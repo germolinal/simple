@@ -1,0 +1,20 @@
+Fenestration {
+    name: "Window 1",
+    construction: "Double Clear Glass",
+    back_boundary: {
+        type: "Space",
+        space: "Space 1",
+    },
+    operation: {
+        type: "Fixed",
+    },
+    category: {
+        type: "Window",
+    },
+    vertices: [
+        0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
+        0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}
+        5.548000,0,0.5000,  // X,Y,Z ==> Vertex 3 {m}
+        5.548000,0,2.5000   // X,Y,Z ==> Vertex 4 {m}
+    ]
+}

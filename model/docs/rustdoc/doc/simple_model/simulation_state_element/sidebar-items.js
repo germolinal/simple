@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Output","Possible outputs to request from the simulation"],["SimulationStateElement","The idea is to have a cheap-to-clone (or copy?) structure"]],"type":[["StateElementField",""]]};

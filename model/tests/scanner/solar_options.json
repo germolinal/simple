@@ -1,0 +1,5 @@
+{    
+    "n_solar_irradiance_points": 30,
+    "solar_sky_discretization": 2,
+    "optical_data_path": "data.json"
+}

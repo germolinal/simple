@@ -1,0 +1,7 @@
+HVAC {    
+    type: "IdealHeaterCooler",
+    name: "Bedrooms heater",
+    target_spaces: [
+        "Bedroom"
+    ]    
+}

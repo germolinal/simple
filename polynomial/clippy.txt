@@ -1,0 +1,2 @@
+    Checking polynomial v0.1.0 (/Users/germolinal/Documents/simple/polynomial)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.16s

@@ -1,0 +1,5 @@
+Luminaire {
+    name: "Some Light",
+    max_power: 30,
+    target_space: "A bright space!"
+}

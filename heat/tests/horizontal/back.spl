@@ -1,0 +1,44 @@
+Substance {
+    type: "Normal",
+    name: "Concrete",    
+    thermal_conductivity: 0.816,
+    density: 1700., 
+    specific_heat_capacity: 800, 
+    front_thermal_absorbtance: 0.9,  
+    back_thermal_absorbtance: 0.9,   
+    front_solar_absorbtance: 0.7,    
+    back_solar_absorbtance: 0.7,     
+    
+}
+
+
+Material {
+    name : "Concrete Layer",
+    substance: "Concrete",
+    thickness: 0.2,
+}
+
+Construction {
+    name: "20cm Concrete",
+    materials: ["Concrete Layer"],
+}
+
+Surface {
+    name: "Wall Exterior",
+    construction: "20cm Concrete",
+    back_boundary: {
+        type: "Space",
+        space: "Interior Space"
+    },
+    vertices: [
+        10., 3., 14.9,
+        10., 0., 14.9,
+        30., 0., 14.9,
+        30., 3., 14.9
+    ]
+}
+
+Space {
+    name: "Interior Space",
+    volume: 600.,
+}

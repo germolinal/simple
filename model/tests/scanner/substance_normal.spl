@@ -1,0 +1,5 @@
+Substance {
+    type: "Normal",
+    name: "the substance", 
+    thermal_conductivity: 12,
+}

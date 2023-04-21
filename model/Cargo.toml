@@ -1,0 +1,22 @@
+
+[package]
+name = "model"
+version = "1.1.4"
+authors = ["German Molina <germolinal@gmail.com>"]
+edition = "2021"
+
+
+[dependencies]
+derive = { path = "../derive" }
+calendar = { path="../calendar" }
+geometry = {path = "../geometry"}
+schedule = { path = "../schedule" }
+rhai = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+json5 = { workspace=true }
+
+[features]
+default = []
+float = ["geometry/float", "rhai/f32_float"]
+wasm = ["rhai/wasm-bindgen"]

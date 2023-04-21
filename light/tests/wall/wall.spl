@@ -1,0 +1,59 @@
+SolarOptions {
+    n_solar_irradiance_points: 100,
+    solar_ambient_divitions: 3000,
+    solar_sky_discretization: 1,    
+}
+
+Substance {
+    type: "Normal",
+    name: "R13_substance",
+    density: 30., 
+    specific_heat_capacity: 800, 
+    thermal_conductivity: 0.01832844575,
+    front_thermal_absorbtance: 0.9,
+    back_thermal_absorbtance: 0.9, 
+    front_solar_absorbtance: 0.7500000,
+    back_solar_absorbtance: 0.7500000,     
+}
+
+Material {
+    name: "R13LAYER",
+    substance: "R13_substance",
+    thickness: 0.1,
+}
+
+
+Construction {
+    name: "R13WALL",
+    materials: [
+        "R13LAYER"
+    ]
+}
+
+
+Space {
+    name: "ZONE ONE",
+    volume: 1061.88, 
+}
+Output{
+    SpaceDryBulbTemperature: "ZONE ONE"
+}
+
+  
+
+
+Surface {
+    name: "Zn001:Wall001",
+    construction: "R13WALL",
+    back_boundary: {
+        type : "Space",
+        space: "ZONE ONE",
+    },
+    vertices: [
+        0,          0,  4.572000,
+        0,          0,  0,       
+        15.24000,   0,  0,       
+        15.24000,   0,  4.572000
+    ]
+
+}

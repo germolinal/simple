@@ -1,0 +1,30 @@
+[package]
+name = "geometry"
+version = "0.2.5"
+authors = ["German Molina <germolinal@gmail.com>"]
+edition = "2018"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = { worspace=true }
+serde_json = { worspace=true }
+
+[dev-dependencies]
+rand = { version = "0.8.4" }
+criterion = "0.4"
+
+[[bench]]
+name = "benchmark"
+path = "./benches/benchmark.rs"
+harness = false
+
+
+
+[features]
+default = []
+float = []
+parallel = []
+quick_inv_sqrt = []
+textures=[]

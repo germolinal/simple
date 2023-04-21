@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Space","Represents a space with homogeneous temperature within a building. It is often actual room enclosed by walls, but it can also be more than one room. In this latter case, there will be walls within the Space, meaning that there are walls whose Front and Back boundary is this space."]]};

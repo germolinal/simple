@@ -1,0 +1,24 @@
+[package]
+name = "air"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+model = { path = "../model" }
+communication = { path = "../communication" }
+weather = { path = "../weather" }
+calendar = { path = "../calendar" }
+
+[dev-dependencies]
+schedule = { path = "../schedule" }
+
+[features]
+default = []
+float = [
+    "communication/float",
+    "model/float",
+    "weather/float",
+    "calendar/float",
+]

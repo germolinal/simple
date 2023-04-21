@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["TerrainClass","This class modifies the wind speed in the site"]],"struct":[["SiteDetails","Some information about the site in which the building(s) are located"]]};

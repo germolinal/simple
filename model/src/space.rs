@@ -1,0 +1,180 @@
+/*
+MIT License
+Copyright (c) 2021 Germán Molina
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+use crate::infiltration::Infiltration;
+use crate::model::Model;
+use crate::simulation_state_element::StateElementField;
+use crate::Float;
+use derive::{ObjectAPI, ObjectIO};
+use serde::{Deserialize, Serialize};
+
+/// Represents a space with homogeneous temperature within a building. It is often actual room enclosed by walls, but it can also
+/// be more than one room. In this latter case, there will be walls
+/// within the Space, meaning that there are walls whose Front and Back
+/// boundary is this space.
+///
+/// ## Examples
+///
+/// #### `.spl`
+/// ```rs
+/// {{#include ../../../tests/scanner/space.spl}}
+/// ```
+/// #### `.json`
+/// ```rs
+/// {{#include ../../../tests/scanner/space.json}}
+/// ```
+#[derive(Debug, ObjectIO, ObjectAPI, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Space {
+    /// The name of the space
+    pub name: String,
+
+    /// Volume of the space
+    pub volume: Option<Float>,
+
+    /// The infiltration in the space
+    infiltration: Option<Infiltration>,
+
+    // The importance of this space over time
+    // importance : Option<Box<dyn Schedule<Float>>>,
+    /// The building in which this `Space` is inserted
+    building: Option<String>,
+
+    #[physical]
+    #[serde(skip)]
+    dry_bulb_temperature: StateElementField,
+
+    #[physical]
+    #[serde(skip)]
+    brightness: StateElementField,
+
+    #[physical]
+    #[serde(skip)]
+    loudness: StateElementField,
+
+    #[physical]
+    #[serde(skip)]
+    infiltration_volume: StateElementField,
+
+    #[physical]
+    #[serde(skip)]
+    infiltration_temperature: StateElementField,
+
+    #[physical]
+    #[serde(skip)]
+    ventilation_volume: StateElementField,
+
+    #[physical]
+    #[serde(skip)]
+    ventilation_temperature: StateElementField,
+}
+
+/***********/
+/* TESTING */
+/***********/
+
+#[cfg(test)]
+mod testing {
+    use super::*;
+    use crate::Model;
+
+    #[test]
+    fn serde() {
+        use json5;
+        use std::fs;
+
+        // Hardcode a reference
+        let mut hardcoded_ref = Space::new("Walrus Enclosure");
+        hardcoded_ref.set_volume(249.);
+        hardcoded_ref.set_building("Wonderful Zoo");
+
+        // Deserialize from hardcoded string and check they are the same
+        let from_hardcoded_json: Space = json5::from_str(
+            "{
+            name: 'Walrus Enclosure',
+            volume: 249,
+            building: 'Wonderful Zoo'
+        }",
+        )
+        .unwrap();
+        assert_eq!(
+            format!("{:?}", hardcoded_ref),
+            format!("{:?}", from_hardcoded_json)
+        );
+
+        // Read json file (used in DOC), Deserialize, and compare
+        let filename = "./tests/scanner/space";
+        let json_file = format!("{}.json", filename);
+        let json_data = fs::read_to_string(json_file).unwrap();
+        let from_json_file: Space = serde_json::from_str(&json_data).unwrap();
+        assert_eq!(
+            format!("{:?}", hardcoded_ref),
+            format!("{:?}", from_json_file)
+        );
+
+        // Serialize and deserialize again... check that everythin matches the pattern
+        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
+        let from_serialized: Space = serde_json::from_str(&rust_json).unwrap();
+        assert_eq!(
+            format!("{:?}", hardcoded_ref),
+            format!("{:?}", from_serialized)
+        );
+
+        // check simple
+        let (model, ..) = Model::from_file("./tests/scanner/space.spl").unwrap();
+        assert_eq!(model.spaces.len(), 1);
+        assert!("Walrus Enclosure" == model.spaces[0].name());
+    }
+
+    #[test]
+    fn test_new() {
+        let space_name = "the_space".to_string();
+
+        let mut space = Space::new(space_name.clone());
+        assert_eq!(space.name, space_name);
+        assert!(space.volume().is_err());
+
+        let vol = 987.12312;
+        space.set_volume(vol);
+        assert_eq!(*space.volume().unwrap(), vol);
+
+
+        let i = 91;
+        assert!(space.dry_bulb_temperature.lock().unwrap().is_none());
+        assert!(space.dry_bulb_temperature_index().is_none());
+        space.set_dry_bulb_temperature_index(i).unwrap();
+        assert!(space.dry_bulb_temperature.lock().unwrap().is_some());
+        assert_eq!(space.dry_bulb_temperature_index().unwrap(), i);
+
+        let i = 191;
+        assert!(space.brightness.lock().unwrap().is_none());
+        assert!(space.brightness_index().is_none());
+        space.set_brightness_index(i).unwrap();
+        assert!(space.brightness.lock().unwrap().is_some());
+        assert_eq!(space.brightness_index().unwrap(), i);
+
+        let i = 111;
+        assert!(space.loudness.lock().unwrap().is_none());
+        assert!(space.loudness_index().is_none());
+        space.set_loudness_index(i).unwrap();
+        assert!(space.loudness.lock().unwrap().is_some());
+        assert_eq!(space.loudness_index().unwrap(), i);
+    }
+}

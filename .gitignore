@@ -1,0 +1,61 @@
+/target
+/**/target
+.DS_Store
+.vscode
+
+# MAIN
+#######
+# Validations
+tests/*/*
+!tests/*/*.csv
+!tests/**/**/*.idf
+!tests/**/**/*.epw
+!tests/**/**/*.spl
+!tests/**/**/*.rs
+
+# MODEL
+#######
+model/docs/ioreference/src/auto-*.md
+model/docs/ioreference/src/SUMMARY.md
+
+# GEOMETRY
+############
+geometry/test_data/*.html
+
+# HEAT
+#########
+# EnergyPlus test stuff
+heat/tests/Energy+.idd
+heat/tests/*/*
+!heat/tests/*/*.csv
+!heat/tests/**/**/*.idf
+!heat/tests/**/**/*.spl
+!heat/tests/**/**/*.epw
+
+# Documentation
+heat/docs
+!heat/docs/index.html
+
+# LIGHT
+############
+light/tests/*/*
+!light/tests/*/*.spl
+!light/tests/*/eplusout.csv
+light/docs/validation/*.html
+
+# RENDERING
+############
+rendering/tests/scenes/images/*.hdr
+rendering/tests/scenes/**/*.mtx
+rendering/tests/scenes/**/*.oct
+rendering/tests/scenes/images/*.tiff
+# rendering/docs/validation/*.html
+
+# WEATHER
+##########
+# EnergyPlus test stuff
+weather/tests/*
+!weather/tests/*csv
+!weather/tests/*.idf
+!weather/tests/*.epw
+!weather/tests/*.rs

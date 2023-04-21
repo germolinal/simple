@@ -1,0 +1,49 @@
+[package]
+name = "light"
+version = "0.1.1"
+authors = ["German Molina <germolinal@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rayon = { workspace=true, optional = true }
+serde = { workspace=true, features = ['derive'] }
+serde_json = { workspace=true}
+calendar = { path = "../calendar" }
+weather = { path = "../weather" }
+model = { path = "../model" }
+communication = { path = "../communication" }
+solar = { path = "../solar" }
+rendering = { path = "../rendering" }
+matrix = { path = "../matrix" }
+geometry = { path = "../geometry" }
+# clap = { version = "4.0.14", features = ["derive"] }
+
+
+
+[dev-dependencies]
+schedule = { path = "../schedule" }
+test_models = { path = "../test_models" }
+
+validate = {git="https://github.com/SIMPLE-BuildingSimulation/validate"}
+json5 = { workspace=true }
+
+
+[features]
+default = []
+parallel = [
+    "rayon",
+    "rendering/parallel",
+    # "matrix/parallel",
+    "geometry/parallel",
+]
+float = [
+    "communication/float",
+    "calendar/float",
+    "weather/float",
+    "model/float",
+    "solar/float",
+    "rendering/float",
+    "geometry/float",
+]

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Substance","A physical substance with physical—i.e., optical, thermal—properties."]],"mod":[["gas","Contains the gases"],["normal","Module describing solid materials, transparent or not"]]};

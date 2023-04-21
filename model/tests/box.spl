@@ -1,0 +1,104 @@
+
+
+/*
+This is how you make    block comments!
+isn't it cool?
+
+(c) German Molina (although... I don't care, just copy this)
+
+
+*/
+
+// ANCHOR: building
+Building {
+    name: "Main campus", 
+    n_storeys: 2,
+    shelter_class: {
+        type: "Urban"
+    }, 
+}
+// ANCHOR_END: building
+
+Substance {
+    type: "Normal",
+    name: "the substance", // We will use this name to assign this to a construction
+    thermal_conductivity: 12., // This is one property... there are more.
+}
+Substance {
+    type: "Gas",
+    name: "the gas substance", // We will use this name to assign this to a construction
+    gas:  {
+        "type": "Xenon", // There are other gases available as well
+    }, 
+}
+Material {
+    name: "the material", // This is the name of this material
+    substance : "the substance",  // This has to match the name of a substance
+    thickness: 0.1
+}
+
+Material {
+    name: "another material", 
+    substance : "the substance", 
+    thickness: 0.01
+}
+
+// ANCHOR: bedroom
+Space {
+    name: "Bedroom", 
+    volume: 42, // volume in m3. 
+    infiltration: { // <- Define the infiltration
+        type : "Doe2", 
+        flow : 0.24,
+    }
+}
+// ANCHOR_END: bedroom
+
+
+// ANCHOR: bedroom_output
+// Report the Bedroom's output variable
+Output{
+    SpaceDryBulbTemperature: "Bedroom"
+}
+// ANCHOR_END: bedroom_output
+
+
+Construction {        
+    name: "the construction", // the name of the construction, to assign it to Surfaces
+        
+    materials : [ // This is a list of materials, from front to back
+        "the material", 
+        "another material"
+    ]
+}
+
+// The normal points in (0,0,1) based on the right-hand rule
+Surface {
+    name: "the surface",
+    construction:"the construction", 
+    vertices: [ 
+        0, 0, 0, // X, Y and Z of Vertex 0
+        1, 0, 0, // X, Y and Z of Vertex 1
+        1, 1, 0, // X, Y and Z of Vertex 2
+        0, 1, 0  // ... 
+    ],
+    back_boundary: {
+        type: "Space",
+        space: "Bedroom"
+    },
+    category:{
+        type: "ExteriorWall"
+    }   
+}
+HVAC {
+    type: "ElectricHeater",
+    name: "Bedrooms heater",
+    target_space: "Bedroom",    
+}
+
+
+
+
+SolarOptions {    
+    n_solar_irradiance_points: 2
+}

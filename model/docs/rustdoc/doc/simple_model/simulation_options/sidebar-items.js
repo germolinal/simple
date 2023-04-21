@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["SolarOptions","The options for the solar and lighting calculations"]]};

@@ -1,0 +1,178 @@
+Substance::Normal {
+    name: "R13_substance",
+    front_thermal_absorbtance: 0.9000000,   //            !- Thermal Absorptance
+    front_solar_absorbtance: 0.7500000,     //          !- Solar Absorptance
+    // visible_absorbtance: 0.7500000, //               !- Visible Absorptance    
+}
+
+Material {
+    name: "R13LAYER",
+    substance: "R13_substance",
+    thickness: 1// so that R-value is 2.290965
+}
+
+Substance::Normal {
+    name: "R31_substance",
+    front_thermal_absorbtance: 0.9000000,   //            !- Thermal Absorptance
+    back_thermal_absorbtance: 0.9000000,   //            !- Thermal Absorptance
+    front_solar_absorbtance: 0.7500000,     //          !- Solar Absorptance
+    // visible_absorbtance: 0.7500000, //               !- Visible Absorptance    
+}
+
+Material {
+    name: "R31LAYER",
+    substance: "R31_substance",
+    thickness: 1// so that R-value is 5.456
+}
+
+Substance::Normal{
+    name: "C5 - 4 IN HW CONCRETE Substance",  // !- Name
+    // MediumRough,       //      !- Roughness
+    thermal_conductivity: 1.729577,          //      !- Conductivity {W/m-K}
+    density: 2242.585,          //      !- Density {kg/m3}
+    specific_heat_capacity: 836.8000,          //      !- Specific Heat {J/kg-K}
+    front_thermal_absorbtance: 0.9000000,         //      !- Thermal Absorptance
+    front_solar_absorbtance: 0.6500000,         //      !- Solar Absorptance
+    // 0.6500000;         //      !- Visible Absorptance
+}
+
+Substance::Normal {
+    name: "glass substance",
+    solar_transmittance: 0.8,
+    front_solar_absorbtance: 0.9,
+    back_solar_absorbtance: 0.9, 
+}
+Material {
+    name: "glass",
+    thickness: 0.003,
+    substance: "glass substance",
+}
+
+Material {
+    name: "C5 - 4 IN HW CONCRETE",
+    substance: "C5 - 4 IN HW CONCRETE Substance",
+    thickness : 0.1014984, //
+}
+
+Construction {
+    name: "R13WALL",
+    materials: [
+        "R13LAYER"
+    ]
+}
+
+Construction {
+    name: "Floor",
+    materials: [
+        "C5 - 4 IN HW CONCRETE"
+    ]
+}
+
+Construction {
+    name: "Roof31",
+    materials: [
+        "R31LAYER"
+    ]
+}
+ 
+Construction {
+    name: "DoubleClear",
+    materials:[
+        "glass"
+    ]
+}
+
+Space {
+    name: "ZONE ONE",
+    volume: 1061.88, // SIMPLE does not yet autocalculate volumes    
+ }
+
+  
+Surface {
+    name: "Zn001:Wall001",
+    construction: "R13WALL",
+    back_boundary: Boundary::Space("ZONE ONE"),
+    vertices: [
+        0,0,4.572000,           // X,Y,Z ==> Vertex 1 {m}
+        0,0,0,                  // X,Y,Z ==> Vertex 2 {m}
+        15.24000,0,0,           // X,Y,Z ==> Vertex 3 {m}
+        15.24000,0,4.572000    // X,Y,Z ==> Vertex 4 {m}
+    ]
+
+}
+
+Fenestration {
+    name: "Zn001:Wall001:Win001",
+    construction: "DoubleClear",
+    back_boundary: Boundary::Space("ZONE ONE"),
+    operation_type: FenestrationPositions::FixedClosed(),
+    fenestration_type: FenestrationType::Window(),
+    vertices: [
+        0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
+        0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}
+        5.548000,0,0.5000,  // X,Y,Z ==> Vertex 3 {m}
+        5.548000,0,2.5000  // X,Y,Z ==> Vertex 4 {m}
+    ]
+}
+
+Surface {
+    name: "Zn001:Wall002",
+    construction: "R13WALL",
+    back_boundary: Boundary::Space("ZONE ONE"),
+    vertices: [
+        15.24000,0,4.572000,            // X,Y,Z ==> Vertex 1 {m}
+        15.24000,0,0,                   // X,Y,Z ==> Vertex 2 {m}
+        15.24000,15.24000,0,            // X,Y,Z ==> Vertex 3 {m}
+        15.24000,15.24000,4.572000     // X,Y,Z ==> Vertex 4 {m}
+    ]
+}
+
+Surface {
+    name: "Zn001:Wall003",
+    construction: "R13WALL",
+    back_boundary: Boundary::Space("ZONE ONE"),
+    vertices: [
+        15.24000,15.24000,4.572000, // X,Y,Z ==> Vertex 1 {m}
+        15.24000,15.24000,0,        // X,Y,Z ==> Vertex 2 {m}
+        0,15.24000,0,               // X,Y,Z ==> Vertex 3 {m}
+        0,15.24000,4.572000        // X,Y,Z ==> Vertex 4 {m}
+    ]
+    
+}
+
+
+Surface {
+    name: "Zn001:Wall004",
+    construction: "R13WALL",
+    back_boundary: Boundary::Space("ZONE ONE"),
+    vertices: [
+        0,15.24000,4.572000,    // X,Y,Z ==> Vertex 1 {m}
+        0,15.24000,0,           // X,Y,Z ==> Vertex 2 {m}
+        0,0,0,                  // X,Y,Z ==> Vertex 3 {m}
+        0,0,4.572000           // X,Y,Z ==> Vertex 4 {m}
+    ]
+}
+
+Surface {
+    name: "Zn001:Flr001",
+    construction: "Floor",
+    back_boundary: Boundary::Space("ZONE ONE"),
+    vertices: [
+        15.24000,0.000000,0.0,  // X,Y,Z ==> Vertex 1 {m}
+        0.000000,0.000000,0.0,  // X,Y,Z ==> Vertex 2 {m}
+        0.000000,15.24000,0.0,  // X,Y,Z ==> Vertex 3 {m}
+        15.24000,15.24000,0.0  // X,Y,Z ==> Vertex 4 {m}
+    ]
+}
+   
+Surface {
+    name: "Zn001:Roof001",
+    construction: "Roof31",
+    back_boundary: Boundary::Space("ZONE ONE"),
+    vertices: [
+        0.000000,15.24000,4.572,  // X,Y,Z ==> Vertex 1 {m}
+        0.000000,0.000000,4.572,  // X,Y,Z ==> Vertex 2 {m}
+        15.24000,0.000000,4.572,  // X,Y,Z ==> Vertex 3 {m}
+        15.24000,15.24000,4.572  // X,Y,Z ==> Vertex 4 {m}
+    ]
+}

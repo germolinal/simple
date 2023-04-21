@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Construction","An object representing an array of Materials, ordered from front to back"]]};

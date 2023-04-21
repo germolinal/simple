@@ -1,0 +1,47 @@
+[package]
+name = "heat"
+version = "1.0.0"
+authors = ["German Molina <germolinal@gmail.com>"]
+edition = "2021"
+license = "MIT"
+
+
+
+[dependencies]
+model = { path = "../model"}
+calendar = { path = "../calendar" }
+weather = { path = "../weather" }
+geometry = { path = "../geometry" }
+communication = { path = "../communication" }
+matrix = {path = "../matrix" }
+polynomial = { path = "../polynomial" }
+rayon = { workspace = true, optional = true}
+
+
+[dev-dependencies]
+validate = { git = "https://github.com/SIMPLE-BuildingSimulation/validate.git"}
+schedule = { path = "../schedule" }
+test_models = { path = "../test_models"}
+
+
+# Check https://stackoverflow.com/questions/53127722/how-can-i-activate-features-in-all-my-crates
+
+[package.metadata.docs.rs]
+rustdoc-args = [
+    "--html-in-header",
+    "./katex.html",
+]
+
+[features]
+default = []
+parallel=[
+    "rayon"
+]
+float = [
+    "model/float",  
+    "matrix/float",  
+    "weather/float", 
+    "calendar/float", 
+    "geometry/float", 
+    "polynomial/float"
+]

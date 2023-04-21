@@ -1,0 +1,21 @@
+    Checking matrix v0.1.0 (/Users/germolinal/Documents/simple/matrix)
+warning: avoid using `collect()` when not needed
+   --> src/lib.rs:795:63
+    |
+795 |         let i: Vec<&[T]> = self.data.chunks_exact(self.ncols).collect();
+    |                                                               ^^^^^^^
+796 |         #[cfg(not(feature = "parallel"))]
+797 |         let i = i.into_iter().zip(into.data.chunks_exact_mut(other.ncols));
+    |                 ------------- the iterator could be used here instead
+    |
+    = note: `#[warn(clippy::needless_collect)]` on by default
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_collect
+help: use the original Iterator instead of collecting it and then producing a new one
+    |
+795 ~         
+796 |         #[cfg(not(feature = "parallel"))]
+797 ~         let i = self.data.chunks_exact(self.ncols).zip(into.data.chunks_exact_mut(other.ncols));
+    |
+
+warning: `matrix` (lib) generated 1 warning
+    Finished dev [unoptimized + debuginfo] target(s) in 0.20s

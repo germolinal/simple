@@ -1,0 +1,243 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>TerrainClass - SIMPLE Simulation Input Output reference</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="what_is_simple.html"><strong aria-hidden="true">1.</strong> What is SIMPLE?</a></li><li class="chapter-item expanded affix "><li class="part-title">Input Output Reference Guide</li><li class="chapter-item expanded "><a href="auto-boundary.html"><strong aria-hidden="true">2.</strong> Boundary</a></li><li class="chapter-item expanded "><a href="auto-building.html"><strong aria-hidden="true">3.</strong> Building</a></li><li class="chapter-item expanded "><a href="auto-construction.html"><strong aria-hidden="true">4.</strong> Construction</a></li><li class="chapter-item expanded "><a href="auto-fenestration.html"><strong aria-hidden="true">5.</strong> Fenestration</a></li><li class="chapter-item expanded "><a href="auto-fenestrationposition.html"><strong aria-hidden="true">6.</strong> FenestrationPosition</a></li><li class="chapter-item expanded "><a href="auto-fenestrationtype.html"><strong aria-hidden="true">7.</strong> FenestrationType</a></li><li class="chapter-item expanded "><a href="auto-hvac.html"><strong aria-hidden="true">8.</strong> HVAC</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="auto-electricheater.html"><strong aria-hidden="true">8.1.</strong> ElectricHeater</a></li><li class="chapter-item expanded "><a href="auto-idealheatercooler.html"><strong aria-hidden="true">8.2.</strong> IdealHeaterCooler</a></li></ol></li><li class="chapter-item expanded "><a href="auto-infiltration.html"><strong aria-hidden="true">9.</strong> Infiltration</a></li><li class="chapter-item expanded "><a href="auto-luminaire.html"><strong aria-hidden="true">10.</strong> Luminaire</a></li><li class="chapter-item expanded "><a href="auto-material.html"><strong aria-hidden="true">11.</strong> Material</a></li><li class="chapter-item expanded "><a href="auto-output.html"><strong aria-hidden="true">12.</strong> Output</a></li><li class="chapter-item expanded "><a href="auto-sitedetails.html"><strong aria-hidden="true">13.</strong> SiteDetails</a></li><li class="chapter-item expanded "><a href="auto-solaroptions.html"><strong aria-hidden="true">14.</strong> SolarOptions</a></li><li class="chapter-item expanded "><a href="auto-space.html"><strong aria-hidden="true">15.</strong> Space</a></li><li class="chapter-item expanded "><a href="auto-substance.html"><strong aria-hidden="true">16.</strong> Substance</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="auto-normal.html"><strong aria-hidden="true">16.1.</strong> Normal</a></li><li class="chapter-item expanded "><a href="auto-gas.html"><strong aria-hidden="true">16.2.</strong> Gas</a></li><li class="chapter-item expanded "><a href="auto-gasspecification.html"><strong aria-hidden="true">16.3.</strong> GasSpecification</a></li></ol></li><li class="chapter-item expanded "><a href="auto-shelterclass.html"><strong aria-hidden="true">17.</strong> ShelterClass</a></li><li class="chapter-item expanded "><a href="auto-surface.html"><strong aria-hidden="true">18.</strong> Surface</a></li><li class="chapter-item expanded "><a href="auto-surfacetype.html"><strong aria-hidden="true">19.</strong> SurfaceType</a></li><li class="chapter-item expanded "><a href="auto-terrainclass.html" class="active"><strong aria-hidden="true">20.</strong> TerrainClass</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">SIMPLE Simulation Input Output reference</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<h1 id="terrainclass"><a class="header" href="#terrainclass">TerrainClass</a></h1>
+<p>This class modifies the wind speed in the site</p>
+<h2 id="supported-variants"><a class="header" href="#supported-variants">Supported Variants</a></h2>
+<h3 id="country"><a class="header" href="#country">Country</a></h3>
+<p>Describes a Flat, Open Country</p>
+<h5 id="full-specification"><a class="header" href="#full-specification">Full Specification</a></h5>
+<pre><code class="language-json">{
+	type: &quot;Country&quot;
+}
+</code></pre>
+<h3 id="suburbs"><a class="header" href="#suburbs">Suburbs</a></h3>
+<p>Describes a Rough, Wooded Country or Suburb</p>
+<h5 id="full-specification-1"><a class="header" href="#full-specification-1">Full Specification</a></h5>
+<pre><code class="language-json">{
+	type: &quot;Suburbs&quot;
+}
+</code></pre>
+<h3 id="city"><a class="header" href="#city">City</a></h3>
+<p>Describes Towns, City Outskirts, and centers of large cities</p>
+<h5 id="full-specification-2"><a class="header" href="#full-specification-2">Full Specification</a></h5>
+<pre><code class="language-json">{
+	type: &quot;City&quot;
+}
+</code></pre>
+<h3 id="ocean"><a class="header" href="#ocean">Ocean</a></h3>
+<p>Describes sites next to the Ocean or Bayou Flat</p>
+<h5 id="full-specification-3"><a class="header" href="#full-specification-3">Full Specification</a></h5>
+<pre><code class="language-json">{
+	type: &quot;Ocean&quot;
+}
+</code></pre>
+<h3 id="urban"><a class="header" href="#urban">Urban</a></h3>
+<p>Describes Urban, Industrual or Forest terrain</p>
+<h5 id="full-specification-4"><a class="header" href="#full-specification-4">Full Specification</a></h5>
+<pre><code class="language-json">{
+	type: &quot;Urban&quot;
+}
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="auto-surfacetype.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="auto-surfacetype.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>

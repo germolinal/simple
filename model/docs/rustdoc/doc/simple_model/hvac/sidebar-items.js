@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["HVAC","A collection of elements heating and cooling systems"]],"mod":[["electric_heater",""],["ideal_heater_cooler",""]],"struct":[["ElectricHeater","A simple model of an Electric Heater. It can only heat and has a COP of 1. It only has two states: On/Off."],["IdealHeaterCooler","An ideal Heating and Cooling device, with a COP of 1."]]};

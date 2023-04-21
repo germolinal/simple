@@ -1,0 +1,52 @@
+[package]
+name = "rendering"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+model = {path = "../model"}
+matrix = {path = "../matrix"}
+geometry = {version="0.2.0", path = "../geometry"}
+solar = {path = "../solar"}
+calendar = { path = "../calendar" }
+rand = { version = "0.8.5", features=["small_rng"]}
+rayon = {workspace=true, optional = true}
+serde = { workspace=true, features=['derive']}
+clap = {version="4.0.14", features=["derive"]}
+obj-rs = "0.7.0"
+jpeg-encoder = "0.5.1"
+
+
+[dev-dependencies]
+criterion = "0.4"
+validate = {git="https://github.com/SIMPLE-BuildingSimulation/validate"}
+
+[[bench]]
+name = "benchmark"
+path = "./benches/benchmark.rs"
+harness = false
+
+[features]
+default = [] 
+float = ["model/float","geometry/float", "matrix/float",  "solar/float"]
+parallel = ["geometry/parallel", "rayon"]
+textures = ["geometry/textures"]
+
+[profile.release]
+debug=true
+lto = true
+codegen-units = 1
+opt-level=3
+
+
+
+[[test]]
+name = "render_materials"
+path = "tests/render_materials.rs"
+
+[[test]]
+name = "test_scenes"
+path = "tests/test_scenes.rs"

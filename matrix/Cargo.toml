@@ -1,0 +1,17 @@
+[package]
+name = "matrix"
+version = "0.1.0"
+authors = ["German Molina <germolinal@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rayon = {version="1.5.2", optional=true}
+serde = {version="1.0.142", features=["derive"]}
+
+[dev-dependencies]
+serde_json = "1.0.83"
+
+[features]
+default = []
+float = []
+parallel = ["rayon"]

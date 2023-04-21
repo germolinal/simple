@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["Model","A structure describing a set of built-environment objects."],["SimpleModelVisitor",""]]};

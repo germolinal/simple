@@ -1,0 +1,90 @@
+
+Substance {
+    type: "Normal",
+    name: "floor_mat",
+    front_solar_absorbtance: 0.9
+}
+
+Substance {
+    type: "Normal",
+    name: "ceiling_mat",
+    front_solar_absorbtance: 0.2
+}
+
+Substance {
+    type: "Normal",
+    name: "wall_mat",
+    front_solar_absorbtance: 0.5
+}
+
+Material {
+    name: "floor_mat",
+    substance: "floor_mat",
+    thickness: 0.1
+}
+
+Material {
+    name: "ceiling_mat",
+    substance: "ceiling_mat",
+    thickness: 0.1
+}
+
+Material {
+    name: "wall_mat",
+    substance: "wall_mat",
+    thickness: 0.1
+}
+
+
+Construction{
+    name: "floor_mat",
+    materials: ["floor_mat"]
+}
+
+Construction{
+    name: "ceiling_mat",
+    materials: ["ceiling_mat"]
+}
+
+Construction{
+    name: "wall_mat",
+    materials: ["wall_mat"]
+}
+
+
+Surface {
+    name: "floor",
+    construction: "floor_mat",
+    vertices: [ 4.000000, 8.000000, 0.000000, 4.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 8.000000, 0.000000 ]
+}
+
+Surface {
+    name: "ceiling",
+    construction: "ceiling_mat",
+    vertices: [0.000000, 8.000000, 4.000000, 0.000000, 0.000000, 4.000000, 4.000000, 0.000000, 4.000000, 4.000000, 8.000000, 4.000000 ]
+}
+
+
+Surface {
+    name: "south",
+    construction: "wall_mat",
+    vertices: [ 0.000000, 0.000000, 4.000000, 0.000000, 0.000000, 0.000000, 4.000000, 0.000000, 0.000000, 4.000000, 0.000000, 4.000000 ]
+}
+
+Surface {
+    name: "east",
+    construction: "wall_mat",
+    vertices: [ 0.000000, 8.000000, 4.000000, 0.000000, 8.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 0.000000, 4.000000 ]
+}
+
+Surface {
+    name: "west",
+    construction: "wall_mat",
+    vertices: [ 4.000000, 0.000000, 4.000000, 4.000000, 0.000000, 0.000000, 4.000000, 8.000000, 0.000000, 4.000000, 8.000000, 4.000000 ]
+}
+
+Surface {
+    name: "north",
+    construction: "wall_mat",
+    vertices: [ 4.000000, 8.000000, 4.000000, 4.000000, 8.000000, 0.000000, 0.000000, 8.000000, 0.000000, 0.000000, 8.000000, 4.000000, 4.000000, 8.000000, 4.000000, 3.990000, 8.000000, 3.990000, 0.010000, 8.000000, 3.990000, 0.010000, 8.000000, 2.783970, 3.990000, 8.000000, 2.783970, 3.990000, 8.000000, 3.990000 ]
+}

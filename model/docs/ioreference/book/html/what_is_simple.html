@@ -1,0 +1,273 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>What is SIMPLE? - SIMPLE Simulation Input Output reference</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="what_is_simple.html" class="active"><strong aria-hidden="true">1.</strong> What is SIMPLE?</a></li><li class="chapter-item expanded affix "><li class="part-title">Input Output Reference Guide</li><li class="chapter-item expanded "><a href="auto-boundary.html"><strong aria-hidden="true">2.</strong> Boundary</a></li><li class="chapter-item expanded "><a href="auto-building.html"><strong aria-hidden="true">3.</strong> Building</a></li><li class="chapter-item expanded "><a href="auto-construction.html"><strong aria-hidden="true">4.</strong> Construction</a></li><li class="chapter-item expanded "><a href="auto-fenestration.html"><strong aria-hidden="true">5.</strong> Fenestration</a></li><li class="chapter-item expanded "><a href="auto-fenestrationposition.html"><strong aria-hidden="true">6.</strong> FenestrationPosition</a></li><li class="chapter-item expanded "><a href="auto-fenestrationtype.html"><strong aria-hidden="true">7.</strong> FenestrationType</a></li><li class="chapter-item expanded "><a href="auto-hvac.html"><strong aria-hidden="true">8.</strong> HVAC</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="auto-electricheater.html"><strong aria-hidden="true">8.1.</strong> ElectricHeater</a></li><li class="chapter-item expanded "><a href="auto-idealheatercooler.html"><strong aria-hidden="true">8.2.</strong> IdealHeaterCooler</a></li></ol></li><li class="chapter-item expanded "><a href="auto-infiltration.html"><strong aria-hidden="true">9.</strong> Infiltration</a></li><li class="chapter-item expanded "><a href="auto-luminaire.html"><strong aria-hidden="true">10.</strong> Luminaire</a></li><li class="chapter-item expanded "><a href="auto-material.html"><strong aria-hidden="true">11.</strong> Material</a></li><li class="chapter-item expanded "><a href="auto-output.html"><strong aria-hidden="true">12.</strong> Output</a></li><li class="chapter-item expanded "><a href="auto-sitedetails.html"><strong aria-hidden="true">13.</strong> SiteDetails</a></li><li class="chapter-item expanded "><a href="auto-solaroptions.html"><strong aria-hidden="true">14.</strong> SolarOptions</a></li><li class="chapter-item expanded "><a href="auto-space.html"><strong aria-hidden="true">15.</strong> Space</a></li><li class="chapter-item expanded "><a href="auto-substance.html"><strong aria-hidden="true">16.</strong> Substance</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="auto-normal.html"><strong aria-hidden="true">16.1.</strong> Normal</a></li><li class="chapter-item expanded "><a href="auto-gas.html"><strong aria-hidden="true">16.2.</strong> Gas</a></li><li class="chapter-item expanded "><a href="auto-gasspecification.html"><strong aria-hidden="true">16.3.</strong> GasSpecification</a></li></ol></li><li class="chapter-item expanded "><a href="auto-shelterclass.html"><strong aria-hidden="true">17.</strong> ShelterClass</a></li><li class="chapter-item expanded "><a href="auto-surface.html"><strong aria-hidden="true">18.</strong> Surface</a></li><li class="chapter-item expanded "><a href="auto-surfacetype.html"><strong aria-hidden="true">19.</strong> SurfaceType</a></li><li class="chapter-item expanded "><a href="auto-terrainclass.html"><strong aria-hidden="true">20.</strong> TerrainClass</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">SIMPLE Simulation Input Output reference</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<h1 id="what-is-simple"><a class="header" href="#what-is-simple">What is <code>SIMPLE</code>?</a></h1>
+<p><code>SIMPLE</code> is a Building Performance Simulation tool
+developed with the purpose of modernizing Building Performance Simulation. This includes,
+but it really is not limited to, more appropriately <strong>integrating how &quot;people&quot; experience 
+and interact with the buildings they use</strong>. There are two main reasons for this.</p>
+<p>The first one is that—based on the <a href="https://openaccess.wgtn.ac.nz/articles/thesis/Exploring_modelling_and_simulating_the_Feeling_of_Comfort_in_residential_settings/17085467/1">research that led to the design and development of 
+<code>SIMPLE</code></a>—<strong>Building Performance Simulation tools should be able to, at least</strong> 
+(again, there are more requirements) <strong>allow us to perform holistic simulations</strong> (i.e., 
+integrating heat, moisture, light and acoustics). The reason for this is that, when 
+people get into a room, they just <em>feel</em> it. They do not separate—as Software and 
+Building Scientists do—the Thermal from the Daylight from the Acoustic domains. So, 
+<code>SIMPLE</code> aims to enable holistic Building Performance Simulation. This is done by having 
+an architecture that allows separating <a href="https://github.com/SIMPLE-BuildingSimulation">the source code of different simulation modules</a> while allowing communication between 
+modules.</p>
+<p>The second reason to focus on people is more related to the changing challenges of 
+Building Science. One or two decades ago, many of the buildings we lived in were <del>crap</del> 
+not very well insulated, they weren't air-tight, their windows weren't sized to balance 
+solar heat gains, daylight, and insulaton, and so on. Under these conditions, it made
+a lot of sense to focus just on building physics. We did not <em>really</em> know how to design
+and build healthy, comfortable and Net-Zero energy buildings... but that has changed. 
+There are many examples of extremely good buildings today and Software has become
+cheaper, more affordable, fast, and easy to use. Today, we understand and can predict the 
+effects of building physics better than ever before, which means that <strong>the main gap in 
+knowledge lies in human factors</strong>. Insulating an open door is absurd, so we need to 
+really understand <em>when</em> and <em>why</em> people choose to open doors, so we can plan in advance
+and design buildings that make their comfort and behaviour compatible with the energy 
+efficiency and health needs we have identified.</p>
+<p>I like to think of this as a change of paradigm, where we stop focusing on 'occupants' and finally start focusing on 'humans'. If you want to understand a 
+bit more the difference I make between Occupants and People <a href="https://buildingsforpeople.org/2020-08-14.blog">read this</a>. </p>
+<h1 id="do-we-need-simple-cant-we-just-keep-using-other-tools"><a class="header" href="#do-we-need-simple-cant-we-just-keep-using-other-tools">Do we need <code>SIMPLE</code>? Can't we just keep using other tools?</a></h1>
+<p>I have been working in Building Simulation Tool space for nearly a decade now. During 
+this time, I have tried to combine simulation tools and methods, and also to make 
+simulation more accessible to people. For example, my MSc research focused on the 
+integration of Radiance and EnergyPlus. It was then when I started developing <a href="www.groundhoglighting.com">Groundhog</a>, which intended to put Radiance in everyone’s hands. While 
+developing Groundhog I realized that Radiance could use some sort of wrapper to make it a 
+bit friendlier by offering out-of-the-box optimizations and pre- and post-processing. 
+This motivated me to develop Emp, a Radiance orchestrator. Both projects—Radiance and 
+Emp—have already died for various reasons. </p>
+<p>During my time developing building performance simulation tools I have learned about an 
+enormous amount of undeniable virtues that currently available tools—e.g., EnergyPlus and 
+Radiance—have: they have been extensively validated, they are open source, they are free 
+(as in freedom), and so on. Unfortunately, I have also seen many drawbacks. For starters, 
+these tools were not really meant to be embedded on other tools. Radiance confesses this 
+quite clearly:</p>
+<blockquote>
+<p>“These routines are designed to aid the programmer who wishes to call Radiance as a 
+library.  Unfortunately, the system was not originally intended to be run this way, and 
+there are some awkward limitations to contend with…” (Radiance’s raycalls.c)</p>
+</blockquote>
+<p>Also, these tools were developed decades ago. Radiance was developed before the gaming 
+and animation industry invested millions in improving rendering techniques, and 
+EnergyPlus tends to focus too much on building physics even if we now know that we need 
+to pay more attention to people’s behaviour in buildings (because insulating an open door 
+is pointless). Also, programming was different back then, with different source control 
+systems and way less people who knew how to code.</p>
+<p><code>SIMPLE</code> attempts to fix these issues by being open-source from day zero, by using a 
+modern programming language, by having an architeture designed for enabling 
+collaboration. Don’t be mistaken, though, <code>SIMPLE</code> does not attempt to reinvent the 
+wheel. The real wheel is the knowledge of physics and rendering and computer sciences 
+behind currently existing Building Performance Simulation tools… what it proposes is to 
+build a good-old wheel with new materials and methods, in a more modern factory, and that
+is designed to travel in modern roads.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next" href="auto-boundary.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next" href="auto-boundary.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "__livereload";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </body>
+</html>

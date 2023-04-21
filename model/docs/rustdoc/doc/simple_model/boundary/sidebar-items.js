@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Boundary","Represents the boundary of a `Surface`"]]};
