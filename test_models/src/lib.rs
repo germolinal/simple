@@ -131,12 +131,13 @@ impl Default for SingleZoneTestBuildingOptions {
     }
 }
 
+
 /// Adds a luminare to the model
 pub fn add_luminaire(model: &mut Model, options: &SingleZoneTestBuildingOptions) {
     let power = options.lighting_power;
     assert!(power > 0.);
     let mut luminaire = Luminaire::new("the luminaire");
-    luminaire.set_max_power(power);
+    luminaire.set_max_power(power as Float);
     luminaire.set_target_space(model.spaces[0].name());
     model.add_luminaire(luminaire).unwrap();
 }

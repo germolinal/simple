@@ -1,0 +1,38 @@
+name: Tests
+
+on:  
+  pull_request:
+    branches: [ main, test ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:  
+  test_default:
+    runs-on: ubuntu-latest     
+    steps:
+    - uses: actions/checkout@v3     
+    - name: Run tests
+      run: cargo test --verbose --workspace 
+      
+  test_float:
+    runs-on: ubuntu-latest     
+    steps:
+    - uses: actions/checkout@v3     
+    - name: Run tests float
+      run: cargo test --features float --verbose --workspace 
+
+  test_float_parallel:
+    runs-on: ubuntu-latest     
+    steps:
+    - uses: actions/checkout@v3     
+    - name: Run tests float
+      run: cargo test --features float --features parallel --verbose --workspace  
+  
+  test_parallel:
+    runs-on: ubuntu-latest     
+    steps:
+    - uses: actions/checkout@v3     
+    - name: Run tests float
+      run: cargo test --features parallel --verbose --workspace 
+  

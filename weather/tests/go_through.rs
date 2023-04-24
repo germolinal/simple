@@ -1,17 +1,17 @@
 use calendar::{Date, DateFactory};
 use validate::*;
-use weather::EPWWeather;
+use weather::{EPWWeather, Float};
 
 #[test]
 fn test_go_through() {
     // cargo test --release --package weather --test go_through -- test_go_through --exact --nocapture
 
     /// Checks whether `SIMPLE`'s EPW module is interpolating properly
-    #[valid(SIMPLE's EPW module vs EnergyPlus - accessing data)]
+    #[valid("Simple's EPW module vs EnergyPlus - accessing data")]
     fn drybulb() -> Box<dyn Validate> {
         let n = 199999000;
 
-        let cols = validate::from_csv("./tests/eplusout.csv", &[1]);
+        let cols = validate::from_csv::<Float>("./tests/eplusout.csv", &[1]);
         let exp_dry_bulb = &cols[0];
 
         let start = Date {
@@ -36,7 +36,7 @@ fn test_go_through() {
         let mut expected = Vec::with_capacity(n);
         let mut found = Vec::with_capacity(n);
         for date in sim_period {
-            expected.push(exp_dry_bulb[i]);
+            expected.push(exp_dry_bulb[i] as Float);
             i += 1;
             let data = weather.find_weather_line(date);
             let found_temp = data.dry_bulb_temperature;

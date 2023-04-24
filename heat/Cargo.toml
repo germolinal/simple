@@ -19,7 +19,7 @@ rayon = { workspace = true, optional = true}
 
 
 [dev-dependencies]
-validate = { git = "https://github.com/SIMPLE-BuildingSimulation/validate.git"}
+validate = { git = "https://github.com/germolinal/validate.git"}
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models"}
 

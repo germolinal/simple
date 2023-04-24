@@ -17,6 +17,7 @@ tests/*/*
 #######
 model/docs/ioreference/src/auto-*.md
 model/docs/ioreference/src/SUMMARY.md
+model/model.json 
 
 # GEOMETRY
 ############

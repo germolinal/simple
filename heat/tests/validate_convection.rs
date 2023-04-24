@@ -4,7 +4,7 @@ use heat::surface::is_windward;
 use heat::Float;
 use validate::*;
 
-fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<dyn Validate> {
+fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<dyn Validate> {
     Box::new(SeriesValidator {
         x_label: Some("time step"),
         y_label: Some("Convection Coefficient"),
@@ -38,7 +38,7 @@ fn calc_convection(
 ) -> (Vec<Float>, Vec<Float>, Vec<Float>, Vec<Float>) {
     let path_string = format!("./tests/{}/eplusout.csv", dir);
     let path = path_string.as_str();
-    let cols = validate::from_csv(path, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    let cols = validate::from_csv::<Float>(path, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
 
     // let site_wind_speed = &cols[0];             // 1	Environment:Site Wind Speed [m/s](TimeStep)
     let site_wind_direction = &cols[1]; // 2	Environment:Site Wind Direction [deg](TimeStep)

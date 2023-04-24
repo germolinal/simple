@@ -11,10 +11,10 @@ use validate::*;
 use weather::SyntheticWeather;
 
 fn get_validator(
-    expected: Vec<f64>,
-    found: Vec<f64>,
+    expected: Vec<Float>,
+    found: Vec<Float>,
     expected_legend: &'static str,
-) -> Box<SeriesValidator> {
+) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
         x_label: Some("time step"),
         y_label: Some("Zone Temperature"),

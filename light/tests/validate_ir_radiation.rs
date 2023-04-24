@@ -7,20 +7,8 @@ use test_models::*;
 use validate::{valid, ScatterValidator, Validate, Validator};
 use weather::SyntheticWeather;
 const SIGMA: Float = 5.670374419e-8;
-fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<ScatterValidator> {
-    // Box::new(SeriesValidator {
-    //     x_label: Some("Timestep".into()),
-    //     y_label: Some("Longwave Rad.".into()),
-    //     y_units: Some("W/m2"),
-    //     expected_legend: Some("EnergyPlus"),
-    //     found_legend: Some("SIMPLE"),
-    //     expected,
-    //     found,
-    //     ..validate::SeriesValidator::default()
-    // })
-    Box::new(ScatterValidator {
-        // expected_label: Some("Timestep".into()),
-        // expected: Some("Longwave Rad.".into()),
+fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidator<Float>> {    
+    Box::new(ScatterValidator {    
         units: Some("W/m2"),
         expected_legend: Some("EnergyPlus"),
         found_legend: Some("SIMPLE"),
@@ -30,7 +18,7 @@ fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<ScatterValidator> {
     })
 }
 
-fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<f64>, Vec<f64>) {
+fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<Float>, Vec<Float>) {
     let path = format!("./tests/{city}_{orientation_str}/eplusout.csv");
     let cols = validate::from_csv(&path, &[1, 2, 3, 4, 10, 11, 13, 14]);
 
@@ -106,7 +94,7 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<f64>, Vec<f64>)
         // gain = area * emissivity*(incident  - sigma  * ts^4)
         // --> gain/area/emissivity = incident - sigma * ts^4
         // --> gain/area/emissivity  + sigma * ts^4 = incident
-        let expected_v = gain / surface_area / emmisivity + SIGMA * (ts + 273.15).powi(4);
+        let expected_v : Float = gain / surface_area / emmisivity + SIGMA * (ts as Float + 273.15).powi(4);
 
         // Set outdoor temp
         let mut weather = SyntheticWeather::default();
@@ -130,7 +118,7 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<f64>, Vec<f64>)
         expected.push(expected_v);
 
         // Advance
-        date.add_hours(1. / n as f64);
+        date.add_hours(1. / n as Float);
         // assert!(false)
     }
     (expected, found)

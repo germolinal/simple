@@ -7,7 +7,7 @@ use test_models::*;
 use validate::{valid, SeriesValidator, Validate, Validator};
 use weather::SyntheticWeather;
 
-fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<SeriesValidator> {
+fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
         x_label: Some("Timestep".into()),
         y_label: Some("Solar Irradiance".into()),
@@ -20,7 +20,7 @@ fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<SeriesValidator> {
     })
 }
 
-fn get_expected(city: &str, orientation: &str) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
+fn get_expected(city: &str, orientation: &str) -> (Vec<Float>, Vec<Float>, Vec<Float>) {
     let path = format!("./tests/{city}_{orientation}/eplusout.csv");
     let cols = validate::from_csv(&path, &[2, 3, 4]);
     let diffuse_horizontal_rad = &cols[0];
@@ -36,10 +36,10 @@ fn get_expected(city: &str, orientation: &str) -> (Vec<f64>, Vec<f64>, Vec<f64>)
 
 fn get_simple_results(
     city: &str,
-    diffuse_horizontal_rad: Vec<f64>,
-    direct_normal_rad: Vec<f64>,
-    orientation: f64,
-) -> Vec<f64> {
+    diffuse_horizontal_rad: Vec<Float>,
+    direct_normal_rad: Vec<Float>,
+    orientation: Float,
+) -> Vec<Float> {
     let (lat, lon, std_mer): (Float, Float, Float) = match city.as_bytes() {
         b"wellington" => (-41.3, 174.78, 180.),
         b"barcelona" => (41.28, 2.07, 15.), // ??? GMT + 1
@@ -61,7 +61,7 @@ fn get_simple_results(
             surface_width: 20.,
             surface_height: 3.,
             construction: vec![TestMat::Concrete(0.2)],
-            orientation,
+            orientation: orientation as Float,
             ..Default::default()
         });
 
@@ -87,8 +87,8 @@ fn get_simple_results(
     {
         // Set outdoor temp
         let mut weather = SyntheticWeather::default();
-        weather.direct_normal_radiation = Box::new(ScheduleConstant::new(*direct_normal));
-        weather.diffuse_horizontal_radiation = Box::new(ScheduleConstant::new(*diffuse_horizontal));
+        weather.direct_normal_radiation = Box::new(ScheduleConstant::new(*direct_normal as Float));
+        weather.diffuse_horizontal_radiation = Box::new(ScheduleConstant::new(*diffuse_horizontal as Float));
         weather.dew_point_temperature = Box::new(ScheduleConstant::new(11.)); // 11C is what Radiance uses by default.
         weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(21.)); // should be irrelevant
         weather.opaque_sky_cover = Box::new(ScheduleConstant::new(0.)); // should be irrelevant
@@ -117,7 +117,7 @@ fn get_simple_results(
         // assert!( (found_radiation-exp_radiation).abs() < 0.4, "found_temp = {}, exp_temp = {} ,  error = {}", found_radiation, exp_radiation, (found_radiation - *exp_radiation).abs() );
 
         // Advance
-        date.add_hours(1. / n as f64);
+        date.add_hours(1. / n as Float);
         // assert!(false)
     }
     ret

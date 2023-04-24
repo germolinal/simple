@@ -26,7 +26,7 @@ geometry = { path = "../geometry" }
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models" }
 
-validate = {git="https://github.com/SIMPLE-BuildingSimulation/validate"}
+validate = {git="https://github.com/germolinal/validate"}
 json5 = { workspace=true }
 
 

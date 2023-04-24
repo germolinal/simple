@@ -22,7 +22,7 @@ jpeg-encoder = "0.5.1"
 
 [dev-dependencies]
 criterion = "0.4"
-validate = {git="https://github.com/SIMPLE-BuildingSimulation/validate"}
+validate = {git="https://github.com/germolinal/validate"}
 
 [[bench]]
 name = "benchmark"
@@ -34,13 +34,6 @@ default = []
 float = ["model/float","geometry/float", "matrix/float",  "solar/float"]
 parallel = ["geometry/parallel", "rayon"]
 textures = ["geometry/textures"]
-
-[profile.release]
-debug=true
-lto = true
-codegen-units = 1
-opt-level=3
-
 
 
 [[test]]

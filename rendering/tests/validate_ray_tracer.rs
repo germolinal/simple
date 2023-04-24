@@ -4,7 +4,7 @@ use validate::{valid, SeriesValidator, Validate, Validator};
 
 const MAX_DEPTH: usize = 13;
 
-fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<SeriesValidator> {
+fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
         x_label: Some("Sensor".into()),
         y_label: Some("Luminance".into()),
@@ -21,7 +21,7 @@ fn load_expected_results(filename: String) -> Vec<Float> {
     let s = std::fs::read_to_string(filename).unwrap();
     s.lines()
         .map(|line| {
-            let a: Vec<f64> = line
+            let a: Vec<Float> = line
                 .split_ascii_whitespace()
                 .into_iter()
                 .map(|x| x.parse::<Float>().unwrap())
@@ -36,7 +36,7 @@ fn load_rays(filename: &str) -> Vec<Ray> {
     let s = std::fs::read_to_string(filename).unwrap();
     s.lines()
         .map(|line| {
-            let a: Vec<f64> = line
+            let a: Vec<Float> = line
                 .split_ascii_whitespace()
                 .into_iter()
                 .map(|x| x.parse::<Float>().unwrap())
