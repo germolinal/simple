@@ -312,7 +312,7 @@ fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
 /// radiation, e.g., light), both model::Fenestration and model::Surface
 /// are treated in the same way.
 #[derive(Clone, Debug)]
-pub struct ThermalSurfaceData<T: SurfaceTrait + Send> {
+pub struct ThermalSurfaceData<T: SurfaceTrait + Send + Sync> {
     /// A clone of the element in the [`Model`] which this struct represents
     pub parent: T,
 
@@ -380,7 +380,7 @@ pub struct ThermalSurfaceData<T: SurfaceTrait + Send> {
     pub back_hs: Option<Float>,
 }
 
-impl<T: SurfaceTrait + Send> ThermalSurfaceData<T> {
+impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
     /// Allocates memory for the simulation
     pub fn allocate_memory(&self) -> SurfaceMemory {
         let massive_chunks = self
@@ -1337,8 +1337,12 @@ mod testing {
             }
         }
         // Expecting
-        assert!(final_qfront > -1e-5, "final_qfront = {}", final_qfront);
-        assert!(final_qback < 1e-5, "final_qback = {}", final_qback);
+        #[cfg(feature="float")]
+        const SMOL: Float = 1e-3;
+        #[cfg(not(feature="float"))]
+        const SMOL: Float = 1e-5;
+        assert!(final_qfront > -SMOL, "final_qfront = {}", final_qfront);
+        assert!(final_qback < SMOL, "final_qback = {}", final_qback);
     }
 
     #[test]
@@ -1592,8 +1596,10 @@ mod testing {
             let temp_b = memory.temps.get(1, 0).unwrap();
             let exp_temp_b = temp_b_fn(time);
             let diff_b = (temp_b - exp_temp_b).abs();
+            #[cfg(feature="float")]
+            const SMOL: Float = 1e-5;
+            #[cfg(not(feature="float"))]
             const SMOL: Float = 1e-8;
-            // println!("{}, {}", diff_a, diff_b);
             assert!(
                 diff_a < SMOL,
                 "temp_a = {} | exp_temp_a = {}, diff = {}",

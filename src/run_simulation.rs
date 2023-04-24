@@ -94,8 +94,8 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
     // end.add_hours(72.0);// simulate one week
 
     let end = Date {
-        day: 7,
-        month: 1,
+        day: 31,
+        month: 12,
         hour: 23.,
     };
 

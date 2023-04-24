@@ -6,7 +6,7 @@ use model::{
 
 /// A trait for defining shared behaviour between [`Surface`] and
 /// [`Fenestration`] objects
-pub trait SurfaceTrait : Clone + Send  {
+pub trait SurfaceTrait : Clone + Send + Sync  {
     /// Adds the front-convection state element
     fn add_front_convection_state(
         &self,

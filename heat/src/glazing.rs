@@ -502,20 +502,25 @@ mod testing {
         let exp_a2 = (tau1 * a_f2 * (1. - rho_b2 * rho_f3) + tau1 * tau2 * a_b2 * rho_f3) / denom;
         let exp_a3 = (tau1 * tau2 * a_f3) / denom;
 
+        #[cfg(feature="float")]
+        const SMOL: Float = 1e-10;
+        #[cfg(not(feature="float"))]
+        const SMOL: Float = 1e-15;        
+
         assert!(
-            (alphas[0] - exp_a1).abs() < 1e-15,
+            (alphas[0] - exp_a1).abs() < SMOL,
             "Expecting {} ... found {}",
             exp_a1,
             alphas[0]
         );
         assert!(
-            (alphas[1] - exp_a2).abs() < 1e-15,
+            (alphas[1] - exp_a2).abs() < SMOL,
             "Expecting {} ... found {}",
             exp_a2,
             alphas[1]
         );
         assert!(
-            (alphas[2] - exp_a3).abs() < 1e-15,
+            (alphas[2] - exp_a3).abs() < SMOL,
             "Expecting {} ... found {}",
             exp_a3,
             alphas[2]

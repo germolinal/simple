@@ -407,6 +407,11 @@ mod testing {
     fn test_nusselt() {
         // https://github.com/LBNL-ETA/Windows-CalcEngine/blob/main/src/Tarcog/tst/units/NusseltNumber.unit.cpp
 
+        #[cfg(feature="float")]
+        const SMOL: Float = 1e-3;
+        #[cfg(not(feature="float"))]
+        const SMOL: Float = 1e-5;
+
         // Test 1
         let ra = 3638.21667064528;
         let a_gi = 83.3333333333333;
@@ -414,31 +419,31 @@ mod testing {
         let mut gamma = (30.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.40474349200254;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (60.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.08005742342789;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (73.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.05703042079892;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (90.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.02691818659179;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (134.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.01936332296842;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         // Test 2
@@ -448,31 +453,31 @@ mod testing {
         let mut gamma = (30.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (60.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.00002777439094;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (73.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.00002235511865;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (90.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.00001526837795;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (134.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 1.00001098315195;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         // Test 3
@@ -482,31 +487,31 @@ mod testing {
         let mut gamma = (30.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 10.2680981545288;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (60.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 11.5975502261096;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (73.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 11.4398529673101;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (90.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 11.2336334750340;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
 
         gamma = (134.0 as Float).to_radians();
         let nu = nusselt(ra, gamma, a_gi);
         let exp = 8.361460;
-        assert!((nu - exp).abs() < 1e-5, "Expecting {exp}... found {nu}");
+        assert!((nu - exp).abs() < SMOL, "Expecting {exp}... found {nu}");
         dbg!(nu, exp, (nu - exp).abs());
     }
 }

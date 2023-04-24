@@ -189,7 +189,7 @@ fn get_boundary_temperature(
 
 // #[cfg(not(feature = "parallel"))]
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn iterate_surfaces<T: SurfaceTrait + Send>(
+pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
     surfaces: &[ThermalSurfaceData<T>],
     alloc: &mut [SurfaceMemory],
     wind_direction: Float,
@@ -199,38 +199,70 @@ pub(crate) fn iterate_surfaces<T: SurfaceTrait + Send>(
     model: &Model,
     state: &mut SimulationState,
 ) -> Result<(), String> {
-
+    // #[cfg(not(feature = "parallel"))]
+    // let surface_iter = surfaces.iter().zip(alloc.iter_mut());
+    // #[cfg(feature = "parallel")]
+    // let surface_iter = (*surfaces).into_par_iter().zip(alloc.par_iter_mut());
     #[cfg(not(feature = "parallel"))]
-    let surface_iter = surfaces.iter().zip(alloc.iter_mut());
+    let surface_iter = alloc.iter_mut().enumerate();
     #[cfg(feature = "parallel")]
-    let surface_iter = surfaces.into_par_iter().zip(alloc.par_iter_mut());
+    let surface_iter = alloc.par_iter_mut().enumerate();
 
-    
+    // Collect boundary temperatures
+    let boundary_temps: Vec<(Float, Float)> = surfaces
+        .iter()
+        .map(|s| {
+            let t_front = get_boundary_temperature(&s.front_boundary, t_out, model, state).unwrap();
+            let t_back = get_boundary_temperature(&s.back_boundary, t_out, model, state).unwrap();
+            (t_front, t_back)
+        })
+        .collect();
 
-    let results = surface_iter.map(
-        |d: (&ThermalSurfaceData<T>, &mut SurfaceMemory)| -> Result<(), String> {
-            let (thermal_surface, memory) = d;
+    // Perform calculations in parallel
+    let results: Vec<Result<(), String>> = surface_iter
+        .map(
+            // |d: (&ThermalSurfaceData<T>, &mut SurfaceMemory)| -> Result<(), String> {
+            |d: (usize, &mut SurfaceMemory)| -> Result<(), String> {
+                // let (thermal_surface, memory) = d;
+                let (index, memory) = d;
+                let thermal_surface = surfaces.get(index).unwrap();
 
-            let t_front =
-                get_boundary_temperature(&thermal_surface.front_boundary, t_out, model, state)?;
-            let t_back =
-                get_boundary_temperature(&thermal_surface.back_boundary, t_out, model, state)?;
-            //= d;
-            // Update temperatures
-            thermal_surface.march(
-                state,
-                t_front,
-                t_back,
-                wind_direction,
-                wind_speed,
-                dt,
-                memory,
-            )?;
+                let (t_front, t_back) = boundary_temps[index];
+                //= d;
+                // Update temperatures
+                thermal_surface.march(
+                    state,
+                    t_front,
+                    t_back,
+                    wind_direction,
+                    wind_speed,
+                    dt,
+                    memory,
+                )?;
+
+                Ok(())
+            },
+        )
+        .collect();
+
+    // Check results
+    for r in results {
+        r?;
+    }
+
+    // Write the results in the state
+    let results : Vec<Result<(), String>> = alloc
+        .iter()
+        .enumerate()
+        .map(|d: (usize, &SurfaceMemory)| -> Result<(), String> {
+            let (index, memory) = d;
+            let thermal_surface = surfaces.get(index).unwrap();
 
             /////////////////////
             // Now, set temperatures, calc heat-flows and return
             /////////////////////
             let (rows, ..) = memory.temperatures.size();
+            let (t_front, t_back) = boundary_temps[index];
 
             thermal_surface
                 .parent
@@ -258,8 +290,7 @@ pub(crate) fn iterate_surfaces<T: SurfaceTrait + Send>(
                 .parent
                 .set_back_convective_heat_flow(state, flow_back)?;
             Ok(())
-        },
-    );
+        }).collect();
 
     // Check results
     for r in results {
@@ -364,8 +395,8 @@ impl SimulationModel for ThermalModel {
                 &construction,
                 d,
             )?;
-            // Match surface and zones            
-            tsurf.set_front_boundary(surf.front_boundary.clone(), model);            
+            // Match surface and zones
+            tsurf.set_front_boundary(surf.front_boundary.clone(), model);
             tsurf.set_back_boundary(surf.back_boundary.clone(), model);
 
             surfaces.push(tsurf);
@@ -406,9 +437,9 @@ impl SimulationModel for ThermalModel {
                 d,
             )?;
             // Match surface and zones
-            tsurf.set_front_boundary(surf.front_boundary.clone(), model);            
+            tsurf.set_front_boundary(surf.front_boundary.clone(), model);
             tsurf.set_back_boundary(surf.back_boundary.clone(), model);
-            
+
             fenestrations.push(tsurf);
         }
 
@@ -474,7 +505,6 @@ impl SimulationModel for ThermalModel {
             // Gather spaces temperatures
             let t_current = self.get_current_zones_temperatures(state);
 
-            
             iterate_surfaces(
                 &self.surfaces,
                 &mut alloc.surfaces,
@@ -485,7 +515,7 @@ impl SimulationModel for ThermalModel {
                 model,
                 state,
             )?;
-            
+
             iterate_surfaces(
                 &self.fenestrations,
                 &mut alloc.fenestrations,
@@ -644,7 +674,7 @@ impl ThermalModel {
         }
 
         /* SURFACES */
-        fn iterate_surfaces<T: SurfaceTrait + Send>(
+        fn iterate_surfaces<T: SurfaceTrait + Send + Sync>(
             surfaces: &[ThermalSurfaceData<T>],
             state: &SimulationState,
             a: &mut [Float],
@@ -805,9 +835,7 @@ mod testing {
         // model.map_simulation_state(&mut state).unwrap();
 
         // Test
-        let (a, b, c) = thermal_model
-            .calculate_zones_abc(&model, &state)
-            .unwrap();
+        let (a, b, c) = thermal_model.calculate_zones_abc(&model, &state).unwrap();
         assert_eq!(a.len(), 1);
         assert_eq!(c.len(), 1);
         assert_eq!(b.len(), 1);
