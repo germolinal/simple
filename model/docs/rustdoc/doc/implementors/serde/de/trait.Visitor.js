@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["model"] = [{"text":"impl&lt;'de&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.149/serde/de/trait.Visitor.html\" title=\"trait serde::de::Visitor\">Visitor</a>&lt;'de&gt; for <a class=\"struct\" href=\"model/model/struct.SimpleModelVisitor.html\" title=\"struct model::model::SimpleModelVisitor\">SimpleModelVisitor</a>","synthetic":false,"types":["model::model::SimpleModelVisitor"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

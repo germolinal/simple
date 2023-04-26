@@ -202,7 +202,7 @@ fn validate_solar_radiation() {
     // cargo test --package light --test validate_solar_radiation -- validate_solar_radiation --exact --nocapture
     let mut validator = Validator::new(
         "Validate Solar Radiation",
-        "./docs/validation/incident_solar_radiation.html",
+        "../docs/validation/incident_solar_radiation.html",
     );
 
     barcelona(&mut validator);

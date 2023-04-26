@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["SimulationStateHeader","The SimulationState is a Vector of SimulationStateElement objects. It is intended to be a quick-to-clone structure."]],"type":[["SimulationState","The structure containing the data that changes during the simulation"]]};

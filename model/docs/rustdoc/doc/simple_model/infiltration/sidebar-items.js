@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["Infiltration","Infiltration is the unintended air exchange between an interior space and the exterior. In `SIMPLE`, infiltrations are added to the intended ventilation."]]};

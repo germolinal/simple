@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["GasSpecification","Represent a common gas, with known physical properties"]],"struct":[["Gas","Represents a Gas, as understood by the standard ISO-15099(2003)."]]};

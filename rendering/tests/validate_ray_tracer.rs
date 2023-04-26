@@ -270,7 +270,7 @@ fn glass(validator: &mut Validator) {
 #[test]
 fn validate_ray_tracer() {
     // cargo test --release  --features parallel --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture --ignored
-    let mut validator = Validator::new("Validate Ray Tracer", "./docs/validation/ray_tracer.html");
+    let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");
 
     metal(&mut validator);
     plastic(&mut validator);

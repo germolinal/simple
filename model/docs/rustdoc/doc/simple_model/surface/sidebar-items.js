@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["SurfaceType","The kind of surface, useful for pre- and post-processing."]],"struct":[["Surface","A fixed (i.e., not movable) surface in the building (or surroundings). This can be of any Construction, transparent or not."]]};

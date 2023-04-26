@@ -195,7 +195,7 @@ fn validate_ir_radiation() {
     // cargo test --package light --test validate_ir_radiation -- validate_ir_radiation --exact --nocapture
     let mut validator = Validator::new(
         "Validate Longwave (i.e., IR) Radiation",
-        "./docs/validation/incident_ir_radiation.html",
+        "../docs/validation/incident_ir_radiation.html",
     );
 
     barcelona(&mut validator);
