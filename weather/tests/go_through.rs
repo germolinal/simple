@@ -59,12 +59,12 @@ fn test_go_through() {
         })
     }
 
-    let p = "./docs/validation";
+    let p = "../docs/validation";
     if !std::path::Path::new(&p).exists() {
         std::fs::create_dir(p).unwrap();
     }
 
-    let target_file = format!("{}/validation.html", p);
+    let target_file = format!("{}/weather.html", p);
     let mut validations = Validator::new(
         "SIMPLE EPW File Parser",
         &target_file,

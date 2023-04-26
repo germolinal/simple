@@ -181,7 +181,7 @@ fn horizontal(validations: &mut Validator) {
 #[test]
 fn validate() {
     // cargo test --package heat --test validate_convection -- validate --exact --nocapture
-    let p = "./docs/validation";
+    let p = "../docs/validation";
     if !std::path::Path::new(&p).exists() {
         std::fs::create_dir(p).unwrap();
     }
