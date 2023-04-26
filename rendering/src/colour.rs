@@ -34,7 +34,7 @@ impl std::default::Default for Spectrum {
     }
 }
 
-impl matrix::OneZero for Spectrum {
+impl matrix::traits::OneZero for Spectrum {
     fn one() -> Self {
         Self::ONE
     }
@@ -373,7 +373,7 @@ impl std::convert::From<Float> for Spectrum {
 mod tests {
     use super::*;
 
-    use matrix::OneZero;
+    use matrix::traits::OneZero;
     use validate::assert_close;
 
     #[test]

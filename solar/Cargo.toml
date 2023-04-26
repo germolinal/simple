@@ -17,4 +17,9 @@ weather = {path = "../weather" }
 
 [features]
 default = []
-float = ["weather/float", "geometry/float", "calendar/float", "matrix/float"]
+float = [
+    "weather/float", 
+    "geometry/float", 
+    "calendar/float", 
+    "matrix/float",
+]

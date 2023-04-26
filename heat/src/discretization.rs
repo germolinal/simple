@@ -22,7 +22,7 @@ pub(crate) const MAX_RS: Float = 0.05;
 use crate::convection::ConvectionParams;
 use crate::Float;
 use crate::{cavity::Cavity, surface::ChunkMemory};
-use matrix::Matrix;
+use matrix::matrix::Matrix;
 use model::{Construction, Model, Substance};
 use std::sync::Arc;
 

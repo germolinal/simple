@@ -5,13 +5,19 @@ authors = ["German Molina <germolinal@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-rayon = {version="1.5.2", optional=true}
+rayon = {workspace=true, optional=true}
 serde = {version="1.0.142", features=["derive"]}
 
 [dev-dependencies]
 serde_json = "1.0.83"
+criterion = {version="0.4", features = ["html_reports"]}
 
 [features]
 default = []
 float = []
 parallel = ["rayon"]
+
+[[bench]]
+name = "generic_matrix_bench"
+harness = false
+

@@ -199,14 +199,11 @@ pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
     model: &Model,
     state: &mut SimulationState,
 ) -> Result<(), String> {
-    // #[cfg(not(feature = "parallel"))]
-    // let surface_iter = surfaces.iter().zip(alloc.iter_mut());
-    // #[cfg(feature = "parallel")]
-    // let surface_iter = (*surfaces).into_par_iter().zip(alloc.par_iter_mut());
     #[cfg(not(feature = "parallel"))]
-    let surface_iter = alloc.iter_mut().enumerate();
+    let surface_iter = surfaces.iter().zip(alloc.iter_mut());
     #[cfg(feature = "parallel")]
-    let surface_iter = alloc.par_iter_mut().enumerate();
+    let surface_iter = (*surfaces).into_par_iter().zip(alloc.par_iter_mut());
+    
 
     // Collect boundary temperatures
     let boundary_temps: Vec<(Float, Float)> = surfaces
@@ -220,15 +217,13 @@ pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
 
     // Perform calculations in parallel
     let results: Vec<Result<(), String>> = surface_iter
+        .enumerate()
         .map(
-            // |d: (&ThermalSurfaceData<T>, &mut SurfaceMemory)| -> Result<(), String> {
-            |d: (usize, &mut SurfaceMemory)| -> Result<(), String> {
-                // let (thermal_surface, memory) = d;
-                let (index, memory) = d;
-                let thermal_surface = surfaces.get(index).unwrap();
+            |(index, d)| -> Result<(), String> {            
+                let (thermal_surface, memory) = d;                
 
                 let (t_front, t_back) = boundary_temps[index];
-                //= d;
+                
                 // Update temperatures
                 thermal_surface.march(
                     state,

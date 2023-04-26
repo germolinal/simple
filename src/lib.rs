@@ -69,12 +69,12 @@ pub use model::{
     Model, SimulationState, SimulationStateElement,
     SimulationStateHeader, *,
 };
-
 pub use weather::{
     Weather,
     SyntheticWeather,
     EPWWeather,    
 };
-
-
 pub use light::OpticalInfo;
+pub use geometry;
+pub use polynomial::*;
+pub use schedule::*;

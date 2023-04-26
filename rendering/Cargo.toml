@@ -31,8 +31,17 @@ harness = false
 
 [features]
 default = [] 
-float = ["model/float","geometry/float", "matrix/float",  "solar/float"]
-parallel = ["geometry/parallel", "rayon"]
+float = [
+    "model/float",
+    "geometry/float", 
+    "matrix/float",  
+    "solar/float"
+]
+parallel = [
+    "geometry/parallel", 
+    "matrix/parallel",
+    "rayon",
+]
 textures = ["geometry/textures"]
 
 

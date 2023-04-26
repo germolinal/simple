@@ -314,7 +314,7 @@ fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
 #[derive(Clone, Debug)]
 pub struct ThermalSurfaceData<T: SurfaceTrait + Send + Sync> {
     /// A clone of the element in the [`Model`] which this struct represents
-    pub parent: T,
+    pub parent: Arc<T>,
 
     /// The [`Discretization`] that represents this `ThermalSurfaceData`
     pub discretization: Discretization,
@@ -539,7 +539,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let cos_tilt = normal * Vector3D::new(0., 0., 1.);
         let wind_speed_modifier = wind_speed_modifier(height, site_details);
 
-        let parent = (**parent).clone();
+        let parent = parent.clone();
         // Build resulting
         Ok(ThermalSurfaceData {
             parent,

@@ -67,7 +67,7 @@ name = "box"
 path = "examples/box/main.rs"
 
 [workspace.dependencies]
-rayon = {version = "1.5.3"}
+rayon = {version = "1.7.0"}
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1" }
 rhai = { version = "1.13.0" }
@@ -81,7 +81,7 @@ clap = "4.0.14"
 
 model = { path = "model" }
 communication = { path = "communication" }
-calendar = { path = "calendar" }
+calendar = { path = "calendar" , features=["chrono", "serde"]}
 weather = { path = "weather" }
 air = { path = "air" }
 light = { path = "light" }
@@ -89,7 +89,8 @@ heat = { path = "heat"}
 rendering = { path = "rendering" }
 geometry = { path = "geometry" }
 solar = { path = "solar" }
-
+polynomial = { path = "polynomial" }
+schedule = { path = "schedule" }
 
 [dev-dependencies]
 
@@ -99,7 +100,7 @@ solar = { path = "solar" }
 default = []
 parallel = [
     "rayon",
-    "heat/parallel", 
+    # "heat/parallel", 
     "light/parallel",
     #"air_flow/parallel"
 ]

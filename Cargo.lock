@@ -812,6 +812,7 @@ dependencies = [
 name = "matrix"
 version = "0.1.0"
 dependencies = [
+ "criterion",
  "rayon",
  "serde",
  "serde_json",
@@ -1270,9 +1271,11 @@ dependencies = [
  "heat",
  "light",
  "model",
+ "polynomial",
  "rayon",
  "rendering",
  "rhai",
+ "schedule",
  "serde_json",
  "solar",
  "weather",
