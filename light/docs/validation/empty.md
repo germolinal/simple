@@ -1,1 +1,0 @@
-This is here to maintain this directory

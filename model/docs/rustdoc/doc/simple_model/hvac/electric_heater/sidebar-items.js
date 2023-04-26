@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["ElectricHeater","A simple model of an Electric Heater. It can only heat and has a COP of 1. It only has two states: On/Off."]]};

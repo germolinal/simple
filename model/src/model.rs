@@ -1156,7 +1156,7 @@ mod testing {
 
     #[test]
     fn write_io_doc() {
-        let dir = "./docs/ioreference/src";
+        let dir = "../docs/ioreference/src";
 
         let summary_template = format!("{}/SUMMARY_TEMPLATE.md", dir);
         if !std::path::Path::new(&summary_template).exists() {

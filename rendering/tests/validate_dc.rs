@@ -142,7 +142,7 @@ fn validate_dc() {
     // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture --ignored
     let mut validator = Validator::new(
         "Validate Daylight Coefficients",
-        "./docs/validation/daylight_coefficient.html",
+        "../docs/validation/daylight_coefficient.html",
     );
 
     room(&mut validator);
