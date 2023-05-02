@@ -22,7 +22,7 @@ use crate::Float;
 use serde::{Serialize,Deserialize};
 
 /// A Location
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Location {
     /// The name of the City
     pub city: String,

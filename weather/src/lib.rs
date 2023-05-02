@@ -123,12 +123,16 @@ impl Weather {
 
 impl std::ops::AddAssign<Self> for Weather {
     fn add_assign(&mut self, rhs: Self) {
-        self.data.extend_from_slice(&rhs.data)        
+        if self.location == rhs.location {
+            self.data.extend_from_slice(&rhs.data)        
+        }else{
+            panic!("Trying to concatenate climates from different origins")
+        }
     }
 }
 
 impl WeatherTrait for Weather{
-    fn get_weather_data(&self, date: Date) -> CurrentWeather {
+    fn get_weather_data(&self, date: Date) -> CurrentWeather {        
         self.find_weather_line(date)
     }
 }
