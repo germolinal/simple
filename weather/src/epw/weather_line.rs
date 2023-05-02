@@ -176,7 +176,7 @@ impl std::convert::Into<CurrentWeather> for &EPWWeatherLine {
             ),
             opaque_sky_cover: self.opaque_sky_cover/10.0, // convert units
             relative_humidity: Some(self.relative_humidity/100.0), // convert units
-            pressure: Some(self.atmospheric_station_pressure)
+            pressure: self.atmospheric_station_pressure
 
         }
     }
