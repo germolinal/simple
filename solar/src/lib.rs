@@ -670,7 +670,7 @@ impl Solar {
         let delta_kt_p = delta_kt_p.clamp(0.0, 1.0);
 
         // Dimention 4 - Eq 4
-        let w = (0.07 * current_data.dew_point_temperature.unwrap() - 0.075).exp();
+        let w = (0.07 * current_data.dew_point_temperature - 0.075).exp();
 
         let ktp_bin = perez_direct_rad_kt_bin(kt_p);
         let zeta_bin = perez_direct_rad_zeta_bin(zenith);

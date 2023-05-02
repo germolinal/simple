@@ -158,8 +158,8 @@ mod tests {
         
 
         assert_close!(
-            ln.dew_point_temperature.unwrap(),
-            epw.data[0].dew_point_temperature.unwrap(),
+            ln.dew_point_temperature,
+            epw.data[0].dew_point_temperature,
             1e-8
         );
         assert_close!(
@@ -175,8 +175,8 @@ mod tests {
         });
 
         assert_close!(
-            ln.dew_point_temperature.unwrap(),
-            epw.data[1].dew_point_temperature.unwrap(),
+            ln.dew_point_temperature,
+            epw.data[1].dew_point_temperature,
             1e-8
         );
         assert_close!(
@@ -192,8 +192,8 @@ mod tests {
         });
 
         assert_close!(
-            ln.dew_point_temperature.unwrap(),
-            (epw.data[1].dew_point_temperature.unwrap() + epw.data[0].dew_point_temperature.unwrap()) / 2.
+            ln.dew_point_temperature,
+            (epw.data[1].dew_point_temperature + epw.data[0].dew_point_temperature) / 2.
         );
         assert_close!(
             ln.dry_bulb_temperature,

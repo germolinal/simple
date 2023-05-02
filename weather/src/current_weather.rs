@@ -34,7 +34,7 @@ pub struct CurrentWeather {
     pub dry_bulb_temperature: Float,
 
     /// Exterior dew point temperature in C
-    pub dew_point_temperature: Option<Float>,
+    pub dew_point_temperature: Float,
 
     /// in Wh/m2
     pub global_horizontal_radiation: Option<Float>,
@@ -100,7 +100,7 @@ impl CurrentWeather {
     /// let cw = CurrentWeather {
     ///     // This method returns an error if this info is not available.
     ///     dry_bulb_temperature: 20.,
-    ///     dew_point_temperature: Some(10.),
+    ///     dew_point_temperature: 10.,
     ///     opaque_sky_cover: Some(0.),
     ///     .. CurrentWeather::default()
     /// };
@@ -114,7 +114,7 @@ impl CurrentWeather {
     /// let cw = CurrentWeather {
     ///     // This method returns an error if this info is not available.
     ///     dry_bulb_temperature: 13.625,
-    ///     dew_point_temperature: Some(8.325),
+    ///     dew_point_temperature: 8.325,
     ///     opaque_sky_cover: Some(5.),
     ///     .. CurrentWeather::default()
     /// };
@@ -134,13 +134,7 @@ impl CurrentWeather {
                 ),
             };
 
-        let dp = match self.dew_point_temperature {
-            Some(v) => v + 273.15,
-            None => return Err(
-                "missing field 'dew_point_temperature' when attempting to derive_horizontal_ir()"
-                    .into(),
-            ),
-        };
+        let dp = self.dew_point_temperature + 273.15;
 
         let temp = self.dry_bulb_temperature + 273.15; 
 
@@ -169,7 +163,7 @@ impl CurrentWeather {
         Self {            
             date,          
             dry_bulb_temperature: interp(self.dry_bulb_temperature, other.dry_bulb_temperature),
-            dew_point_temperature: interp_opt(self.dew_point_temperature, other.dew_point_temperature),
+            dew_point_temperature: interp(self.dew_point_temperature, other.dew_point_temperature),
             relative_humidity: interp_opt(self.relative_humidity, other.relative_humidity),
             pressure: interp_opt(
                 self.pressure,

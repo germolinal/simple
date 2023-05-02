@@ -95,7 +95,7 @@ impl WeatherTrait for SyntheticWeather {
         CurrentWeather {
             date,
             dry_bulb_temperature: self.dry_bulb_temperature.get(date).or(Some(0.0)).unwrap(),
-            dew_point_temperature: self.dew_point_temperature.get(date),
+            dew_point_temperature: self.dew_point_temperature.get(date).or(Some(0.0)).unwrap(),
             global_horizontal_radiation: self.global_horizontal_radiation.get(date),
             direct_normal_radiation: self.direct_normal_radiation.get(date),
             diffuse_horizontal_radiation: self.diffuse_horizontal_radiation.get(date),
