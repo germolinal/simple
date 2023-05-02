@@ -1278,6 +1278,7 @@ dependencies = [
  "schedule",
  "serde_json",
  "solar",
+ "validate",
  "weather",
 ]
 

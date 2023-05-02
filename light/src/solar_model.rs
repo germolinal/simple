@@ -27,7 +27,7 @@ use std::borrow::Borrow;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use weather::{CurrentWeather, Weather};
+use weather::{CurrentWeather, WeatherTrait};
 
 use crate::optical_info::OpticalInfo;
 
@@ -74,13 +74,10 @@ impl SolarModel {
             emissivity * SIGMA * (temp + 273.15).powi(4)
         }
 
-        let db = match weather_data.dry_bulb_temperature {
-            Some(v) => v,
-            None => return Err("Cannot calculate IR radiation without Dry Bulb temperature".into()),
-        };
+        let db = weather_data.dry_bulb_temperature;
         let horizontal_ir = match weather_data.horizontal_infrared_radiation_intensity {
             Some(v) => v,
-            None => weather_data.derive_horizontal_ir()?,
+            None => weather_data.derive_horizontal_ir(),
         };
 
         let iter = model.surfaces.iter().enumerate();
@@ -422,7 +419,7 @@ impl SimulationModel for SolarModel {
         })
     }
 
-    fn march<W: Weather, M: Borrow<Model>>(
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
         &self,
         date: Date,
         weather: &W,

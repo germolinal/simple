@@ -1,6 +1,6 @@
 use calendar::{Date, DateFactory};
 use validate::*;
-use weather::{EPWWeather, Float};
+use weather::{EPWWeather, Float, Weather};
 
 #[test]
 fn test_go_through() {
@@ -28,8 +28,8 @@ fn test_go_through() {
 
         let dt = 60. * 60. / 20.;
         let sim_period = DateFactory::new(start, end, dt);
-
-        let weather = EPWWeather::from_file("./tests/wellington.epw").unwrap();
+        
+        let weather: Weather = EPWWeather::from_file("./tests/wellington.epw").unwrap().into();
 
         let mut i = 0;
         

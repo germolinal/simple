@@ -13,8 +13,7 @@ pub fn constant_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, Strin
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
             let outdoor_temperature = current_weather
-                .dry_bulb_temperature
-                .expect("Weather does not have dry bulb temperature");
+                .dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -31,8 +30,7 @@ pub fn blast_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> 
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
             let outdoor_temperature = current_weather
-                .dry_bulb_temperature
-                .expect("Weather does not have dry bulb temperature");
+                .dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -50,8 +48,7 @@ pub fn doe2_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
             let outdoor_temperature = current_weather
-                .dry_bulb_temperature
-                .expect("Weather does not have dry bulb temperature");
+                .dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -76,8 +73,7 @@ pub fn design_flow_rate_resolver(
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
             let outdoor_temperature = current_weather
-                .dry_bulb_temperature
-                .expect("Weather does not have dry bulb temperature");
+                .dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -197,8 +193,7 @@ pub fn effective_air_leakage_resolver(
             move |current_weather: &CurrentWeather, state: &mut SimulationState| {
                 // Set temperature
                 let outdoor_temperature = current_weather
-                    .dry_bulb_temperature
-                    .expect("Weather does not have dry bulb temperature");
+                    .dry_bulb_temperature;
                 space_clone
                     .set_infiltration_temperature(state, outdoor_temperature)
                     .unwrap();

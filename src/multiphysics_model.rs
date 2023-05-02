@@ -38,7 +38,7 @@ use air::air_model::{AirFlowModel, AirFlowModelMemory};
 use heat::heat_model::{ThermalModel, ThermalModelMemory};
 use light::solar_model::{SolarModel, SolarModelMemory};
 use std::borrow::Borrow;
-use weather::Weather;
+use weather::WeatherTrait;
 // use acoustic_model::model::AcousticModel;
 
 /// The memory to be allocated for running the simulation
@@ -149,7 +149,7 @@ impl SimulationModel for MultiphysicsModel {
         })
     }
 
-    fn march<W: Weather, M: Borrow<Model>>(
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
         &self,
         date: Date,
         weather: &W,

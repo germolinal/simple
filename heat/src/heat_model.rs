@@ -23,7 +23,7 @@ use calendar::Date;
 
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use geometry::Vector3D;
-use weather::Weather;
+use weather::WeatherTrait;
 
 use crate::surface::{SurfaceMemory, ThermalFenestration, ThermalSurface, ThermalSurfaceData};
 use crate::surface_trait::SurfaceTrait;
@@ -472,7 +472,7 @@ impl SimulationModel for ThermalModel {
     /// Advances one main_timestep through time. That is,
     /// it performs `self.dt_subdivisions` steps, advancing
     /// `self.dt` seconds in each of them.
-    fn march<W: Weather, M: Borrow<Model>>(
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
         &self,
         mut date: Date,
         weather: &W,
@@ -486,16 +486,10 @@ impl SimulationModel for ThermalModel {
             // advance in time
             date.add_seconds(self.dt);
             let current_weather = weather.get_weather_data(date);
-            let wind_direction = current_weather.wind_direction.unwrap().to_radians();
-            let wind_speed = current_weather.wind_speed.unwrap();
+            let wind_direction = current_weather.wind_direction.to_radians();
+            let wind_speed = current_weather.wind_speed;
 
-            let t_out = match current_weather.dry_bulb_temperature {
-                Some(v) => v,
-                None => return Err(
-                    "Trying to march on Thermal Model, but dry bulb temperature was not provided"
-                        .to_string(),
-                ),
-            };
+            let t_out = current_weather.dry_bulb_temperature;
 
             // Gather spaces temperatures
             let t_current = self.get_current_zones_temperatures(state);

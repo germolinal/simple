@@ -26,7 +26,7 @@ use model::{
     Infiltration, Model, SimulationState, SimulationStateElement, SimulationStateHeader,
 };
 use std::borrow::Borrow;
-use weather::{CurrentWeather, Weather};
+use weather::{CurrentWeather, WeatherTrait};
 
 pub type Resolver = Box<dyn Fn(&CurrentWeather, &mut SimulationState)>;
 
@@ -106,7 +106,7 @@ impl SimulationModel for AirFlowModel {
     /// Advances one main_timestep through time. That is,
     /// it performs `self.dt_subdivisions` steps, advancing
     /// `self.dt` seconds in each of them.
-    fn march<W: Weather, M: Borrow<Model>>(
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
         &self,
         date: Date,
         weather: &W,

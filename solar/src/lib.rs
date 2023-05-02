@@ -39,7 +39,7 @@ mod reinhart_sky;
 pub use reinhart_sky::ReinhartSky;
 mod perez;
 pub use perez::{PerezSky, SkyUnits};
-use weather::epw_weather_line::EPWWeatherLine;
+use weather::CurrentWeather;
 
 /// The kind of Floating point number used in the
 /// library... the `"float"` feature means it becomes `f32`
@@ -65,43 +65,43 @@ pub fn air_mass(solar_zenith: Float) -> Float {
     1. / (solar_zenith.cos() + 0.15 * (93.885 - solar_zenith.to_degrees()).powf(-1.253))
 }
 
-/// Structure used or passing data for weather forecasting and more.
-#[derive(Debug, Default, Copy, Clone)]
-pub struct SolarForecastData {
-    /// The day of the year (generally calculated from `Date.day_of_year()`)
-    pub n: Time,
-    /// The dew-point temperature of the air
-    pub dew_point_temperature: Float,
-    /// The dry-bulb temperature of the air
-    pub dry_bulb_temperature: Float,
-    /// Atmospheric Pressure in Pascals
-    pub pressure: Float,
-    /// The cloud cover, in fraction (0 to 1)    
-    pub cloud_cover: Float,
-    /// The wind speed in m/s
-    pub wind_speed: Float,
-    /// The relative humidity in fraction (0 to 1)
-    pub relative_humidity: Float,
-    /// The global horizontal radiation, in W/m2
-    pub global_horizontal_rad: Float,
-}
+// /// Structure used or passing data for weather forecasting and more.
+// #[derive(Debug, Default, Copy, Clone)]
+// pub struct SolarForecastData {
+//     /// The day of the year (generally calculated from `Date.day_of_year()`)
+//     pub n: Time,
+//     /// The dew-point temperature of the air
+//     pub dew_point_temperature: Float,
+//     /// The dry-bulb temperature of the air
+//     pub dry_bulb_temperature: Float,
+//     /// Atmospheric Pressure in Pascals
+//     pub pressure: Float,
+//     /// The cloud cover, in fraction (0 to 1)    
+//     pub cloud_cover: Float,
+//     /// The wind speed in m/s
+//     pub wind_speed: Float,
+//     /// The relative humidity in fraction (0 to 1)
+//     pub relative_humidity: Float,
+//     /// The global horizontal radiation, in W/m2
+//     pub global_horizontal_rad: Float,
+// }
 
-impl std::convert::From<&EPWWeatherLine> for SolarForecastData {
-    fn from(ln: &EPWWeatherLine) -> Self {
-        let date = ln.date();
-        let n = Time::Standard(date.day_of_year());
-        Self {
-            n,
-            dew_point_temperature: ln.dew_point_temperature,
-            dry_bulb_temperature: ln.dry_bulb_temperature,
-            pressure: ln.atmospheric_station_pressure,
-            cloud_cover: ln.total_sky_cover/100.0,
-            wind_speed: ln.wind_speed,
-            relative_humidity: ln.relative_humidity/100.0,
-            global_horizontal_rad: ln.global_horizontal_radiation,
-        }
-    }
-}
+// impl std::convert::From<&EPWWeatherLine> for SolarForecastData {
+//     fn from(ln: &EPWWeatherLine) -> Self {
+//         let date = ln.date();
+//         let n = Time::Standard(date.day_of_year());
+//         Self {
+//             n,
+//             dew_point_temperature: ln.dew_point_temperature,
+//             dry_bulb_temperature: ln.dry_bulb_temperature,
+//             pressure: ln.atmospheric_station_pressure,
+//             cloud_cover: ln.total_sky_cover/100.0,
+//             wind_speed: ln.wind_speed,
+//             relative_humidity: ln.relative_humidity/100.0,
+//             global_horizontal_rad: ln.global_horizontal_radiation,
+//         }
+//     }
+// }
 
 /// The solar equivalent of Date's "day of the year". The
 /// distinction is there so that we don't mistake solar and
@@ -388,15 +388,15 @@ impl Solar {
     pub fn direct_diffuse_from_cloud_generic(
         &self,
         sun_direction: Vector3D,
-        current_data: SolarForecastData,
-        next_hour_data: Option<SolarForecastData>,
-        prev_hour_data: Option<SolarForecastData>,
-        three_hours_prior_data: SolarForecastData,
+        current_data: CurrentWeather,
+        next_hour_data: Option<CurrentWeather>,
+        prev_hour_data: Option<CurrentWeather>,
+        three_hours_prior_data: CurrentWeather,
     ) -> (Float, Float, Float) {
         // let global_horizontal = self.cloud_cover_to_global_rad_generic(n, sun_direction, site_elevation, cloud_cover);
         let global_horizontal = self.estimate_global_horizontal_radiation(
             sun_direction,
-            current_data.cloud_cover,
+            current_data.opaque_sky_cover,
             current_data.dry_bulb_temperature,
             three_hours_prior_data.dry_bulb_temperature,
             current_data.wind_speed,
@@ -404,23 +404,7 @@ impl Solar {
         );
         let cos_theta = sun_direction.z;
 
-        // let global_normal = global_horizontal / cos_theta;
-        // let kt = self.hourly_clearness_index(n, global_normal);
-        // let diffuse_fraction = self.diffuse_fraction(kt);
-        // let a = 0.23;
-        // let b = 0.45;
-        // let diffuse_fraction = a + b * cloud_cover;
-        // debug_assert!(diffuse_fraction <= 1.0);
-        // debug_assert!(diffuse_fraction >= 0.0);
-        // let direct_fraction = 1.0 - diffuse_fraction;
-        // debug_assert!(direct_fraction <= 1.0);
-        // debug_assert!(direct_fraction >= 0.0);
-
-        // (
-        //     direct_fraction * global_horizontal / cos_theta,
-        //     diffuse_fraction * global_horizontal,
-        //     global_horizontal,
-        // )
+        
 
         let direct_normal_radiation = self.perez_direct_normal_radiation(
             sun_direction,
@@ -429,9 +413,11 @@ impl Solar {
             prev_hour_data,
         );
 
+        let diffuse_horizontal = (global_horizontal - direct_normal_radiation * cos_theta).max(0.0);
+
         (
             direct_normal_radiation,
-            global_horizontal - direct_normal_radiation * cos_theta,
+            diffuse_horizontal,
             global_horizontal,
         )
     }
@@ -636,9 +622,9 @@ impl Solar {
     pub fn perez_direct_normal_radiation(
         &self,
         sun_direction: Vector3D,
-        current_data: SolarForecastData,
-        next_hour_data: Option<SolarForecastData>,
-        prev_hour_data: Option<SolarForecastData>,
+        current_data: CurrentWeather,
+        next_hour_data: Option<CurrentWeather>,
+        prev_hour_data: Option<CurrentWeather>,
     ) -> Float {
         // Dimension 1:
         let cos_zenith = sun_direction.z;
@@ -650,8 +636,8 @@ impl Solar {
         }
 
         // Dimention 2
-        let n = current_data.n;
-        let global_normal_radiation = current_data.global_horizontal_rad / cos_zenith;
+        let n = Time::Standard(current_data.date.day_of_year());
+        let global_normal_radiation = current_data.global_horizontal_radiation.unwrap() / cos_zenith;
         let m =  if zenith > 80.0 * crate::PI / 180.0 {
             return 0.0;
         } else {
@@ -665,7 +651,7 @@ impl Solar {
 
         let next_kt_p = if let Some(next) = next_hour_data {
             let next_kt =
-                self.hourly_clearness_index(next.n, next.global_horizontal_rad / cos_zenith);
+                self.hourly_clearness_index(Time::Standard(next.date.day_of_year()), next.global_horizontal_radiation.unwrap() / cos_zenith);
             aux(next_kt, m)
         } else {
             kt_p
@@ -673,7 +659,7 @@ impl Solar {
 
         let prev_kt_p = if let Some(prev) = prev_hour_data {
             let prev_kt =
-                self.hourly_clearness_index(prev.n, prev.global_horizontal_rad / cos_zenith);
+                self.hourly_clearness_index(Time::Standard(prev.date.day_of_year()), prev.global_horizontal_radiation.unwrap() / cos_zenith);
             aux(prev_kt, m)
         } else {
             kt_p
@@ -1100,12 +1086,12 @@ mod tests {
     use super::*;
     use calendar::{Date, DateFactory};
     use validate::{valid, ScatterValidator, Validate, Validator};
-    use weather::EPWWeather;
+    use weather::{EPWWeather, Weather};
 
     #[test]
     fn test_cloud_cover_to_global_rad_generic() {
-        fn global(filename: &str) -> Box<dyn Validate> {
-            let epw = EPWWeather::from_file(filename).unwrap();
+        fn global(filename: &str) -> Box<dyn Validate> {            
+            let epw : Weather = EPWWeather::from_file(filename).unwrap().into();
 
             let solar = Solar::new(
                 epw.location.latitude.to_radians(),
@@ -1113,10 +1099,12 @@ mod tests {
                 (-epw.location.timezone as Float * 15.0).to_radians(),
             );
 
+            
+
             let expected: Vec<Float> = epw
                 .data
                 .iter()
-                .map(|line| line.global_horizontal_radiation)
+                .map(|line| line.global_horizontal_radiation.unwrap())
                 .collect();
 
             let found: Vec<Float> = epw
@@ -1124,7 +1112,7 @@ mod tests {
                 .iter()
                 .enumerate()
                 .map(|(line_index, line)| {
-                    let n = line.date().day_of_year();
+                    let n = line.date.day_of_year();
                     let n = Time::Standard(n);
                     if let Some(sun_direction) = solar.sun_position(n) {
                         let prior_temp = if line_index >= 3 {
@@ -1134,11 +1122,11 @@ mod tests {
                         };
                         solar.estimate_global_horizontal_radiation(
                             sun_direction,
-                            line.total_sky_cover / 100.0,
+                            line.opaque_sky_cover,
                             line.dry_bulb_temperature,
                             prior_temp,
                             line.wind_speed,
-                            line.relative_humidity / 100.0,
+                            line.relative_humidity,
                         )
                     } else {
                         0.0
@@ -1158,7 +1146,7 @@ mod tests {
         }
 
         fn direct(filename: &str) -> Box<dyn Validate> {
-            let epw = EPWWeather::from_file(filename).unwrap();
+            let epw : Weather = EPWWeather::from_file(filename).unwrap().into();
 
             let solar = Solar::new(
                 epw.location.latitude.to_radians(),
@@ -1169,40 +1157,33 @@ mod tests {
             let expected: Vec<Float> = epw
                 .data
                 .iter()
-                .map(|line| line.direct_normal_radiation)
+                .map(|line| line.direct_normal_radiation.unwrap())
                 .collect();
 
             let found: Vec<Float> = epw
                 .data
                 .iter()
                 .enumerate()
-                .map(|(line_index, line)| {
-                    let current_data = SolarForecastData::from(line);
-                    let n = current_data.n;
+                .map(|(line_index, current_data)| {
+                    
+                    let n = Time::Standard(current_data.date.day_of_year());
                     if let Some(sun_direction) = solar.sun_position(n) {
                         let three_hours_prior_data = if line_index >= 3 {
-                            let ln = &epw.data[line_index - 3];
-                            let r: SolarForecastData = SolarForecastData::from(ln);
-                            r
+                            epw.data[line_index - 3]                            
                         } else {
-                            SolarForecastData {
-                                dry_bulb_temperature: line.dry_bulb_temperature,
-                                ..Default::default()
-                            }
+                            *current_data                            
                         };
 
-                        let prior_data: Option<SolarForecastData> = if line_index >= 1 {
-                            let ln = &epw.data[line_index - 1];
-                            let r: SolarForecastData = SolarForecastData::from(ln);
+                        let prior_data: Option<CurrentWeather> = if line_index >= 1 {
+                            let r = epw.data[line_index - 1];                            
                             Some(r)
                         } else {
                             None
                         };
 
-                        let next_data: Option<SolarForecastData> =
+                        let next_data: Option<CurrentWeather> =
                             if line_index + 1 < epw.data.len() {
-                                let ln = &epw.data[line_index + 1];
-                                let r: SolarForecastData = SolarForecastData::from(ln);
+                                let r = epw.data[line_index + 1];                                
                                 Some(r)
                             } else {
                                 None
@@ -1211,7 +1192,7 @@ mod tests {
                         let (direct_normal, _diffuse_horizontal, _global) = solar
                             .direct_diffuse_from_cloud_generic(
                                 sun_direction,
-                                current_data,
+                                *current_data,
                                 next_data,
                                 prior_data,
                                 three_hours_prior_data,
@@ -1235,7 +1216,7 @@ mod tests {
         }
 
         fn diffuse(filename: &str) -> Box<dyn Validate> {
-            let epw = EPWWeather::from_file(filename).unwrap();
+            let epw : Weather = EPWWeather::from_file(filename).unwrap().into();
 
             let solar = Solar::new(
                 epw.location.latitude.to_radians(),
@@ -1246,40 +1227,33 @@ mod tests {
             let expected: Vec<Float> = epw
                 .data
                 .iter()
-                .map(|line| line.diffuse_horizontal_radiation)
+                .map(|line| line.diffuse_horizontal_radiation.unwrap())
                 .collect();
 
             let found: Vec<Float> = epw
                 .data
                 .iter()
                 .enumerate()
-                .map(|(line_index, line)| {
-                    let current_data = SolarForecastData::from(line);
-                    let n = current_data.n;
+                .map(|(line_index, current_data)| {
+                    let n = Time::Standard(current_data.date.day_of_year());
                     if let Some(sun_direction) = solar.sun_position(n) {
                         let three_hours_prior_data = if line_index >= 3 {
-                            let ln = &epw.data[line_index - 3];
-                            let r: SolarForecastData = SolarForecastData::from(ln);
+                            let r = epw.data[line_index - 3];                            
                             r
                         } else {
-                            SolarForecastData {
-                                dry_bulb_temperature: line.dry_bulb_temperature,
-                                ..Default::default()
-                            }
+                            *current_data
                         };
 
-                        let prior_data: Option<SolarForecastData> = if line_index >= 1 {
-                            let ln = &epw.data[line_index - 1];
-                            let r: SolarForecastData = SolarForecastData::from(ln);
+                        let prior_data: Option<CurrentWeather> = if line_index >= 1 {
+                            let r = epw.data[line_index - 1];
                             Some(r)
                         } else {
                             None
                         };
 
-                        let next_data: Option<SolarForecastData> =
+                        let next_data: Option<CurrentWeather> =
                             if line_index + 1 < epw.data.len() {
-                                let ln = &epw.data[line_index + 1];
-                                let r: SolarForecastData = SolarForecastData::from(ln);
+                                let r = epw.data[line_index + 1];
                                 Some(r)
                             } else {
                                 None
@@ -1288,7 +1262,7 @@ mod tests {
                         let (_direct_normal, diffuse_horizontal, _global) = solar
                             .direct_diffuse_from_cloud_generic(
                                 sun_direction,
-                                current_data,
+                                *current_data,
                                 next_data,
                                 prior_data,
                                 three_hours_prior_data,
