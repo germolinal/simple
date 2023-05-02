@@ -12,6 +12,9 @@ fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidato
         units: Some("W/m2"),
         expected_legend: Some("EnergyPlus"),
         found_legend: Some("SIMPLE"),
+        allowed_intersect_delta: Some(0.6),
+        allowed_r2: Some(0.98),
+        allowed_slope_delta: Some(0.01),
         expected,
         found,
         ..validate::ScatterValidator::default()

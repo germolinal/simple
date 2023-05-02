@@ -211,9 +211,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.2.5"
+version = "4.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8a1f23fa97e1d1641371b51f35535cb26959b8e27ab50d167a8b996b5bada819"
+checksum = "34d21f9bf1b425d2968943631ec91202fe5e837264063503708b83013f8fc938"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -222,9 +222,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.2.5"
+version = "4.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fdc5d93c358224b4d6867ef1356d740de2303e9892edc06c5340daeccd96bab"
+checksum = "914c8c79fb560f238ef6429439a30023c862f7a28e688c58f7203f12b29970bd"
 dependencies = [
  "anstream",
  "anstyle",
@@ -485,7 +485,7 @@ dependencies = [
 [[package]]
 name = "derive"
 version = "0.1.0"
-source = "git+https://github.com/germolinal/validate#b2dba0e53fb34277ab7cc41817aea9469f8fc7a5"
+source = "git+https://github.com/germolinal/validate#37d5b2af301465f0cabe1119a2c15976f007be42"
 dependencies = [
  "proc-macro-error",
  "proc-macro2",
@@ -1128,7 +1128,7 @@ name = "rendering"
 version = "0.1.0"
 dependencies = [
  "calendar",
- "clap 4.2.5",
+ "clap 4.2.7",
  "criterion",
  "geometry",
  "jpeg-encoder",
@@ -1144,9 +1144,9 @@ dependencies = [
 
 [[package]]
 name = "rhai"
-version = "1.13.0"
+version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd29fa1f740be6dc91982013957e08c3c4232d7efcfe19e12da87d50bad47758"
+checksum = "b2c99b27f6661b4d217b6aa21727c6a0808729266edfc8a8877042d609b1904e"
 dependencies = [
  "ahash",
  "bitflags",
@@ -1265,7 +1265,7 @@ version = "0.1.0"
 dependencies = [
  "air",
  "calendar",
- "clap 4.2.5",
+ "clap 4.2.7",
  "communication",
  "geometry",
  "heat",
@@ -1466,7 +1466,7 @@ checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
 [[package]]
 name = "validate"
 version = "0.1.0"
-source = "git+https://github.com/germolinal/validate#b2dba0e53fb34277ab7cc41817aea9469f8fc7a5"
+source = "git+https://github.com/germolinal/validate#37d5b2af301465f0cabe1119a2c15976f007be42"
 dependencies = [
  "csv",
  "derive 0.1.0",

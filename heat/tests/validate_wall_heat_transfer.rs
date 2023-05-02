@@ -24,6 +24,9 @@ fn get_validator(
         found_legend: Some("SIMPLE"),
         expected,
         found,
+
+        allowed_mean_bias_error: Some(0.2),
+        allowed_root_mean_squared_error: Some(0.2),
         ..validate::SeriesValidator::default()
     })
 }
