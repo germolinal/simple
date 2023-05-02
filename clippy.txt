@@ -1,0 +1,7 @@
+warning: /Users/germolinal/Documents/wisehouse/simple/Cargo.toml: unused manifest key: examples
+warning: /Users/germolinal/Documents/wisehouse/simple/geometry/Cargo.toml: dependency (serde) specified without providing a local path, Git repository, or version to use. This will be considered an error in future versions
+warning: /Users/germolinal/Documents/wisehouse/simple/geometry/Cargo.toml: dependency (serde_json) specified without providing a local path, Git repository, or version to use. This will be considered an error in future versions
+warning: /Users/germolinal/Documents/wisehouse/simple/geometry/Cargo.toml: unused manifest key: dependencies.serde.worspace
+warning: /Users/germolinal/Documents/wisehouse/simple/geometry/Cargo.toml: unused manifest key: dependencies.serde_json.worspace
+    Checking simple v0.1.0 (/Users/germolinal/Documents/wisehouse/simple)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.27s
