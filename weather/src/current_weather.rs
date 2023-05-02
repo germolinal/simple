@@ -55,7 +55,7 @@ pub struct CurrentWeather {
     pub horizontal_infrared_radiation_intensity: Option<Float>,
 
     /// used this if IR Intensity is missing (in fraction, 0-1)
-    pub opaque_sky_cover: Option<Float>,
+    pub opaque_sky_cover: Float,
 
     /// Relative humidity, in fractions (0-1)
     pub relative_humidity: Option<Float>,
@@ -101,12 +101,12 @@ impl CurrentWeather {
     ///     // This method returns an error if this info is not available.
     ///     dry_bulb_temperature: 20.,
     ///     dew_point_temperature: 10.,
-    ///     opaque_sky_cover: Some(0.),
+    ///     opaque_sky_cover: 0.,
     ///     .. CurrentWeather::default()
     /// };
     ///
     /// let expected = 341.2; // W/m2
-    /// let found = cw.derive_horizontal_ir().unwrap();
+    /// let found = cw.derive_horizontal_ir();
     /// assert!( (expected - found).abs() < 0.1, "expected = {} | found = {}", expected, found );
     ///
     /// // This example compares an actual value (in an EPW file) and a derived one
@@ -115,25 +115,18 @@ impl CurrentWeather {
     ///     // This method returns an error if this info is not available.
     ///     dry_bulb_temperature: 13.625,
     ///     dew_point_temperature: 8.325,
-    ///     opaque_sky_cover: Some(5.),
+    ///     opaque_sky_cover: 5.,
     ///     .. CurrentWeather::default()
     /// };
     ///
     /// let expected = 329.25; // W/m2, from EPW file
-    /// let found = cw.derive_horizontal_ir().unwrap();
+    /// let found = cw.derive_horizontal_ir();
     /// assert!( (expected - found).abs() < 0.1, "expected = {} | found = {}", expected, found );
     /// ```
-    pub fn derive_horizontal_ir(&self) -> Result<Float, String> {
+    pub fn derive_horizontal_ir(&self) -> Float {
         pub const SIGMA: Float = 5.670374419e-8;
-        let n =
-            match self.opaque_sky_cover {
-                Some(v) => v,
-                None => return Err(
-                    "missing field 'opaque_sky_cover' when attempting to derive_horizontal_ir()"
-                        .into(),
-                ),
-            };
-
+        let n = self.opaque_sky_cover;
+            
         let dp = self.dew_point_temperature + 273.15;
 
         let temp = self.dry_bulb_temperature + 273.15; 
@@ -141,7 +134,7 @@ impl CurrentWeather {
         let e_sky_clear = 0.787 + 0.764 * (dp / 273.).ln();
         let e_sky = e_sky_clear * (1.0 + 0.0224 * n - 0.0035 * n.powi(2) + 0.00028 * n.powi(3));
 
-        Ok(SIGMA * e_sky * (temp).powi(4))
+        SIGMA * e_sky * (temp).powi(4)
     }
 
     /// Interpolates the data between to WeatherLines
@@ -188,7 +181,7 @@ impl CurrentWeather {
             wind_direction: interp_opt(self.wind_direction, other.wind_direction),
             wind_speed: interp(self.wind_speed, other.wind_speed),
             // total_sky_cover: interp(self.total_sky_cover, other.total_sky_cover),
-            opaque_sky_cover: interp_opt(self.opaque_sky_cover, other.opaque_sky_cover),            
+            opaque_sky_cover: interp(self.opaque_sky_cover, other.opaque_sky_cover),            
         }
     }
 }

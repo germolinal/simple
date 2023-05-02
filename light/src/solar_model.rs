@@ -77,7 +77,7 @@ impl SolarModel {
         let db = weather_data.dry_bulb_temperature;
         let horizontal_ir = match weather_data.horizontal_infrared_radiation_intensity {
             Some(v) => v,
-            None => weather_data.derive_horizontal_ir()?,
+            None => weather_data.derive_horizontal_ir(),
         };
 
         let iter = model.surfaces.iter().enumerate();

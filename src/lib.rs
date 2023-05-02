@@ -75,6 +75,7 @@ pub use weather::{
     SyntheticWeather,
     EPWWeather,    
     CurrentWeather,
+    Location,
 };
 pub use light::OpticalInfo;
 pub use geometry;

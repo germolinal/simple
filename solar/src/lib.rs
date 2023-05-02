@@ -396,7 +396,7 @@ impl Solar {
         // let global_horizontal = self.cloud_cover_to_global_rad_generic(n, sun_direction, site_elevation, cloud_cover);
         let global_horizontal = self.estimate_global_horizontal_radiation(
             sun_direction,
-            current_data.opaque_sky_cover.expect("We need 'opaque_sky_cover' for this calculation"),
+            current_data.opaque_sky_cover,
             current_data.dry_bulb_temperature,
             three_hours_prior_data.dry_bulb_temperature,
             current_data.wind_speed,
@@ -1122,7 +1122,7 @@ mod tests {
                         };
                         solar.estimate_global_horizontal_radiation(
                             sun_direction,
-                            line.opaque_sky_cover.unwrap(),
+                            line.opaque_sky_cover,
                             line.dry_bulb_temperature,
                             prior_temp,
                             line.wind_speed,
