@@ -3,6 +3,10 @@
 .DS_Store
 .vscode
 
+# this is created in a test
+optical_data.json
+cold_optical_data.json
+
 # MAIN
 #######
 # Validations

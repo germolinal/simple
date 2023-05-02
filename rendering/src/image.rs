@@ -63,7 +63,7 @@ fn colour_to_rgbe(red: Float, green: Float, blue: Float) -> [u8; 4] {
     if v < 1e-19 {
         [0, 0, 0, 0]
     } else {
-        let (mut mantissa, e) = rusty_frexp(v.into());
+        let (mut mantissa, e) = rusty_frexp(v);
         mantissa *= 256.0 / v;
         let r = (red * mantissa).floor() as u8;
         let g = (green * mantissa).floor() as u8;
@@ -209,7 +209,7 @@ impl ImageBuffer {
         let width: Option<usize>;
         loop {
             let nl = match &content.iter().position(|u| *u as char == '\n') {
-                None => return Err(format!("Apparentyly incorrectly formatted file")),
+                None => return Err("Apparentyly incorrectly formatted file".to_string()),
                 Some(i) => *i,
             };
 

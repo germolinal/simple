@@ -150,11 +150,7 @@ fn main() {
     } else if input_file.ends_with(".spl") {
         let (model, _header) = model::Model::from_file(input_file).unwrap();
         Scene::from_simple_model(&model, Wavelengths::Visible).unwrap()
-    }
-    // else if input.ends_with(".obj"){
-    //     Scene::from_simple_model(input)
-    // }
-    else {
+    }else {
         panic!("Unkwown format in file {}", input_file);
     };
 

@@ -56,10 +56,11 @@ impl<T: Numberish> GenericMatrix<T> {
         let n_rows = data.len();
         let n_elements = n_rows * n_rows;
         let mut v = vec![T::zero(); n_elements];
-
-        for nrow in 0..n_rows {
+        
+        for (nrow,value) in data.iter().enumerate(){
             let i = nrow * (n_rows + 1);
-            v[i] = data[nrow];
+            // v[i] = data[nrow];
+            v[i] = *value;
         }
 
         GenericMatrix::from_data(n_rows, n_rows, v)
@@ -254,7 +255,7 @@ impl<T: Numberish> GenericMatrix<T> {
             .into_par_iter()
             .zip(into.data.par_chunks_exact_mut(other.ncols));
 
-        let _ = self_rows.for_each(|(row_data, into_data)| {
+        self_rows.for_each(|(row_data, into_data)| {
             for (col, item) in into_data.iter_mut().enumerate().take(other.ncols) {
                 // Add the numbers
                 for (row, a) in row_data.iter().enumerate().take(other.nrows) {
@@ -305,11 +306,11 @@ impl<T: Numberish> GenericMatrix<T> {
         *into *= T::zero();
 
         // Multiply.
-        let i: Vec<&[T]> = self.data.chunks_exact(self.ncols).collect();
+        let i = self.data.chunks_exact(self.ncols);
         let i = i.into_iter().zip(into.data.chunks_exact_mut(other.ncols));
 
         let one_sided_n = one_sided_n!(n);
-        let _ = i.enumerate().for_each(|(r, (row_data, into_data))| {
+        i.enumerate().for_each(|(r, (row_data, into_data))| {
             // for c in 0..other.ncols {
             for (c, item) in into_data.iter_mut().enumerate().take(other.ncols) {
                 // Add before the diagonal

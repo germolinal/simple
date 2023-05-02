@@ -18,24 +18,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
-
-
+use crate::Float;
+use std::cmp::{Ordering, PartialOrd};
 use std::fmt;
 use std::ops::Sub;
-use std::cmp::{PartialOrd, Ordering};
-use crate::Float;
 
+#[cfg(feature = "chrono")]
+use chrono::NaiveDate;
 
-
-#[cfg(feature="serde")]
-use serde::{Serialize, Deserialize};
-#[cfg_attr(feature="serde", derive(Serialize, Deserialize))]
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
 /// An extremely simple Date object. We don't
 /// need anything else, I think.
 /// It does not consider years at all!
-/// Days and Months are counted from 1 
+/// Days and Months are counted from 1
 /// (e.g. January is 1, not 0)
 pub struct Date {
     /// Months of the year, from 1 to 12
@@ -48,10 +46,10 @@ pub struct Date {
     pub hour: Float,
 }
 
-#[cfg(feature="chrono")]
-use chrono::{Datelike, Timelike, NaiveDateTime};
+#[cfg(feature = "chrono")]
+use chrono::{Datelike, NaiveDateTime, Timelike};
 
-#[cfg(feature="chrono")]
+#[cfg(feature = "chrono")]
 impl std::convert::From<NaiveDateTime> for Date {
     fn from(item: NaiveDateTime) -> Self {
         let month = item.month() as u8;
@@ -59,46 +57,32 @@ impl std::convert::From<NaiveDateTime> for Date {
         let hour_int = item.hour() as Float;
         let minute = item.minute() as Float;
         let seconds = item.second() as Float;
-        let hour = hour_int + minute/60. + seconds/3600.;
-        Self { 
-            month, day, hour   
-        }
+        let hour = hour_int + minute / 60. + seconds / 3600.;
+        Self { month, day, hour }
     }
 }
-
-// ignoring this because there we would need to invent a year. Leaving this here in case someone 
-// requests it
-// #[cfg(feature="chrono")]
-// impl std::convert::Into<NaiveDateTime> for Date {
-//     fn into(self) -> NaiveDateTime {
-        
-//         let hour = self.hour.floor();
-        
-//         let remainder = self.hour - hour;        
-
-//         let minute = (remainder * 60.0).round();
-//         let seconds = 0; // ignore seconds
-//         NaiveDate::from_ymd(2022, self.month as u32, self.day as u32).and_hms(hour as u32, minute as u32, seconds as u32)
-//     }
-// }
 
 impl fmt::Display for Date {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // format hour
 
         let mut hour = self.hour.floor();
-        
-        let remainder = self.hour - hour;        
+
+        let remainder = self.hour - hour;
 
         let mut minute = (remainder * 60.0).round();
         if minute == 60.0 {
-            hour +=1.0;
+            hour += 1.0;
             minute = 0.0
-        } 
-        
+        }
+
         // ignore seconds
 
-        write!(f, "{:02}/{:02} - {}:{:02}", self.month, self.day, hour, minute)
+        write!(
+            f,
+            "{:02}/{:02} - {}:{:02}",
+            self.month, self.day, hour, minute
+        )
     }
 }
 
@@ -119,47 +103,57 @@ impl PartialOrd for Date {
 }
 
 impl Ord for Date {
-    fn cmp(&self, other:&Self)->Ordering{
-        if self.month < other.month {
-            // If self's month is earlier than others, 
-            // then it cannot be later
-            Ordering::Less
-        }else if self.month > other.month {
-            // if self's month is later than other's, 
-            // then self it must be later
-            Ordering::Greater
-        }else{
-            // Same month... compare by day
-
-            // If self's day is earlier than others, 
-            // then it cannot be later
-            if self.day < other.day {
-                Ordering::Less
-            }else if self.day > other.day {
-                Ordering::Greater
-            }else{
-                // Same day and month; compare by hour
-                if self.hour < other.hour{
-                    Ordering::Less
-                }else if self.hour > other.hour {
-                    Ordering::Greater
-                }else{
-                    // They are the same
-                    Ordering::Equal
-                }
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.month.cmp(&other.month){
+            Ordering::Less => Ordering::Less,
+            Ordering::Greater => Ordering::Greater,
+            Ordering::Equal => {                
+                match self.day.cmp(&other.day){
+                    Ordering::Less => Ordering::Less,
+                    Ordering::Greater => Ordering::Greater,
+                    Ordering::Equal => {                        
+                        // Same day and month; compare by hour
+                        if self.hour < other.hour {
+                            Ordering::Less
+                        } else if self.hour > other.hour {
+                            Ordering::Greater
+                        } else {
+                            // They are the same
+                            Ordering::Equal
+                        }
+                    }
+                }                
             }
         }
+        
     }
 }
 
 impl Date {
+    
+    /// Transforms a Date into a `chrono` `NaiveDateTime`.
+    /// 
+    /// Because `Date` does not have a year, we need to pass it as a parameter.        
+    #[cfg(feature = "chrono")]
+    pub fn into_naive_datetime(self, year: i32) -> NaiveDateTime {
+        let hour = self.hour.floor();
+
+        let remainder = self.hour - hour;
+
+        let min = (remainder * 60.0).round();
+        let sec = 0; // ignore seconds
+        NaiveDate::from_ymd_opt(year, self.month as u32, self.day as u32).expect("Could not build chronos::Date").and_hms_opt(
+            hour as u32,
+            min as u32,
+            sec as u32,
+        ).expect("could not build chronos::DateTime")
+    }
 
     /// Interpolates between two dates
-    pub fn interpolate(&self, other:Self, x: Float)-> Self {
-
+    pub fn interpolate(&self, other: Self, x: Float) -> Self {
         let n_self = self.day_of_year();
         let mut n_other = other.day_of_year();
-        
+
         // If we celebrate new years between both dates
         if n_other < n_self {
             n_other += 365.
@@ -167,21 +161,20 @@ impl Date {
 
         // Interpolate between the two
         let full_n = n_self + x * (n_other - n_self);
-        return Date::from_day_of_year(full_n % 365.)
-                
+        Date::from_day_of_year(full_n % 365.)
     }
 
-    /// Transforms a day of the year into a date 
-    pub fn from_day_of_year(n: Float)->Self{
-        if n >= 365. || n < 0. {
+    /// Transforms a day of the year into a date
+    pub fn from_day_of_year(n: Float) -> Self {
+        if !(0. ..365.).contains(&n) {
             panic!("Impossible day of the year '{}' when building a date", n);
         }
 
-        const CUMULATED_DAYS_BEFORE_MONTH : [Float; 12]= [
-            0., // Jan
-            31., // Feb
-            59., // Mar
-            90., // Apr
+        const CUMULATED_DAYS_BEFORE_MONTH: [Float; 12] = [
+            0.,   // Jan
+            31.,  // Feb
+            59.,  // Mar
+            90.,  // Apr
             120., // May
             151., // Jun
             181., // Jul
@@ -189,13 +182,12 @@ impl Date {
             243., // Sept
             273., // Oct
             304., // Nov
-            334. // Dec
+            334., // Dec
         ];
 
         for i in 0..12 {
             if CUMULATED_DAYS_BEFORE_MONTH[i] > n {
-
-                let day_hour = n - CUMULATED_DAYS_BEFORE_MONTH[i-1];
+                let day_hour = n - CUMULATED_DAYS_BEFORE_MONTH[i - 1];
                 let day = day_hour.floor();
                 let hour = day_hour - day;
 
@@ -204,7 +196,7 @@ impl Date {
                 return Date {
                     month: i as u8,
                     day: 1 + day as u8,
-                    hour: hour * 24.0
+                    hour: hour * 24.0,
                 };
             }
         }
@@ -219,19 +211,18 @@ impl Date {
         Date {
             month: 12,
             day: 1 + day as u8,
-            hour: hour * 24.0
+            hour: hour * 24.0,
         }
-
     }
 
-    /// Retrieves the day of the year corresponding 
+    /// Retrieves the day of the year corresponding
     /// to the date (includes the decimals for the hour)
-    pub fn day_of_year(&self)->Float{
-        const CUMULATED_DAYS_BEFORE_MONTH : [Float; 12]= [
-            0., // Jan
-            31., // Feb
-            59., // Mar
-            90., // Apr
+    pub fn day_of_year(&self) -> Float {
+        const CUMULATED_DAYS_BEFORE_MONTH: [Float; 12] = [
+            0.,   // Jan
+            31.,  // Feb
+            59.,  // Mar
+            90.,  // Apr
             120., // May
             151., // Jun
             181., // Jul
@@ -239,37 +230,34 @@ impl Date {
             243., // Sept
             273., // Oct
             304., // Nov
-            334. // Dec
+            334., // Dec
         ];
 
-        CUMULATED_DAYS_BEFORE_MONTH[self.month as usize-1] + self.day as Float + self.hour/24.0 - 1.0
-
-        
+        CUMULATED_DAYS_BEFORE_MONTH[self.month as usize - 1] + self.day as Float + self.hour / 24.0
+            - 1.0
     }
-    
-    /// Adds a certain number of seconds to a date
-    pub fn add_hours(&mut self, n_hours : Float){
 
-        // Calculate how many days are in those hours, and add them.        
+    /// Adds a certain number of seconds to a date
+    pub fn add_hours(&mut self, n_hours: Float) {
+        // Calculate how many days are in those hours, and add them.
         let n_days = (n_hours / 24.).floor();
         self.add_days(n_days as usize);
 
         // Get remaining seconds and add them
         let remaining_hours = n_hours - 24. * n_days;
-        
+
         self.hour += remaining_hours;
         if self.hour >= 24. {
-            // ... remaining hours should be smaller than 24, 
+            // ... remaining hours should be smaller than 24,
             // so adding a single day should be fine.
             self.add_days(1);
-            self.hour = self.hour%24.0;
+            self.hour %= 24.0;
         }
     }
 
     /// Adds a certain number of days to a date.
-    pub fn add_days(&mut self, n_days: usize){
-        
-        const N_DAYS_PER_MONTH : [u8; 12]= [
+    pub fn add_days(&mut self, n_days: usize) {
+        const N_DAYS_PER_MONTH: [u8; 12] = [
             31, // Jan
             28, // Feb
             31, // March
@@ -281,20 +269,19 @@ impl Date {
             30, // Sept
             31, // Oct
             30, // Nov
-            31  // Dec
+            31, // Dec
         ];
 
         // Lets recursively consume n_days month by month.
-        let n_days = n_days%365;
-        if n_days > 0{                       
+        let n_days = n_days % 365;
+        if n_days > 0 {
             let would_be_day = self.day as usize + n_days; // Now we can add more than a year
-            let n_days_this_month = N_DAYS_PER_MONTH[self.month as usize-1];
-            
-            if would_be_day as u8 > n_days_this_month {
+            let n_days_this_month = N_DAYS_PER_MONTH[self.month as usize - 1];
 
+            if would_be_day as u8 > n_days_this_month {
                 // Add one month, considering that this might be a change in year
                 self.month += 1;
-                if self.month == 13{
+                if self.month == 13 {
                     self.month = 1;
                 }
 
@@ -302,72 +289,40 @@ impl Date {
                 self.day = 1;
                 // And try again with the remaining days
                 self.add_days(would_be_day - n_days_this_month as usize - 1);
-            }else{
+            } else {
                 // No change in month.
                 self.day += n_days as u8;
-            }                    
-        }           
+            }
+        }
     }
 
     /// Adds a timestep to the date.
     /// dt is in seconds
     pub fn add_seconds(&mut self, dt: Float) {
-        self.add_hours(dt/3600.);
+        self.add_hours(dt / 3600.);
     }
 
     /// Adds minutes to the date.    
     pub fn add_minutes(&mut self, minutes: Float) {
-        self.add_hours(minutes/60.);
+        self.add_hours(minutes / 60.);
     }
 
     /// Checks whether two dates have same day and month
-    pub fn same_day(&self, other: Self)->bool{
+    pub fn same_day(&self, other: Self) -> bool {
         self.month == other.month && self.day == other.day
     }
 
-    /// Checks whether one date is earlier than another 
+    /// Checks whether one date is earlier than another
     /// date. Dates are NOT earlier than themselvs.    
-    #[deprecated="Use 'self < other'  instead"]
-    pub fn is_earlier(&self,other:Date)->bool{
+    #[deprecated = "Use 'self < other'  instead"]
+    pub fn is_earlier(&self, other: Date) -> bool {
         if *self == other {
             return false;
         }
-        !(self > &other)
+        self <= &other
     }
 
-    /// Checks whether one date is later than another 
-    /// date. Dates are NOT later than themselves.
-    #[deprecated="Use 'self > other' instead"]
-    pub fn is_later(&self, other: Date)->bool{
-        if self.month < other.month {
-            // If self's month is earlier than others, 
-            // then it cannot be later
-            return false;
-        }else if self.month > other.month {
-            // if self's month is later than other's, 
-            // then self it must be later
-            return true;
-        }else{
-            // Same month... compare by day
-
-            // If self's day is earlier than others, 
-            // then it cannot be later
-            if self.day < other.day {
-                return false;
-            }else if self.day > other.day {
-                return true;
-            }else{
-                // Same day and month; compare by hour
-                if self.hour <= other.hour{
-                    return false;
-                }else{
-                    return true;
-                }
-            }
-        }
-
-    }
-
+    
 }
 
 #[cfg(test)]
@@ -375,256 +330,245 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_interpolate(){
-        
-        let start = Date{
-            month: 1, 
-            day : 1,
+    fn test_interpolate() {
+        let start = Date {
+            month: 1,
+            day: 1,
             hour: 0.0,
         };
-        
-        assert!((start - start.interpolate(start, 0.0)).abs()<1e-5);
-        assert!((start - start.interpolate(start, 0.1)).abs()<1e-5);
-        assert!((start - start.interpolate(start, 0.5)).abs()<1e-5);
-        assert!((start - start.interpolate(start, 0.9)).abs()<1e-5);
 
-        let end = Date{
+        assert!((start - start.interpolate(start, 0.0)).abs() < 1e-5);
+        assert!((start - start.interpolate(start, 0.1)).abs() < 1e-5);
+        assert!((start - start.interpolate(start, 0.5)).abs() < 1e-5);
+        assert!((start - start.interpolate(start, 0.9)).abs() < 1e-5);
+
+        let end = Date {
             month: 1,
-            day : 2,
+            day: 2,
             hour: 23.999999999,
         };
 
         assert!(start.same_day(start.interpolate(end, 0.0)));
-        assert!(start.same_day(start.interpolate(end, 0.2)));        
+        assert!(start.same_day(start.interpolate(end, 0.2)));
         assert!(start.same_day(start.interpolate(end, 0.49)));
-        assert!(start.same_day(start.interpolate(end, 0.49999)), "Start = {} | interpolated = {}", start, start.interpolate(end, 0.5) );        
-        assert!(end.same_day(start.interpolate(end, 0.51)));
-        assert!(end.same_day(start.interpolate(end, 0.7)));
-        assert!(end.same_day(start.interpolate(end, 0.9)));
-        
-
-        let start = Date{
-            month: 12, 
-            day : 31,
-            hour: 0.0,
-        };
-
-        let end = Date{
-            month: 1, 
-            day : 1,
-            hour: 23.9999999999999,
-        };
-
-        
-        
-        assert!(start.same_day(start.interpolate(end, 0.0)));
-        assert!(start.same_day(start.interpolate(end, 0.2)));        
-        assert!(start.same_day(start.interpolate(end, 0.49)));
-        assert!(end.same_day(start.interpolate(end, 0.5)));                
+        assert!(
+            start.same_day(start.interpolate(end, 0.49999)),
+            "Start = {} | interpolated = {}",
+            start,
+            start.interpolate(end, 0.5)
+        );
         assert!(end.same_day(start.interpolate(end, 0.51)));
         assert!(end.same_day(start.interpolate(end, 0.7)));
         assert!(end.same_day(start.interpolate(end, 0.9)));
 
-
-        let start = Date{
-            month: 1, 
-            day : 31,
-            hour: 0.0,
-        };
-
-        let end = Date{
-            month: 2, 
-            day : 1,
-            hour: 23.9999999999999,
-        };
-
-        assert!(start.same_day(start.interpolate(end, 0.0)));
-        assert!(start.same_day(start.interpolate(end, 0.2)));        
-        assert!(start.same_day(start.interpolate(end, 0.49)));
-        assert!(start.same_day(start.interpolate(end, 0.49999)));                
-        assert!(end.same_day(start.interpolate(end, 0.51)));
-        assert!(end.same_day(start.interpolate(end, 0.7)));
-        assert!(end.same_day(start.interpolate(end, 0.9)));
-        
-
-    }
-
-
-
-    #[test]
-    fn test_get_day_of_year(){
-
-        let date = Date{
+        let start = Date {
             month: 12,
             day: 31,
-            hour: 12.0
-        };        
-        assert!( (date - Date::from_day_of_year(364.5)).abs() < 0.01 );
-
-        let date = Date{
-            day: 1,
-            month:1,
-            hour: 0.0
+            hour: 0.0,
         };
 
-        assert_eq!(0., date.day_of_year());        
-        assert!( (date - Date::from_day_of_year(0.)).abs() < 0.01 );
-
-        let date = Date{
+        let end = Date {
+            month: 1,
             day: 1,
-            month:1,
-            hour: 12.0
+            hour: 23.9999999999999,
+        };
+
+        assert!(start.same_day(start.interpolate(end, 0.0)));
+        assert!(start.same_day(start.interpolate(end, 0.2)));
+        assert!(start.same_day(start.interpolate(end, 0.49)));
+        assert!(end.same_day(start.interpolate(end, 0.5)));
+        assert!(end.same_day(start.interpolate(end, 0.51)));
+        assert!(end.same_day(start.interpolate(end, 0.7)));
+        assert!(end.same_day(start.interpolate(end, 0.9)));
+
+        let start = Date {
+            month: 1,
+            day: 31,
+            hour: 0.0,
+        };
+
+        let end = Date {
+            month: 2,
+            day: 1,
+            hour: 23.9999999999999,
+        };
+
+        assert!(start.same_day(start.interpolate(end, 0.0)));
+        assert!(start.same_day(start.interpolate(end, 0.2)));
+        assert!(start.same_day(start.interpolate(end, 0.49)));
+        assert!(start.same_day(start.interpolate(end, 0.49999)));
+        assert!(end.same_day(start.interpolate(end, 0.51)));
+        assert!(end.same_day(start.interpolate(end, 0.7)));
+        assert!(end.same_day(start.interpolate(end, 0.9)));
+    }
+
+    #[test]
+    fn test_get_day_of_year() {
+        let date = Date {
+            month: 12,
+            day: 31,
+            hour: 12.0,
+        };
+        assert!((date - Date::from_day_of_year(364.5)).abs() < 0.01);
+
+        let date = Date {
+            day: 1,
+            month: 1,
+            hour: 0.0,
+        };
+
+        assert_eq!(0., date.day_of_year());
+        assert!((date - Date::from_day_of_year(0.)).abs() < 0.01);
+
+        let date = Date {
+            day: 1,
+            month: 1,
+            hour: 12.0,
         };
 
         assert_eq!(0.5, date.day_of_year());
-        assert!( (date - Date::from_day_of_year(0.5)).abs() < 0.01 );
+        assert!((date - Date::from_day_of_year(0.5)).abs() < 0.01);
 
-
-
-        let date = Date{
+        let date = Date {
             day: 4,
-            month:8,
-            hour: 0.0
+            month: 8,
+            hour: 0.0,
         };
 
         assert_eq!(215., date.day_of_year());
-        assert!( (date - Date::from_day_of_year(215.)).abs() < 0.01 );
+        assert!((date - Date::from_day_of_year(215.)).abs() < 0.01);
 
-        let date = Date{
+        let date = Date {
             day: 4,
-            month:8,
-            hour: 0.3 * 24.
+            month: 8,
+            hour: 0.3 * 24.,
         };
 
-        assert_eq!(215.3, date.day_of_year());                
-        assert!( (date - Date::from_day_of_year(215.3)).abs() < 0.01 );
+        assert_eq!(215.3, date.day_of_year());
+        assert!((date - Date::from_day_of_year(215.3)).abs() < 0.01);
 
-
-        let date = Date{
+        let date = Date {
             day: 24,
-            month:3,
-            hour: 0.0
+            month: 3,
+            hour: 0.0,
         };
 
         assert_eq!(82., date.day_of_year());
-        assert!( (date - Date::from_day_of_year(82.)).abs() < 0.01 );
+        assert!((date - Date::from_day_of_year(82.)).abs() < 0.01);
 
-        let date = Date{
+        let date = Date {
             day: 24,
-            month:3,
-            hour: 0.9 * 24.
+            month: 3,
+            hour: 0.9 * 24.,
         };
 
         assert_eq!(82.9, date.day_of_year());
-        assert!( (date - Date::from_day_of_year(82.9)).abs() < 0.01 );
+        assert!((date - Date::from_day_of_year(82.9)).abs() < 0.01);
     }
-    
-    
+
     fn test_compare(before: Date, after: Date) {
-        
         assert!(after > before);
         assert!(!(before > after));
-        
+
         assert!(before < after);
-        assert!(! (after < before));
-        
+        assert!(!(after < before));
+
         assert!(before == before);
         assert!(after == after);
-        
     }
 
     #[test]
-    fn compare_equal(){
+    fn compare_equal() {
         // A single date... it is not later than itself
-        let d = Date{
+        let d = Date {
             month: 2,
             day: 3,
-            hour: 1.
+            hour: 1.,
         };
-        assert!(! (d > d));  
-        assert!(! (d < d));
+        assert!(!(d > d));
+        assert!(!(d < d));
         assert!(d == d);
     }
 
     #[test]
-    fn compare_by_month(){
+    fn compare_by_month() {
         // month of difference
-        let before = Date{
-            month: 1, 
-            day: 1, 
-            hour: 0.
+        let before = Date {
+            month: 1,
+            day: 1,
+            hour: 0.,
         };
-        let after = Date{
-            month: 2, 
-            day: 1, 
-            hour: 0.
+        let after = Date {
+            month: 2,
+            day: 1,
+            hour: 0.,
         };
 
-        test_compare(before,after);
+        test_compare(before, after);
     }
 
     #[test]
-    fn compare_by_day(){
+    fn compare_by_day() {
         // month of difference
-        let before = Date{
-            month: 2, 
-            day: 12, 
-            hour: 0.
+        let before = Date {
+            month: 2,
+            day: 12,
+            hour: 0.,
         };
-        let after = Date{
-            month: 2, 
-            day: 31, 
-            hour: 0.
+        let after = Date {
+            month: 2,
+            day: 31,
+            hour: 0.,
         };
 
-        test_compare(before,after);
+        test_compare(before, after);
     }
 
     #[test]
-    fn compare_by_hour(){
+    fn compare_by_hour() {
         // month of difference
-        let before = Date{
-            month: 2, 
-            day: 12, 
-            hour: 12.4
+        let before = Date {
+            month: 2,
+            day: 12,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 2, 
-            day: 12, 
-            hour: 21.
+        let after = Date {
+            month: 2,
+            day: 12,
+            hour: 21.,
         };
 
-        test_compare(before,after);
+        test_compare(before, after);
     }
 
     #[test]
-    fn compare_dates(){
+    fn compare_dates() {
         // month of difference
-        let before = Date{
-            month: 2, 
-            day: 12, 
-            hour: 12.4
+        let before = Date {
+            month: 2,
+            day: 12,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 9, 
-            day: 1, 
-            hour: 0.
+        let after = Date {
+            month: 9,
+            day: 1,
+            hour: 0.,
         };
 
-        test_compare(before,after);
+        test_compare(before, after);
     }
 
     #[test]
-    fn test_add_days_within_month(){
-        let mut before = Date{
-            month: 2, 
-            day: 12, 
-            hour: 12.4
+    fn test_add_days_within_month() {
+        let mut before = Date {
+            month: 2,
+            day: 12,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 2, 
-            day: 12, 
-            hour: 12.4
+        let after = Date {
+            month: 2,
+            day: 12,
+            hour: 12.4,
         };
 
         before.add_days(0);
@@ -632,191 +576,246 @@ mod tests {
 
         // Add three days
         before.add_days(3);
-        let after = Date{
-            month: 2, 
-            day: 15, 
-            hour: 12.4
+        let after = Date {
+            month: 2,
+            day: 15,
+            hour: 12.4,
         };
         assert!(before == after);
     }
 
     #[test]
-    fn test_add_days_changing_month(){
-        let mut before = Date{
-            month: 1, 
-            day: 25, 
-            hour: 12.4
+    fn test_add_days_changing_month() {
+        let mut before = Date {
+            month: 1,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 2, 
-            day: 4, 
-            hour: 12.4
+        let after = Date {
+            month: 2,
+            day: 4,
+            hour: 12.4,
         };
-                
+
         // Add ten days
-        before.add_days(10);                
+        before.add_days(10);
         assert!(before == after);
 
         // Change two months
-        let mut before = Date{
-            month: 1, 
-            day: 25, 
-            hour: 12.4
+        let mut before = Date {
+            month: 1,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 3, 
-            day: 1, 
-            hour: 12.4
+        let after = Date {
+            month: 3,
+            day: 1,
+            hour: 12.4,
         };
-                
+
         // Add 35 days
-        before.add_days(35);                
-        assert!(before == after );
+        before.add_days(35);
+        assert!(before == after);
     }
 
     #[test]
-    fn test_add_days_changing_year(){
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+    fn test_add_days_changing_year() {
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 1, 
-            day: 4, 
-            hour: 12.4
+        let after = Date {
+            month: 1,
+            day: 4,
+            hour: 12.4,
         };
-                
+
         // Add ten days
-        before.add_days(10);                
+        before.add_days(10);
         assert!(before == after);
 
         // Change two months
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 2, 
-            day: 2, 
-            hour: 12.4
+        let after = Date {
+            month: 2,
+            day: 2,
+            hour: 12.4,
         };
-                
+
         // Add 39 days
-        before.add_days(39);                
-        assert!(before == after );
+        before.add_days(39);
+        assert!(before == after);
 
         // Add 365 days
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+        let after = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        before.add_days(365);                
-        assert!(before == after );
+        before.add_days(365);
+        assert!(before == after);
 
         // Add 365 + 39 days
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 2, 
-            day: 2, 
-            hour: 12.4
+        let after = Date {
+            month: 2,
+            day: 2,
+            hour: 12.4,
         };
-        before.add_days(365 + 39);                
-        assert!(before == after );
+        before.add_days(365 + 39);
+        assert!(before == after);
     }
 
     #[test]
-    fn test_add_hours_seconds(){
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+    fn test_add_hours_seconds() {
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 12, 
-            day: 25, 
-            hour: 13.6
+        let after = Date {
+            month: 12,
+            day: 25,
+            hour: 13.6,
         };
-                
-        // Add 1.2 hours
-        before.add_hours(1.2);                        
-        assert!( (before - after).abs() < 1e-5, "Before is {} | after is {}", before, after);
 
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+        // Add 1.2 hours
+        before.add_hours(1.2);
+        assert!(
+            (before - after).abs() < 1e-5,
+            "Before is {} | after is {}",
+            before,
+            after
+        );
+
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
 
         // Add 1.2 hours, but in seconds
-        before.add_seconds(4320.);                
-        assert!( (before - after).abs() < 1e-5, "Before is {} | after is {}", before, after);
-
-
+        before.add_seconds(4320.);
+        assert!(
+            (before - after).abs() < 1e-5,
+            "Before is {} | after is {}",
+            before,
+            after
+        );
 
         /* ADD DAYS, IN HOURS */
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 1, 
-            day: 4, 
-            hour: 12.4
+        let after = Date {
+            month: 1,
+            day: 4,
+            hour: 12.4,
         };
-                        
+
         // Add ten days, in hours
-        before.add_hours(10.*24.);                
-        assert!(before == after );
+        before.add_hours(10. * 24.);
+        assert!(before == after);
 
         // Change two months
-        let mut before = Date{
-            month: 12, 
-            day: 25, 
-            hour: 12.4
+        let mut before = Date {
+            month: 12,
+            day: 25,
+            hour: 12.4,
         };
-        let after = Date{
-            month: 2, 
-            day: 2, 
-            hour: 12.4
+        let after = Date {
+            month: 2,
+            day: 2,
+            hour: 12.4,
         };
-                
+
         // Add 39 days
-        before.add_days(39);                
+        before.add_days(39);
         assert!(before == after);
     }
 
-
     #[test]
-    fn test_sort(){
+    fn test_sort() {
         let sorted = vec![
-            Date{month: 1, day: 1, hour: 1.23},
-            Date{month: 1, day: 2, hour: 2.23},
-            Date{month: 2, day: 3, hour: 1.23},
-            Date{month: 5, day: 4, hour: 7.23},
-            Date{month: 7, day: 5, hour: 1.23},
-            Date{month: 12, day: 6, hour: 2.23},
+            Date {
+                month: 1,
+                day: 1,
+                hour: 1.23,
+            },
+            Date {
+                month: 1,
+                day: 2,
+                hour: 2.23,
+            },
+            Date {
+                month: 2,
+                day: 3,
+                hour: 1.23,
+            },
+            Date {
+                month: 5,
+                day: 4,
+                hour: 7.23,
+            },
+            Date {
+                month: 7,
+                day: 5,
+                hour: 1.23,
+            },
+            Date {
+                month: 12,
+                day: 6,
+                hour: 2.23,
+            },
         ];
 
         let mut original = vec![
-            Date{month: 5, day: 4, hour: 7.23},
-            Date{month: 12, day: 6, hour: 2.23},
-            Date{month: 1, day: 2, hour: 2.23},
-            Date{month: 2, day: 3, hour: 1.23},
-            Date{month: 7, day: 5, hour: 1.23},
-            Date{month: 1, day: 1, hour: 1.23},
+            Date {
+                month: 5,
+                day: 4,
+                hour: 7.23,
+            },
+            Date {
+                month: 12,
+                day: 6,
+                hour: 2.23,
+            },
+            Date {
+                month: 1,
+                day: 2,
+                hour: 2.23,
+            },
+            Date {
+                month: 2,
+                day: 3,
+                hour: 1.23,
+            },
+            Date {
+                month: 7,
+                day: 5,
+                hour: 1.23,
+            },
+            Date {
+                month: 1,
+                day: 1,
+                hour: 1.23,
+            },
         ];
 
         original.sort();
@@ -825,36 +824,70 @@ mod tests {
     }
 
     #[test]
-    fn test_search(){
+    fn test_search() {
         let sorted = vec![
-            Date{month: 1, day: 1, hour: 1.23},
-            Date{month: 1, day: 2, hour: 2.23},
-            Date{month: 2, day: 3, hour: 1.23},
-            Date{month: 5, day: 4, hour: 7.23},
-            Date{month: 7, day: 5, hour: 1.23},
-            Date{month: 12, day: 6, hour: 2.23},
+            Date {
+                month: 1,
+                day: 1,
+                hour: 1.23,
+            },
+            Date {
+                month: 1,
+                day: 2,
+                hour: 2.23,
+            },
+            Date {
+                month: 2,
+                day: 3,
+                hour: 1.23,
+            },
+            Date {
+                month: 5,
+                day: 4,
+                hour: 7.23,
+            },
+            Date {
+                month: 7,
+                day: 5,
+                hour: 1.23,
+            },
+            Date {
+                month: 12,
+                day: 6,
+                hour: 2.23,
+            },
         ];
 
-        
-
-        if let Ok(i) = sorted.binary_search(&Date{month: 2, day: 3, hour: 1.23}){
+        if let Ok(i) = sorted.binary_search(&Date {
+            month: 2,
+            day: 3,
+            hour: 1.23,
+        }) {
             assert_eq!(i, 2)
         }
 
-        if let Err(i) = sorted.binary_search(&Date{month: 2, day: 3, hour: 1.0}){
+        if let Err(i) = sorted.binary_search(&Date {
+            month: 2,
+            day: 3,
+            hour: 1.0,
+        }) {
             assert_eq!(i, 2)
         }
 
-        if let Err(i) = sorted.binary_search(&Date{month: 12, day: 13, hour: 1.0}){
+        if let Err(i) = sorted.binary_search(&Date {
+            month: 12,
+            day: 13,
+            hour: 1.0,
+        }) {
             assert_eq!(i, 6)
         }
 
         // assert_eq!(sorted, original);
     }
 
-    #[cfg(feature="serde")]
+    #[cfg(feature = "serde")]
     #[test]
-    fn test_serde(){
+    fn test_serde() {
         use serde_json;
 
         let v = r#"{
@@ -862,39 +895,38 @@ mod tests {
             "day": 4, 
             "hour": 21
         }"#;
-        let d : Date = serde_json::from_str(&v).unwrap();
+        let d: Date = serde_json::from_str(&v).unwrap();
         assert_eq!(d.month, 9);
         assert_eq!(d.day, 4);
         assert!((d.hour - 21.).abs() < 1e-5);
-
     }
 
-    #[cfg(feature="chrono")]
+    #[cfg(feature = "chrono")]
     #[test]
-    fn test_chrono(){
+    fn test_chrono() {
         use chrono::NaiveDateTime;
-        
-        let v = "2014-11-28T21:00:09+09:00";
-        let chrono_datetime  = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").unwrap();
 
-        let d : Date = chrono_datetime.into();
+        let v = "2014-11-28T21:00:09+09:00";
+        let chrono_datetime = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").unwrap();
+
+        let d: Date = chrono_datetime.into();
         assert_eq!(d.month, 11);
         assert_eq!(d.day, 28);
         assert!((d.hour - 21.0025).abs() < 1e-5, "hour is {}", d.hour);
 
         let v = "2023-06-30T23:59:59+12:00";
-        let chrono_datetime  = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").unwrap();
+        let chrono_datetime = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").unwrap();
 
-        let d : Date = chrono_datetime.into();
+        let d: Date = chrono_datetime.into();
         assert_eq!(d.month, 06);
         assert_eq!(d.day, 30);
         println!("{d}");
         assert!((d.hour - 23.99972).abs() < 1e-5, "hour is {}", d.hour);
     }
 
-    #[cfg(feature="chrono")]
+    #[cfg(feature = "chrono")]
     #[test]
-    fn test_loop(){
+    fn test_loop() {
         use crate::DateFactory;
 
         // let start_str = "2022-12-25T00:00:00+12:00";
@@ -917,10 +949,33 @@ mod tests {
         };
         dbg!(end - start);
         let factory = DateFactory::new(start, end, 3600.);
-        for (i,d) in factory.enumerate() {
+        for (i, d) in factory.enumerate() {
             dbg!(d, i);
         }
-        
+    }
+
+    #[test]
+    #[cfg(feature = "chrono")]
+    fn test_into_naive_datetime(){
+        use chrono::{Datelike, Timelike};
+
+        let d = Date{
+            month: 10,
+            day: 11,
+            hour: 12.0
+        };
+
+        let year = 2025;
+
+        let out = d.into_naive_datetime(year);
+        assert_eq!(out.year(), year);
+        assert_eq!(out.month() as u8, d.month);
+        assert_eq!(out.day() as u8, d.day);
+
+        assert_eq!(out.hour(), 12);
+        assert_eq!(out.minute(), 0);
+        assert_eq!(out.second(), 0);
+
 
     }
 }

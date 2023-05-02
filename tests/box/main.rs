@@ -11,7 +11,7 @@ fn some_fun() {
         output: Some("./check.csv".into()),
         control_file: None,
         research_mode: false,
-        n: 1,
+        n: 4,
     };
 
     // Create model

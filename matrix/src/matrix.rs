@@ -194,9 +194,9 @@ impl Matrix {
             x.data.copy_from_slice(&new_x.data);
         }
 
-        return Err(format!(
+        Err(format!(
             "Gauss-Seidel algorithm did not converge after {} iterations",
             max_iter
-        ));
+        ))
     }
 }
