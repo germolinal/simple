@@ -80,4 +80,4 @@ pub use geometry;
 pub use polynomial::*;
 pub use schedule::*;
 
-pub use solar::{Time, Solar};
+pub use solar::{Time, Solar, SolarForecastData};
