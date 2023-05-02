@@ -32,7 +32,7 @@ use weather::{CurrentWeather, Weather};
 use crate::optical_info::OpticalInfo;
 
 /// The name of the module
-pub(crate) const MODULE_NAME: &'static str = "Solar Model";
+pub(crate) const MODULE_NAME: &str = "Solar Model";
 
 /// The memory used by this module during simulation
 pub type SolarModelMemory = ();

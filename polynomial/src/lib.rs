@@ -95,6 +95,38 @@ impl Polynomial{
             coefficients: [0.0; 12],
         }
     }
+
+    /// checks whether the number of coefficients is zero
+    pub const fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// Adds a new coefficient to the polynomial
+    pub fn push(&mut self, v: Float) {
+        if self.len >= self.coefficients.len() {
+            panic!(
+                "The number of coefficients in a Polynomial is limited to {}. Cannot add a new one",
+                self.coefficients.len()
+            )
+        }
+        self.coefficients[self.len] = v;
+        self.len += 1;
+    }
+
+    /// Returns the number of coefficients
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Evaluates the polynomial with a certain input.
+    pub fn eval(&self, x: Float) -> Float {
+        let mut y = 0.0;
+        for i in 0..self.len {
+            y += self.coefficients[i] * x.powi(i as i32);
+        }
+
+        y
+    }
 }
 
 
@@ -144,34 +176,7 @@ macro_rules! poly {
 
 }
 
-impl Polynomial{
-    /// Adds a new coefficient to the polynomial
-    pub fn push(&mut self, v: Float) {
-        if self.len >= self.coefficients.len() {
-            panic!(
-                "The number of coefficients in a Polynomial is limited to {}. Cannot add a new one",
-                self.coefficients.len()
-            )
-        }
-        self.coefficients[self.len] = v;
-        self.len += 1;
-    }
 
-    /// Returns the number of coefficients
-    pub fn len(&self) -> usize {
-        self.len
-    }
-
-    /// Evaluates the polynomial with a certain input.
-    pub fn eval(&self, x: Float) -> Float {
-        let mut y = 0.0;
-        for i in 0..self.len {
-            y += self.coefficients[i] * x.powi(i as i32);
-        }
-
-        y
-    }
-}
 
 /***********/
 /* TESTING */
