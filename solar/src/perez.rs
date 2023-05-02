@@ -432,8 +432,7 @@ impl PerezSky {
         }
 
         let dew_point = weather_data
-            .dew_point_temperature
-            .expect("Weather data needs dew point temperature for calculating sky-vec");
+            .dew_point_temperature;
         let diffuse_horizontal_irrad = weather_data
             .diffuse_horizontal_radiation
             .expect("Weather data needs diffuse_horizontal_radiation for calculating sky-vec");
@@ -775,7 +774,7 @@ mod tests {
         let units = SkyUnits::Visible;
 
         let weather_data = CurrentWeather {
-            dew_point_temperature: Some(11.),
+            dew_point_temperature: 11.,
             direct_normal_radiation: Some(538.),
             diffuse_horizontal_radiation: Some(25.),
 
@@ -849,7 +848,7 @@ mod tests {
         let units = SkyUnits::Solar;
 
         let weather_data = CurrentWeather {
-            dew_point_temperature: Some(11.),
+            dew_point_temperature: 11.,
             direct_normal_radiation: Some(538.),
             diffuse_horizontal_radiation: Some(25.),
 
@@ -923,7 +922,7 @@ mod tests {
         let units = SkyUnits::Solar;
 
         let weather_data = CurrentWeather {
-            dew_point_temperature: Some(11.),
+            dew_point_temperature: 11.,
             direct_normal_radiation: Some(538.),
             diffuse_horizontal_radiation: Some(25.),
 
@@ -997,7 +996,7 @@ mod tests {
         let units = SkyUnits::Solar;
 
         let weather_data = CurrentWeather {
-            dew_point_temperature: Some(11.),
+            dew_point_temperature: 11.,
             direct_normal_radiation: Some(538.),
             diffuse_horizontal_radiation: Some(25.),
 
@@ -1071,7 +1070,7 @@ mod tests {
         let units = SkyUnits::Visible;
 
         let weather_data = CurrentWeather {
-            dew_point_temperature: Some(11.),
+            dew_point_temperature: 11.,
             direct_normal_radiation: Some(538.),
             diffuse_horizontal_radiation: Some(25.),
 
@@ -1145,7 +1144,7 @@ mod tests {
         let units = SkyUnits::Visible;
 
         let weather_data = CurrentWeather {
-            dew_point_temperature: Some(11.),
+            dew_point_temperature: 11.,
             direct_normal_radiation: Some(538.),
             diffuse_horizontal_radiation: Some(25.),
 

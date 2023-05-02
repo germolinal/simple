@@ -28,13 +28,14 @@ use chrono::NaiveDate;
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Copy, Clone, PartialEq, Debug, Default)]
+
 /// An extremely simple Date object. We don't
 /// need anything else, I think.
 /// It does not consider years at all!
 /// Days and Months are counted from 1
 /// (e.g. January is 1, not 0)
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Copy, Clone, PartialEq, Debug, Default)]
 pub struct Date {
     /// Months of the year, from 1 to 12
     pub month: u8,

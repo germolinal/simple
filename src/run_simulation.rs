@@ -28,7 +28,7 @@ use std::borrow::Borrow;
 use crate::RhaiControlScript;
 
 use crate::multiphysics_model::MultiphysicsModel;
-use weather::EPWWeather;
+use weather::{EPWWeather, Weather};
 
 /// The options we can pass to the simulation
 #[derive(Parser)]
@@ -63,9 +63,12 @@ pub struct SimOptions {
     // /// The final date
     // #[clap(short = 'e')]
     // pub end: Date,
+    
     /// The number of timesteps per hour in the simulation
     #[clap(short = 'n')]
     pub n: usize,
+
+    
 }
 
 
@@ -76,7 +79,7 @@ struct PreProcessData {
     report_indexes: Vec<usize>,
     full_header: Vec<String>,
     model: MultiphysicsModel,
-    weather: EPWWeather,
+    weather: Weather,
 }
 
 fn pre_process(model: &Model, options: &SimOptions, state_header: &mut SimulationStateHeader)->Result<PreProcessData, String> {
@@ -96,14 +99,14 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
     let end = Date {
         day: 31,
         month: 12,
-        hour: 23.,
+        hour: 24.,
     };
 
     let dt = 60. * 60. / options.n as Float;
     let sim_period = DateFactory::new(start, end, dt);
 
     // Load weather
-    let weather = EPWWeather::from_file(options.weather_file.to_string())?;
+    let weather : Weather = EPWWeather::from_file(options.weather_file.to_string())?.into();
 
     let meta_options = MetaOptions {
         latitude: weather.location.latitude.to_radians(),

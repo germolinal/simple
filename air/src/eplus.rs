@@ -43,11 +43,9 @@ pub fn design_flow_rate(
         .dry_bulb_temperature(state)
         .expect("Space does not have Dry Bulb temperature");
     let t_out = weather
-        .dry_bulb_temperature
-        .expect("Weather given did not have Dry Bulb temperature");
+        .dry_bulb_temperature;
     let wind_speed = weather
-        .wind_speed
-        .expect("Weather does not have Wind Speed");
+        .wind_speed;
 
     design_rate * (a + b * (t_space - t_out).abs() + c * wind_speed + d * wind_speed * wind_speed)
 }
@@ -90,13 +88,12 @@ pub fn effective_leakage_area(
     cs: Float,
 ) -> Float {
     let outdoor_temp = weather
-        .dry_bulb_temperature
-        .expect("Weather provided does not include DryBulb Temperature");
+        .dry_bulb_temperature;
     let space_temp = space
         .dry_bulb_temperature(state)
         .expect("Space has no Dry-bulb temperature");
     let delta_t = (outdoor_temp - space_temp).abs();
-    let ws = weather.wind_speed.unwrap_or(0.0);
+    let ws = weather.wind_speed;
 
     (area / 1000.) * (cs * delta_t + cw * ws * ws).sqrt()
 }
@@ -108,7 +105,7 @@ mod tests {
     use calendar::Date;
     use schedule::ScheduleConstant;
     use weather::SyntheticWeather;
-    use weather::Weather;
+    use weather::WeatherTrait;
 
     #[test]
     fn test_design_blast_flow_rate() {
