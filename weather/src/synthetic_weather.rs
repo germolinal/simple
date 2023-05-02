@@ -30,11 +30,11 @@ use crate::WeatherTrait;
 /// the data.
 pub struct SyntheticWeather {
     /// A schedule producing the drybulb temperature
-    /// in C (in Float format)
+    /// in C (in Float format). Defaults to 0C
     pub dry_bulb_temperature: Box<dyn Schedule<Float>>,
 
     /// A schedule producing the dew point temperature
-    /// in C (in Float format)
+    /// in C (in Float format). Defaults to 0C
     pub dew_point_temperature: Box<dyn Schedule<Float>>,
 
     /// A schedule producing the global horizontal radiation
@@ -50,10 +50,10 @@ pub struct SyntheticWeather {
     pub diffuse_horizontal_radiation: Box<dyn Schedule<Float>>,
 
     /// A schedule producing the drybulb temperature
-    /// in C (in Float format)
+    /// in C (in Float format). Defaults to 0m/s
     pub wind_speed: Box<dyn Schedule<Float>>,
 
-    /// Wind Direction in degrees
+    /// Wind Direction in radians. Defaults to zero
     ///
     /// From EnergyPlus documentation:
     /// > The convention is that North=0.0, East=90.0, South=180.0, West=270.0. (Wind direction in degrees at the time indicated. If calm, direction equals zero.) Values can range from 0 to 360
@@ -62,13 +62,13 @@ pub struct SyntheticWeather {
     /// Horizontal IR Radiation in Wh/m2
     pub horizontal_infrared_radiation_intensity: Box<dyn Schedule<Float>>,
 
-    /// The opaque sky cover (in fraction, from 0 ro 1)
+    /// The opaque sky cover (in fraction, from 0 ro 1). Defaults to zero
     pub opaque_sky_cover: Box<dyn Schedule<Float>>,
 
-    /// The relative humidity (in fraction, from 0 to 1)
+    /// The relative humidity (in fraction, from 0 to 1). Defaults to 0.5
     pub relative_humidity: Box<dyn Schedule<Float>>,
 
-    /// The pressure, in Pa
+    /// The pressure, in Pa... defaults to 101300 Pa
     pub pressure: Box<dyn Schedule<Float>>,
 }
 
@@ -105,7 +105,7 @@ impl WeatherTrait for SyntheticWeather {
                 .horizontal_infrared_radiation_intensity
                 .get(date),
             opaque_sky_cover: self.opaque_sky_cover.get(date).or(Some(0.0)).unwrap(),
-            relative_humidity: self.relative_humidity.get(date).or(Some(50.0)).unwrap(),
+            relative_humidity: self.relative_humidity.get(date).or(Some(0.5)).unwrap(),
             pressure: self.pressure.get(date).or(Some(101300.)).unwrap(),
         }
     }
