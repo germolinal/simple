@@ -19,15 +19,15 @@ SOFTWARE.
 */
 use crate::Float;
 
-use crate::epw_weather::EPWWeather;
-//use crate::location::Location;
-use crate::epw_ground_temperature::EPWGroundTemperature;
-use crate::epw_weather_line::EPWWeatherLine;
+use super::weather::EPWWeather;
+use super::ground_temperature::EPWGroundTemperature;
+use super::weather_line::EPWWeatherLine;
 use std::fmt::Display;
 use std::path::Path;
 use std::fs;
 
-pub struct EPWScanner<'a> {
+
+pub (crate)struct EPWScanner<'a> {
     /// Indicates the position of current character being
     /// scanned
     current: usize,

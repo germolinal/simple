@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 
 //! The main `SIMPLE` Simulation crate, combining pretty much every other 
 //! development.
@@ -71,9 +71,11 @@ pub use model::{
 };
 pub use weather::{
     Weather,
+    WeatherTrait,
     SyntheticWeather,
     EPWWeather,    
     CurrentWeather,
+    Location,
 };
 pub use light::OpticalInfo;
 pub use geometry;
