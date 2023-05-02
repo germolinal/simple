@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["Normal","Represents a physical material with common physical properties (e.g., timber, concrete, brick, glass).  In other words, it cannot change its thermal/optical properties based on its internal state (e.g., it cannot change its specific heat based on temperature, like Gas or Phase Change Materials)."]]};

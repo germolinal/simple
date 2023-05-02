@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["FenestrationPosition","Defines whether the Fenestration is fixed or openable."],["FenestrationType","Defines whether the fenestration is a Door or a Window."]],"struct":[["Fenestration","A surface that can potentially be opened and closed. It can be of any Construction and it does not need to be a hole in another surface."]]};

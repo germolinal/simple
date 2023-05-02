@@ -3,6 +3,10 @@
 .DS_Store
 .vscode
 
+# this is created in a test
+optical_data.json
+cold_optical_data.json
+
 # MAIN
 #######
 # Validations
@@ -15,8 +19,9 @@ tests/*/*
 
 # MODEL
 #######
-model/docs/ioreference/src/auto-*.md
-model/docs/ioreference/src/SUMMARY.md
+docs/ioreference/src/auto-*.md
+docs/ioreference/src/SUMMARY.md
+docs/ioreference/book
 model/model.json 
 
 # GEOMETRY

@@ -13,7 +13,7 @@ matrix = { path = "../matrix" }
 weather = {path = "../weather" }
 
 [dev-dependencies]
-
+validate = {git="https://github.com/germolinal/validate"}
 
 [features]
 default = []

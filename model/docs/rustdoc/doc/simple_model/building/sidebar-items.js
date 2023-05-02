@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["ShelterClass","Indicates how sheltered is the building. This affects its infiltration"]],"struct":[["Building","This object is utilized to group `Space` objects together for metering and/or shared values. For example, the number of storeys and the `ShelterClass` will help defining the `Infiltrations`"]]};
