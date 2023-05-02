@@ -105,7 +105,7 @@ impl WeatherTrait for SyntheticWeather {
                 .horizontal_infrared_radiation_intensity
                 .get(date),
             opaque_sky_cover: self.opaque_sky_cover.get(date).or(Some(0.0)).unwrap(),
-            relative_humidity: self.relative_humidity.get(date),
+            relative_humidity: self.relative_humidity.get(date).or(Some(50.0)).unwrap(),
             pressure: self.pressure.get(date).or(Some(101300.)).unwrap(),
         }
     }

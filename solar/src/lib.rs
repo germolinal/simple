@@ -400,7 +400,7 @@ impl Solar {
             current_data.dry_bulb_temperature,
             three_hours_prior_data.dry_bulb_temperature,
             current_data.wind_speed,
-            current_data.relative_humidity.expect("We need 'relative_humidity' for this"),
+            current_data.relative_humidity,
         );
         let cos_theta = sun_direction.z;
 
@@ -1126,7 +1126,7 @@ mod tests {
                             line.dry_bulb_temperature,
                             prior_temp,
                             line.wind_speed,
-                            line.relative_humidity.unwrap(),
+                            line.relative_humidity,
                         )
                     } else {
                         0.0

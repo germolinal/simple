@@ -58,7 +58,7 @@ pub struct CurrentWeather {
     pub opaque_sky_cover: Float,
 
     /// Relative humidity, in fractions (0-1)
-    pub relative_humidity: Option<Float>,
+    pub relative_humidity: Float,
 
     /// in Pa
     pub pressure: Float,
@@ -157,7 +157,7 @@ impl CurrentWeather {
             date,          
             dry_bulb_temperature: interp(self.dry_bulb_temperature, other.dry_bulb_temperature),
             dew_point_temperature: interp(self.dew_point_temperature, other.dew_point_temperature),
-            relative_humidity: interp_opt(self.relative_humidity, other.relative_humidity),
+            relative_humidity: interp(self.relative_humidity, other.relative_humidity),
             pressure: interp(
                 self.pressure,
                 other.pressure,
