@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 use model::{Model,SimulationState, SimulationStateHeader};
-use weather::Weather;
+use weather::WeatherTrait;
 use calendar::Date;
 use communication::{MetaOptions, SimulationModel, ErrorHandling};
 use std::borrow::Borrow;
@@ -36,7 +36,7 @@ impl SimulationModel for ModelA{
     fn new<M: Borrow<Model>>(_meta: &MetaOptions, _options: Self::OptionType, _model : M, _state: &mut SimulationStateHeader, _n: usize)->Result<Self::OutputType,String>{
         todo!()
     }
-    fn march<W: Weather, M: Borrow<Model>>(&self, _date: Date, _weather: &W, _model: M, _state: &mut SimulationState, _alloc: &mut () )->Result<(),String>{
+    fn march<W: WeatherTrait, M: Borrow<Model>>(&self, _date: Date, _weather: &W, _model: M, _state: &mut SimulationState, _alloc: &mut () )->Result<(),String>{
         todo!()
     }
 
@@ -69,7 +69,7 @@ impl SimulationModel for ModelB{
     fn new<M: Borrow<Model>>(_meta: &MetaOptions, _options: Self::OptionType, _model : M, _state: &mut SimulationStateHeader, _n: usize)->Result<Self::OutputType,String>{
         todo!()
     }
-    fn march<W: Weather, M: Borrow<Model>>(&self, _date: Date, _weather: &W, _model: M, _state: &mut SimulationState, _alloc: &mut ())->Result<(),String>{
+    fn march<W: WeatherTrait, M: Borrow<Model>>(&self, _date: Date, _weather: &W, _model: M, _state: &mut SimulationState, _alloc: &mut ())->Result<(),String>{
         todo!()
     }
 

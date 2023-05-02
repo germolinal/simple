@@ -93,7 +93,7 @@ polynomial = { path = "polynomial" }
 schedule = { path = "schedule" }
 
 [dev-dependencies]
-
+validate = { git = "https://github.com/germolinal/validate" }
 
 
 [features]

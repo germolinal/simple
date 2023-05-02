@@ -8,13 +8,13 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-calendar = { path = "../calendar" }
+calendar = { path = "../calendar", features = ["serde"]}
 schedule = { path = "../schedule" }
-serde = {version="1", features=["derive"]}
+serde = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
-validate = {git="https://github.com/germolinal/validate"}
-serde_json="1"
+validate = { git = "https://github.com/germolinal/validate" }
+serde_json = { workspace = true }
 
 
 [features]

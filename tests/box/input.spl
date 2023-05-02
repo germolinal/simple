@@ -2,7 +2,7 @@ SolarOptions {
     n_solar_irradiance_points: 100,
     solar_ambient_divitions: 3000,
     solar_sky_discretization: 1,
-    optical_data_path: "./optical_data.json"
+    optical_data_path: "./tests/box/optical_data.json"
 }
 
 Substance {
