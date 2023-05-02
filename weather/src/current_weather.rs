@@ -48,8 +48,8 @@ pub struct CurrentWeather {
     /// in m/s
     pub wind_speed: Float,
 
-    /// in degrees... north is zero?
-    pub wind_direction: Option<Float>,
+    /// in radians... north is zero?
+    pub wind_direction: Float,
 
     /// in Wh/m2
     pub horizontal_infrared_radiation_intensity: Option<Float>,
@@ -178,7 +178,7 @@ impl CurrentWeather {
                 self.diffuse_horizontal_radiation,
                 other.diffuse_horizontal_radiation,
             ),            
-            wind_direction: interp_opt(self.wind_direction, other.wind_direction),
+            wind_direction: interp(self.wind_direction, other.wind_direction),
             wind_speed: interp(self.wind_speed, other.wind_speed),
             // total_sky_cover: interp(self.total_sky_cover, other.total_sky_cover),
             opaque_sky_cover: interp(self.opaque_sky_cover, other.opaque_sky_cover),            

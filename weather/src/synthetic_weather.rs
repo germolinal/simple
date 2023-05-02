@@ -100,7 +100,7 @@ impl WeatherTrait for SyntheticWeather {
             direct_normal_radiation: self.direct_normal_radiation.get(date),
             diffuse_horizontal_radiation: self.diffuse_horizontal_radiation.get(date),
             wind_speed: self.wind_speed.get(date).or(Some(0.0)).unwrap(),
-            wind_direction: self.wind_direction.get(date),
+            wind_direction: self.wind_direction.get(date).or(Some(0.0)).unwrap(),
             horizontal_infrared_radiation_intensity: self
                 .horizontal_infrared_radiation_intensity
                 .get(date),

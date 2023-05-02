@@ -170,7 +170,7 @@ impl std::convert::Into<CurrentWeather> for &EPWWeatherLine {
             global_horizontal_radiation: Some(self.global_horizontal_radiation),
             diffuse_horizontal_radiation: Some(self.diffuse_horizontal_radiation),
             wind_speed: self.wind_speed,
-            wind_direction: Some(self.wind_direction),
+            wind_direction: self.wind_direction.to_radians(),
             horizontal_infrared_radiation_intensity: Some(
                 self.horizontal_infrared_radiation_intensity,
             ),
