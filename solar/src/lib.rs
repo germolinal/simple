@@ -399,7 +399,7 @@ impl Solar {
             current_data.opaque_sky_cover.expect("We need 'opaque_sky_cover' for this calculation"),
             current_data.dry_bulb_temperature,
             three_hours_prior_data.dry_bulb_temperature,
-            current_data.wind_speed.expect("We need 'wind_speed' for this calculation"),
+            current_data.wind_speed,
             current_data.relative_humidity.expect("We need 'relative_humidity' for this"),
         );
         let cos_theta = sun_direction.z;
@@ -1125,7 +1125,7 @@ mod tests {
                             line.opaque_sky_cover.unwrap(),
                             line.dry_bulb_temperature,
                             prior_temp,
-                            line.wind_speed.unwrap(),
+                            line.wind_speed,
                             line.relative_humidity.unwrap(),
                         )
                     } else {

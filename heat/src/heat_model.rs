@@ -487,7 +487,7 @@ impl SimulationModel for ThermalModel {
             date.add_seconds(self.dt);
             let current_weather = weather.get_weather_data(date);
             let wind_direction = current_weather.wind_direction.unwrap().to_radians();
-            let wind_speed = current_weather.wind_speed.unwrap();
+            let wind_speed = current_weather.wind_speed;
 
             let t_out = current_weather.dry_bulb_temperature;
 

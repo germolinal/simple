@@ -94,12 +94,12 @@ impl WeatherTrait for SyntheticWeather {
     fn get_weather_data(&self, date: Date) -> CurrentWeather {
         CurrentWeather {
             date,
-            dry_bulb_temperature: self.dry_bulb_temperature.get(date).ok_or(0.0).unwrap(),
+            dry_bulb_temperature: self.dry_bulb_temperature.get(date).or(Some(0.0)).unwrap(),
             dew_point_temperature: self.dew_point_temperature.get(date),
             global_horizontal_radiation: self.global_horizontal_radiation.get(date),
             direct_normal_radiation: self.direct_normal_radiation.get(date),
             diffuse_horizontal_radiation: self.diffuse_horizontal_radiation.get(date),
-            wind_speed: self.wind_speed.get(date),
+            wind_speed: self.wind_speed.get(date).or(Some(0.0)).unwrap(),
             wind_direction: self.wind_direction.get(date),
             horizontal_infrared_radiation_intensity: self
                 .horizontal_infrared_radiation_intensity

@@ -45,8 +45,7 @@ pub fn design_flow_rate(
     let t_out = weather
         .dry_bulb_temperature;
     let wind_speed = weather
-        .wind_speed
-        .expect("Weather does not have Wind Speed");
+        .wind_speed;
 
     design_rate * (a + b * (t_space - t_out).abs() + c * wind_speed + d * wind_speed * wind_speed)
 }
@@ -94,7 +93,7 @@ pub fn effective_leakage_area(
         .dry_bulb_temperature(state)
         .expect("Space has no Dry-bulb temperature");
     let delta_t = (outdoor_temp - space_temp).abs();
-    let ws = weather.wind_speed.unwrap_or(0.0);
+    let ws = weather.wind_speed;
 
     (area / 1000.) * (cs * delta_t + cw * ws * ws).sqrt()
 }
