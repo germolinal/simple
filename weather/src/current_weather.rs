@@ -31,7 +31,7 @@ pub struct CurrentWeather {
     pub date: Date,
 
     /// Exterior dry bulb temperature in C
-    pub dry_bulb_temperature: Option<Float>,
+    pub dry_bulb_temperature: Float,
 
     /// Exterior dew point temperature in C
     pub dew_point_temperature: Option<Float>,
@@ -99,7 +99,7 @@ impl CurrentWeather {
     /// # use weather::current_weather::CurrentWeather;
     /// let cw = CurrentWeather {
     ///     // This method returns an error if this info is not available.
-    ///     dry_bulb_temperature: Some(20.),
+    ///     dry_bulb_temperature: 20.,
     ///     dew_point_temperature: Some(10.),
     ///     opaque_sky_cover: Some(0.),
     ///     .. CurrentWeather::default()
@@ -113,7 +113,7 @@ impl CurrentWeather {
     /// 
     /// let cw = CurrentWeather {
     ///     // This method returns an error if this info is not available.
-    ///     dry_bulb_temperature: Some(13.625),
+    ///     dry_bulb_temperature: 13.625,
     ///     dew_point_temperature: Some(8.325),
     ///     opaque_sky_cover: Some(5.),
     ///     .. CurrentWeather::default()
@@ -142,13 +142,7 @@ impl CurrentWeather {
             ),
         };
 
-        let temp = match self.dry_bulb_temperature {
-            Some(v) => v + 273.15,
-            None => return Err(
-                "missing field 'dry_bulb_temperature' when attempting to derive_horizontal_ir()"
-                    .into(),
-            ),
-        };
+        let temp = self.dry_bulb_temperature + 273.15; 
 
         let e_sky_clear = 0.787 + 0.764 * (dp / 273.).ln();
         let e_sky = e_sky_clear * (1.0 + 0.0224 * n - 0.0035 * n.powi(2) + 0.00028 * n.powi(3));
@@ -158,12 +152,15 @@ impl CurrentWeather {
 
     /// Interpolates the data between to WeatherLines
     pub fn interpolate(&self, other: &Self, x: Float) -> Self {
-        let interp = |a, b| {
+        let interp_opt = |a, b| {
             if let (Some(a), Some(b)) = (a, b) {
                 Some(a + x * (b - a))
             } else {
                 None
             }
+        };
+        let interp = |a, b| {
+            a + x * (b - a)
         };
 
 
@@ -172,32 +169,32 @@ impl CurrentWeather {
         Self {            
             date,          
             dry_bulb_temperature: interp(self.dry_bulb_temperature, other.dry_bulb_temperature),
-            dew_point_temperature: interp(self.dew_point_temperature, other.dew_point_temperature),
-            relative_humidity: interp(self.relative_humidity, other.relative_humidity),
-            pressure: interp(
+            dew_point_temperature: interp_opt(self.dew_point_temperature, other.dew_point_temperature),
+            relative_humidity: interp_opt(self.relative_humidity, other.relative_humidity),
+            pressure: interp_opt(
                 self.pressure,
                 other.pressure,
             ),            
-            horizontal_infrared_radiation_intensity: interp(
+            horizontal_infrared_radiation_intensity: interp_opt(
                 self.horizontal_infrared_radiation_intensity,
                 other.horizontal_infrared_radiation_intensity,
             ),
-            global_horizontal_radiation: interp(
+            global_horizontal_radiation: interp_opt(
                 self.global_horizontal_radiation,
                 other.global_horizontal_radiation,
             ),
-            direct_normal_radiation: interp(
+            direct_normal_radiation: interp_opt(
                 self.direct_normal_radiation,
                 other.direct_normal_radiation,
             ),
-            diffuse_horizontal_radiation: interp(
+            diffuse_horizontal_radiation: interp_opt(
                 self.diffuse_horizontal_radiation,
                 other.diffuse_horizontal_radiation,
             ),            
-            wind_direction: interp(self.wind_direction, other.wind_direction),
-            wind_speed: interp(self.wind_speed, other.wind_speed),
+            wind_direction: interp_opt(self.wind_direction, other.wind_direction),
+            wind_speed: interp_opt(self.wind_speed, other.wind_speed),
             // total_sky_cover: interp(self.total_sky_cover, other.total_sky_cover),
-            opaque_sky_cover: interp(self.opaque_sky_cover, other.opaque_sky_cover),            
+            opaque_sky_cover: interp_opt(self.opaque_sky_cover, other.opaque_sky_cover),            
         }
     }
 }

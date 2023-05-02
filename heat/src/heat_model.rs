@@ -489,13 +489,7 @@ impl SimulationModel for ThermalModel {
             let wind_direction = current_weather.wind_direction.unwrap().to_radians();
             let wind_speed = current_weather.wind_speed.unwrap();
 
-            let t_out = match current_weather.dry_bulb_temperature {
-                Some(v) => v,
-                None => return Err(
-                    "Trying to march on Thermal Model, but dry bulb temperature was not provided"
-                        .to_string(),
-                ),
-            };
+            let t_out = current_weather.dry_bulb_temperature;
 
             // Gather spaces temperatures
             let t_current = self.get_current_zones_temperatures(state);

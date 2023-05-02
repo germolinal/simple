@@ -121,6 +121,12 @@ impl Weather {
     } // end of find_weather_line()
 }
 
+impl std::ops::AddAssign<Self> for Weather {
+    fn add_assign(&mut self, rhs: Self) {
+        self.data.extend_from_slice(&rhs.data)        
+    }
+}
+
 impl WeatherTrait for Weather{
     fn get_weather_data(&self, date: Date) -> CurrentWeather {
         self.find_weather_line(date)
@@ -132,6 +138,7 @@ impl WeatherTrait for Weather{
 mod tests {
     use super::*;
     use super::epw::scanner::EPWScanner;
+    use calendar::DateFactory;
     use validate::assert_close;
 
     #[test]
@@ -156,8 +163,8 @@ mod tests {
             1e-8
         );
         assert_close!(
-            ln.dry_bulb_temperature.unwrap(),
-            epw.data[0].dry_bulb_temperature.unwrap(),
+            ln.dry_bulb_temperature,
+            epw.data[0].dry_bulb_temperature,
             1e-8
         );
 
@@ -173,8 +180,8 @@ mod tests {
             1e-8
         );
         assert_close!(
-            ln.dry_bulb_temperature.unwrap(),
-            epw.data[1].dry_bulb_temperature.unwrap(),
+            ln.dry_bulb_temperature,
+            epw.data[1].dry_bulb_temperature,
             1e-8
         );
 
@@ -189,8 +196,74 @@ mod tests {
             (epw.data[1].dew_point_temperature.unwrap() + epw.data[0].dew_point_temperature.unwrap()) / 2.
         );
         assert_close!(
-            ln.dry_bulb_temperature.unwrap(),
-            (epw.data[1].dry_bulb_temperature.unwrap() + epw.data[0].dry_bulb_temperature.unwrap()) / 2.
+            ln.dry_bulb_temperature,
+            (epw.data[1].dry_bulb_temperature + epw.data[0].dry_bulb_temperature) / 2.
         );
+    }
+
+    #[test]
+    fn test_add_assign(){
+        
+        let fact = DateFactory::new(
+            Date{month: 1, day: 1, hour: 0.}, 
+            Date{month: 1, day: 25, hour: 0.}, 
+            60.*60./2., // half an hour
+        );
+
+        let first_fact = fact;
+        let second_fact = fact;
+
+        let first_dates : Vec<CurrentWeather> = first_fact.into_iter().take(5).map(|date| CurrentWeather{
+            date,
+            .. CurrentWeather::default()
+        }).collect();
+        let second_dates : Vec<CurrentWeather> = second_fact.into_iter().skip(5).take(5).map(|date| CurrentWeather{
+            date,
+            .. CurrentWeather::default()
+        }).collect();
+
+        let mut first = Weather {
+            location: Location::default(),
+            data: first_dates
+        };
+
+        let second = Weather {
+            location: Location::default(),
+            data: second_dates
+        };
+
+        first += second;
+
+        assert_eq!(first.data.len(), 10);
+
+        for (i,d) in fact.into_iter().take(10).enumerate(){
+            assert_eq!(d, first.data[i].date)
+        }
+
+    }
+
+    #[test]
+    fn test_interpolate_line() {
+        let one = CurrentWeather {
+            date: Date{
+                month: 1, 
+                day: 1, 
+                hour: 0.0,
+            },
+            dry_bulb_temperature: 22.,
+            .. CurrentWeather::default()
+        };
+
+        let other = CurrentWeather {
+            date: Date{
+                month: 1, 
+                day: 1, 
+                hour: 0.0,
+            },
+            dry_bulb_temperature: 33.,
+            .. CurrentWeather::default()
+        };
+
+        one.interpolate(&other, 0.5);
     }
 }

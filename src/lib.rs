@@ -70,6 +70,7 @@ pub use model::{
     SimulationStateHeader, *,
 };
 pub use weather::{
+    Weather,
     WeatherTrait,
     SyntheticWeather,
     EPWWeather,    

@@ -397,8 +397,8 @@ impl Solar {
         let global_horizontal = self.estimate_global_horizontal_radiation(
             sun_direction,
             current_data.opaque_sky_cover.expect("We need 'opaque_sky_cover' for this calculation"),
-            current_data.dry_bulb_temperature.expect("We need 'dry_bulb_temperature' for this calculation" ),
-            three_hours_prior_data.dry_bulb_temperature.expect("we need 'dry_bulb_temperature' for this calculation"),
+            current_data.dry_bulb_temperature,
+            three_hours_prior_data.dry_bulb_temperature,
             current_data.wind_speed.expect("We need 'wind_speed' for this calculation"),
             current_data.relative_humidity.expect("We need 'relative_humidity' for this"),
         );
@@ -1116,14 +1116,14 @@ mod tests {
                     let n = Time::Standard(n);
                     if let Some(sun_direction) = solar.sun_position(n) {
                         let prior_temp = if line_index >= 3 {
-                            epw.data[line_index - 3].dry_bulb_temperature.unwrap()
+                            epw.data[line_index - 3].dry_bulb_temperature
                         } else {
-                            line.dry_bulb_temperature.unwrap()
+                            line.dry_bulb_temperature
                         };
                         solar.estimate_global_horizontal_radiation(
                             sun_direction,
                             line.opaque_sky_cover.unwrap(),
-                            line.dry_bulb_temperature.unwrap(),
+                            line.dry_bulb_temperature,
                             prior_temp,
                             line.wind_speed.unwrap(),
                             line.relative_humidity.unwrap(),

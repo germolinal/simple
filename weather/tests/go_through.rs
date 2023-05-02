@@ -39,7 +39,7 @@ fn test_go_through() {
             expected.push(exp_dry_bulb[i] as Float);
             i += 1;
             let data = weather.find_weather_line(date);
-            let found_temp = data.dry_bulb_temperature.unwrap();
+            let found_temp = data.dry_bulb_temperature;
             found.push(found_temp);
 
             if i >= n || i >= exp_dry_bulb.len() {

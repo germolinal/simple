@@ -164,7 +164,7 @@ impl std::convert::Into<CurrentWeather> for &EPWWeatherLine {
                 day: self.day,
                 hour: self.hour,
             },
-            dry_bulb_temperature: Some(self.dry_bulb_temperature),
+            dry_bulb_temperature: self.dry_bulb_temperature,
             dew_point_temperature: Some(self.dew_point_temperature),
             direct_normal_radiation: Some(self.direct_normal_radiation),
             global_horizontal_radiation: Some(self.global_horizontal_radiation),
