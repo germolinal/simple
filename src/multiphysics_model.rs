@@ -84,7 +84,9 @@ impl SimulationModel for MultiphysicsModel {
     fn allocate_memory(&self)->Result<Self::AllocType, String>{
 
         let thermal = self.thermal_model.allocate_memory()?;
+        #[allow(clippy::let_unit_value)]
         let solar = self.solar_model.allocate_memory()?;
+        #[allow(clippy::let_unit_value)]
         let air = self.air_flow_model.allocate_memory()?;
         
         let ret = MultiphysicsModelMemory {

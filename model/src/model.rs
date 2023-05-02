@@ -218,6 +218,36 @@ impl<'de> Deserialize<'de> for Model {
 }
 
 impl Model {
+    /// Gets the (lat,lon, stdmer) tuple. If either `site_details` is not there,
+    /// or if any of the `latitude`, `longitude`, or `standard_meridian` 
+    /// in the `site_details` aren't there,
+    /// it returns None.
+    ///
+    /// ```rust
+    /// use model::Model;
+    ///
+    /// // Successful workflow
+    ///
+    /// let json_str = r#"{
+    ///     "site_details": {
+    ///         "latitude": 1.2,
+    ///         "longitude" : 5.21,
+    ///         "standard_meridian": 123.0
+    ///     }
+    /// }"#;
+    ///
+    /// let (model, header) = Model::from_json(&json_str).unwrap();
+    /// assert_eq!(Some((1.2, 5.21, 123.0)), model.geolocation());         
+    /// ```
+    pub fn geolocation(&self) -> Option<(Float, Float, Float)> {
+        if let Some(site) = &self.site_details {
+            if let (Ok(lat), Ok(lon), Ok(stdmer)) = (site.latitude(), site.longitude(), site.standard_meridian()) {
+                return Some((*lat, *lon, *stdmer));
+            }
+            return None;
+        }
+        None
+    }
     /// Adds an element and default value to the model's [`SimulationStateHeader`]. Returns an error
     /// if the state has been taken already
     fn push_to_state(&mut self, e: SimulationStateElement, v: Float) -> Result<usize, String> {
@@ -864,7 +894,7 @@ impl Model {
             } else {
                 // otherwise, they are diverted
                 add.front_boundary = s.back_boundary.clone();
-                add.back_boundary = s.front_boundary.clone();                
+                add.back_boundary = s.front_boundary.clone();
             }
         }
 
@@ -1156,7 +1186,7 @@ mod testing {
 
     #[test]
     fn write_io_doc() {
-        let dir = "./docs/ioreference/src";
+        let dir = "../docs/ioreference/src";
 
         let summary_template = format!("{}/SUMMARY_TEMPLATE.md", dir);
         if !std::path::Path::new(&summary_template).exists() {
@@ -1329,6 +1359,68 @@ mod testing {
     }
 
     #[test]
+    fn test_geolocation() {
+        // Successful workflow
+
+        let json_str = r#"{
+            "site_details": {
+                "latitude": 1.2,
+                "longitude" : 5.21,
+                "standard_meridian": 123.1
+            }
+        }"#;
+
+        let (model, _header) = Model::from_json(&json_str).unwrap();
+        assert_eq!(Some((1.2, 5.21,123.1)), model.geolocation());
+
+        // No site details
+        let json_str = r#"{
+            "buildings": [{
+                "name": "The Building",
+                "shelter_class" : {
+                    "type" : "Urban"
+                }
+            }]
+        }"#;
+
+        let (model, _header) = Model::from_json(&json_str).unwrap();
+        assert!(model.geolocation().is_none());
+
+        // No longitude
+        let json_str = r#"{
+            "site_details": {
+                "latitude": 1.2,
+                "standard_meridian": 123
+            }
+        }"#;
+
+        let (model, _header) = Model::from_json(&json_str).unwrap();
+        assert!(model.geolocation().is_none());
+
+        // No latitude
+        let json_str = r#"{
+            "site_details": {
+                "longitude": 1.2,
+                "standard_meridian": 123
+            }
+        }"#;
+
+        let (model, _header) = Model::from_json(&json_str).unwrap();
+        assert!(model.geolocation().is_none());
+
+        // No standard_meridian
+        let json_str = r#"{
+            "site_details": {
+                "longitude": 1.2,
+                "latitude": 123
+            }
+        }"#;
+
+        let (model, _header) = Model::from_json(&json_str).unwrap();
+        assert!(model.geolocation().is_none());
+    }
+
+    #[test]
     fn building_substance() {
         let mut building = Model::default();
 
@@ -1416,7 +1508,7 @@ mod testing {
         assert!((model.fenestrations[0].area() - 0.36).abs() < 1e-6);
         assert_eq!(model.surfaces.len(), 1);
         assert!((model.surfaces[0].area() - 0.64).abs() < 1e-6);
-        
+
         assert_eq!(
             format!("{:?}", fen.front_boundary),
             format!("{:?}", s.front_boundary)
@@ -1475,7 +1567,7 @@ mod testing {
         assert_eq!(model.fenestrations.len(), 1);
         assert!((model.fenestrations[0].area() - 0.36).abs() < 1e-6);
         assert_eq!(model.surfaces.len(), 1);
-        assert!((model.surfaces[0].area() - 0.64).abs() < 1e-6);        
+        assert!((model.surfaces[0].area() - 0.64).abs() < 1e-6);
         assert_eq!(
             format!("{:?}", fen.back_boundary),
             format!("{:?}", s.front_boundary)

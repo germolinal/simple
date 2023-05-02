@@ -40,12 +40,13 @@ pub struct DateFactory {
 
 impl DateFactory {
 
-    /// Creates a new Factory
+    /// Creates a new Factory starting on `start` and ending in `end`, 
+    /// separated by `dt` seconds each time.
     pub fn new( start: Date, end: Date, dt: Float)-> Self{
         Self{            
-            end: end,
+            end,
             current: start,
-            dt: dt
+            dt,
         }
     }
 }

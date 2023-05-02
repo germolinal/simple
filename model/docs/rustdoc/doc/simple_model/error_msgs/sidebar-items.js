@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["print_error","Prints an error message."],["print_error_no_module","Prints an error message"],["print_warning","Prints a warning message."],["print_warning_no_module","Prints a warning message"]]};
