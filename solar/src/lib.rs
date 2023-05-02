@@ -642,7 +642,7 @@ impl Solar {
             return 0.0;
         } else {
             // air_mass(solar_zenith)
-            air_mass(zenith) * current_data.pressure.unwrap() / 101300.0
+            air_mass(zenith) * current_data.pressure / 101300.0
         };
         let kt = self.hourly_clearness_index(n, global_normal_radiation);
         let kt = kt.clamp(0., 1.0);
@@ -683,7 +683,7 @@ impl Solar {
             n,
             sun_direction,
             global_normal_radiation,
-            current_data.pressure.unwrap(),
+            current_data.pressure,
         )
     }
 } // end of impl Solar
