@@ -17,7 +17,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::Float;
+use crate::{Float, CurrentWeather};
 
 use calendar::Date;
 use serde::{Serialize,Deserialize};
@@ -52,7 +52,7 @@ pub struct EPWWeatherLine {
     pub dew_point_temperature: Float,
 
     /// Element N8 in the EPW dictionary
-    /// in degrees C
+    /// in % (from 1 to 100)
     pub relative_humidity: Float,
 
     /// Element N9 in the EPW dictionary
@@ -100,7 +100,7 @@ pub struct EPWWeatherLine {
     pub zenith_luminance: Float,
 
     /// Element N20 in the EPW dictionary
-    /// in degrees. (which is north?)
+    /// in degrees. 
     pub wind_direction: Float,
 
     /// Element N21 in the EPW dictionary
@@ -108,10 +108,12 @@ pub struct EPWWeatherLine {
     pub wind_speed: Float,
 
     /// Element N22 in the EPW dictionary    
+    /// (Goes from 1 to 10)
     pub total_sky_cover: Float,
 
     /// Element N23 in the EPW dictionary
     /// EnergyPlus used this if IR Intensity is missing
+    /// (Goes from 1 to 10)
     pub opaque_sky_cover: Float,
 
     /// Element N24 in the EPW dictionary
@@ -154,6 +156,32 @@ pub struct EPWWeatherLine {
     pub liquid_precipitation_quantity: Float,
 }
 
+impl std::convert::Into<CurrentWeather> for &EPWWeatherLine {
+    fn into(self)->CurrentWeather{
+        CurrentWeather {
+            date: Date{
+                month: self.month, 
+                day: self.day,
+                hour: self.hour,
+            },
+            dry_bulb_temperature: Some(self.dry_bulb_temperature),
+            dew_point_temperature: Some(self.dew_point_temperature),
+            direct_normal_radiation: Some(self.direct_normal_radiation),
+            global_horizontal_radiation: Some(self.global_horizontal_radiation),
+            diffuse_horizontal_radiation: Some(self.diffuse_horizontal_radiation),
+            wind_speed: Some(self.wind_speed),
+            wind_direction: Some(self.wind_direction),
+            horizontal_infrared_radiation_intensity: Some(
+                self.horizontal_infrared_radiation_intensity,
+            ),
+            opaque_sky_cover: Some(self.opaque_sky_cover/10.0), // convert units
+            relative_humidity: Some(self.relative_humidity/100.0), // convert units
+            pressure: Some(self.atmospheric_station_pressure)
+
+        }
+    }
+}
+
 impl EPWWeatherLine {
     /// Gets the date corresponding to that
     pub fn date(&self) -> Date {
@@ -163,101 +191,6 @@ impl EPWWeatherLine {
             // We count hours from 0 to 23.9999, EPW files include
             // hours from 1 to 24.99
             hour: self.hour,// - 1.0,
-        }
-    }
-
-    /// Interpolates the data between to WeatherLines
-    pub fn interpolate(&self, other: &Self, x: Float) -> Self {
-        let interp = |a, b| a + x * (b - a);
-
-        let self_date = Date {
-            month: self.month,
-            day: self.day,
-            hour: self.hour,
-        };
-        let other_date = Date {
-            month: other.month,
-            day: other.day,
-            hour: other.hour,
-        };
-
-        let date = self_date.interpolate(other_date, x);
-
-        Self {
-            year: self.year, // irrelevant, really
-            month: date.month,
-            day: date.day,
-            hour: date.hour,
-            minute: self.minute,                       // irrelevant, really
-            uncertainty_flags: self.uncertainty_flags, // irrelevant, really
-            dry_bulb_temperature: interp(self.dry_bulb_temperature, other.dry_bulb_temperature),
-            dew_point_temperature: interp(self.dew_point_temperature, other.dew_point_temperature),
-            relative_humidity: interp(self.relative_humidity, other.relative_humidity),
-            atmospheric_station_pressure: interp(
-                self.atmospheric_station_pressure,
-                other.atmospheric_station_pressure,
-            ),
-            extraterrestrial_horizontal_radiation: interp(
-                self.extraterrestrial_horizontal_radiation,
-                other.extraterrestrial_horizontal_radiation,
-            ),
-            extraterrestrial_direct_normal_radiation: interp(
-                self.extraterrestrial_direct_normal_radiation,
-                other.extraterrestrial_direct_normal_radiation,
-            ),
-            horizontal_infrared_radiation_intensity: interp(
-                self.horizontal_infrared_radiation_intensity,
-                other.horizontal_infrared_radiation_intensity,
-            ),
-            global_horizontal_radiation: interp(
-                self.global_horizontal_radiation,
-                other.global_horizontal_radiation,
-            ),
-            direct_normal_radiation: interp(
-                self.direct_normal_radiation,
-                other.direct_normal_radiation,
-            ),
-            diffuse_horizontal_radiation: interp(
-                self.diffuse_horizontal_radiation,
-                other.diffuse_horizontal_radiation,
-            ),
-            global_horizontal_illuminance: interp(
-                self.global_horizontal_illuminance,
-                other.global_horizontal_illuminance,
-            ),
-            direct_normal_illuminance: interp(
-                self.direct_normal_illuminance,
-                other.direct_normal_illuminance,
-            ),
-            diffuse_horizontal_illuminance: interp(
-                self.diffuse_horizontal_illuminance,
-                other.diffuse_horizontal_illuminance,
-            ),
-            zenith_luminance: interp(self.zenith_luminance, other.zenith_luminance),
-            wind_direction: interp(self.wind_direction, other.wind_direction),
-            wind_speed: interp(self.wind_speed, other.wind_speed),
-            total_sky_cover: interp(self.total_sky_cover, other.total_sky_cover),
-            opaque_sky_cover: interp(self.opaque_sky_cover, other.opaque_sky_cover),
-            visibility: interp(self.visibility, other.visibility),
-            ceiling_height: interp(self.ceiling_height, other.ceiling_height),
-            present_weather_observation: interp(
-                self.present_weather_observation,
-                other.present_weather_observation,
-            ),
-            present_weather_codes: interp(self.present_weather_codes, other.present_weather_codes),
-            precipitable_water: interp(self.precipitable_water, other.precipitable_water),
-            aerosol_optical_depth: interp(self.aerosol_optical_depth, other.aerosol_optical_depth),
-            snow_depth: interp(self.snow_depth, other.snow_depth),
-            last_day_since_last_snowfall: self.last_day_since_last_snowfall,
-            albedo: interp(self.albedo, other.albedo),
-            liquid_precipitation_depth: interp(
-                self.liquid_precipitation_depth,
-                other.liquid_precipitation_depth,
-            ),
-            liquid_precipitation_quantity: interp(
-                self.liquid_precipitation_quantity,
-                other.liquid_precipitation_quantity,
-            ),
         }
     }
 }

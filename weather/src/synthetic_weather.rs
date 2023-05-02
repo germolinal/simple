@@ -23,7 +23,7 @@ use schedule::EmptySchedule;
 use schedule::Schedule;
 
 use crate::current_weather::CurrentWeather;
-use crate::Weather;
+use crate::WeatherTrait;
 
 /// A Factory of CurrentWeather objects.
 /// Each element is a Schedule that produces
@@ -62,8 +62,14 @@ pub struct SyntheticWeather {
     /// Horizontal IR Radiation in Wh/m2
     pub horizontal_infrared_radiation_intensity: Box<dyn Schedule<Float>>,
 
-    /// The opaque sky cover
+    /// The opaque sky cover (in fraction, from 0 ro 1)
     pub opaque_sky_cover: Box<dyn Schedule<Float>>,
+
+    /// The relative humidity (in fraction, from 0 to 1)
+    pub relative_humidity: Box<dyn Schedule<Float>>,
+
+    /// The pressure, in Pa
+    pub pressure: Box<dyn Schedule<Float>>,
 }
 
 impl std::default::Default for SyntheticWeather {
@@ -78,13 +84,16 @@ impl std::default::Default for SyntheticWeather {
             wind_direction: Box::new(EmptySchedule),
             horizontal_infrared_radiation_intensity: Box::new(EmptySchedule),
             opaque_sky_cover: Box::new(EmptySchedule),
+            relative_humidity: Box::new(EmptySchedule),
+            pressure: Box::new(EmptySchedule),
         }
     }
 }
 
-impl Weather for SyntheticWeather {
+impl WeatherTrait for SyntheticWeather {
     fn get_weather_data(&self, date: Date) -> CurrentWeather {
         CurrentWeather {
+            date,
             dry_bulb_temperature: self.dry_bulb_temperature.get(date),
             dew_point_temperature: self.dew_point_temperature.get(date),
             global_horizontal_radiation: self.global_horizontal_radiation.get(date),
@@ -96,6 +105,8 @@ impl Weather for SyntheticWeather {
                 .horizontal_infrared_radiation_intensity
                 .get(date),
             opaque_sky_cover: self.opaque_sky_cover.get(date),
+            relative_humidity: self.relative_humidity.get(date),
+            pressure: self.pressure.get(date),
         }
     }
 }

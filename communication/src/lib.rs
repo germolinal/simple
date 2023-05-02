@@ -76,7 +76,7 @@ pub trait ErrorHandling {
 
 
 use model::{Model,SimulationState, SimulationStateHeader};
-use weather::Weather;
+use weather::WeatherTrait;
 use calendar::Date;
 use std::borrow::Borrow;
 
@@ -109,7 +109,7 @@ pub trait SimulationModel : ErrorHandling {
     /// * The model
     /// * The model state (will be modified)
     /// * A piece of weather data
-    fn march<W: Weather, M: Borrow<Model>>(&self, date: Date, weather: &W, model: M, state: &mut SimulationState, alloc: &mut Self::AllocType)->Result<(),String>;
+    fn march<W: WeatherTrait, M: Borrow<Model>>(&self, date: Date, weather: &W, model: M, state: &mut SimulationState, alloc: &mut Self::AllocType)->Result<(),String>;
 
     /// Allocates the memory needed to run the simulation.
     /// 

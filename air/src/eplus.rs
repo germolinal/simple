@@ -108,7 +108,7 @@ mod tests {
     use calendar::Date;
     use schedule::ScheduleConstant;
     use weather::SyntheticWeather;
-    use weather::Weather;
+    use weather::WeatherTrait;
 
     #[test]
     fn test_design_blast_flow_rate() {

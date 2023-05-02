@@ -27,7 +27,7 @@ use std::borrow::Borrow;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use weather::{CurrentWeather, Weather};
+use weather::{CurrentWeather, WeatherTrait};
 
 use crate::optical_info::OpticalInfo;
 
@@ -422,7 +422,7 @@ impl SimulationModel for SolarModel {
         })
     }
 
-    fn march<W: Weather, M: Borrow<Model>>(
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
         &self,
         date: Date,
         weather: &W,

@@ -23,7 +23,7 @@ use calendar::Date;
 
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use geometry::Vector3D;
-use weather::Weather;
+use weather::WeatherTrait;
 
 use crate::surface::{SurfaceMemory, ThermalFenestration, ThermalSurface, ThermalSurfaceData};
 use crate::surface_trait::SurfaceTrait;
@@ -472,7 +472,7 @@ impl SimulationModel for ThermalModel {
     /// Advances one main_timestep through time. That is,
     /// it performs `self.dt_subdivisions` steps, advancing
     /// `self.dt` seconds in each of them.
-    fn march<W: Weather, M: Borrow<Model>>(
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
         &self,
         mut date: Date,
         weather: &W,

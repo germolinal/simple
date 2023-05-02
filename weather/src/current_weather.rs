@@ -18,12 +18,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use serde::{Serialize, Deserialize};
+use calendar::Date;
 use crate::Float;
 
 /// A structure containing weather data necessary to simulate the performance
 /// of buildings.
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct CurrentWeather {
+
+    /// The date of the current weather
+    pub date: Date,
+
     /// Exterior dry bulb temperature in C
     pub dry_bulb_temperature: Option<Float>,
 
@@ -48,8 +54,14 @@ pub struct CurrentWeather {
     /// in Wh/m2
     pub horizontal_infrared_radiation_intensity: Option<Float>,
 
-    /// used this if IR Intensity is missing
+    /// used this if IR Intensity is missing (in fraction, 0-1)
     pub opaque_sky_cover: Option<Float>,
+
+    /// Relative humidity, in fractions (0-1)
+    pub relative_humidity: Option<Float>,
+
+    /// in Pa
+    pub pressure: Option<Float>,
 }
 
 impl CurrentWeather {
@@ -142,5 +154,50 @@ impl CurrentWeather {
         let e_sky = e_sky_clear * (1.0 + 0.0224 * n - 0.0035 * n.powi(2) + 0.00028 * n.powi(3));
 
         Ok(SIGMA * e_sky * (temp).powi(4))
+    }
+
+    /// Interpolates the data between to WeatherLines
+    pub fn interpolate(&self, other: &Self, x: Float) -> Self {
+        let interp = |a, b| {
+            if let (Some(a), Some(b)) = (a, b) {
+                Some(a + x * (b - a))
+            } else {
+                None
+            }
+        };
+
+
+        let date = self.date.interpolate(other.date, x);
+
+        Self {            
+            date,          
+            dry_bulb_temperature: interp(self.dry_bulb_temperature, other.dry_bulb_temperature),
+            dew_point_temperature: interp(self.dew_point_temperature, other.dew_point_temperature),
+            relative_humidity: interp(self.relative_humidity, other.relative_humidity),
+            pressure: interp(
+                self.pressure,
+                other.pressure,
+            ),            
+            horizontal_infrared_radiation_intensity: interp(
+                self.horizontal_infrared_radiation_intensity,
+                other.horizontal_infrared_radiation_intensity,
+            ),
+            global_horizontal_radiation: interp(
+                self.global_horizontal_radiation,
+                other.global_horizontal_radiation,
+            ),
+            direct_normal_radiation: interp(
+                self.direct_normal_radiation,
+                other.direct_normal_radiation,
+            ),
+            diffuse_horizontal_radiation: interp(
+                self.diffuse_horizontal_radiation,
+                other.diffuse_horizontal_radiation,
+            ),            
+            wind_direction: interp(self.wind_direction, other.wind_direction),
+            wind_speed: interp(self.wind_speed, other.wind_speed),
+            // total_sky_cover: interp(self.total_sky_cover, other.total_sky_cover),
+            opaque_sky_cover: interp(self.opaque_sky_cover, other.opaque_sky_cover),            
+        }
     }
 }

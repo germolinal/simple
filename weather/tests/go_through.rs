@@ -1,6 +1,6 @@
 use calendar::{Date, DateFactory};
 use validate::*;
-use weather::{EPWWeather, Float};
+use weather::{EPWWeather, Float, Weather};
 
 #[test]
 fn test_go_through() {
@@ -28,8 +28,8 @@ fn test_go_through() {
 
         let dt = 60. * 60. / 20.;
         let sim_period = DateFactory::new(start, end, dt);
-
-        let weather = EPWWeather::from_file("./tests/wellington.epw").unwrap();
+        
+        let weather: Weather = EPWWeather::from_file("./tests/wellington.epw").unwrap().into();
 
         let mut i = 0;
         
@@ -39,7 +39,7 @@ fn test_go_through() {
             expected.push(exp_dry_bulb[i] as Float);
             i += 1;
             let data = weather.find_weather_line(date);
-            let found_temp = data.dry_bulb_temperature;
+            let found_temp = data.dry_bulb_temperature.unwrap();
             found.push(found_temp);
 
             if i >= n || i >= exp_dry_bulb.len() {

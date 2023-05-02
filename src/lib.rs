@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 
 //! The main `SIMPLE` Simulation crate, combining pretty much every other 
 //! development.
@@ -70,7 +70,7 @@ pub use model::{
     SimulationStateHeader, *,
 };
 pub use weather::{
-    Weather,
+    WeatherTrait,
     SyntheticWeather,
     EPWWeather,    
     CurrentWeather,
@@ -80,4 +80,4 @@ pub use geometry;
 pub use polynomial::*;
 pub use schedule::*;
 
-pub use solar::{Time, Solar, SolarForecastData};
+pub use solar::{Time, Solar};
