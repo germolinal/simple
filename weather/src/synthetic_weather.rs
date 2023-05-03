@@ -94,19 +94,19 @@ impl WeatherTrait for SyntheticWeather {
     fn get_weather_data(&self, date: Date) -> CurrentWeather {
         CurrentWeather {
             date,
-            dry_bulb_temperature: self.dry_bulb_temperature.get(date).or(Some(0.0)).unwrap(),
-            dew_point_temperature: self.dew_point_temperature.get(date).or(Some(0.0)).unwrap(),
-            global_horizontal_radiation: self.global_horizontal_radiation.get(date).or(Some(0.0)).unwrap(),
-            direct_normal_radiation: self.direct_normal_radiation.get(date).or(Some(0.0)).unwrap(),
-            diffuse_horizontal_radiation: self.diffuse_horizontal_radiation.get(date).or(Some(0.0)).unwrap(),
-            wind_speed: self.wind_speed.get(date).or(Some(0.0)).unwrap(),
-            wind_direction: self.wind_direction.get(date).or(Some(0.0)).unwrap(),
+            dry_bulb_temperature: self.dry_bulb_temperature.get(date).unwrap_or(0.0),
+            dew_point_temperature: self.dew_point_temperature.get(date).unwrap_or(0.0),
+            global_horizontal_radiation: self.global_horizontal_radiation.get(date).unwrap_or(0.0),
+            direct_normal_radiation: self.direct_normal_radiation.get(date).unwrap_or(0.0),
+            diffuse_horizontal_radiation: self.diffuse_horizontal_radiation.get(date).unwrap_or(0.0),
+            wind_speed: self.wind_speed.get(date).unwrap_or(0.0),
+            wind_direction: self.wind_direction.get(date).unwrap_or(0.0),
             horizontal_infrared_radiation_intensity: self
                 .horizontal_infrared_radiation_intensity
                 .get(date),
-            opaque_sky_cover: self.opaque_sky_cover.get(date).or(Some(0.0)).unwrap(),
-            relative_humidity: self.relative_humidity.get(date).or(Some(0.5)).unwrap(),
-            pressure: self.pressure.get(date).or(Some(101300.)).unwrap(),
+            opaque_sky_cover: self.opaque_sky_cover.get(date).unwrap_or(0.0),
+            relative_humidity: self.relative_humidity.get(date).unwrap_or(0.5),
+            pressure: self.pressure.get(date).unwrap_or(101300.),
         }
     }
 }
