@@ -133,6 +133,8 @@ fn march_with_window() -> (Vec<Float>, Vec<Float>) {
     let hs_back = 10.;
     thermal_model.surfaces[0].front_hs = Some(hs_front);
     thermal_model.surfaces[0].back_hs = Some(hs_back);
+    thermal_model.fenestrations[0].front_hs = Some(hs_front);
+    thermal_model.fenestrations[0].back_hs = Some(hs_back);
 
     let r = thermal_model.surfaces[0].discretization.r_value() + 1. / hs_front + 1. / hs_back;
 

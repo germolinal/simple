@@ -45,8 +45,8 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<Float>, Vec<Flo
     };
 
     let (lat, lon, std_mer): (Float, Float, Float) = match city.as_bytes() {
-        b"wellington" => (-41.3, 174.78, 180.),
-        b"barcelona" => (41.28, 2.07, 15.), // ??? GMT + 1
+        b"wellington" => (-41.3, -174.78, -180.),
+        b"barcelona" => (41.28, -2.07, -15.), // ??? GMT + 1
         _ => panic!("Unsupported city '{}'", city),
     };
 

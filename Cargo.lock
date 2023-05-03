@@ -778,7 +778,6 @@ dependencies = [
  "schedule",
  "serde",
  "serde_json",
- "solar",
  "test_models",
  "validate",
  "weather",
@@ -1138,8 +1137,8 @@ dependencies = [
  "rand",
  "rayon",
  "serde",
- "solar",
  "validate",
+ "weather",
 ]
 
 [[package]]
@@ -1277,7 +1276,6 @@ dependencies = [
  "rhai",
  "schedule",
  "serde_json",
- "solar",
  "validate",
  "weather",
 ]
@@ -1297,17 +1295,6 @@ dependencies = [
  "autocfg",
  "static_assertions",
  "version_check",
-]
-
-[[package]]
-name = "solar"
-version = "0.1.0"
-dependencies = [
- "calendar",
- "geometry",
- "matrix",
- "validate",
- "weather",
 ]
 
 [[package]]
@@ -1561,6 +1548,8 @@ name = "weather"
 version = "0.1.0"
 dependencies = [
  "calendar",
+ "geometry",
+ "matrix",
  "schedule",
  "serde",
  "serde_json",
