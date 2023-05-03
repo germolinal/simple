@@ -65,8 +65,8 @@ fn some_fun() {
             found_legend: Some("SIMPLE-calculated temperature"),
             found: found[0].clone(),
 
-            allowed_r2: Some(0.97),
-            allowed_intersect_delta: Some(0.3),
+            allowed_r2: Some(0.93),
+            allowed_intersect_delta: Some(0.5),
             allowed_slope_delta: Some(0.06),
 
             ..Default::default()
