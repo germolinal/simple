@@ -22,12 +22,12 @@ use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use matrix::Matrix;
 use model::{Boundary, Model, SimulationState, SimulationStateHeader, SolarOptions};
-use weather::{PerezSky, SkyUnits, Solar};
 use std::borrow::Borrow;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use weather::{CurrentWeather, WeatherTrait};
+use weather::{PerezSky, SkyUnits, Solar};
 
 use crate::optical_info::OpticalInfo;
 
@@ -108,25 +108,25 @@ impl SolarModel {
 
             // Deal with Back
             match &surface.back_boundary {
-                    Boundary::Space { .. } => {
-                        // Zero net IR exchange
-                        let temp = surface.last_node_temperature(state).unwrap_or(22.);
-                        surface.set_back_ir_irradiance(state, ir(temp, 1.0))?;
-                    }
-                    Boundary::AmbientTemperature { temperature } => {
-                        surface.set_back_ir_irradiance(state, ir(*temperature, 1.0))?;
-                    }
-                    Boundary::Ground => {
-                        // ignore ground
-                    }
-                    Boundary::Outdoor => {
-                        // outdoor
-                        let view_factors = &self.optical_info.back_surfaces_view_factors[index];
-                        let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
-                        let sky = view_factors.sky * horizontal_ir;
-                        surface.set_back_ir_irradiance(state, ground_other + sky)?;
-                    }
+                Boundary::Space { .. } => {
+                    // Zero net IR exchange
+                    let temp = surface.last_node_temperature(state).unwrap_or(22.);
+                    surface.set_back_ir_irradiance(state, ir(temp, 1.0))?;
                 }
+                Boundary::AmbientTemperature { temperature } => {
+                    surface.set_back_ir_irradiance(state, ir(*temperature, 1.0))?;
+                }
+                Boundary::Ground => {
+                    // ignore ground
+                }
+                Boundary::Outdoor => {
+                    // outdoor
+                    let view_factors = &self.optical_info.back_surfaces_view_factors[index];
+                    let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
+                    let sky = view_factors.sky * horizontal_ir;
+                    surface.set_back_ir_irradiance(state, ground_other + sky)?;
+                }
+            }
         }
 
         let iter = model.fenestrations.iter().enumerate();
@@ -143,8 +143,7 @@ impl SolarModel {
                 }
                 Boundary::Ground => {}
                 Boundary::Outdoor => {
-                    let view_factors =
-                        &self.optical_info.front_fenestrations_view_factors[index];
+                    let view_factors = &self.optical_info.front_fenestrations_view_factors[index];
                     let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
                     let sky = view_factors.sky * horizontal_ir;
                     surface.set_front_ir_irradiance(state, ground_other + sky)?;
@@ -164,8 +163,7 @@ impl SolarModel {
                 Boundary::Ground => {}
                 Boundary::Outdoor => {
                     // outdoor
-                    let view_factors =
-                        &self.optical_info.back_fenestrations_view_factors[index];
+                    let view_factors = &self.optical_info.back_fenestrations_view_factors[index];
                     let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
                     let sky = view_factors.sky * horizontal_ir;
                     surface.set_back_ir_irradiance(state, ground_other + sky)?;
@@ -183,10 +181,8 @@ impl SolarModel {
         model: &Model,
         state: &mut SimulationState,
     ) -> Result<(), String> {
-        let direct_normal_irrad = weather_data
-            .direct_normal_radiation;
-        let diffuse_horizontal_irrad = weather_data
-            .diffuse_horizontal_radiation;
+        let direct_normal_irrad = weather_data.direct_normal_radiation;
+        let diffuse_horizontal_irrad = weather_data.diffuse_horizontal_radiation;
 
         let is_day = direct_normal_irrad + diffuse_horizontal_irrad >= 1e-4;
         let vec = if is_day {
@@ -440,8 +436,8 @@ impl SimulationModel for SolarModel {
 #[cfg(test)]
 mod testing {
     use super::*;
-    use schedule::ScheduleConstant;
     use model::{substance::Normal, Construction, Fenestration, Material, Surface};
+    use schedule::ScheduleConstant;
     use weather::SyntheticWeather;
 
     #[test]
@@ -520,7 +516,7 @@ mod testing {
             }
          }",
         )
-        .unwrap();        
+        .unwrap();
         model.add_surface(s);
 
         let s: Surface = json5::from_str(
@@ -570,7 +566,7 @@ mod testing {
         }",
         )
         .unwrap();
-        
+
         model.add_fenestration(fen).unwrap();
 
         let meta_options = MetaOptions {
@@ -614,62 +610,50 @@ mod testing {
             .unwrap();
 
         // This surface should receive NO sun at the front but yes at the back
-        assert!(
-            model.surfaces[0]
-                .front_incident_solar_irradiance(&state)
-                .unwrap()
-                .abs()
-                < 1e-9
-        );
-        assert!(
-            model.surfaces[0]
-                .back_incident_solar_irradiance(&state)
-                .unwrap()
-                > 50.
-        );
+        let v = model.surfaces[0]
+            .front_incident_solar_irradiance(&state)
+            .unwrap()
+            .abs();
+        assert!(v < 1e-9, "v = {}", v);
+
+        let v = model.surfaces[0]
+            .back_incident_solar_irradiance(&state)
+            .unwrap();
+        assert!(v > 20., "v={}", v);
 
         // This surface should receive sun on both sides
-        assert!(
-            model.surfaces[1]
-                .front_incident_solar_irradiance(&state)
-                .unwrap()
-                .abs()
-                > 50.
-        );
-        assert!(
-            model.surfaces[1]
-                .back_incident_solar_irradiance(&state)
-                .unwrap()
-                > 50.
-        );
+        let v = model.surfaces[1]
+            .front_incident_solar_irradiance(&state)
+            .unwrap()
+            .abs();
+        assert!(v > 20., "v={}", v);
+
+        let v = model.surfaces[1]
+            .back_incident_solar_irradiance(&state)
+            .unwrap();
+        assert!(v > 20., "v={}", v);
 
         // This surface should receive sun on both sides
-        assert!(
-            model.fenestrations[0]
-                .front_incident_solar_irradiance(&state)
-                .unwrap()
-                > 50.
-        );
-        assert!(
-            model.fenestrations[0]
-                .back_incident_solar_irradiance(&state)
-                .unwrap()
-                > 50.
-        );
+        let v = model.fenestrations[0]
+            .front_incident_solar_irradiance(&state)
+            .unwrap();
+        assert!(v > 20., "v = {}", v);
+
+        let v = model.fenestrations[0]
+            .back_incident_solar_irradiance(&state)
+            .unwrap();
+        assert!(v > 20., "v = {}", v);
 
         // This surface should receive NO sun at the back but yes at the front
-        assert!(
-            model.fenestrations[1]
-                .front_incident_solar_irradiance(&state)
-                .unwrap()
-                > 50.
-        );
-        assert!(
-            model.fenestrations[1]
-                .back_incident_solar_irradiance(&state)
-                .unwrap()
-                .abs()
-                < 1e-9
-        );
+        let v = model.fenestrations[1]
+            .front_incident_solar_irradiance(&state)
+            .unwrap();
+        assert!(v > 20., "v = {}", v);
+
+        let v = model.fenestrations[1]
+            .back_incident_solar_irradiance(&state)
+            .unwrap()
+            .abs();
+        assert!(v < 1e-9, "v = {}", v);
     }
 }

@@ -24,5 +24,5 @@ default = []
 float = [
     "calendar/float", 
     "geometry/float",
-    "matrix/float"
+    "matrix/float",
 ]

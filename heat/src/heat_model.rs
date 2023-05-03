@@ -362,10 +362,8 @@ impl SimulationModel for ThermalModel {
             let construction = model.get_construction(&surf.construction)?;
 
             let normal = surf.vertices.normal();
-            let cos_tilt = normal * Vector3D::new(0., 0., 1.);
-            #[cfg(debug_assertions)]
-            dbg!("height is 1");
-            let height = 1.;
+            let cos_tilt = normal * Vector3D::new(0., 0., 1.);            
+            let height = 1.; // we need to update this. https://github.com/wisehouse-app/simple/issues/8
             let angle = cos_tilt.acos();
             let area = surf.area();
             let perimeter = surf.vertices.outer().perimeter().unwrap();
