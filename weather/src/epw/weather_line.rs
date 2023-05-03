@@ -166,9 +166,9 @@ impl std::convert::Into<CurrentWeather> for &EPWWeatherLine {
             },
             dry_bulb_temperature: self.dry_bulb_temperature,
             dew_point_temperature: self.dew_point_temperature,
-            direct_normal_radiation: Some(self.direct_normal_radiation),
-            global_horizontal_radiation: Some(self.global_horizontal_radiation),
-            diffuse_horizontal_radiation: Some(self.diffuse_horizontal_radiation),
+            direct_normal_radiation: self.direct_normal_radiation,
+            global_horizontal_radiation: self.global_horizontal_radiation,
+            diffuse_horizontal_radiation: self.diffuse_horizontal_radiation,
             wind_speed: self.wind_speed,
             wind_direction: self.wind_direction.to_radians(),
             horizontal_infrared_radiation_intensity: Some(

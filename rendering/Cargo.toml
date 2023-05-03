@@ -10,7 +10,7 @@ license = "MIT"
 model = {path = "../model"}
 matrix = {path = "../matrix"}
 geometry = {version="0.2.0", path = "../geometry"}
-solar = {path = "../solar"}
+weather = {path = "../weather"}
 calendar = { path = "../calendar" }
 rand = { version = "0.8.5", features=["small_rng"]}
 rayon = {workspace=true, optional = true}
@@ -35,7 +35,7 @@ float = [
     "model/float",
     "geometry/float", 
     "matrix/float",  
-    "solar/float"
+    "weather/float"
 ]
 parallel = [
     "geometry/parallel", 

@@ -22,7 +22,7 @@ use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use matrix::Matrix;
 use model::{Boundary, Model, SimulationState, SimulationStateHeader, SolarOptions};
-use solar::{PerezSky, SkyUnits, Solar};
+use weather::{PerezSky, SkyUnits, Solar};
 use std::borrow::Borrow;
 use std::fs::File;
 use std::io::Write;
@@ -184,11 +184,9 @@ impl SolarModel {
         state: &mut SimulationState,
     ) -> Result<(), String> {
         let direct_normal_irrad = weather_data
-            .direct_normal_radiation
-            .expect("Missing data for direct normal irradiance");
+            .direct_normal_radiation;
         let diffuse_horizontal_irrad = weather_data
-            .diffuse_horizontal_radiation
-            .expect("Missing data for diffuse horizontal");
+            .diffuse_horizontal_radiation;
 
         let is_day = direct_normal_irrad + diffuse_horizontal_irrad >= 1e-4;
         let vec = if is_day {
@@ -405,7 +403,7 @@ impl SimulationModel for SolarModel {
             if mf >= 9 || ncols == 0 {
                 return Err(format!("sky discretization seems to be too high ({mf}... If this is a bug, please report it!"));
             }
-            if solar::ReinhartSky::n_bins(mf) == ncols {
+            if weather::ReinhartSky::n_bins(mf) == ncols {
                 break;
             } else {
                 mf += 1;

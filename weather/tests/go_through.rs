@@ -53,6 +53,9 @@ fn test_go_through() {
 
             expected_legend: Some("EnergyPlus"),
             found_legend: Some("SIMPLE"),
+            allowed_intersect_delta: Some(0.05),
+            allowed_slope_delta: Some(0.01),
+            allowed_r2: Some(0.99),
             expected,
             found,
             ..validate::ScatterValidator::default()

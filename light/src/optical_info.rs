@@ -23,7 +23,7 @@ use matrix::Matrix;
 use rendering::{DCFactory, Scene, Wavelengths};
 use serde::{Deserialize, Serialize};
 use model::{Model, SimulationStateHeader, SolarOptions};
-use solar::ReinhartSky;
+use weather::ReinhartSky;
 
 /// A set of view factors as seen by a `ThermalSurface`.
 #[derive(Debug, Default, Copy, Clone, Serialize, Deserialize)]

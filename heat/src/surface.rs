@@ -369,14 +369,12 @@ pub struct ThermalSurfaceData<T: SurfaceTrait + Send + Sync> {
     /// to the back incident radiation (i.e., they do not add up to 1.0)
     pub back_alphas: Matrix,
 
-    /// [**Only available during testing**] this allows setting a fixed convection
+    /// this allows setting a fixed convection
     /// coefficient
-    #[cfg(debug_assertions)]
     pub front_hs: Option<Float>,
 
-    /// [**Only available during testing**] this allows setting a fixed convection
+    /// this allows setting a fixed convection
     /// coefficient
-    #[cfg(debug_assertions)]
     pub back_hs: Option<Float>,
 }
 
@@ -540,6 +538,11 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let wind_speed_modifier = wind_speed_modifier(height, site_details);
 
         let parent = parent.clone();
+
+        let front_hs = parent.fixed_front_hs();
+        let back_hs = parent.fixed_back_hs();
+
+
         // Build resulting
         Ok(ThermalSurfaceData {
             parent,
@@ -559,10 +562,8 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             back_alphas,
             massive_chunks,
             nomass_chunks,
-            #[cfg(debug_assertions)]
-            front_hs: None,
-            #[cfg(debug_assertions)]
-            back_hs: None,
+            front_hs,
+            back_hs,
         })
     }
 
@@ -619,9 +620,14 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                     cos_surface_tilt: self.cos_tilt,
                 };
 
+                let front_hs = match self.front_hs {
+                    Some(v)=>v,
+                    None => front_env.get_tarp_natural_convection_coefficient(),
+                };
+
                 (
                     front_env,
-                    front_env.get_tarp_natural_convection_coefficient(),
+                    front_hs,
                 )
             }
             Boundary::AmbientTemperature { temperature } => {
@@ -634,9 +640,14 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                     cos_surface_tilt: self.cos_tilt,
                 };
 
+                let front_hs = match self.front_hs {
+                    Some(v)=>v,
+                    None => front_env.get_tarp_natural_convection_coefficient(),
+                };
+
                 (
                     front_env,
-                    front_env.get_tarp_natural_convection_coefficient(),
+                    front_hs,
                 )
             }
             Boundary::Ground => unreachable!(),
@@ -650,10 +661,17 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                     cos_surface_tilt: self.cos_tilt,
                 };
                 front_env.cos_surface_tilt = -self.cos_tilt;
+
+                let front_hs = match self.front_hs {
+                    Some(v)=>v,
+                    None => front_env.get_tarp_convection_coefficient(self.area, self.perimeter, windward),
+                };
+
                 (
                     front_env,
-                    front_env.get_tarp_convection_coefficient(self.area, self.perimeter, windward),
+                    front_hs,
                 )
+                
             }
         };
 
@@ -667,10 +685,15 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                     roughness_index: 1,
                     cos_surface_tilt: self.cos_tilt,
                 };
-                (back_env, back_env.get_tarp_natural_convection_coefficient())
+                let back_hs = match self.back_hs {
+                    Some(v)=>v,
+                    None => back_env.get_tarp_natural_convection_coefficient(),
+                };
+
+                (back_env, back_hs )
             }
             Boundary::AmbientTemperature { temperature } => {
-                let front_env = ConvectionParams {
+                let back_env = ConvectionParams {
                     air_temperature: *temperature,
                     air_speed: 0.0,
                     rad_temperature: t_front,
@@ -679,10 +702,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                     cos_surface_tilt: self.cos_tilt,
                 };
 
-                (
-                    front_env,
-                    front_env.get_tarp_natural_convection_coefficient(),
-                )
+                let back_hs = match self.back_hs {
+                    Some(v)=>v,
+                    None => back_env.get_tarp_natural_convection_coefficient(),
+                };
+
+                (back_env, back_hs )
             }
             Boundary::Ground => unreachable!(),
             Boundary::Outdoor => {
@@ -694,25 +719,19 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                     roughness_index: 1,
                     cos_surface_tilt: self.cos_tilt,
                 };
-                (
-                    back_env,
-                    back_env.get_tarp_convection_coefficient(self.area, self.perimeter, windward),
-                )
+                let back_hs = match self.back_hs {
+                    Some(v)=>v,
+                    None => back_env.get_tarp_convection_coefficient(self.area, self.perimeter, windward),
+                };
+
+                (back_env, back_hs )
             }
         };
 
         assert!(
             !front_hs.is_nan() && !back_hs.is_nan(),
             "Found NaN convection coefficients: Front={front_hs} | back={back_hs}"
-        );
-        #[cfg(debug_assertions)]
-        return (
-            front_env,
-            back_env,
-            self.front_hs.unwrap_or(front_hs),
-            self.back_hs.unwrap_or(back_hs),
-        );
-        #[cfg(not(debug_assertions))]
+        );        
         (front_env, back_env, front_hs, back_hs)
     }
 
@@ -1110,13 +1129,15 @@ mod testing {
         let p = Polygon3D::new(the_loop).unwrap();
 
         /* SURFACE */
-        let s = Surface::new(
+        let mut s = Surface::new(
             "Surface 1",
             p,
             c.name(),
             Boundary::Outdoor,
             Boundary::Outdoor,
         );
+        s.set_precalculated_back_convection_coef(10.0);
+        s.set_precalculated_front_convection_coef(10.0);
 
         let surface = model.add_surface(s);
 
@@ -1129,7 +1150,7 @@ mod testing {
         let normal = geometry::Vector3D::new(0., 0., 1.);
         let perimeter = 8. * l;
         let mut state_header = SimulationStateHeader::new();
-        let mut ts = ThermalSurface::new(
+        let  ts = ThermalSurface::new(
             &mut state_header,
             &model,
             &None,
@@ -1143,10 +1164,7 @@ mod testing {
             d,
         )
         .unwrap();
-
-        ts.front_hs = Some(10.);
-        ts.back_hs = Some(10.);
-
+    
         let mut state = state_header.take_values().unwrap();
 
         // TEST
@@ -1250,13 +1268,15 @@ mod testing {
         let p = Polygon3D::new(the_loop).unwrap();
 
         /* SURFACE */
-        let s = Surface::new(
+        let mut s = Surface::new(
             "Surface 1",
             p,
             c.name(),
             Boundary::AmbientTemperature { temperature: 30.0 },
             Boundary::Outdoor,
         );
+        s.set_precalculated_back_convection_coef(10.0);
+        s.set_precalculated_front_convection_coef(10.0);
 
         let surface = model.add_surface(s);
 
@@ -1269,7 +1289,7 @@ mod testing {
         let normal = geometry::Vector3D::new(0., 0., 1.);
         let perimeter = 8. * l;
         let mut state_header = SimulationStateHeader::new();
-        let mut ts = ThermalSurface::new(
+        let  ts = ThermalSurface::new(
             &mut state_header,
             &model,
             &None,
@@ -1284,8 +1304,7 @@ mod testing {
         )
         .unwrap();
 
-        ts.front_hs = Some(10.);
-        ts.back_hs = Some(10.);
+        
 
         let mut state = state_header.take_values().unwrap();
 
@@ -1372,7 +1391,9 @@ mod testing {
         let p = Polygon3D::new(the_loop).unwrap();
 
         /* SURFACE */
-        let s = Surface::new("WALL", p, c.name(), Boundary::Outdoor, Boundary::Outdoor);
+        let mut s = Surface::new("WALL", p, c.name(), Boundary::Outdoor, Boundary::Outdoor);
+        s.set_precalculated_back_convection_coef(10.0);
+        s.set_precalculated_front_convection_coef(10.0);
         let surface = model.add_surface(s);
         let mut state_header = SimulationStateHeader::new();
 
@@ -1386,7 +1407,7 @@ mod testing {
 
         let normal = geometry::Vector3D::new(0., 0., 1.);
         let perimeter = 8. * l;
-        let mut ts = ThermalSurface::new(
+        let  ts = ThermalSurface::new(
             &mut state_header,
             &model,
             &None,
@@ -1400,8 +1421,7 @@ mod testing {
             d,
         )
         .unwrap();
-        ts.front_hs = Some(10.);
-        ts.back_hs = Some(10.);
+        
 
         let mut state = state_header.take_values().unwrap();
 
