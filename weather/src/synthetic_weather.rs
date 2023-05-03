@@ -96,9 +96,9 @@ impl WeatherTrait for SyntheticWeather {
             date,
             dry_bulb_temperature: self.dry_bulb_temperature.get(date).or(Some(0.0)).unwrap(),
             dew_point_temperature: self.dew_point_temperature.get(date).or(Some(0.0)).unwrap(),
-            global_horizontal_radiation: self.global_horizontal_radiation.get(date),
-            direct_normal_radiation: self.direct_normal_radiation.get(date),
-            diffuse_horizontal_radiation: self.diffuse_horizontal_radiation.get(date),
+            global_horizontal_radiation: self.global_horizontal_radiation.get(date).or(Some(0.0)).unwrap(),
+            direct_normal_radiation: self.direct_normal_radiation.get(date).or(Some(0.0)).unwrap(),
+            diffuse_horizontal_radiation: self.diffuse_horizontal_radiation.get(date).or(Some(0.0)).unwrap(),
             wind_speed: self.wind_speed.get(date).or(Some(0.0)).unwrap(),
             wind_direction: self.wind_direction.get(date).or(Some(0.0)).unwrap(),
             horizontal_infrared_radiation_intensity: self

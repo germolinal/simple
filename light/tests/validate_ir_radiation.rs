@@ -12,6 +12,9 @@ fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidato
         units: Some("W/m2"),
         expected_legend: Some("EnergyPlus"),
         found_legend: Some("SIMPLE"),
+        allowed_intersect_delta: Some(0.6),
+        allowed_r2: Some(0.98),
+        allowed_slope_delta: Some(0.01),
         expected,
         found,
         ..validate::ScatterValidator::default()
@@ -42,8 +45,8 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<Float>, Vec<Flo
     };
 
     let (lat, lon, std_mer): (Float, Float, Float) = match city.as_bytes() {
-        b"wellington" => (-41.3, 174.78, 180.),
-        b"barcelona" => (41.28, 2.07, 15.), // ??? GMT + 1
+        b"wellington" => (-41.3, -174.78, -180.),
+        b"barcelona" => (41.28, -2.07, -15.), // ??? GMT + 1
         _ => panic!("Unsupported city '{}'", city),
     };
 

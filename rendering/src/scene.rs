@@ -112,13 +112,13 @@ impl Scene {
     ) {
         let dew_point = 11.;
         // Add sky
-        let solar = solar::Solar::new(
+        let solar = weather::Solar::new(
             latitude.to_radians(),
             longitude.to_radians(),
             standard_meridian.to_radians(),
         );
-        let s = solar::PerezSky::get_sky_func_standard_time(
-            solar::SkyUnits::Visible,
+        let s = weather::PerezSky::get_sky_func_standard_time(
+            weather::SkyUnits::Visible,
             &solar,
             date,
             dew_point,
@@ -129,7 +129,7 @@ impl Scene {
         self.sky = Some(s);
 
         // Add sun if there is any (it might be nighttime)
-        let n = solar::Time::Standard(date.day_of_year());
+        let n = weather::Time::Standard(date.day_of_year());
         if let Some(sun_position) = solar.sun_position(n) {
             let angle = (0.533 as Float).to_radians();
             let tan_half_alpha = (angle / 2.0).tan();
@@ -151,25 +151,25 @@ impl Scene {
             } else {
                 cos_zenit.acos()
             };
-            let apwc = solar::PerezSky::precipitable_water_content(dew_point);
-            let air_mass = solar::air_mass(zenith);
+            let apwc = weather::PerezSky::precipitable_water_content(dew_point);
+            let air_mass = weather::solar::air_mass(zenith);
             let day = solar.unwrap_solar_time(n);
             let extraterrestrial_irradiance = solar.normal_extraterrestrial_radiation(day);
-            let sky_brightness = solar::PerezSky::sky_brightness(
+            let sky_brightness = weather::PerezSky::sky_brightness(
                 diffuse_horizontal_irrad,
                 air_mass,
                 extraterrestrial_irradiance,
             )
             .clamp(0.01, 9e9);
-            let sky_clearness = solar::PerezSky::sky_clearness(
+            let sky_clearness = weather::PerezSky::sky_clearness(
                 diffuse_horizontal_irrad,
                 direct_normal_irrad,
                 zenith,
             )
             .clamp(-9e9, 11.9);
-            let index = solar::PerezSky::clearness_category(sky_clearness);
+            let index = weather::PerezSky::clearness_category(sky_clearness);
             let dir_illum = direct_normal_irrad
-                * solar::PerezSky::direct_illuminance_ratio(apwc, zenith, sky_brightness, index);
+                * weather::PerezSky::direct_illuminance_ratio(apwc, zenith, sky_brightness, index);
 
             let sun_brightness = dir_illum / omega / crate::colour::WHITE_EFFICACY;
             let sun_mat =

@@ -18,11 +18,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::Float;
+use crate::{Float, solar::Solar};
 use serde::{Serialize,Deserialize};
 
 /// A Location
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Location {
     /// The name of the City
     pub city: String,
@@ -56,4 +56,14 @@ pub struct Location {
 
     /// The elevation of the weather station
     pub elevation: Float,
+}
+
+
+impl Location {
+    /// Builds a [`Solar`] object corresponding to 
+    /// this location
+    pub fn get_solar(&self)->Solar{
+        let stdmer = ((self.timezone as f64)*15.0).to_radians();                
+        Solar::new(self.latitude, -self.longitude, -stdmer)
+    }
 }
