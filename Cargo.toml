@@ -19,7 +19,6 @@ members = [
     "polynomial",
     "rendering",
     "schedule",
-    "solar",
     "test_models",
     "weather",
     "derive"
@@ -88,7 +87,6 @@ light = { path = "light" }
 heat = { path = "heat"}
 rendering = { path = "rendering" }
 geometry = { path = "geometry" }
-solar = { path = "solar" }
 polynomial = { path = "polynomial" }
 schedule = { path = "schedule" }
 

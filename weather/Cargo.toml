@@ -8,8 +8,10 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-calendar = { path = "../calendar", features = ["serde"]}
+calendar = { path = "../calendar", features = ["serde"] }
 schedule = { path = "../schedule" }
+geometry = { path = "../geometry" }
+matrix = {path="../matrix"}
 serde = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
@@ -19,4 +21,8 @@ serde_json = { workspace = true }
 
 [features]
 default = []
-float = ["calendar/float"]
+float = [
+    "calendar/float", 
+    "geometry/float",
+    "matrix/float"
+]

@@ -109,14 +109,12 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
     let weather : Weather = EPWWeather::from_file(options.weather_file.to_string())?.into();
 
     let meta_options = MetaOptions {
-        latitude: weather.location.latitude.to_radians(),
-        longitude: weather.location.longitude.to_radians(),
+        latitude: weather.location.latitude,
+        longitude: weather.location.longitude,
         standard_meridian: (weather.location.timezone as Float * 15.).to_radians(),
         elevation: weather.location.elevation,
     };
-
     
-
     // Create physics model
     let physics_model = MultiphysicsModel::new(
         &meta_options,
@@ -227,9 +225,7 @@ where
 
         controller.control(model.borrow(), &pre_process_data.model, &mut state)?;
 
-        // Physics
-        // let model = model.as_ref();
-        // let mut state = (*state).borrow_mut();
+        // Physics        
         pre_process_data.model.march(date, &pre_process_data.weather, model.borrow(), &mut state, &mut memory)?;
 
         // Print all the values in the state

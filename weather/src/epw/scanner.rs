@@ -305,8 +305,8 @@ impl<'a> EPWScanner<'a> {
         epw.location.source = EPWScanner::scan_string(self.scan_element()).unwrap();
         epw.location.wmo = EPWScanner::scan_string(self.scan_element()).unwrap();
 
-        epw.location.latitude = EPWScanner::scan_number(self.scan_element()).unwrap();
-        epw.location.longitude = EPWScanner::scan_number(self.scan_element()).unwrap();
+        epw.location.latitude = EPWScanner::scan_number(self.scan_element()).unwrap().to_radians();
+        epw.location.longitude = EPWScanner::scan_number(self.scan_element()).unwrap().to_radians();
         epw.location.timezone = EPWScanner::scan_number(self.scan_element()).unwrap() as i8;
         epw.location.elevation = EPWScanner::scan_number(self.scan_element()).unwrap();
     }
@@ -433,8 +433,8 @@ mod tests {
         assert_eq!(epw.location.country, "CHL".to_string());
         assert_eq!(epw.location.source, "IWEC Data".to_string());
         assert_eq!(epw.location.wmo, "855740".to_string());
-        assert_eq!(epw.location.latitude, -33.38);
-        assert_eq!(epw.location.longitude, -70.78);
+        assert_eq!(epw.location.latitude, (-33.38 as Float).to_radians());
+        assert_eq!(epw.location.longitude, (-70.78 as Float).to_radians());
         assert_eq!(epw.location.timezone, -4);
         assert_eq!(epw.location.elevation, 476.0);
 
@@ -497,8 +497,8 @@ mod tests {
         assert_eq!(epw.location.country, "CHL".to_string());
         assert_eq!(epw.location.source, "IWEC Data".to_string());
         assert_eq!(epw.location.wmo, "855740".to_string());
-        assert_eq!(epw.location.latitude, -33.38);
-        assert_eq!(epw.location.longitude, -70.78);
+        assert_eq!(epw.location.latitude, (-33.38 as Float).to_radians());
+        assert_eq!(epw.location.longitude, (-70.78 as Float).to_radians());
         assert_eq!(epw.location.timezone, -4.0 as i8);
         assert_eq!(epw.location.elevation, 476.0);
 

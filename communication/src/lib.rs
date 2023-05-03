@@ -33,6 +33,7 @@ type Float = f64;
 
 /// A set of options that affect the whole simulation but aren't part of 
 /// the model itself (e.g., location)
+#[derive(Debug,Default)]
 pub struct MetaOptions {
     /// The Latitude in Radians. 
     /// 

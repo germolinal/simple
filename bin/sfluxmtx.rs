@@ -19,7 +19,7 @@ SOFTWARE.
 */
 use clap::Parser;
 use rendering::{colour_matrix::save_colour_matrix, Scene};
-use solar::ReinhartSky;
+use weather::ReinhartSky;
 // use rendering::from_radiance::from
 use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::daylight_coefficients::DCFactory;

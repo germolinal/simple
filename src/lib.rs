@@ -76,10 +76,11 @@ pub use weather::{
     EPWWeather,    
     CurrentWeather,
     Location,
+    Time,
+    Solar,
 };
 pub use light::OpticalInfo;
 pub use geometry;
 pub use polynomial::*;
 pub use schedule::*;
 
-pub use solar::{Time, Solar};

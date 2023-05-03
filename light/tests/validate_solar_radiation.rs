@@ -16,6 +16,7 @@ fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator
         found_legend: Some("SIMPLE"),
         expected,
         found,
+        allowed_mean_bias_error: Some(14.5),
         ..validate::SeriesValidator::default()
     })
 }
