@@ -29,7 +29,7 @@ use crate::Float;
 use geometry::intersection::SurfaceSide;
 use geometry::Vector3D;
 use geometry::{Point3D, Ray3D};
-use solar::ReinhartSky;
+use weather::solar::ReinhartSky;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;

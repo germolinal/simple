@@ -161,9 +161,29 @@ pub trait SurfaceTrait : Clone + Send + Sync  {
 
     /// Gets the back IR irradiance
     fn back_infrared_irradiance(&self, state: &SimulationState) -> Float;
+
+    /// Gets the front precalculated_front_convection_coef
+    fn fixed_front_hs(&self)->Option<Float>;
+
+    /// Gets the back precalculated_front_convection_coef
+    fn fixed_back_hs(&self)->Option<Float>;
 }
 
 impl SurfaceTrait for Surface {
+
+    fn fixed_front_hs(&self)->Option<Float>{
+        match self.precalculated_front_convection_coef(){
+            Ok(v)=>Some(*v),
+            Err(_)=> None
+        }
+    }
+    
+    fn fixed_back_hs(&self)->Option<Float>{
+        match self.precalculated_back_convection_coef(){
+            Ok(v)=>Some(*v),
+            Err(_)=> None,
+        }
+    }
 
     fn set_front_convective_heat_flow(&self, state: &mut SimulationState, v: Float)->Result<(),String>{
         self.set_front_convective_heat_flow(state, v)
@@ -379,6 +399,20 @@ impl SurfaceTrait for Surface {
 }
 
 impl SurfaceTrait for Fenestration {
+    
+    fn fixed_front_hs(&self)->Option<Float>{
+        match self.precalculated_front_convection_coef(){
+            Ok(v)=>Some(*v),
+            Err(_)=> None
+        }
+    }
+    
+    fn fixed_back_hs(&self)->Option<Float>{
+        match self.precalculated_back_convection_coef(){
+            Ok(v)=>Some(*v),
+            Err(_)=> None,
+        }
+    }
     
     fn set_front_convective_heat_flow(&self, state: &mut SimulationState, v: Float)->Result<(),String>{
         self.set_front_convective_heat_flow(state, v)

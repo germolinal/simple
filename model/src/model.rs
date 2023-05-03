@@ -1139,16 +1139,9 @@ mod testing {
 
     use super::*;
 
-    use crate::boundary::Boundary;
-    use crate::building::Building;
-    use crate::fenestration::{FenestrationPosition, FenestrationType};
-    use crate::hvac;
-    use crate::substance;
     use crate::substance::Normal;
-    use crate::Output;
-    use crate::ShelterClass;
-    use crate::SolarOptions;
-    use crate::TerrainClass;
+
+    
 
     #[test]
     fn serde() {
@@ -1184,8 +1177,19 @@ mod testing {
         assert_eq!(state.len(), other_state.len());
     }
 
+    #[cfg(debug_assertions)]
     #[test]
     fn write_io_doc() {
+        use crate::boundary::Boundary;
+        use crate::building::Building;
+        use crate::fenestration::{FenestrationPosition, FenestrationType};
+        use crate::hvac;
+        use crate::substance;
+        use crate::Output;
+        use crate::ShelterClass;
+        use crate::SolarOptions;
+        use crate::TerrainClass;
+        
         let dir = "../docs/ioreference/src";
 
         let summary_template = format!("{}/SUMMARY_TEMPLATE.md", dir);

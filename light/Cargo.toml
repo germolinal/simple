@@ -14,7 +14,6 @@ calendar = { path = "../calendar" }
 weather = { path = "../weather" }
 model = { path = "../model" }
 communication = { path = "../communication" }
-solar = { path = "../solar" }
 rendering = { path = "../rendering" }
 matrix = { path = "../matrix" }
 geometry = { path = "../geometry" }
@@ -42,8 +41,7 @@ float = [
     "communication/float",
     "calendar/float",
     "weather/float",
-    "model/float",
-    "solar/float",
+    "model/float",    
     "rendering/float",
     "geometry/float",
 ]

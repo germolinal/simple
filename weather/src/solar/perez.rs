@@ -19,12 +19,12 @@ SOFTWARE.
 */
 
 const WHTEFFICACY: Float = 179.;
-use crate::*;
 use crate::{Float, PI};
 use calendar::Date;
 use geometry::Vector3D;
 use matrix::Matrix;
-use weather::CurrentWeather;
+use super::*;
+
 
 /// Specifies which units do we want returned
 /// from the sky model
@@ -434,11 +434,9 @@ impl PerezSky {
         let dew_point = weather_data
             .dew_point_temperature;
         let diffuse_horizontal_irrad = weather_data
-            .diffuse_horizontal_radiation
-            .expect("Weather data needs diffuse_horizontal_radiation for calculating sky-vec");
+            .diffuse_horizontal_radiation;
         let direct_normal_irrad = weather_data
-            .direct_normal_radiation
-            .expect("Weather data needs direct_normal_radiation for calculating sky-vec");
+            .direct_normal_radiation;
 
         // If it is nighttime, just fill with zeroes
         if direct_normal_irrad + diffuse_horizontal_irrad < 1e-4 {
@@ -775,8 +773,8 @@ mod tests {
 
         let weather_data = CurrentWeather {
             dew_point_temperature: 11.,
-            direct_normal_radiation: Some(538.),
-            diffuse_horizontal_radiation: Some(25.),
+            direct_normal_radiation: 538.,
+            diffuse_horizontal_radiation: 25.,
 
             ..CurrentWeather::default()
         };
@@ -849,8 +847,8 @@ mod tests {
 
         let weather_data = CurrentWeather {
             dew_point_temperature: 11.,
-            direct_normal_radiation: Some(538.),
-            diffuse_horizontal_radiation: Some(25.),
+            direct_normal_radiation: 538.,
+            diffuse_horizontal_radiation: 25.,
 
             ..CurrentWeather::default()
         };
@@ -923,8 +921,8 @@ mod tests {
 
         let weather_data = CurrentWeather {
             dew_point_temperature: 11.,
-            direct_normal_radiation: Some(538.),
-            diffuse_horizontal_radiation: Some(25.),
+            direct_normal_radiation: 538.,
+            diffuse_horizontal_radiation: 25.,
 
             ..CurrentWeather::default()
         };
@@ -997,8 +995,8 @@ mod tests {
 
         let weather_data = CurrentWeather {
             dew_point_temperature: 11.,
-            direct_normal_radiation: Some(538.),
-            diffuse_horizontal_radiation: Some(25.),
+            direct_normal_radiation: 538.,
+            diffuse_horizontal_radiation: 25.,
 
             ..CurrentWeather::default()
         };
@@ -1071,8 +1069,8 @@ mod tests {
 
         let weather_data = CurrentWeather {
             dew_point_temperature: 11.,
-            direct_normal_radiation: Some(538.),
-            diffuse_horizontal_radiation: Some(25.),
+            direct_normal_radiation: 538.,
+            diffuse_horizontal_radiation: 25.,
 
             ..CurrentWeather::default()
         };
@@ -1145,8 +1143,8 @@ mod tests {
 
         let weather_data = CurrentWeather {
             dew_point_temperature: 11.,
-            direct_normal_radiation: Some(538.),
-            diffuse_horizontal_radiation: Some(25.),
+            direct_normal_radiation: 538.,
+            diffuse_horizontal_radiation: 25.,
 
             ..CurrentWeather::default()
         };

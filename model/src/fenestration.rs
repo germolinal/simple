@@ -139,6 +139,18 @@ pub struct Fenestration {
     #[serde(default)]
     pub back_boundary: Boundary,
 
+    /// The front convection coefficient, in `W/m2K`
+    /// 
+    /// This value fixes the value, so the automatic calculations
+    /// in SIMPLE have no effect.
+    precalculated_front_convection_coef: Option<Float>,
+
+    /// The back convection coefficient, in `W/m2K`
+    /// 
+    /// This value fixes the value, so the automatic calculations
+    /// in SIMPLE have no effect.
+    precalculated_back_convection_coef: Option<Float>,
+
     /// The name of the surface containing this `Fenestration`,
     /// if any. A hole will be made in the parent surface in order
     /// to accomodate

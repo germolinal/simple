@@ -37,13 +37,13 @@ pub struct CurrentWeather {
     pub dew_point_temperature: Float,
 
     /// in Wh/m2
-    pub global_horizontal_radiation: Option<Float>,
+    pub global_horizontal_radiation: Float,
 
     /// in Wh/m2
-    pub direct_normal_radiation: Option<Float>,
+    pub direct_normal_radiation: Float,
 
     /// in Wh/m2
-    pub diffuse_horizontal_radiation: Option<Float>,
+    pub diffuse_horizontal_radiation: Float,
 
     /// in m/s
     pub wind_speed: Float,
@@ -166,15 +166,15 @@ impl CurrentWeather {
                 self.horizontal_infrared_radiation_intensity,
                 other.horizontal_infrared_radiation_intensity,
             ),
-            global_horizontal_radiation: interp_opt(
+            global_horizontal_radiation: interp(
                 self.global_horizontal_radiation,
                 other.global_horizontal_radiation,
             ),
-            direct_normal_radiation: interp_opt(
+            direct_normal_radiation: interp(
                 self.direct_normal_radiation,
                 other.direct_normal_radiation,
             ),
-            diffuse_horizontal_radiation: interp_opt(
+            diffuse_horizontal_radiation: interp(
                 self.diffuse_horizontal_radiation,
                 other.diffuse_horizontal_radiation,
             ),            
