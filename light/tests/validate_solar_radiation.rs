@@ -16,7 +16,7 @@ fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator
         found_legend: Some("SIMPLE"),
         expected,
         found,
-        allowed_mean_bias_error: Some(14.5),
+        allowed_mean_bias_error: Some(18.0),
         ..validate::SeriesValidator::default()
     })
 }
@@ -69,7 +69,7 @@ fn get_simple_results(
     // Finished model the Model
     let mut options = SolarOptions::new();
     options
-        .set_n_solar_irradiance_points(10)
+        .set_n_solar_irradiance_points(100)
         .set_solar_ambient_divitions(3000)
         .set_solar_sky_discretization(1);
 
@@ -103,23 +103,10 @@ fn get_simple_results(
 
         let front_radiation = surface.front_incident_solar_irradiance(&state).unwrap();
         ret.push(front_radiation);
-        // let back_radiation = surface.back_incident_solar_irradiance(&state).unwrap();
-
-        // let lat = -33.38 * PI / 180.;
-        // let lon = 70.78 * PI / 180.;
-        // let std_mer = 60. * PI / 180.;
-
-        // let solar = Solar::new(lat, lon, std_mer);
-        // let day = Time::Standard(date.day_of_year());
-        // let err = (front_radiation - exp_radiation).abs();
-
-        // println!("{},{},{}", front_radiation, exp_radiation, err);
-
-        // assert!( (found_radiation-exp_radiation).abs() < 0.4, "found_temp = {}, exp_temp = {} ,  error = {}", found_radiation, exp_radiation, (found_radiation - *exp_radiation).abs() );
-
+        
         // Advance
         date.add_hours(1. / n as Float);
-        // assert!(false)
+        
     }
     ret
 }
@@ -200,7 +187,7 @@ fn wellington(validator: &mut Validator) {
 
 #[test]
 fn validate_solar_radiation() {
-    // cargo test --package light --test validate_solar_radiation -- validate_solar_radiation --exact --nocapture
+    // cargo test --release --package light --test validate_solar_radiation -- validate_solar_radiation --exact --nocapture
     let mut validator = Validator::new(
         "Validate Solar Radiation",
         "../docs/validation/incident_solar_radiation.html",

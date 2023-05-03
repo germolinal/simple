@@ -154,8 +154,7 @@ impl Weather {
                     let date = current_data.date;                    
                     if let Some(sun_direction) = solar.sun_position_from_standard_time(date) {
                         let three_hours_prior_data = if line_index >= 3 {
-                            let r = self.data[line_index - 3];
-                            r
+                            self.data[line_index - 3]                            
                         } else {
                             *current_data
                         };
