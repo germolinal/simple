@@ -928,7 +928,7 @@ mod tests {
     #[cfg(feature = "chrono")]
     #[test]
     fn test_loop() {
-        use crate::DateFactory;
+        use crate::Period;
 
         // let start_str = "2022-12-25T00:00:00+12:00";
         // let chrono_start = NaiveDateTime::parse_from_str(&start_str, "%Y-%m-%dT%H:%M:%S%z").unwrap();
@@ -949,7 +949,7 @@ mod tests {
             hour: 23.999722222222225,
         };
         dbg!(end - start);
-        let factory = DateFactory::new(start, end, 3600.);
+        let factory = Period::new(start, end, 3600.);
         for (i, d) in factory.enumerate() {
             dbg!(d, i);
         }

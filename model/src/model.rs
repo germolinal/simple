@@ -218,7 +218,7 @@ impl<'de> Deserialize<'de> for Model {
 }
 
 impl Model {
-    /// Gets the (lat,lon, stdmer) tuple. If either `site_details` is not there,
+    /// Gets the (lat,lon, stdmer) tuple in degrees. If either `site_details` is not there,
     /// or if any of the `latitude`, `longitude`, or `standard_meridian` 
     /// in the `site_details` aren't there,
     /// it returns None.

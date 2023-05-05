@@ -12,27 +12,27 @@ jobs:
     runs-on: ubuntu-latest     
     steps:
     - uses: actions/checkout@v3     
-    - name: Run tests
+    - name: Run tests default
       run: cargo test --verbose --workspace 
     
   test_parallel:
     runs-on: ubuntu-latest     
     steps:
     - uses: actions/checkout@v3     
-    - name: Run tests float
+    - name: Run tests parallel
       run: cargo test --features parallel --verbose --workspace 
 
   check_float:
     runs-on: ubuntu-latest     
     steps:
     - uses: actions/checkout@v3     
-    - name: Run tests
+    - name: Check float
       run: cargo check --features float --verbose --workspace 
     
   check_float_parallel:
     runs-on: ubuntu-latest     
     steps:
     - uses: actions/checkout@v3     
-    - name: Run tests float
+    - name: Check float parallel
       run: cargo check --features float --features parallel --verbose --workspace 
   

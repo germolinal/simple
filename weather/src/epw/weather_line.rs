@@ -158,12 +158,16 @@ pub struct EPWWeatherLine {
 
 impl std::convert::Into<CurrentWeather> for &EPWWeatherLine {
     fn into(self)->CurrentWeather{
+
+        let date = Date{
+            month: self.month, 
+            day: self.day,
+            hour: self.hour-0.000001,
+        };
+        
+
         CurrentWeather {
-            date: Date{
-                month: self.month, 
-                day: self.day,
-                hour: self.hour,
-            },
+            date,
             dry_bulb_temperature: self.dry_bulb_temperature,
             dew_point_temperature: self.dew_point_temperature,
             direct_normal_radiation: self.direct_normal_radiation,
