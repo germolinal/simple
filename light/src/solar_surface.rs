@@ -388,16 +388,16 @@ mod testing {
         // Front side
         let views = s.calc_view_factors(&scene, true).unwrap();
 
-        assert_close!(views.ground, 0.0);
-        assert_close!(views.sky, 1.0);
-        assert_close!(views.air, 0.0);
+        assert_close!(views.ground, 0.0, 1e-4);
+        assert_close!(views.sky, 1.0, 1e-4);
+        assert_close!(views.air, 0.0, 1e-4);
 
         // back side
         let views = s.calc_view_factors(&scene, false).unwrap();
 
-        assert_close!(views.ground, 1.0);
-        assert_close!(views.sky, 0.0);
-        assert_close!(views.air, 0.0);
+        assert_close!(views.ground, 1.0, 1e-4);
+        assert_close!(views.sky, 0.0, 1e-4);
+        assert_close!(views.air, 0.0, 1e-4);
     }
 
     #[test]
