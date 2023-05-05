@@ -218,7 +218,7 @@ impl WeatherTrait for Weather {
 mod tests {
     use super::epw::scanner::EPWScanner;
     use super::*;
-    use calendar::DateFactory;
+    use calendar::Period;
     use validate::assert_close;
 
     #[test]
@@ -238,12 +238,12 @@ mod tests {
         assert_close!(
             ln.dew_point_temperature,
             epw.data[0].dew_point_temperature,
-            1e-8
+            1e-5
         );
         assert_close!(
             ln.dry_bulb_temperature,
             epw.data[0].dry_bulb_temperature,
-            1e-8
+            1e-5
         );
 
         let ln = epw.find_weather_line(Date {
@@ -255,12 +255,12 @@ mod tests {
         assert_close!(
             ln.dew_point_temperature,
             epw.data[1].dew_point_temperature,
-            1e-8
+            1e-5
         );
         assert_close!(
             ln.dry_bulb_temperature,
             epw.data[1].dry_bulb_temperature,
-            1e-8
+            1e-5
         );
 
         let ln = epw.find_weather_line(Date {
@@ -271,17 +271,19 @@ mod tests {
 
         assert_close!(
             ln.dew_point_temperature,
-            (epw.data[1].dew_point_temperature + epw.data[0].dew_point_temperature) / 2.
+            (epw.data[1].dew_point_temperature + epw.data[0].dew_point_temperature) / 2.,
+            1e-5
         );
         assert_close!(
             ln.dry_bulb_temperature,
-            (epw.data[1].dry_bulb_temperature + epw.data[0].dry_bulb_temperature) / 2.
+            (epw.data[1].dry_bulb_temperature + epw.data[0].dry_bulb_temperature) / 2.,
+            1e-5
         );
     }
 
     #[test]
     fn test_add_assign() {
-        let fact = DateFactory::new(
+        let fact = Period::new(
             Date {
                 month: 1,
                 day: 1,

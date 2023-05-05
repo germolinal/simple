@@ -19,7 +19,7 @@ SOFTWARE.
 */
 use crate::control_trait::SimpleControl;
 use crate::Float;
-use calendar::{Date, DateFactory};
+use calendar::{Date, Period};
 use clap::Parser;
 use communication::{MetaOptions, SimulationModel};
 use serde_json;
@@ -75,7 +75,7 @@ pub struct SimOptions {
 
 
 struct PreProcessData {
-    sim_period: DateFactory,
+    sim_period: Period,
     report_indexes: Vec<usize>,
     full_header: Vec<String>,
     model: MultiphysicsModel,
@@ -83,7 +83,7 @@ struct PreProcessData {
 }
 
 fn pre_process(model: &Model, options: &SimOptions, state_header: &mut SimulationStateHeader)->Result<PreProcessData, String> {
-    // Check consistency with dates and create DateFactory
+    // Check consistency with dates and create Period
     // if options.start == options.end || options.start.is_later(options.end) {
     //     return Err(format!("Time period inconsistency... Start = {} | End = {}", options.start, options.end));
     // }
@@ -99,11 +99,11 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
     let end = Date {
         day: 31,
         month: 12,
-        hour: 24.,
+        hour: 23.99999,
     };
 
     let dt = 60. * 60. / options.n as Float;
-    let sim_period = DateFactory::new(start, end, dt);
+    let sim_period = Period::new(start, end, dt);
 
     // Load weather
     let weather : Weather = EPWWeather::from_file(options.weather_file.to_string())?.into();
