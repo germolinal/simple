@@ -62,7 +62,7 @@ pub use occupant_behaviour::OccupantBehaviour;
 pub mod run_simulation;
 
 // Re-exports
-pub use calendar::{Date, DateFactory};
+pub use calendar::{Date, Period};
 pub use communication::{MetaOptions, SimulationModel};
 pub use model;
 pub use model::{
@@ -73,7 +73,8 @@ pub use weather::{
     Weather,
     WeatherTrait,
     SyntheticWeather,
-    EPWWeather,    
+    EPWWeather, 
+    EPWWeatherLine,
     CurrentWeather,
     Location,
     Time,

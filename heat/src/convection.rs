@@ -99,6 +99,7 @@ impl ConvectionParams {
         {
             1.81 * abs_delta_t.powf(1. / 3.) / (1.382 + self.cos_surface_tilt.abs())
         } else {
+            dbg!(delta_t, self.cos_surface_tilt);
             unreachable!()
         };
 

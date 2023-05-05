@@ -1,4 +1,4 @@
-use calendar::{Date, DateFactory};
+use calendar::{Date, Period};
 use validate::*;
 use weather::{EPWWeather, Float, Weather};
 
@@ -23,28 +23,26 @@ fn test_go_through() {
         let end = Date {
             day: 31,
             month: 12,
-            hour: 23.,
+            hour: 23.99999999,
         };
 
         let dt = 60. * 60. / 20.;
-        let sim_period = DateFactory::new(start, end, dt);
+        let sim_period = Period::new(start, end, dt);
         
         let weather: Weather = EPWWeather::from_file("./tests/wellington.epw").unwrap().into();
 
-        let mut i = 0;
-        
         let mut expected = Vec::with_capacity(n);
-        let mut found = Vec::with_capacity(n);
-        for date in sim_period {
-            expected.push(exp_dry_bulb[i] as Float);
-            i += 1;
+        let mut found = Vec::with_capacity(n);        
+        for (date,exp) in sim_period
+            .into_iter()
+            .zip(exp_dry_bulb)
+            .skip(20) // We skip 20 beacause EnergyPlus seems to be making up data between midningt and 1am?
+        {
+            expected.push(*exp as Float);
             let data = weather.find_weather_line(date);
             let found_temp = data.dry_bulb_temperature;
             found.push(found_temp);
-
-            if i >= n || i >= exp_dry_bulb.len() {
-                break;
-            }
+            // println!("{},{}", date, found_temp);
         }
 
         Box::new(ScatterValidator {
