@@ -578,8 +578,8 @@ mod testing {
 
         let mut state_header = SimulationStateHeader::new();
         let mut options = SolarOptions::new();
-        options.set_n_solar_irradiance_points(1);
-        options.set_solar_ambient_divitions(1);
+        options.set_n_solar_irradiance_points(10);
+        options.set_solar_ambient_divitions(1000);
         options.set_solar_sky_discretization(1);
 
         let n: usize = 1;
