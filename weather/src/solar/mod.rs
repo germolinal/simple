@@ -1023,7 +1023,7 @@ mod tests {
 
     use super::*;
     use crate::{EPWWeather, Weather};
-    use calendar::{Date, DateFactory};
+    use calendar::{Date, Period};
     use validate::{valid, ScatterValidator, Validate, Validator};
 
     #[test]
@@ -1728,7 +1728,7 @@ mod tests {
             hour: 0.0,
         };
 
-        let dates = DateFactory::new(start, end, 3600.0);
+        let dates = Period::new(start, end, 3600.0);
         const RAD_DATA: [Float; 48] = [
             0.00, -2.00, -3.20, -3.30, -3.20, -4.20, -3.20, 20.60, 86.10, 262.40, 391.20, 462.40,
             462.10, 410.60, 301.30, 162.60, 19.10, -4.40, -3.40, -4.80, -4.80, -3.80, -3.80, -3.80,

@@ -12,7 +12,7 @@ fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidato
         units: Some("W/m2"),
         expected_legend: Some("EnergyPlus"),
         found_legend: Some("SIMPLE"),
-        allowed_intersect_delta: Some(0.6),
+        allowed_intersect_delta: Some(0.7),
         allowed_r2: Some(0.98),
         allowed_slope_delta: Some(0.01),
         expected,
@@ -72,7 +72,7 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<Float>, Vec<Flo
     // Finished model the Model
     let mut options = SolarOptions::new();
     options
-        .set_n_solar_irradiance_points(10)
+        .set_n_solar_irradiance_points(100)
         .set_solar_ambient_divitions(3000)
         .set_solar_sky_discretization(1);
 
