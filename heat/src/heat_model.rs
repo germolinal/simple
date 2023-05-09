@@ -34,7 +34,6 @@ use crate::luminaire::ThermalLuminaire;
 use crate::zone::ThermalZone;
 use model::{Boundary, Model, SimulationState, SimulationStateHeader};
 use std::borrow::Borrow;
-use std::ops::Bound;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
