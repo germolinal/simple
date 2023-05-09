@@ -94,8 +94,8 @@ impl SolarModel {
                     // It depends on the ambient tempearture
                     surface.set_front_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {
-                    // ignore ground
+                Boundary::Ground | Boundary::Adiabatic => {
+                    // ignore ground and adiabatic
                 }
                 Boundary::Outdoor => {
                     // outdoor
@@ -116,8 +116,8 @@ impl SolarModel {
                 Boundary::AmbientTemperature { temperature } => {
                     surface.set_back_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {
-                    // ignore ground
+                Boundary::Ground | Boundary::Adiabatic => {
+                    // ignore ground and adiabatic
                 }
                 Boundary::Outdoor => {
                     // outdoor
@@ -141,7 +141,7 @@ impl SolarModel {
                 Boundary::AmbientTemperature { temperature } => {
                     surface.set_front_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {}
+                Boundary::Ground | Boundary::Adiabatic => {}
                 Boundary::Outdoor => {
                     let view_factors = &self.optical_info.front_fenestrations_view_factors[index];
                     let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
@@ -160,7 +160,7 @@ impl SolarModel {
                 Boundary::AmbientTemperature { temperature } => {
                     surface.set_back_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {}
+                Boundary::Ground | Boundary::Adiabatic => {}
                 Boundary::Outdoor => {
                     // outdoor
                     let view_factors = &self.optical_info.back_fenestrations_view_factors[index];

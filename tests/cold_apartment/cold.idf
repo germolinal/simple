@@ -1,0 +1,1180 @@
+
+
+  Version,22.2;
+
+  Timestep,4;
+
+  Building,
+    Simple One Zone w Windows,  !- Name
+    0,                       !- North Axis {deg}
+    Suburbs,                 !- Terrain
+    0.04,                    !- Loads Convergence Tolerance Value {W}
+    0.004,                   !- Temperature Convergence Tolerance Value {deltaC}
+    FullInteriorAndExterior,        !- Solar Distribution
+    30,                      !- Maximum Number of Warmup Days
+    6;                       !- Minimum Number of Warmup Days
+
+  HeatBalanceAlgorithm,ConductionTransferFunction;
+
+  
+
+  SimulationControl,
+    No,                      !- Do Zone Sizing Calculation
+    No,                      !- Do System Sizing Calculation
+    No,                      !- Do Plant Sizing Calculation
+    No,                     !- Run Simulation for Sizing Periods
+    Yes,                      !- Run Simulation for Weather File Run Periods
+    No,                      !- Do HVAC Sizing Simulation for Sizing Periods
+    1;                       !- Maximum Number of HVAC Sizing Simulation Passes
+
+  RunPeriod,
+    Run Period 1,            !- Name
+    1,                       !- Begin Month
+    1,                       !- Begin Day of Month
+    ,                        !- Begin Year
+    12,                      !- End Month
+    31,                      !- End Day of Month
+    ,                        !- End Year
+    Tuesday,                 !- Day of Week for Start Day
+    Yes,                     !- Use Weather File Holidays and Special Days
+    Yes,                     !- Use Weather File Daylight Saving Period
+    No,                      !- Apply Weekend Holiday Rule
+    Yes,                     !- Use Weather File Rain Indicators
+    Yes;                     !- Use Weather File Snow Indicators
+
+
+
+WindowMaterial:Glazing,
+  glass, !- Name
+  SpectralAverage,
+  ,
+  0.003, !- thickness
+  0.8,    !- solar transmittance
+  0.1, !- front solar reflectance,
+  0.1; !- back solar reflectance,
+
+Construction,
+  window,             !- Name
+  glass;
+   
+
+
+  Material:NoMass,
+    1inch insulation,                !- Name
+    Rough,                   !- Roughness
+    0.714,                   !- Thermal Resistance {m2-K/W}
+    0.9,               !- Thermal Absorptance
+    0.7500000,               !- Solar Absorptance
+    0.7500000;               !- Visible Absorptance
+
+  Material,
+    10cm Concrete,   !- Name
+    MediumRough,             !- Roughness
+    0.1,               !- Thickness {m}
+    1.63,                !- Conductivity {W/m-K}
+    2400.0,                !- Density {kg/m3}
+    900,                !- Specific Heat {J/kg-K}
+    0.9,               !- Thermal Absorptance
+    0.6500000,               !- Solar Absorptance
+    0.6500000;               !- Visible Absorptance
+
+Material,
+    20cm Concrete,   !- Name
+    MediumRough,             !- Roughness
+    0.2,               !- Thickness {m}
+    1.63,                !- Conductivity {W/m-K}
+    2400.0,                !- Density {kg/m3}
+    900,                !- Specific Heat {J/kg-K}
+    0.9,               !- Thermal Absorptance
+    0.6500000,               !- Solar Absorptance
+    0.6500000;               !- Visible Absorptance
+
+  
+  
+  Construction,
+    interior wall,                   !- Name
+    10cm Concrete;   !- Outside Layer
+
+  Construction,
+    exterior wall,                  !- Name
+    20cm Concrete;
+    !-,
+    !-1inch insulation;
+
+
+   
+Schedule:Constant, 
+    AlwaysZero, !- Name
+    On/Off, !- Schedule Type Limits Name 
+    0.0; !- Hourly Value
+
+
+  Site:GroundTemperature:BuildingSurface,18.89,18.92,19.02,19.12,19.21,19.23,19.07,19.32,19.09,19.21,19.13,18.96;
+
+  ScheduleTypeLimits,
+    Fraction,                !- Name
+    0.0,                     !- Lower Limit Value
+    1.0,                     !- Upper Limit Value
+    CONTINUOUS;              !- Numeric Type
+
+  GlobalGeometryRules,
+    UpperLeftCorner,         !- Starting Vertex Position
+    CounterClockWise,        !- Vertex Entry Direction
+    World;                   !- Coordinate System
+
+
+
+
+!-----
+!-----
+
+  Zone,
+    Kids Bedroom,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    19.23;           !- Volume {m3}
+
+Lights,
+    Kids light,
+    Kids Bedroom,
+    AlwaysZero,
+    LightingLevel,
+    15;
+
+!- Heater,
+
+BuildingSurface:Detailed,
+    kids - exterior,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Kids Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0, 1.35, 0, 
+    0, 1.35, 2.7,  
+    0, 3.74, 2.7, 
+    0, 3.74, 0;
+
+
+FenestrationSurface:Detailed,
+    kids - window,    !- Name
+    Window,                  !- Surface Type
+    window,             !- Construction Name
+    kids - exterior,           !- Building Surface Name
+    ,                        !- Outside Boundary Condition Object
+    0.5000000,               !- View Factor to Ground
+    ,                        !- Frame and Divider Name
+    1.0,                     !- Multiplier
+    4,                       !- Number of Vertices
+    0, 2.09, 0.83,
+    0, 2.09, 2.29,
+    0, 2.99, 2.29,
+    0, 2.99, 0.83;
+
+
+BuildingSurface:Detailed,
+    kids - Bathroom,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kids Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Bathroom,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0, 3.74, 0, 
+    0, 3.74, 2.7,  
+    1.92, 3.74, 2.7, 
+    1.92, 3.74, 0;
+
+BuildingSurface:Detailed,
+    kids - Storage,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kids Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Storage,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    1.92, 3.74, 0, 
+    1.92, 3.74, 2.7,  
+    2.98, 3.74, 2.7, 
+    2.98, 3.74, 0;
+
+BuildingSurface:Detailed,
+    kids - Hallway,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kids Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Hallway,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 1.35, 0, 
+    2.98, 1.35, 2.7,  
+    2.98, 3.74, 2.7, 
+    2.98, 3.74, 0;
+
+BuildingSurface:Detailed,
+    kids - Common Area,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kids Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0,    1.35, 0, 
+    0,    1.35, 2.7,  
+    2.98, 1.35, 2.7, 
+    2.98, 1.35, 0;
+
+BuildingSurface:Detailed,
+    kids - Ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kids Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0.00, 1.35, 2.7,  
+      2.98, 1.35, 2.7,  
+      2.98, 3.74, 2.7, 
+      0.00, 3.74, 2.7;
+
+BuildingSurface:Detailed,
+    kids - Floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kids Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices    
+    0.00, 3.74, 0,  !- 4
+    2.98, 3.74, 0,  !- 3
+    2.98, 1.35, 0,  !- 2
+    0.00, 1.35, 0;  !- 1
+
+!-----
+!-----
+
+ Zone,
+    Bathroom,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    10.47;           !- Volume {m3}
+
+Lights,
+    Bathroom light,
+    Bathroom,
+    AlwaysZero,
+    LightingLevel,
+    5;
+
+BuildingSurface:Detailed,
+    Bathroom - exterior,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Bathroom,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0, 3.74, 0, 
+    0, 3.74, 2.7,  
+    0, 5.76, 2.7, 
+    0, 5.76, 0;
+
+FenestrationSurface:Detailed,
+     Bathroom - window,    !- Name
+     Window,                  !- Surface Type
+     window,             !- Construction Name
+     Bathroom - exterior,           !- Building Surface Name
+     ,                        !- Outside Boundary Condition Object
+     0.5000000,               !- View Factor to Ground
+     ,                        !- Frame and Divider Name
+     1.0,                     !- Multiplier
+     4,                       !- Number of Vertices
+     0, 4.975, 1.16, 
+    0, 4.975, 2.29,  
+    0, 5.585, 2.29, 
+    0, 5.585, 1.16;
+
+BuildingSurface:Detailed,
+    Bathroom - Kitchen,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Bathroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Kitchen,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0, 5.76, 0, 
+    0, 5.76, 2.7,  
+    1.92, 5.76, 2.7, 
+    1.92, 5.76, 0;
+
+BuildingSurface:Detailed,
+    Bathroom - Hallway,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Bathroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Hallway,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    1.92, 5.76, 0, 
+    1.92, 5.76, 2.7,  
+    1.92, 4.80, 2.7, 
+    1.92, 4.80, 0;
+
+
+BuildingSurface:Detailed,
+    Bathroom - Storage,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Bathroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Storage,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    1.92, 4.80, 0, 
+    1.92, 4.80, 2.7,  
+    1.92, 3.74, 2.7, 
+    1.92, 3.74, 0;
+
+BuildingSurface:Detailed,
+    Bathroom - ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Bathroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0.00, 3.74, 2.7,  
+    1.92, 3.74, 2.7,  
+    1.92, 5.76, 2.7, 
+    0.00, 5.76, 2.7;
+
+BuildingSurface:Detailed,
+    Bathroom - floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Bathroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0.00, 5.76, 0,  !- 4
+    1.92, 5.76, 0,  !- 3
+    1.92, 3.74, 0,  !- 2
+    0.00, 3.74, 0;  !- 1
+
+!-----
+!-----
+
+Zone,
+    Storage,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    3.03;           !- Volume {m3}
+
+BuildingSurface:Detailed,
+    Storage - Hallway,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Storage,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Hallway,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 4.80, 0, 
+    2.98, 4.80, 2.7,  
+    2.98, 3.74, 2.7, 
+    2.98, 3.74, 0;
+
+BuildingSurface:Detailed,
+    Storage - Hallway door,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Storage,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Hallway,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    1.92, 4.80, 0, 
+    1.92, 4.80, 2.7,  
+    2.98, 4.80, 2.7, 
+    2.98, 4.80, 0;
+
+BuildingSurface:Detailed,
+    Storage - ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Storage,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    1.92, 3.74, 2.7,  
+    2.98, 3.74, 2.7,  
+    2.98, 4.80, 2.7, 
+    1.92, 4.80, 2.7;
+
+BuildingSurface:Detailed,
+    Storage - floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Storage,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    1.92, 3.74, 0,  
+    2.98, 3.74, 0,  
+    2.98, 4.80, 0, 
+    1.92, 4.80, 0;
+
+!-----
+!-----
+
+Zone,
+    Kitchen,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    9.9;           !- Volume {m3}
+
+Lights,
+    Kitchen light,
+    Kitchen,
+    AlwaysZero,
+    LightingLevel,
+    10;
+
+
+BuildingSurface:Detailed,
+    Kitchen - exterior west,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Kitchen,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0, 5.76, 0, 
+    0, 5.76, 2.7,  
+    0, 7.67, 2.7, 
+    0, 7.67, 0;
+
+BuildingSurface:Detailed,
+    Kitchen - exterior north,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Kitchen,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0, 7.67, 0, 
+    0, 7.67, 2.7,  
+    2.98, 7.67, 2.7, 
+    2.98, 7.67, 0;
+
+FenestrationSurface:Detailed,
+    Kitchen - window,    !- Name
+    Window,                  !- Surface Type
+    window,             !- Construction Name
+    Kitchen - exterior north,           !- Building Surface Name
+    ,                        !- Outside Boundary Condition Object
+    0.5000000,               !- View Factor to Ground
+    ,                        !- Frame and Divider Name
+    1.0,                     !- Multiplier
+    4,                       !- Number of Vertices
+    1.06, 7.67, 1.15, 
+    1.06, 7.67, 2.29,  
+    1.92, 7.67, 2.29, 
+    1.92, 7.67, 1.15;
+
+BuildingSurface:Detailed,
+    Kitchen - laundry,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kitchen,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Laundry,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 7.67, 0, 
+    2.98, 7.67, 2.7,  
+    2.98, 6.03, 2.7, 
+    2.98, 6.03, 0;
+
+BuildingSurface:Detailed,
+    Kitchen - Hallway small,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kitchen,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Laundry,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 6.03, 0, 
+    2.98, 6.03, 2.7,  
+    2.98, 5.76, 2.7, 
+    2.98, 5.76, 0;
+
+BuildingSurface:Detailed,
+    Kitchen - Ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kitchen,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0.00, 5.76, 2.7,  
+      2.98, 5.76, 2.7,  
+      2.98, 7.67, 2.7, 
+      0, 7.67, 2.7;
+
+BuildingSurface:Detailed,
+    Kitchen - Floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Kitchen,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    0, 7.67, 0, !- 4
+    2.98, 7.67, 0, !- 3
+    2.98, 5.76, 0,  !- 2
+    0.00, 5.76, 0;  !- 1
+
+!-----
+!-----
+
+Zone,
+    Laundry,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    3.84;           !- Volume {m3}
+
+Lights,
+    Laundry light,
+    Laundry,
+    AlwaysZero,
+    LightingLevel,
+    7;
+
+BuildingSurface:Detailed,
+    Laundry - exterior,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Laundry,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 7.67, 0, 
+    2.98, 7.67, 2.7,  
+    4.02, 7.67, 2.7, 
+    4.02, 7.67, 0;
+
+FenestrationSurface:Detailed,
+     laundry - window,    !- Name
+     Window,                  !- Surface Type
+     window,             !- Construction Name
+     Laundry - exterior,           !- Building Surface Name
+     ,                        !- Outside Boundary Condition Object
+     0.5000000,               !- View Factor to Ground
+     ,                        !- Frame and Divider Name
+     1.0,                     !- Multiplier
+     4,                       !- Number of Vertices
+     3.58, 7.67, 2.0, 
+    3.58, 7.67, 2.29,  
+    3.78, 7.67, 2.29, 
+    3.78, 7.67, 2.0;
+
+BuildingSurface:Detailed,
+    Laundry - livingroom,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Laundry,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Livingroom,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 7.67, 0, 
+    4.02, 7.67, 2.7,  
+    4.02, 6.03, 2.7, 
+    4.02, 6.03, 0;
+
+BuildingSurface:Detailed,
+    Laundry - Hallway,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Laundry,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Hallway,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 6.03, 0, 
+    2.98, 6.03, 2.7,  
+    4.02, 6.03, 2.7, 
+    4.02, 6.03, 0;
+
+
+BuildingSurface:Detailed,
+    Laundry - Ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Laundry,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 6.03, 2.7,  
+    4.02, 6.03, 2.7,  
+    4.02, 7.67, 2.7, 
+    2.98, 7.67, 2.7;
+
+BuildingSurface:Detailed,
+    Laundry - Floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Laundry,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 7.67, 0,  !- 4
+    4.02, 7.67, 0,  !- 3
+    4.02, 6.03, 0,  !- 2
+    2.98, 6.03, 0;  !- 1
+
+    
+
+!-----
+!-----
+
+Zone,
+    Livingroom,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    50.66;           !- Volume {m3}
+
+Lights,
+    Livingroom light,
+    Livingroom,
+    AlwaysZero,
+    LightingLevel,
+    35;
+
+BuildingSurface:Detailed,
+    Livingroom - exterior north,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Livingroom,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 7.67, 0, 
+    4.02, 7.67, 2.7,  
+    8.77, 7.67, 2.7, 
+    8.77, 7.67, 0;
+
+FenestrationSurface:Detailed,
+     Living - window north,    !- Name
+     Window,                  !- Surface Type
+     window,             !- Construction Name
+     Livingroom - exterior north,           !- Building Surface Name
+     ,                        !- Outside Boundary Condition Object
+     0.5000000,               !- View Factor to Ground
+     ,                        !- Frame and Divider Name
+     1.0,                     !- Multiplier
+     4,                       !- Number of Vertices
+     7.90, 7.67, 0.70, 
+    7.90, 7.67, 2.29,  
+    8.45, 7.67, 2.29, 
+    8.45, 7.67, 0.70;
+
+BuildingSurface:Detailed,
+    Livingroom - exterior east,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Livingroom,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    8.77, 7.67, 0, 
+    8.77, 7.67, 2.7,  
+    8.77, 3.74, 2.7, 
+    8.77, 3.74, 0;
+
+
+
+FenestrationSurface:Detailed,
+    Livingroom - east 1,    !- Name
+    Window,                  !- Surface Type
+    window,             !- Construction Name
+    Livingroom - exterior east,           !- Building Surface Name
+    ,                        !- Outside Boundary Condition Object
+    0.5000000,               !- View Factor to Ground
+    ,                        !- Frame and Divider Name
+    1.0,                     !- Multiplier
+    4,                       !- Number of Vertices
+    8.77, 7.35, 0.7, 
+    8.77, 7.35, 2.29,  
+    8.77, 6.8, 2.29, 
+    8.77, 6.8, 0.7;
+
+FenestrationSurface:Detailed,
+    Livingroom - east 2,    !- Name
+    Window,                  !- Surface Type
+    window,             !- Construction Name
+    Livingroom - exterior east,           !- Building Surface Name
+    ,                        !- Outside Boundary Condition Object
+    0.5000000,               !- View Factor to Ground
+    ,                        !- Frame and Divider Name
+    1.0,                     !- Multiplier
+    4,                       !- Number of Vertices
+    8.77, 6.4, 0.3, 
+    8.77, 6.4, 2.29,  
+    8.77, 5.5, 2.29, 
+    8.77, 5.5, 0.3;
+
+FenestrationSurface:Detailed,
+    Livingroom - east 3,    !- Name
+    Window,                  !- Surface Type
+    window,             !- Construction Name
+    Livingroom - exterior east,           !- Building Surface Name
+    ,                        !- Outside Boundary Condition Object
+    0.5000000,               !- View Factor to Ground
+    ,                        !- Frame and Divider Name
+    1.0,                     !- Multiplier
+    4,                       !- Number of Vertices
+    8.77, 5.1, 0.7, 
+    8.77, 5.1, 2.29,  
+    8.77, 4.55, 2.29, 
+    8.77, 4.55, 0.7;
+
+BuildingSurface:Detailed,
+    Livingroom - main bedroom,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Livingroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Main Bedroom,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 3.74, 0, 
+    4.02, 3.74, 2.7,  
+    8.77, 3.74, 2.7, 
+    8.77, 3.74, 0;
+
+BuildingSurface:Detailed,
+    Livingroom - Hallway,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Livingroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Hallway,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 6.03, 0, 
+    4.02, 6.03, 2.7,  
+    4.02, 3.74, 2.7, 
+    4.02, 3.74, 0;
+
+BuildingSurface:Detailed,
+    Livingroom - ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Livingroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 3.74, 2.7,  
+    8.77, 3.74, 2.7,  
+    8.77, 7.67, 2.7, 
+    4.02, 7.67, 2.7;
+
+BuildingSurface:Detailed,
+    Livingroom - floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Livingroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 7.67, 0, !- 4
+    8.77, 7.67, 0, !- 3
+    8.77, 3.74, 0, !- 2
+    4.02, 3.74, 0; !- 1  
+
+!-----
+!-----
+
+Zone,
+    Main Bedroom,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    48.654;           !- Volume {m3}
+
+Lights,
+    Main Bedrooms light,
+    Main Bedroom,
+    AlwaysZero,
+    LightingLevel,
+    25;
+
+BuildingSurface:Detailed,
+    Main Bedroom - exterior,           !- Name
+    Wall,                    !- Surface Type
+    exterior wall,                 !- Construction Name
+    Main Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Outdoors,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    SunExposed,              !- Sun Exposure
+    WindExposed,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    8.77, 3.74, 0, 
+    8.77, 3.74, 2.7,  
+    8.77, 0, 2.7, 
+    8.77, 0, 0;
+
+
+FenestrationSurface:Detailed,
+    Main Bedroom - window,    !- Name
+    Window,                  !- Surface Type
+    window,             !- Construction Name
+    Main Bedroom - exterior,           !- Building Surface Name
+    ,                        !- Outside Boundary Condition Object
+    0.5000000,               !- View Factor to Ground
+    ,                        !- Frame and Divider Name
+    1.0,                     !- Multiplier
+    4,                       !- Number of Vertices
+    8.77, 2.474, 0.7, !- 4
+    8.77, 2.475, 2.29, !- 3
+    8.77, 1.265, 2.29,  !- 2
+    8.77, 1.265, 0.7; !- 1
+
+BuildingSurface:Detailed,
+    Main Bedroom - Hallway,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Main Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Zone,                !- Outside Boundary Condition
+    Hallway,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 3.74, 0, 
+    4.02, 3.74, 2.7,  
+    4.02, 1.35, 2.7, 
+    4.02, 1.35, 0;
+
+BuildingSurface:Detailed,
+    Main Bedroom - common area,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Main Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 0, 0, 
+      4.02, 0, 2.7,  
+      8.77, 0, 2.7, 
+      8.77, 0, 0;
+
+BuildingSurface:Detailed,
+    Main Bedroom - common area small,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Main Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 1.35, 0, 
+    4.02, 1.35, 2.7,  
+    4.02, 0, 2.7, 
+    4.02, 0, 0;
+
+BuildingSurface:Detailed,
+    Main Bedroom - ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Main Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 0.00, 2.7,  
+    8.77, 0.00, 2.7,  
+    8.77, 3.74, 2.7, 
+    4.02, 3.74, 2.7;
+
+BuildingSurface:Detailed,
+    Main Bedroom - floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Main Bedroom,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    4.02, 3.74, 0, !- 4
+    8.77, 3.74, 0, !- 3
+    8.77, 0.00, 0, !- 2
+    4.02, 0.00, 0; !- 1
+
+!-----
+!-----
+
+Zone,
+    Hallway,                !- Name
+    0,                       !- Direction of Relative North {deg}
+    0,                       !- X Origin {m}
+    0,                       !- Y Origin {m}
+    0,                       !- Z Origin {m}
+    1,                       !- Type
+    1,                       !- Multiplier
+    2.7,           !- Ceiling Height {m}
+    19.68;           !- Volume {m3}
+
+Lights,
+    Hallway lights,
+    Hallway,
+    AlwaysZero,
+    LightingLevel,
+    5;
+
+BuildingSurface:Detailed,
+    Hallway - common area small,           !- Name
+    Wall,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Hallway,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    4,                       !- Number of Vertices
+    2.98, 1.35, 0, 
+      2.98, 1.35, 2.7,  
+      4.02, 1.35, 2.7, 
+      4.02, 1.35, 0;
+
+BuildingSurface:Detailed,
+    Hallway - ceiling,           !- Name
+    Roof,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Hallway,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    8,                       !- Number of Vertices
+    2.98, 1.35, 2.7,  
+    4.02, 1.35, 2.7,  
+    4.02, 6.03, 2.7, 
+    2.98, 6.03, 2.7,  
+    2.98, 5.76, 2.7,  
+    1.92, 5.76, 2.7,  
+    1.92, 4.80, 2.7,  
+    2.98, 4.80, 2.7;
+
+BuildingSurface:Detailed,
+    Hallway - floor,           !- Name
+    Floor,                    !- Surface Type
+    interior wall,                 !- Construction Name
+    Hallway,                !- Zone Name
+    ,                        !- Space Name
+    Adiabatic,                !- Outside Boundary Condition
+    ,                        !- Outside Boundary Condition Object
+    NoSun,              !- Sun Exposure
+    NoWind,             !- Wind Exposure
+    0.5000000,               !- View Factor to Ground
+    8,                       !- Number of Vertices
+    2.98, 4.80, 0,  !-8
+    1.92, 4.80, 0,  !-7
+    1.92, 5.76, 0,  !-6
+    2.98, 5.76, 0,  !-5
+    2.98, 6.03, 0,  !- 4
+    4.02, 6.03, 0,  !- 3
+    4.02, 1.35, 0,  !- 2
+    2.98, 1.35, 0;  !- 1
+
+!-----
+!-----
+
+
+Output:Variable,*,Zone Mean Air Temperature,timestep; !- Zone Average [C]
+

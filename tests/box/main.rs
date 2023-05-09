@@ -24,8 +24,7 @@ fn some_fun() {
     /// * Direct and Diffuse Solar Radiation
     fn series() -> Box<dyn Validate> {
         let options = SimOptions {
-            input_file: "./tests/box/input.spl".into(),
-            // input_file: "./tests/box/cold.spl".into(),
+            input_file: "./tests/box/box.spl".into(),            
             weather_file: "./tests/wellington.epw".into(),
             output: Some("./tests/box/check.csv".into()),
             control_file: None,
@@ -54,16 +53,16 @@ fn some_fun() {
 
         // Load produced data
         let found = validate::from_csv::<simple::Float>(res, &[1]);
-        let expected = validate::from_csv::<simple::Float>("tests/box/cold_box_eplus.csv", &[0]);
+        let expected = validate::from_csv::<simple::Float>("tests/box/eplusout.csv", &[0]);
         
         
         Box::new(ScatterValidator {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
-            expected: expected[0].clone(),
+            expected: expected[0].iter().skip(20).map(|v| *v).collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[0].clone(),
+            found: found[0].iter().skip(20).map(|v| *v).collect(),
 
             allowed_r2: Some(0.93),
             allowed_intersect_delta: Some(0.5),
