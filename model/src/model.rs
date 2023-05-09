@@ -1,4 +1,5 @@
 use crate::error_msgs::print_warning_no_module;
+use std::collections::HashMap;
 use std::fmt::Display;
 /*
 MIT License
@@ -1128,6 +1129,59 @@ impl Model {
         let name = &mat.substance;
         self.get_substance(name)
     }
+
+
+    /// Retrieves a dictionary with the heating/cooling setpoints of the different 
+    /// HVACs in the model. The dictionary will be empty if 
+    /// there are no HVACs. If an hvac does not have a setpoint,
+    /// the content will be none.
+    /// 
+    /// ```
+    /// use model::{Model, hvac::ElectricHeater};
+    /// let mut model = Model::default();
+    ///
+    /// let heater_name = "Heater".to_string();
+    /// let mut heater = ElectricHeater::new(heater_name.clone());
+    /// heater.set_heating_setpoint(19.);
+    /// model.add_hvac(heater.wrap()).unwrap();
+    /// 
+    /// let setpoints = model.get_hvac_setpoints();
+    /// assert_eq!(setpoints.len(), 1);
+    /// assert!( setpoints[&heater_name][0].is_some() );
+    /// assert!( (19.0 - setpoints[&heater_name][0].unwrap()).abs() < 1e-9 );
+    /// assert!( setpoints[&heater_name][1].is_none() );
+    /// ```
+    pub fn get_hvac_setpoints(&self)->HashMap<String, [Option<Float>;2]>{
+        let mut hvac_setpoints : HashMap<String, [Option<Float>;2]> = HashMap::with_capacity(self.hvacs.len());
+        for hvac in self.hvacs.iter(){
+            let (name, heating,cooling) = match hvac {
+                HVAC::ElectricHeater(heater)=>{
+                    let heating = match heater.heating_setpoint(){
+                        Ok(v)=>Some(*v),
+                        Err(_)=>None
+                    };
+                    (hvac.name().clone(), heating, None)
+                },
+                HVAC::IdealHeaterCooler(h)=>{
+                    let heating = match h.heating_setpoint(){
+                        Ok(v)=>Some(*v),
+                        Err(_)=>None
+                    };
+                    let cooling = match h.cooling_setpoint(){
+                        Ok(v)=>Some(*v),
+                        Err(_)=>None
+                    };
+
+                    (hvac.name().clone(), heating,cooling)
+                }
+            };
+            hvac_setpoints.insert(name, [heating,cooling]);
+        }
+        hvac_setpoints
+    }
+
+
+    
 }
 
 /***********/
