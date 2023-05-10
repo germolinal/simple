@@ -126,9 +126,10 @@ impl Iterator for Period {
         
 
         let old = self.current;
+        
         let mut new = self.current;
 
-        let vs_end_before = new < self.end;        
+        let vs_end_before = new <= self.end;        
         new.add_seconds(self.dt);
         let vs_end_after = new <= self.end;        
         let crossed_end = vs_end_before != vs_end_after;
@@ -136,8 +137,9 @@ impl Iterator for Period {
 
         // println!("     ---- old = {} | new = {} | end = {} |||| vs_end_before = {} | vs_end_after = {} | crossed_new? = {}", old, new, self.end, vs_end_before, vs_end_after, crossed_ny);
 
-        if !self.goes_through_new_year && (crossed_end || crossed_ny)
-            || self.goes_through_new_year && crossed_end && !crossed_ny
+        // if !self.goes_through_new_year && (crossed_end || crossed_ny)
+        //     || self.goes_through_new_year && crossed_end && !crossed_ny
+        if (crossed_ny || crossed_end) && (!crossed_ny || !self.goes_through_new_year)
         {
             return None;
         }
@@ -248,5 +250,32 @@ mod tests {
             println!("{}", d)
         }
         dbg!(count);
+    }
+
+    #[test]
+    fn test_warmup_period(){
+        let warmup_period = Period {
+            end: Date {
+                month: 1,
+                day: 1,
+                hour: 1.0,
+            },
+            start: Date {
+                month: 12,
+                day: 25,
+                hour: 1.0,
+            },
+            current: Date {
+                month: 12,
+                day: 25,
+                hour: 1.0,
+            },
+            dt: 3600.0,
+            goes_through_new_year: true,
+        };
+
+        for d in warmup_period{
+            println!("{}", d)
+        }
     }
 }

@@ -2,8 +2,8 @@ use simple::{run_simulation::*, Model};
 use validate::{valid, ScatterValidator, Validate, Validator};
 
 #[test]
-fn some_fun() {
-    // cargo test --release --package simple --test box -- some_fun --exact --nocapture 
+fn box_sim() {
+    // cargo test --release --package simple --test box -- box_sim --exact --nocapture 
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
         std::fs::create_dir(p).unwrap();
@@ -53,7 +53,7 @@ fn some_fun() {
 
         // Load produced data
         let found = validate::from_csv::<simple::Float>(res, &[1]);
-        let expected = validate::from_csv::<simple::Float>("tests/box/eplusout.csv", &[0]);
+        let expected = validate::from_csv::<simple::Float>("tests/box/cold_box_eplus.csv", &[0]);
         
         
         Box::new(ScatterValidator {

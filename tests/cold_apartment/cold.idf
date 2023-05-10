@@ -517,7 +517,7 @@ Zone,
     1,                       !- Type
     1,                       !- Multiplier
     2.7,           !- Ceiling Height {m}
-    9.9;           !- Volume {m3}
+    16.092;           !- Volume {m3}
 
 Lights,
     Kitchen light,

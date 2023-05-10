@@ -699,7 +699,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             Boundary::Adiabatic => {
                 // Apply same boundary conditions                
                 (
-                    front_env.clone(),
+                    front_env,
                     front_hs,
                 )
             }

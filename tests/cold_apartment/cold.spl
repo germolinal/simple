@@ -553,7 +553,7 @@ Surface {
 
 Space {
   name: "Kitchen",
-  volume: 9.9, 
+  volume: 16.092, 
   // infiltration: {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm

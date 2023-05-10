@@ -58,14 +58,14 @@ impl EPWWeather {
     }    
 }
 
-impl std::convert::Into<Weather> for EPWWeather {
-    fn into(self) -> Weather {
-        let data = self.data.iter().map(|ln| ln.into()).collect();
+impl std::convert::From<EPWWeather> for Weather {
+    fn from(epw: EPWWeather) -> Weather {
+        let data = epw.data.iter().map(|ln| ln.into()).collect();
         
 
         Weather {
             data,
-            location: self.location,
+            location: epw.location,
         }
     }
 }
