@@ -1,0 +1,1326 @@
+SiteDetails {
+   altitude : 0.0,
+   terrain : {
+        type: "City"
+    },
+   latitude : -41.0, 
+   longitude : 174.0, 
+   standard_meridian : 180.0, 
+}
+
+
+// ANCHOR: building
+// Building {
+//     name: "Art Deco Building", 
+//     n_storeys: 2,
+//     shelter_class: {
+//         type: "Urban"
+//     }, 
+// }
+// ANCHOR_END: building
+
+SolarOptions {
+    n_solar_irradiance_points: 100,
+    solar_ambient_divitions: 3000,
+    solar_sky_discretization: 4,
+    optical_data_path: "./tests/cold_apartment/cold_optical_data.json"
+}
+
+Substance {
+  type: "Normal",
+  name: "Concrete", 
+  thermal_conductivity: 1.63,
+  density: 2400,
+  specific_heat_capacity: 900.,
+  front_thermal_absorbtance: 0.9,
+  back_thermal_absorbtance: 0.9,
+}
+
+Substance {
+  type: "Normal",
+  name: "XPS", 
+  thermal_conductivity: 0.035,
+  density: 30,
+  specific_heat_capacity: 900.,
+  front_thermal_absorbtance: 0.9,
+  back_thermal_absorbtance: 0.9,
+}
+
+Material {
+  name: "1inch insulation",
+  substance: "XPS",
+  thickness: 0.025,
+}
+
+Material {  
+  name:"20cm Concrete",
+  substance: "Concrete",
+  thickness: 0.2
+}
+
+Material {
+  name:"10cm Concrete",
+  substance: "Concrete",
+  thickness: 0.1
+}
+
+Construction {
+  name: "interior wall",
+  materials: [
+      "10cm Concrete",
+  ]
+}
+
+Construction {
+  name: "exterior wall",
+  materials: [
+      "20cm Concrete",
+      // "1inch insulation"
+  ]
+}
+
+Substance {
+    type:"Normal",
+    name: "glass substance",
+    
+    solar_transmittance: 0.8,
+    front_solar_absorbtance: 0.1,
+    back_solar_absorbtance: 0.1, 
+
+    front_thermal_absorbtance: 0.84,
+    back_thermal_absorbtance: 0.84,
+    density: 800,
+    thermal_conductivity: 1.,
+    specific_heat_capacity: 1.4,
+}
+
+Material {
+    name: "glass",
+    thickness: 0.003,
+    substance: "glass substance",    
+}
+
+
+Construction {
+    name: "Window",
+    materials:[
+        "glass"
+    ]
+}
+
+
+/* Kids bedroom */
+// ANCHOR: kids_bedroom
+Space {
+    name: "Kids Bedroom",
+    volume: 19.23, 
+    // infiltration: {
+    //   type : "EffectiveAirLeakageArea",
+    //   area: 0.0496, // this is roughly 22cm x 22cm
+    // },
+    // building: "Art Deco Building"
+}
+// ANCHOR_END: kids_bedroom
+
+Luminaire {
+  name: "Kids light",
+  max_power: 15,
+  target_space: "Kids Bedroom",
+}
+
+HVAC {
+  type: "ElectricHeater",
+  name: "Kids heater",
+  target_space: "Kids Bedroom",
+  max_heating_power: 2300,
+  heating_setpoint: 19.,
+}
+
+Surface {
+  name: "kids - exterior",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Kids Bedroom"
+  },  
+  vertices: [ 
+      0, 1.35, 0, 
+      0, 1.35, 2.7,  
+      0, 3.74, 2.7, 
+      0, 3.74, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Fenestration {
+    name: "kids - window",
+    parent_surface: "kids - exterior",
+    construction: "Window",
+    vertices: [
+        0, 2.09, 0.83,
+        0, 2.09, 2.29,
+        0, 2.99, 2.29,
+        0, 2.99, 0.83,
+    ]
+}
+
+
+Surface {
+  name: "kids - Bathroom",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Kids Bedroom"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Bathroom"
+  },
+  vertices: [ 
+      0, 3.74, 0, 
+      0, 3.74, 2.7,  
+      1.92, 3.74, 2.7, 
+      1.92, 3.74, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "kids - Storage",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Kids Bedroom"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Storage"
+  },
+  vertices: [ 
+      1.92, 3.74, 0, 
+      1.92, 3.74, 2.7,  
+      2.98, 3.74, 2.7, 
+      2.98, 3.74, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "kids - Hallway",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Kids Bedroom"
+  },
+  vertices: [ 
+      2.98, 1.35, 0, 
+      2.98, 1.35, 2.7,  
+      2.98, 3.74, 2.7, 
+      2.98, 3.74, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "kids - common area",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Kids Bedroom"
+  },
+  vertices: [ 
+      0,    1.35, 0, 
+      0,    1.35, 2.7,  
+      2.98, 1.35, 2.7, 
+      2.98, 1.35, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "kids - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Kids Bedroom"
+  },
+  vertices: [ 
+      0.00, 1.35, 2.7,  
+      2.98, 1.35, 2.7,  
+      2.98, 3.74, 2.7, 
+      0.00, 3.74, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "kids - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Kids Bedroom"
+  },
+  vertices: [ 
+      0.00, 1.35, 0,  
+      2.98, 1.35, 0,  
+      2.98, 3.74, 0, 
+      0.00, 3.74, 0,  
+  ],
+  category: {
+    type: "ExteriorFloor"
+  }
+}
+
+
+/* BATHROOM */
+
+
+Space {
+  name: "Bathroom",
+  volume: 10.47, 
+  // infiltration: {
+  //     type : "EffectiveAirLeakageArea",
+  //     area: 0.0496, // this is roughly 22cm x 22cm
+  // },
+  // building: "Art Deco Building"
+}
+Luminaire {
+  name: "Bathroom light",
+  "max_power": 5,
+  target_space: "Bathroom",
+}
+
+
+Surface {
+  name: "Bathroom - exterior",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Bathroom"
+  },
+  vertices: [ 
+      0, 3.74, 0, 
+      0, 3.74, 2.7,  
+      0, 5.76, 2.7, 
+      0, 5.76, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Fenestration {
+    name: "Bathroom - window",
+    parent_surface: "Bathroom - exterior",
+    construction: "Window",
+    vertices: [
+        0, 4.975, 1.16, 
+        0, 4.975, 2.29,  
+        0, 5.585, 2.29, 
+        0, 5.585, 1.16, 
+    ]
+}
+
+
+Surface {
+  name: "Bathroom - Kitchen",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Bathroom"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Kitchen"
+  },
+  vertices: [ 
+      0, 5.76, 0, 
+      0, 5.76, 2.7,  
+      1.92, 5.76, 2.7, 
+      1.92, 5.76, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Bathroom - Hallway",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Bathroom"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  vertices: [ 
+      1.92, 5.76, 0, 
+      1.92, 5.76, 2.7,  
+      1.92, 4.80, 2.7, 
+      1.92, 4.80, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "Bathroom - Storage",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Bathroom"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Storage"
+  },
+  vertices: [ 
+      1.92, 4.80, 0, 
+      1.92, 4.80, 2.7,  
+      1.92, 3.74, 2.7, 
+      1.92, 3.74, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Bathroom - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Bathroom"
+  },
+  vertices: [ 
+      0.00, 3.74, 2.7,  
+      1.92, 3.74, 2.7,  
+      1.92, 5.76, 2.7, 
+      0.00, 5.76, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "Bathroom - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Bathroom"
+  },
+  vertices: [ 
+      0.00, 3.74, 0,  
+      1.92, 3.74, 0,  
+      1.92, 5.76, 0, 
+      0.00, 5.76, 0,  
+  ],
+  category: {
+    type: "ExteriorFloor"
+  }
+}
+
+
+/* STORAGE */
+
+
+Space {
+  name: "Storage",
+  volume: 3.03,
+  // infiltration: {
+  //     type : "EffectiveAirLeakageArea",
+  //     area: 0.0496, // this is roughly 22cm x 22cm
+  // },
+  // building: "Art Deco Building"
+}
+
+
+Surface {
+  name: "Storage - Hallway",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Storage"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  vertices: [ 
+      2.98, 4.80, 0, 
+      2.98, 4.80, 2.7,  
+      2.98, 3.74, 2.7, 
+      2.98, 3.74, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Storage - Hallway door",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Storage"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  vertices: [ 
+      1.92, 4.80, 0, 
+      1.92, 4.80, 2.7,  
+      2.98, 4.80, 2.7, 
+      2.98, 4.80, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Storage - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Storage"
+  },
+  vertices: [ 
+      1.92, 3.74, 2.7,  
+      2.98, 3.74, 2.7,  
+      2.98, 4.80, 2.7, 
+      1.92, 4.80, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "Storage - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Storage"
+  },
+  vertices: [ 
+      1.92, 3.74, 0,  
+      2.98, 3.74, 0,  
+      2.98, 4.80, 0, 
+      1.92, 4.80, 0,   
+  ],
+  category: {
+    type: "ExteriorFloor"
+  }
+}
+
+
+/*  KITCHEN */
+
+
+Space {
+  name: "Kitchen",
+  volume: 16.092, 
+  // infiltration: {
+  //     type : "EffectiveAirLeakageArea",
+  //     area: 0.0496, // this is roughly 22cm x 22cm
+  // },
+  // building: "Art Deco Building"
+}
+
+Luminaire {
+  name: "Kitchen light",
+  "max_power": 10,
+  target_space: "Kitchen",
+}
+
+
+Surface {
+  name: "Kitchen - exterior west",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Kitchen"
+  },
+  vertices: [ 
+      0, 5.76, 0, 
+      0, 5.76, 2.7,  
+      0, 7.67, 2.7, 
+      0, 7.67, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Kitchen - exterior north",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Kitchen"
+  },
+  vertices: [ 
+      0, 7.67, 0, 
+      0, 7.67, 2.7,  
+      2.98, 7.67, 2.7, 
+      2.98, 7.67, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Fenestration {
+    name: "Kitchen - window",
+    parent_surface: "Kitchen - exterior north",
+    construction: "Window",
+    vertices: [
+        1.06, 7.67, 1.15, 
+        1.06, 7.67, 2.29,  
+        1.92, 7.67, 2.29, 
+        1.92, 7.67, 1.15, 
+    ]
+}
+
+
+Surface {
+  name: "Kitchen - laundry",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Kitchen"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Laundry"
+  },
+  vertices: [ 
+      2.98, 7.67, 0, 
+      2.98, 7.67, 2.7,  
+      2.98, 6.03, 2.7, 
+      2.98, 6.03, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "Kitchen - Hallway small",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Kitchen"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Laundry"
+  },
+  vertices: [ 
+      2.98, 6.03, 0, 
+      2.98, 6.03, 2.7,  
+      2.98, 5.76, 2.7, 
+      2.98, 5.76, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+
+Surface {
+  name: "Kitchen - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Kitchen"
+  },
+  vertices: [ 
+      0.00, 5.76, 2.7,  
+      2.98, 5.76, 2.7,  
+      2.98, 7.67, 2.7, 
+      0, 7.67, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "Kitchen - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Kitchen"
+  },
+  vertices: [ 
+      0.00, 5.76, 0,  
+      2.98, 5.76, 0,  
+      2.98, 7.67, 0, 
+      0, 7.67, 0,  
+  ],
+  category: {
+    type: "ExteriorFloor"
+  }
+}
+
+
+/*
+Opening {
+    vertices: [ 
+        1.92, 5.76, 0, 
+        1.92, 5.76, 2.7,  
+        2.98, 5.76, 2.7, 
+        2.98, 5.76, 0, 
+    ] 
+}
+*/
+
+/* LAUNDRY */
+
+
+Space {
+  name: "Laundry",
+  volume: 3.84,
+  // infiltration: {
+  //     type : "EffectiveAirLeakageArea",
+  //     area: 0.0496, // this is roughly 22cm x 22cm
+  // },
+  // building: "Art Deco Building"
+}
+
+Luminaire {
+  name: "Laundry light",
+  "max_power": 7,
+  target_space: "Laundry",
+}
+
+
+Surface {
+  name: "Laundry - exterior",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Laundry"
+  },
+  vertices: [ 
+      2.98, 7.67, 0, 
+      2.98, 7.67, 2.7,  
+      4.02, 7.67, 2.7, 
+      4.02, 7.67, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Fenestration {
+    name: "Laundry - window",
+    parent_surface: "Laundry - exterior",
+    construction: "Window",
+    vertices: [
+        3.58, 7.67, 2.0, 
+        3.58, 7.67, 2.29,  
+        3.78, 7.67, 2.29, 
+        3.78, 7.67, 2.0, 
+    ]
+}
+
+
+Surface {
+  name: "Laundry - livingroom",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Laundry"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Livingroom"
+  },
+  vertices: [ 
+      4.02, 7.67, 0, 
+      4.02, 7.67, 2.7,  
+      4.02, 6.03, 2.7, 
+      4.02, 6.03, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "Laundry - Hallway",
+  construction: "interior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Laundry"
+  },
+  vertices: [ 
+      2.98, 6.03, 0, 
+      2.98, 6.03, 2.7,  
+      4.02, 6.03, 2.7, 
+      4.02, 6.03, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Laundry - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Laundry"
+  },
+  vertices: [ 
+      2.98, 6.03, 2.7,  
+      4.02, 6.03, 2.7,  
+      4.02, 7.67, 2.7, 
+      2.98, 7.67, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "Laundry - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Laundry"
+  },
+  vertices: [ 
+      2.98, 6.03, 0,  
+      4.02, 6.03, 0,  
+      4.02, 7.67, 0, 
+      2.98, 7.67, 0,  
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+/* LIVINGROOM */
+
+
+Space {
+  name: "Livingroom",
+  volume: 50.66, 
+  // infiltration: {
+  //     type : "EffectiveAirLeakageArea",
+  //     area: 0.0496, // this is roughly 22cm x 22cm
+  // },
+  // building: "Art Deco Building"
+}
+
+Luminaire {
+  name: "Livingroom light",
+  "max_power": 35,
+  target_space: "Livingroom",
+}
+
+HVAC {
+  type: "ElectricHeater",
+  name: "Livingroom heater",
+  target_space: "Livingroom",
+  max_heating_power: 2300,
+  heating_setpoint: 19.,
+}
+
+
+Surface {
+  name: "Livingroom - exterior north",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Livingroom"
+  },
+  vertices: [ 
+      4.02, 7.67, 0, 
+      4.02, 7.67, 2.7,  
+      8.77, 7.67, 2.7, 
+      8.77, 7.67, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Fenestration {
+    name: "Living - window north",
+    parent_surface: "Livingroom - exterior north",
+    construction: "Window",
+    vertices: [
+        7.90, 7.67, 0.70, 
+        7.90, 7.67, 2.29,  
+        8.45, 7.67, 2.29, 
+        8.45, 7.67, 0.70, 
+    ]
+}
+
+
+Surface {
+  name: "Livingroom - exterior east",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Livingroom"
+  },
+  vertices: [ 
+      8.77, 7.67, 0, 
+      8.77, 7.67, 2.7,  
+      8.77, 3.74, 2.7, 
+      8.77, 3.74, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Fenestration {
+    name: "Livingroom - east 1",
+    parent_surface: "Livingroom - exterior east",
+    construction: "Window",
+    vertices: [
+        8.77, 7.35, 0.7, 
+        8.77, 7.35, 2.29,  
+        8.77, 6.8, 2.29, 
+        8.77, 6.8, 0.7, 
+    ]
+}
+
+Fenestration {
+    name: "Livingroom - east 2",
+    parent_surface: "Livingroom - exterior east",
+    construction: "Window",
+    vertices: [
+        8.77, 6.4, 0.3, 
+        8.77, 6.4, 2.29,  
+        8.77, 5.5, 2.29, 
+        8.77, 5.5, 0.3, 
+    ]
+}
+
+Output {
+    SpaceDryBulbTemperature : "Kids Bedroom"
+}
+
+Output {
+    SpaceDryBulbTemperature : "Bathroom"
+}
+
+Output {
+    SpaceDryBulbTemperature : "Storage",
+}
+
+Output {
+    SpaceDryBulbTemperature : "Kitchen",
+}
+
+Output {
+    SpaceDryBulbTemperature : "Laundry",
+}
+
+
+Output {
+    SpaceDryBulbTemperature : "Livingroom"
+}
+
+Output {
+    SpaceDryBulbTemperature : "Main Bedroom",
+}
+
+
+Output {
+    SpaceDryBulbTemperature : "Hallway"
+}
+
+
+Fenestration {
+    name: "Livingroom - east 3",
+    parent_surface: "Livingroom - exterior east",
+    construction: "Window",
+    vertices: [
+        8.77, 5.1, 0.7, 
+        8.77, 5.1, 2.29,  
+        8.77, 4.55, 2.29, 
+        8.77, 4.55, 0.7, 
+    ]
+}
+
+
+Surface {
+  name: "Livingroom - main bedroom",
+  construction: "interior wall", 
+  front_boundary: {
+    type: "Space",
+    space: "Livingroom"
+  },
+  back_boundary: {
+    type: "Space",
+    space: "Main Bedroom"
+  },
+  vertices: [ 
+      4.02, 3.74, 0, 
+      4.02, 3.74, 2.7,  
+      8.77, 3.74, 2.7, 
+      8.77, 3.74, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "Livingroom - Hallway",
+  construction: "interior wall", 
+  front_boundary: {
+    type: "Space",
+    space: "Livingroom"
+  },
+  back_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  vertices: [ 
+      4.02, 6.03, 0, 
+      4.02, 6.03, 2.7,  
+      4.02, 3.74, 2.7, 
+      4.02, 3.74, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Livingroom - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Livingroom"
+  },
+  vertices: [ 
+      4.02, 3.74, 2.7,  
+      8.77, 3.74, 2.7,  
+      8.77, 7.67, 2.7, 
+      4.02, 7.67, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "Livingroom - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Livingroom"
+  },
+  vertices: [ 
+      4.02, 3.74, 0,  
+      8.77, 3.74, 0,  
+      8.77, 7.67, 0, 
+      4.02, 7.67, 0,  
+  ],
+  category: {
+    type: "ExteriorFloor"
+  }
+}
+
+
+/* MAIN BEDROOM */
+
+
+Space {
+  name: "Main Bedroom",
+  volume: 48.654, 
+  // infiltration: {
+  //     type : "EffectiveAirLeakageArea",
+  //     area: 0.0496, // this is roughly 22cm x 22cm
+  // },
+  // building: "Art Deco Building"
+}
+
+Luminaire {
+  name: "Main Bedroom's light",
+  "max_power": 25,
+  target_space: "Main Bedroom",
+}
+
+HVAC {
+  type: "ElectricHeater",
+  name: "Main Bedroom heater",
+  target_space: "Main Bedroom",
+  max_heating_power: 2300,
+  heating_setpoint: 19.,
+}
+
+
+Surface {
+  name: "Main Bedroom - exterior",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Main Bedroom"
+  },
+  vertices: [ 
+      8.77, 3.74, 0, 
+      8.77, 3.74, 2.7,  
+      8.77, 0, 2.7, 
+      8.77, 0, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Fenestration {
+    name: "Bedroom - Window",
+    parent_surface: "Main Bedroom - exterior",
+    construction: "Window",
+    vertices: [
+      8.77, 2.474, 0.7, 
+      8.77, 2.475, 2.29, 
+      8.77, 1.265, 2.29,  
+      8.77, 1.265, 0.7, 
+    ]
+}
+
+
+Surface {
+  name: "Main Bedroom - Hallway",
+  construction: "exterior wall", 
+  back_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  front_boundary: {
+    type: "Space",
+    space: "Main Bedroom"
+  },
+  vertices: [ 
+      4.02, 3.74, 0, 
+      4.02, 3.74, 2.7,  
+      4.02, 1.35, 2.7, 
+      4.02, 1.35, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+Surface {
+  name: "Main Bedroom - common area",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Main Bedroom"
+  },
+  vertices: [ 
+      4.02, 0, 0, 
+      4.02, 0, 2.7,  
+      8.77, 0, 2.7, 
+      8.77, 0, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+Surface {
+  name: "Livingroom - common area small",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Main Bedroom"
+  },
+  vertices: [ 
+      4.02, 1.35, 0, 
+      4.02, 1.35, 2.7,  
+      4.02, 0, 2.7, 
+      4.02, 0, 0, 
+  ],
+  category: {
+    type: "InteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Main Bedroom - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Main Bedroom"
+  },
+  vertices: [ 
+      4.02, 0.00, 2.7,  
+      8.77, 0.00, 2.7,  
+      8.77, 3.74, 2.7, 
+      4.02, 3.74, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "Main Bedroom - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Main Bedroom"
+  },
+  vertices: [ 
+      4.02, 0.00, 0,  
+      8.77, 0.00, 0,  
+      8.77, 3.74, 0, 
+      4.02, 3.74, 0,  
+  ],
+  category: {
+    type: "ExteriorFloor"
+  }
+}
+
+
+/* Hallway */
+Space {
+  name: "Hallway",
+  volume: 19.68,
+  // infiltration: {
+  //     type : "EffectiveAirLeakageArea",
+  //     area: 0.0496, // this is roughly 22cm x 22cm
+  // },
+  // building: "Art Deco Building"
+}
+
+Luminaire {
+  name: "Hallway's light",
+  "max_power": 5,
+  target_space: "Hallway",
+}
+
+
+Surface {
+  name: "Hallway - common area small",
+  construction: "exterior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  vertices: [ 
+      2.98, 1.35, 0, 
+      2.98, 1.35, 2.7,  
+      4.02, 1.35, 2.7, 
+      4.02, 1.35, 0, 
+  ],
+  category: {
+    type: "ExteriorWall"
+  }
+}
+
+
+Surface {
+  name: "Hallway - ceiling",
+  construction: "interior wall", 
+  front_boundary: { type: "Adiabatic" },
+  back_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  vertices: [ 
+      2.98, 1.35, 2.7,  
+      4.02, 1.35, 2.7,  
+      4.02, 6.03, 2.7, 
+      2.98, 6.03, 2.7,  
+      2.98, 5.76, 2.7,  
+      1.92, 5.76, 2.7,  
+      1.92, 4.80, 2.7,  
+      2.98, 4.80, 2.7,  
+  ],
+  category: {
+    type: "Ceiling"
+  }
+}
+
+Surface {
+  name: "Hallway - floor",
+  construction: "interior wall", 
+  back_boundary: { type: "Adiabatic" },
+  front_boundary: {
+    type: "Space",
+    space: "Hallway"
+  },
+  vertices: [ 
+      2.98, 1.35, 0,  
+      4.02, 1.35, 0,  
+      4.02, 6.03, 0, 
+      2.98, 6.03, 0,  
+      2.98, 5.76, 0,  
+      1.92, 5.76, 0,  
+      1.92, 4.80, 0,  
+      2.98, 4.80, 0,  
+  ],
+  category: {
+    type: "ExteriorFloor"
+  }
+}

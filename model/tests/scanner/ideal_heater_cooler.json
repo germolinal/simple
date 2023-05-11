@@ -1,6 +1,4 @@
 {    
     "name": "Bedrooms heater",
-    "target_spaces": [
-        "Bedroom"    
-    ]
+    "target_space": "Bedroom"        
 }

@@ -78,12 +78,15 @@ pub struct ThermalModel {
 }
 
 fn get_boundary_temperature(
-    b: &Boundary,
+    b: &Boundary,    
     t_out: Float,
     model: &Model,
     state: &SimulationState,
 ) -> Result<Float, String> {
     match b {
+        Boundary::Adiabatic => {
+            unreachable!()
+        }
         Boundary::Space { space } => {
             let space = model.get_space(space)?;
             space
@@ -96,100 +99,9 @@ fn get_boundary_temperature(
     }
 }
 
-// #[cfg(feature = "parallel")]
-// fn iterate_surfaces<T : SurfaceTrait>(
-//     surfaces: &[ThermalSurfaceData<T>],
-//     alloc: &mut Vec<SurfaceMemory>,
-//     wind_direction: Float,
-//     wind_speed: Float,
-//     t_out: Float,
-//     dt: Float,
-//     model: &Model,
-//     state: &mut SimulationState,
-// )->Result<(),String>{
-
-//     use std::{Send::{Arc, Mutex}, thread};
-
-//     let mut handles = Vec::with_capacity(surfaces.len());
-//     let shared_state = Arc::new(Mutex::new(state.clone()));
-
-//     // let front_back_temp : Vec<(Float, Float)> = surfaces.iter().map(|thermal_surface|{
-//     //     // find t_in and t_out of surface.
-//     //     let t_front = get_boundary_temperature(&thermal_surface.front_boundary, t_out, model, state).unwrap();
-//     //     let t_back = get_boundary_temperature(&thermal_surface.back_boundary, t_out, model, state).unwrap();
-//     //     (t_front, t_back)
-//     // }).collect();
-
-//     // let surface_iter = surfaces
-//     //     .iter()
-//     //     .zip(front_back_temp.into_iter())
-//     //     .zip(alloc.iter_mut());
-
-//     // for d in surface_iter {
-//     //     let ((thermal_surface, (t_front, t_back)), memory) = d;
-//     for i in 0..surfaces.len(){
-//         // let thermal_surface = Arc::new(&surfaces[i]);
-//         let this_surface = surfaces[i].clone();
-//         let t_front = get_boundary_temperature(&this_surface.front_boundary, t_out, model, state).unwrap();
-//         let t_back = get_boundary_temperature(&this_surface.back_boundary, t_out, model, state).unwrap();
-//         let mut memory = alloc[i].clone();
-
-//         let this_state = Arc::clone(&shared_state);
-
-//         let handle = thread::spawn(move || {
-
-//             let mut this_state = this_state.lock().unwrap();
-
-//                 // Update temperatures
-//                 this_surface.march(
-//                     &this_state,
-//                     t_front,
-//                     t_back,
-//                     wind_direction,
-//                     wind_speed,
-//                     dt,
-//                     &mut memory,
-//                 ).unwrap();
-
-//                 /////////////////////
-//                 // Now, set temperatures, calc heat-flows and return
-//                 /////////////////////
-//                 // let (rows, ..) = memory.temperatures.size();
-
-//                 // thermal_surface.parent
-//                 // .set_node_temperatures(state, &memory.temperatures);
-
-//                 // // Calc heat flow
-//                 // let ts_front = memory.temperatures.get(0, 0).unwrap();
-//                 // let ts_back = memory.temperatures.get(rows - 1, 0).unwrap();
-//                 // let (_front_env, _back_env, front_hs, back_hs) =
-//                 // thermal_surface.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
-//                 // thermal_surface.parent
-//                 //     .set_front_convection_coefficient(state, front_hs).unwrap();
-//                 //     thermal_surface.parent
-//                 //     .set_back_convection_coefficient(state, back_hs).unwrap();
-
-//                 // let flow_front = (ts_front - t_front) * front_hs;
-//                 // let flow_back = (ts_back - t_back) * back_hs;
-
-//                 // thermal_surface.parent.set_front_convective_heat_flow(state, flow_front).unwrap();
-//                 // thermal_surface.parent.set_back_convective_heat_flow(state, flow_back).unwrap();
-
-//             });
-//             handles.push(handle);
-
-//     };
-
-//     for handle in handles {
-//         handle.join().unwrap();
-//     }
-
-//     Ok(())
-// }
-
 // #[cfg(not(feature = "parallel"))]
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
+pub(crate) fn iterate_surfaces<T: SurfaceTrait + Send + Sync>(
     surfaces: &[ThermalSurfaceData<T>],
     alloc: &mut [SurfaceMemory],
     wind_direction: Float,
@@ -203,14 +115,31 @@ pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
     let surface_iter = surfaces.iter().zip(alloc.iter_mut());
     #[cfg(feature = "parallel")]
     let surface_iter = (*surfaces).into_par_iter().zip(alloc.par_iter_mut());
-    
 
     // Collect boundary temperatures
     let boundary_temps: Vec<(Float, Float)> = surfaces
         .iter()
         .map(|s| {
-            let t_front = get_boundary_temperature(&s.front_boundary, t_out, model, state).unwrap();
-            let t_back = get_boundary_temperature(&s.back_boundary, t_out, model, state).unwrap();
+            let t_front = match &s.front_boundary{
+                Boundary::Adiabatic => {
+                    s.parent.back_temperature(state)
+                },
+                _ => {
+                    get_boundary_temperature(&s.front_boundary, t_out, model, state)
+                        .unwrap()
+                }
+            };
+            
+            let t_back =  match &s.back_boundary{
+                Boundary::Adiabatic => {
+                    t_front
+                },
+                _ => {
+                    get_boundary_temperature(&s.back_boundary, t_out, model, state)
+                    .unwrap()
+                }
+            }; 
+                        
             (t_front, t_back)
         })
         .collect();
@@ -218,26 +147,24 @@ pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
     // Perform calculations in parallel
     let results: Vec<Result<(), String>> = surface_iter
         .enumerate()
-        .map(
-            |(index, d)| -> Result<(), String> {            
-                let (thermal_surface, memory) = d;                
+        .map(|(index, d)| -> Result<(), String> {
+            let (thermal_surface, memory) = d;
 
-                let (t_front, t_back) = boundary_temps[index];
-                
-                // Update temperatures
-                thermal_surface.march(
-                    state,
-                    t_front,
-                    t_back,
-                    wind_direction,
-                    wind_speed,
-                    dt,
-                    memory,
-                )?;
+            let (t_front, t_back) = boundary_temps[index];
 
-                Ok(())
-            },
-        )
+            // Update temperatures
+            thermal_surface.march(
+                state,
+                t_front,
+                t_back,
+                wind_direction,
+                wind_speed,
+                dt,
+                memory,
+            )?;
+
+            Ok(())
+        })
         .collect();
 
     // Check results
@@ -246,7 +173,7 @@ pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
     }
 
     // Write the results in the state
-    let results : Vec<Result<(), String>> = alloc
+    let results: Vec<Result<(), String>> = alloc
         .iter()
         .enumerate()
         .map(|d: (usize, &SurfaceMemory)| -> Result<(), String> {
@@ -285,7 +212,8 @@ pub(crate) fn iterate_surfaces< T: SurfaceTrait + Send + Sync>(
                 .parent
                 .set_back_convective_heat_flow(state, flow_back)?;
             Ok(())
-        }).collect();
+        })
+        .collect();
 
     // Check results
     for r in results {
@@ -362,7 +290,7 @@ impl SimulationModel for ThermalModel {
             let construction = model.get_construction(&surf.construction)?;
 
             let normal = surf.vertices.normal();
-            let cos_tilt = normal * Vector3D::new(0., 0., 1.);            
+            let cos_tilt = normal * Vector3D::new(0., 0., 1.);
             let height = 1.; // we need to update this. https://github.com/wisehouse-app/simple/issues/8
             let angle = cos_tilt.acos();
             let area = surf.area();

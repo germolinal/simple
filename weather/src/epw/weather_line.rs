@@ -156,31 +156,31 @@ pub struct EPWWeatherLine {
     pub liquid_precipitation_quantity: Float,
 }
 
-impl std::convert::Into<CurrentWeather> for &EPWWeatherLine {
-    fn into(self)->CurrentWeather{
+impl std::convert::From<&EPWWeatherLine> for CurrentWeather {
+    fn from(epw: &EPWWeatherLine)->CurrentWeather{
 
         let date = Date{
-            month: self.month, 
-            day: self.day,
-            hour: self.hour-0.000001,
+            month: epw.month, 
+            day: epw.day,
+            hour: epw.hour-0.000001,
         };
         
 
         CurrentWeather {
             date,
-            dry_bulb_temperature: self.dry_bulb_temperature,
-            dew_point_temperature: self.dew_point_temperature,
-            direct_normal_radiation: self.direct_normal_radiation,
-            global_horizontal_radiation: self.global_horizontal_radiation,
-            diffuse_horizontal_radiation: self.diffuse_horizontal_radiation,
-            wind_speed: self.wind_speed,
-            wind_direction: self.wind_direction.to_radians(),
+            dry_bulb_temperature: epw.dry_bulb_temperature,
+            dew_point_temperature: epw.dew_point_temperature,
+            direct_normal_radiation: epw.direct_normal_radiation,
+            global_horizontal_radiation: epw.global_horizontal_radiation,
+            diffuse_horizontal_radiation: epw.diffuse_horizontal_radiation,
+            wind_speed: epw.wind_speed,
+            wind_direction: epw.wind_direction.to_radians(),
             horizontal_infrared_radiation_intensity: Some(
-                self.horizontal_infrared_radiation_intensity,
+                epw.horizontal_infrared_radiation_intensity,
             ),
-            opaque_sky_cover: self.opaque_sky_cover/10.0, // convert units
-            relative_humidity: self.relative_humidity/100.0, // convert units
-            pressure: self.atmospheric_station_pressure
+            opaque_sky_cover: epw.opaque_sky_cover/10.0, // convert units
+            relative_humidity: epw.relative_humidity/100.0, // convert units
+            pressure: epw.atmospheric_station_pressure
 
         }
     }

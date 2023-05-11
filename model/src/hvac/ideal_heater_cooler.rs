@@ -50,7 +50,7 @@ pub struct IdealHeaterCooler {
 
     /// The `Space`s that this `IdealHeaterCooler` heats and/or
     /// cools
-    pub target_spaces: Vec<String>,
+    pub target_space: Option<String>,
 
     /// Max heating power
     max_heating_power: Option<Float>,
@@ -81,9 +81,7 @@ pub struct IdealHeaterCooler {
     /// simulation (as opposed to the occupant/people control timestep,
     /// which is the one set by the user witht the simulation options)
     cooling_setpoint: Option<Float>,
-
-    /// The name of the `Space` whose temperature triggers on/off
-    thermostat_location: Option<String>,
+    
 
     /// The heating or cooling power consumption (not delivered to the `Space`)    
     #[operational("power_consumption")]
@@ -110,13 +108,13 @@ mod testing {
 
         // Hardcode a reference
         let mut rust_reference = IdealHeaterCooler::new("Bedrooms heater");
-        rust_reference.target_spaces.push("Bedroom".into());
+        rust_reference.set_target_space("Bedroom");
 
         // Deserialize from hardcoded string and check they are the same
         let json5_heater: IdealHeaterCooler = json5::from_str(
             "{            
             name: \"Bedrooms heater\",
-            target_spaces: ['Bedroom'],    
+            target_space: 'Bedroom',    
         }",
         )
         .unwrap();
@@ -148,9 +146,8 @@ mod testing {
             Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl").unwrap();
         assert_eq!(model.hvacs.len(), 1);
         if let HVAC::IdealHeaterCooler(hvac) = &model.hvacs[0] {
-            assert_eq!("Bedrooms heater", hvac.name());
-            assert_eq!(hvac.target_spaces.len(), 1);
-            assert_eq!("Bedroom", &hvac.target_spaces[0]);
+            assert_eq!("Bedrooms heater", hvac.name());            
+            assert_eq!("Bedroom", hvac.target_space().unwrap());
         } else {
             assert!(false, "Incorrect heater!")
         }

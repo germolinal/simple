@@ -84,6 +84,11 @@ pub enum Boundary {
         /// The temperature in the evironment
         temperature: Float,
     },
+
+    /// The temperature of the other side of the wall will be
+    /// the same as the one measured at the interior of the space
+    Adiabatic,
+
 }
 
 /***********/
