@@ -157,7 +157,7 @@ impl Date {
             hour.round() as u32,
             min,
             sec,
-        ).expect(&format!("could not build chronos::DateTime --> self={:?}", self))
+        ).unwrap()
     }
 
     /// Interpolates between two dates

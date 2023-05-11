@@ -610,6 +610,26 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
         // TODO: There is something to do here if we are talking about windows
         let (front_env, front_hs) = match &self.front_boundary {
+            Boundary::Adiabatic => {
+                let front_env = ConvectionParams {
+                    air_temperature: t_back,
+                    air_speed: 0.0,
+                    rad_temperature: t_back,
+                    surface_temperature: self.parent.back_temperature(state),
+                    roughness_index: 1,
+                    cos_surface_tilt: self.cos_tilt,
+                };
+
+                let front_hs = match self.front_hs {
+                    Some(v)=>v,
+                    None => front_env.get_tarp_natural_convection_coefficient(),
+                };
+
+                (
+                    front_env,
+                    front_hs,
+                )
+            }
             Boundary::Space { .. } => {
                 let front_env = ConvectionParams {
                     air_temperature: t_front,
@@ -676,6 +696,13 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         };
 
         let (back_env, back_hs) = match &self.back_boundary {
+            Boundary::Adiabatic => {
+                // Apply same boundary conditions                
+                (
+                    front_env,
+                    front_hs,
+                )
+            }
             Boundary::Space { .. } => {
                 let back_env = ConvectionParams {
                     air_temperature: t_back,

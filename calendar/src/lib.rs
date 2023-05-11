@@ -73,5 +73,5 @@ type Float = f64;
 
 mod date;
 pub use crate::date::Date;
-mod date_factory;
-pub use crate::date_factory::Period;
+mod period;
+pub use crate::period::Period;

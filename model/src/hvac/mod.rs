@@ -71,7 +71,7 @@ mod testing {
 
         // Hardcode a reference
         let mut rust_reference = IdealHeaterCooler::new("Bedrooms heater");
-        rust_reference.target_spaces.push("Bedroom".into());
+        rust_reference.set_target_space("Bedroom");
         let rust_reference = rust_reference.wrap();
 
         // Deserialize from hardcoded string and check they are the same
@@ -79,7 +79,7 @@ mod testing {
             "{            
             type: 'IdealHeaterCooler',
             name: \"Bedrooms heater\",
-            target_spaces: ['Bedroom'],    
+            target_space: 'Bedroom',    
         }",
         )
         .unwrap();
@@ -113,9 +113,8 @@ mod testing {
         assert_eq!(model.hvacs.len(), 1);
 
         if let HVAC::IdealHeaterCooler(hvac) = &model.hvacs[0] {
-            assert_eq!("Bedrooms heater", hvac.name());
-            assert_eq!(1, hvac.target_spaces.len());
-            assert_eq!("Bedroom", hvac.target_spaces[0]);
+            assert_eq!("Bedrooms heater", hvac.name());            
+            assert_eq!("Bedroom", hvac.target_space().unwrap());
         } else {
             assert!(false, "Wrong space!")
         }
