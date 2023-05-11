@@ -1,4 +1,5 @@
 use crate::error_msgs::print_warning_no_module;
+use std::collections::HashMap;
 use std::fmt::Display;
 /*
 MIT License
@@ -21,7 +22,7 @@ SOFTWARE.
 */
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
-use crate::{hvac::*, SolarOptions};
+use crate::{hvac::*, SolarOptions, SurfaceType, Boundary};
 use crate::{Float, SiteDetails};
 use crate::{Output, SimulationStateHeader};
 use serde::{self, de::Visitor};
@@ -1128,6 +1129,124 @@ impl Model {
         let name = &mat.substance;
         self.get_substance(name)
     }
+
+
+    /// Retrieves a dictionary with the heating/cooling setpoints of the different 
+    /// HVACs in the model. The dictionary will be empty if 
+    /// there are no HVACs. If an hvac does not have a setpoint,
+    /// the content will be none.
+    /// 
+    /// ```
+    /// use model::{Model, hvac::ElectricHeater};
+    /// let mut model = Model::default();
+    ///
+    /// let heater_name = "Heater".to_string();
+    /// let mut heater = ElectricHeater::new(heater_name.clone());
+    /// heater.set_heating_setpoint(19.);
+    /// model.add_hvac(heater.wrap()).unwrap();
+    /// 
+    /// let setpoints = model.get_hvac_setpoints();
+    /// assert_eq!(setpoints.len(), 1);
+    /// assert!( setpoints[&heater_name][0].is_some() );
+    /// assert!( (19.0 - setpoints[&heater_name][0].unwrap()).abs() < 1e-9 );
+    /// assert!( setpoints[&heater_name][1].is_none() );
+    /// ```
+    pub fn get_hvac_setpoints(&self)->HashMap<String, [Option<Float>;2]>{
+        let mut hvac_setpoints : HashMap<String, [Option<Float>;2]> = HashMap::with_capacity(self.hvacs.len());
+        for hvac in self.hvacs.iter(){
+            let (name, heating,cooling) = match hvac {
+                HVAC::ElectricHeater(heater)=>{
+                    let heating = match heater.heating_setpoint(){
+                        Ok(v)=>Some(*v),
+                        Err(_)=>None
+                    };
+                    (hvac.name().clone(), heating, None)
+                },
+                HVAC::IdealHeaterCooler(h)=>{
+                    let heating = match h.heating_setpoint(){
+                        Ok(v)=>Some(*v),
+                        Err(_)=>None
+                    };
+                    let cooling = match h.cooling_setpoint(){
+                        Ok(v)=>Some(*v),
+                        Err(_)=>None
+                    };
+
+                    (hvac.name().clone(), heating,cooling)
+                }
+            };
+            hvac_setpoints.insert(name, [heating,cooling]);
+        }
+        hvac_setpoints
+    }
+
+    /// Calculates the total floor area of the model, and the floor areas on each space 
+    /// within it.
+    /// 
+    /// # NOTE:
+    /// 
+    /// * It does not separate by building or anything
+    /// * It only accounts for surfaces labelled as 
+    /// 
+    /// ```
+    /// use model::Model;
+    /// let mut model = Model::default();
+    /// let (total_area, areas) = model.get_space_sizes();
+    /// ```
+    pub fn get_space_sizes(&self)->(Float,HashMap<String, Float>){
+        let mut total_area = 0.0;
+
+        
+        let mut floor_areas  = HashMap::with_capacity(self.spaces.len());
+        self.spaces.iter().for_each(|s|{
+            floor_areas.insert(s.name().clone(), 0.0);
+        });
+        
+        fn get_space(s: &Arc<Surface>)->Option<String>{
+            if let Boundary::Space{space} = &s.front_boundary {
+                Some(space.clone())
+            }else if let Boundary::Space{space} = &s.back_boundary {
+                Some(space.clone())
+            }else{
+                None
+            }
+        }
+
+        for s in self.surfaces.iter(){            
+            if let (Ok(cat), Some(space)) = (s.category(), get_space(s)){
+                let area = s.area();                
+                match cat{
+                    SurfaceType::GroundFloor => {
+                        total_area += area;
+                        let k = floor_areas.get_mut(&space).unwrap_or_else(|| panic!("Unexpected space {}", space));
+                        *k += area;
+
+                    }
+                    SurfaceType::InteriorFloor => {
+                        total_area += area;
+                        let k = floor_areas.get_mut(&space).unwrap_or_else(|| panic!("Unexpected space {}", space));
+                        *k += area;
+                        
+                    }
+                    SurfaceType::ExteriorFloor => {
+                        total_area += area;
+                        let k = floor_areas.get_mut(&space).unwrap_or_else(|| panic!("Unexpected space {}", space));
+                        *k += area;
+                        
+                    },
+                    _ => {} // ignore
+                }
+            }
+        }
+
+        (total_area, floor_areas)
+    }
+
+
+
+
+
+    
 }
 
 /***********/
@@ -1686,5 +1805,30 @@ mod testing {
             .unwrap();
 
         let _result: () = engine.eval_ast(&ast).unwrap();
+    }
+
+    #[test]
+    fn test_get_space_sizes(){
+        let (model,_) = Model::from_file("./tests/cold_wellington_apartment.spl").unwrap();
+        let (total_area, areas) = model.get_space_sizes();
+
+        fn check_close(a: Float, b: Float)->Result<(),String>{
+            if (a-b).abs() > 1e-1{
+                return Err(format!("{} and {} are too different", a, b))
+            }
+            Ok(())
+        }
+
+        check_close(total_area, 61.839).unwrap();
+
+        check_close(areas["Kids Bedroom"], 7.12).unwrap();
+        check_close(areas["Bathroom"], 3.877).unwrap();
+        check_close(areas["Storage"], 1.12).unwrap();
+        check_close(areas["Kitchen"], 5.6918).unwrap();
+        check_close(areas["Laundry"], 1.7056).unwrap();
+        check_close(areas["Livingroom"], 18.76).unwrap();
+        check_close(areas["Main Bedroom"], 17.765).unwrap();
+        check_close(areas["Hallway"], 5.884).unwrap();
+        
     }
 }

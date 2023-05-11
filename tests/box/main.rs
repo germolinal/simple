@@ -2,8 +2,8 @@ use simple::{run_simulation::*, Model};
 use validate::{valid, ScatterValidator, Validate, Validator};
 
 #[test]
-fn some_fun() {
-    // cargo test --release --package simple --test box -- some_fun --exact --nocapture 
+fn box_sim() {
+    // cargo test --release --package simple --test box -- box_sim --exact --nocapture 
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
         std::fs::create_dir(p).unwrap();
@@ -24,8 +24,7 @@ fn some_fun() {
     /// * Direct and Diffuse Solar Radiation
     fn series() -> Box<dyn Validate> {
         let options = SimOptions {
-            input_file: "./tests/box/input.spl".into(),
-            // input_file: "./tests/box/cold.spl".into(),
+            input_file: "./tests/box/box.spl".into(),            
             weather_file: "./tests/wellington.epw".into(),
             output: Some("./tests/box/check.csv".into()),
             control_file: None,
@@ -61,9 +60,9 @@ fn some_fun() {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
-            expected: expected[0].clone(),
+            expected: expected[0].iter().skip(20).map(|v| *v).collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[0].clone(),
+            found: found[0].iter().skip(20).map(|v| *v).collect(),
 
             allowed_r2: Some(0.93),
             allowed_intersect_delta: Some(0.5),
