@@ -21,7 +21,7 @@ use crate::{solar_surface::SolarSurface, Float};
 use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use matrix::Matrix;
-use model::{Boundary, Model, SimulationState, SimulationStateHeader, SolarOptions};
+use model::{Boundary, Model, SimulationState, SimulationStateHeader, SolarOptions, print_warning};
 use std::borrow::Borrow;
 use std::fs::File;
 use std::io::Write;
@@ -94,8 +94,8 @@ impl SolarModel {
                     // It depends on the ambient tempearture
                     surface.set_front_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {
-                    // ignore ground
+                Boundary::Ground | Boundary::Adiabatic => {
+                    // ignore ground and adiabatic
                 }
                 Boundary::Outdoor => {
                     // outdoor
@@ -116,8 +116,8 @@ impl SolarModel {
                 Boundary::AmbientTemperature { temperature } => {
                     surface.set_back_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {
-                    // ignore ground
+                Boundary::Ground | Boundary::Adiabatic => {
+                    // ignore ground and adiabatic
                 }
                 Boundary::Outdoor => {
                     // outdoor
@@ -141,7 +141,7 @@ impl SolarModel {
                 Boundary::AmbientTemperature { temperature } => {
                     surface.set_front_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {}
+                Boundary::Ground | Boundary::Adiabatic => {}
                 Boundary::Outdoor => {
                     let view_factors = &self.optical_info.front_fenestrations_view_factors[index];
                     let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
@@ -160,7 +160,7 @@ impl SolarModel {
                 Boundary::AmbientTemperature { temperature } => {
                     surface.set_back_ir_irradiance(state, ir(*temperature, 1.0))?;
                 }
-                Boundary::Ground => {}
+                Boundary::Ground | Boundary::Adiabatic => {}
                 Boundary::Outdoor => {
                     // outdoor
                     let view_factors = &self.optical_info.back_fenestrations_view_factors[index];
@@ -380,11 +380,21 @@ impl SimulationModel for SolarModel {
             OpticalInfo::new(&options, model, state)?
         };
 
+        
         // Create the Solar object
         let latitude = meta_options.latitude;
         let longitude = -meta_options.longitude;
         let standard_meridian = -meta_options.standard_meridian;
         let solar = Solar::new(latitude, longitude, standard_meridian);
+
+        if model.surfaces.is_empty(){
+            print_warning(MODULE_NAME, "Model has no surfaces");
+            return Ok(Self {
+                optical_info,
+                solar,
+                solar_sky_discretization: 1, // not really relevant
+            })
+        }
 
         // derive MF
         let (.., ncols) = optical_info.back_surfaces_dc.size();
