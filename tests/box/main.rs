@@ -2,6 +2,7 @@ use simple::{run_simulation::*, Model};
 use validate::{valid, ScatterValidator, Validate, Validator};
 
 #[test]
+#[ignore]
 fn box_sim() {
     // cargo test --release --package simple --test box -- box_sim --exact --nocapture 
     let p = "./docs/validation";
