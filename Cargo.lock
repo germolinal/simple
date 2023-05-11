@@ -485,16 +485,6 @@ dependencies = [
 [[package]]
 name = "derive"
 version = "0.1.0"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "derive"
-version = "0.1.0"
 source = "git+https://github.com/germolinal/validate#37d5b2af301465f0cabe1119a2c15976f007be42"
 dependencies = [
  "proc-macro-error",
@@ -617,7 +607,7 @@ dependencies = [
  "rayon",
  "schedule",
  "test_models",
- "validate 0.1.0 (git+https://github.com/germolinal/validate)",
+ "validate",
  "weather",
 ]
 
@@ -789,7 +779,7 @@ dependencies = [
  "serde",
  "serde_json",
  "test_models",
- "validate 0.1.0 (git+https://github.com/germolinal/validate)",
+ "validate",
  "weather",
 ]
 
@@ -1147,7 +1137,7 @@ dependencies = [
  "rand",
  "rayon",
  "serde",
- "validate 0.1.0 (git+https://github.com/germolinal/validate)",
+ "validate",
  "weather",
 ]
 
@@ -1286,7 +1276,7 @@ dependencies = [
  "rhai",
  "schedule",
  "serde_json",
- "validate 0.1.0",
+ "validate",
  "weather",
 ]
 
@@ -1463,20 +1453,10 @@ checksum = "711b9620af191e0cdc7468a8d14e709c3dcdb115b36f838e601583af800a370a"
 [[package]]
 name = "validate"
 version = "0.1.0"
-dependencies = [
- "csv",
- "derive 0.1.0",
- "poloto",
- "pulldown-cmark",
-]
-
-[[package]]
-name = "validate"
-version = "0.1.0"
 source = "git+https://github.com/germolinal/validate#37d5b2af301465f0cabe1119a2c15976f007be42"
 dependencies = [
  "csv",
- "derive 0.1.0 (git+https://github.com/germolinal/validate)",
+ "derive 0.1.0",
  "poloto",
  "pulldown-cmark",
 ]
@@ -1573,7 +1553,7 @@ dependencies = [
  "schedule",
  "serde",
  "serde_json",
- "validate 0.1.0 (git+https://github.com/germolinal/validate)",
+ "validate",
 ]
 
 [[package]]
