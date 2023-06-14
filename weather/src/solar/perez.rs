@@ -87,12 +87,13 @@ impl PerezSky {
 
     /// Get the sky clearness category, usef for accessing Table 1 in the 1990 paper
     pub fn clearness_category(clearness_index: Float) -> usize {
-        if clearness_index < 1. {
-            panic!(
-                "A clearness index of {} is too low for Perez's Sky",
-                clearness_index
-            );
-        } else if clearness_index < 1.065 {
+        // if clearness_index < 1. {
+        //     panic!(
+        //         "A clearness index of {} is too low for Perez's Sky",
+        //         clearness_index
+        //     );
+        // } else 
+        if clearness_index < 1.065 {
             0
         } else if clearness_index < 1.230 {
             1
@@ -106,14 +107,15 @@ impl PerezSky {
             5
         } else if clearness_index < 6.2 {
             6
-        } else if clearness_index < 12.01 {
+        } else /*if clearness_index < 12.01 */{
             7
-        } else {
-            panic!(
-                "A clearness index of {} is too high for Perez's Sky",
-                clearness_index
-            );
-        }
+        } 
+        // else {
+        //     panic!(
+        //         "A clearness index of {} is too high for Perez's Sky",
+        //         clearness_index
+        //     );
+        // }
     }
 
     /// Calculates the direct illuminance/diffuse radiance ratio
