@@ -1279,11 +1279,11 @@ mod testing {
 
         let mut model: Model = serde_json::from_str(&model_str).unwrap();
 
-        use std::fs::File;
-        use std::io::Write;
-        let mut file = File::create("./model.json").unwrap();
-        // Write a &str in the file (ignoring the result).
-        writeln!(&mut file, "{}", serde_json::to_string(&model).unwrap()).unwrap();
+        // use std::fs::File;
+        // use std::io::Write;
+        // let mut file = File::create("./model.json").unwrap();
+        // // Write a &str in the file (ignoring the result).
+        // writeln!(&mut file, "{}", serde_json::to_string(&model).unwrap()).unwrap();
 
         let other_state = model.take_state().unwrap();
         assert_eq!(2, model.substances.len());

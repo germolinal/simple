@@ -277,7 +277,7 @@ fn laptop() {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes//images/laptop.hdr"));
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/laptop.hdr"));
 }
 
 #[test]
@@ -292,7 +292,7 @@ fn sponza() {
         roughness: 0.,
     }));
 
-    scene.add_from_obj("./tests/scenes//sponza.obj".to_string(), gray, gray);
+    scene.add_from_obj("./tests/scenes/sponza.obj".to_string(), gray, gray);
 
     scene.add_perez_sky(
         calendar::Date {
@@ -335,7 +335,7 @@ fn sponza() {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes//images/sponza.hdr"));
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/sponza.hdr"));
 }
 
 #[test]
@@ -344,7 +344,7 @@ fn cornell() {
     // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
     // RUSTFLAGS="-C target-cpu=native -C target-feature=+neon" cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
 
-    let mut scene = Scene::from_radiance("./tests/scenes//cornell.rad".to_string());
+    let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string());
 
     scene.build_accelerator();
 
