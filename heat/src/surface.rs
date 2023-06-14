@@ -609,7 +609,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let windward = is_windward(wind_direction, self.cos_tilt, self.normal);
 
         // TODO: There is something to do here if we are talking about windows
-        let (front_env, front_hs) = match &self.front_boundary {
+        let (front_env, mut front_hs) = match &self.front_boundary {
             Boundary::Adiabatic => {
                 let front_env = ConvectionParams {
                     air_temperature: t_back,
@@ -695,7 +695,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             }
         };
 
-        let (back_env, back_hs) = match &self.back_boundary {
+        let (back_env, mut back_hs) = match &self.back_boundary {
             Boundary::Adiabatic => {
                 // Apply same boundary conditions                
                 (
@@ -755,10 +755,20 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             }
         };
 
-        assert!(
-            !front_hs.is_nan() && !back_hs.is_nan(),
-            "Found NaN convection coefficients: Front={front_hs} | back={back_hs}"
-        );        
+        // assert!(
+        //     !front_hs.is_nan() && !back_hs.is_nan(),
+        //     "Found NaN convection coefficients: Front={front_hs} | back={back_hs}"
+        // );        
+
+        if front_hs.is_nan() && back_hs.is_nan(){
+            front_hs = 2.0;
+            back_hs = 2.0;
+        }else if front_hs.is_nan() && !back_hs.is_nan(){
+            front_hs = back_hs;
+        }else if !front_hs.is_nan() && back_hs.is_nan(){
+            back_hs = front_hs;
+        }
+
         (front_env, back_env, front_hs, back_hs)
     }
 

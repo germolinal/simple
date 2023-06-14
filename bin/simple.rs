@@ -97,8 +97,9 @@ fn choose_controller(
 
 fn main() {
     
-    // cargo instruments --release --template Allocations -- -i ./tests/box/cold.spl -w ./tests/wellington.epw -n 1 -o check.csv
-    // cargo instruments --release --template 'CPU Profiler' -- -i ./tests/box/cold.spl -w ./tests/wellington.epw -n 1 -o check.csv
+    // cargo instruments --release --template Allocations -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
+    // cargo instruments --release --template 'CPU Profiler' --package simple --bin simple -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
+    
     
     let options = SimOptions::parse();
 
