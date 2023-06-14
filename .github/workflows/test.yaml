@@ -13,14 +13,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3     
     - name: Run tests default
-      run: cargo test --verbose --workspace 
+      run: |
+        cargo test --verbose --workspace 
+        cargo test --release --verbose -p simple -- --ignored
     
   test_parallel:
     runs-on: ubuntu-latest     
     steps:
     - uses: actions/checkout@v3     
     - name: Run tests parallel
-      run: cargo test --features parallel --verbose --workspace 
+      run: |
+        cargo test --features parallel --verbose --workspace 
+        cargo test --release --features parallel --verbose -p simple -- --ignored 
 
   check_float:
     runs-on: ubuntu-latest     
