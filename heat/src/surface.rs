@@ -21,11 +21,11 @@ SOFTWARE.
 use crate::convection::ConvectionParams;
 use crate::discretization::Discretization;
 use crate::glazing::Glazing;
-use crate::surface_trait::SurfaceTrait;
 use crate::Float;
 use geometry::Vector3D;
 use matrix::Matrix;
 use model::{
+    SurfaceTrait,
     Boundary, Construction, Fenestration, Model, SimulationStateHeader, Substance, Surface,
     TerrainClass,
 };

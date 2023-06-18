@@ -74,7 +74,6 @@ pub mod heating_cooling;
 
 /// For calculating heat transfer through all kinds of surfaces.
 pub mod surface;
-mod surface_trait;
 
 /// For calculating the temperatures within Spaces.
 pub mod zone;
