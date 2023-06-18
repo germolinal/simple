@@ -423,6 +423,7 @@ mod testing {
             "some fen",
             poly.clone(),
             "some construction",
+            model::FenestrationType::Window,
             Boundary::Outdoor,
             Boundary::Outdoor,
         );
@@ -433,6 +434,7 @@ mod testing {
             "some fen",
             poly.clone(),
             "some construction",
+            model::FenestrationType::Window,
             Boundary::Outdoor,
             Boundary::Space {
                 space: "some space".into(),
@@ -445,6 +447,7 @@ mod testing {
             "some fen",
             poly.clone(),
             "some construction",
+            model::FenestrationType::Window,
             Boundary::Space {
                 space: "some space".into(),
             },
@@ -457,6 +460,7 @@ mod testing {
             "some fen",
             poly.clone(),
             "some construction",
+            model::FenestrationType::Window,
             Boundary::Space {
                 space: "some space".into(),
             },
@@ -469,6 +473,7 @@ mod testing {
             "some fen",
             poly.clone(),
             "some construction",
+            model::FenestrationType::Window,
             Boundary::AmbientTemperature { temperature: 1. },
             Boundary::AmbientTemperature { temperature: 1. },
         );
@@ -479,6 +484,7 @@ mod testing {
             "some fen",
             poly.clone(),
             "some construction",
+            model::FenestrationType::Window,
             Boundary::Ground,
             Boundary::Ground,
         );
