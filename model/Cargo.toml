@@ -10,6 +10,7 @@ edition = "2021"
 derive = { path = "../derive" }
 calendar = { path="../calendar" }
 geometry = {path = "../geometry"}
+matrix = {path = "../matrix"}
 schedule = { path = "../schedule" }
 rhai = { workspace = true }
 serde = { workspace = true }

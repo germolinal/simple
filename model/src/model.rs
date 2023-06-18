@@ -1,6 +1,3 @@
-use crate::error_msgs::print_warning_no_module;
-use std::collections::HashMap;
-use std::fmt::Display;
 /*
 MIT License
 Copyright (c) 2021 Germán Molina
@@ -20,6 +17,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+use crate::error_msgs::print_warning_no_module;
+use std::collections::HashMap;
+use std::fmt::Display;
+use crate::SurfaceTrait;
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
 use crate::{hvac::*, SolarOptions, SurfaceType, Boundary};
@@ -758,7 +759,7 @@ impl Model {
     /// that does not exist of it does not fit within it.
     ///
     /// ```rust
-    /// use model::{Model, Fenestration};
+    /// use model::{Model, Fenestration, SurfaceTrait};
     /// use json5;
     ///
     /// let fen  : Fenestration = json5::from_str("{

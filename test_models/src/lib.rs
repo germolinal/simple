@@ -33,7 +33,7 @@ type Float = f64;
 
 use geometry::{Loop3D, Point3D, Polygon3D};
 
-use model::{
+use model::{    
     hvac::ElectricHeater,
     substance::{gas::GasSpecification, Gas, Normal as NormalSubstance},
     Boundary, Construction, Fenestration, Infiltration, Luminaire, Material, Model,
@@ -361,6 +361,7 @@ pub fn get_single_zone_test_building(
             "window one".to_string(),
             window_polygon,
             construction.name().clone(),
+            model::FenestrationType::Window,
             Boundary::Space {
                 space: space.name().clone(),
             },
@@ -393,6 +394,7 @@ pub fn get_single_zone_test_building(
 mod testing {
 
     use super::*;
+    use model::SurfaceTrait;
 
     #[test]
     fn test_with_window() {
