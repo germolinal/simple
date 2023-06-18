@@ -17,11 +17,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::Float;
-
+use crate::{Float, SurfaceTrait};
+use crate::{SimulationState, SimulationStateHeader, SimulationStateElement};
 use crate::{Boundary, Model};
 use derive::{ObjectAPI, ObjectIO};
-use geometry::Polygon3D;
+use geometry::{Polygon3D, Loop3D, Vector3D};
 use serde::{Deserialize, Serialize};
 
 use crate::simulation_state_element::StateElementField;
@@ -178,15 +178,255 @@ pub struct Surface {
     back_ir_irradiance: StateElementField,
 }
 
-/// A surface in the Model, separating two spaces,
-/// or a space and the exterior, or exterior and exterior
-impl Surface {
-    /// Returns the area of the [`Surface`] (calculated
-    /// based on the [`Polygon3D`] that represents it)
-    pub fn area(&self) -> Float {
+impl SurfaceTrait for Surface {
+    fn area(&self) -> Float {
         self.vertices.area()
     }
+    
+    fn outer(&self)->&Loop3D{
+        &self.vertices.outer()
+    }
+    
+    fn front_boundary(&self)->&Boundary{
+        &self.front_boundary
+    }
+
+    fn back_boundary(&self)->&Boundary{
+        &self.back_boundary
+    }
+
+    fn normal(&self)->Vector3D{
+        self.vertices.normal()
+    }
+
+    fn fixed_front_hs(&self)->Option<Float>{
+        match self.precalculated_front_convection_coef(){
+            Ok(v)=>Some(*v),
+            Err(_)=> None
+        }
+    }
+    
+    fn fixed_back_hs(&self)->Option<Float>{
+        match self.precalculated_back_convection_coef(){
+            Ok(v)=>Some(*v),
+            Err(_)=> None,
+        }
+    }
+
+    fn set_front_convective_heat_flow(&self, state: &mut SimulationState, v: Float)->Result<(),String>{
+        self.set_front_convective_heat_flow(state, v)
+    }
+
+    fn set_back_convective_heat_flow(&self, state: &mut SimulationState, v: Float)->Result<(),String>{
+        self.set_back_convective_heat_flow(state, v)
+    }
+    
+
+
+    fn front_infrared_irradiance(&self, state: &SimulationState) -> Float {
+        self.front_ir_irradiance(state).unwrap()
+    }
+    fn back_infrared_irradiance(&self, state: &SimulationState) -> Float {
+        self.back_ir_irradiance(state).unwrap()
+    }
+
+    fn front_solar_irradiance(&self, state: &SimulationState) -> Float {
+        self.front_incident_solar_irradiance(state).unwrap()
+    }
+    fn back_solar_irradiance(&self, state: &SimulationState) -> Float {
+        self.back_incident_solar_irradiance(state).unwrap()
+    }
+
+    fn set_front_convection_coefficient(
+        &self,
+        _state: &mut SimulationState,
+        _v: Float,
+    ) -> Result<(), String> {
+        self.set_front_convection_coefficient(_state, _v)
+    }
+    fn set_back_convection_coefficient(
+        &self,
+        _state: &mut SimulationState,
+        _v: Float,
+    ) -> Result<(), String> {
+        self.set_back_convection_coefficient(_state, _v)
+    }
+
+    fn front_convection_coefficient(&self, _state: &SimulationState) -> Option<Float> {
+        self.front_convection_coefficient(_state)
+    }
+    fn back_convection_coefficient(&self, _state: &SimulationState) -> Option<Float> {
+        self.back_convection_coefficient(_state)
+    }
+
+    fn first_node_temperature_index(&self) -> usize {
+        self.first_node_temperature_index()
+            .expect("Could not get first node index in surface")
+    }
+    fn last_node_temperature_index(&self) -> usize {
+        self.last_node_temperature_index()
+            .expect("Could not get last node index in surface")
+    }
+
+    fn add_front_convection_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_convection_coefficient_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceFrontConvectionCoefficient(ref_surface_index),
+                1.739658084820765,
+            )?;
+            self.set_front_convection_coefficient_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceFrontConvectionCoefficient already in surface".into())
+        }
+    }
+
+    fn add_back_convection_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_convection_coefficient_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceBackConvectionCoefficient(ref_surface_index),
+                1.739658084820765,
+            )?;
+            self.set_back_convection_coefficient_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceBackConvectionCoefficient already in surface".into())
+        }
+    }
+
+    fn add_front_convective_heatflow_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_convective_heat_flow_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceFrontConvectiveHeatFlow(ref_surface_index),
+                0.0,
+            )?;
+            self.set_front_convective_heat_flow_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceFrontConvectiveHeatFlow already in surface".into())
+        }
+    }
+    fn add_back_convective_heatflow_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_convective_heat_flow_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceBackConvectiveHeatFlow(ref_surface_index),
+                0.0,
+            )?;
+            self.set_back_convective_heat_flow_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceBackConvectiveHeatFlow already in surface".into())
+        }
+    }
+
+    fn add_front_solar_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_incident_solar_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceFrontSolarIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_front_incident_solar_irradiance_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceFrontSolarIrradiance already in surface".into())
+        }
+    }
+    fn add_back_solar_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_incident_solar_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceBackSolarIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_back_incident_solar_irradiance_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceBackSolarIrradiance already in surface".into())
+        }
+    }
+
+    fn add_front_ir_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_ir_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceFrontIRIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_front_ir_irradiance_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceFrontIRIrradiance already in Surface".into())
+        }
+    }
+    fn add_back_ir_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_ir_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::SurfaceBackIRIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_back_ir_irradiance_index(i)?;
+            Ok(())
+        } else {
+            Err("SurfaceBackIRIrradiance already in Surface".into())
+        }
+    }
+
+    fn add_node_temperature_states(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+        n_nodes: usize,
+    ) -> Result<(), String> {
+        if self.first_node_temperature_index().is_none() {
+            // let n_nodes = d.segments.len();
+            let first_node = state.len();
+            for node_index in 0..n_nodes {
+                state.push(
+                    SimulationStateElement::SurfaceNodeTemperature(ref_surface_index, node_index),
+                    22.0,
+                )?;
+            }
+            let last_node = state.len();
+            self.set_first_node_temperature_index(first_node)?;
+            self.set_last_node_temperature_index(last_node - 1)?;
+            Ok(())
+        } else {
+            Err("Surface already has nodes attached".into())
+        }
+    }
 }
+
+
 
 /***********/
 /* TESTING */
