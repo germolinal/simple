@@ -840,6 +840,7 @@ dependencies = [
  "derive 1.1.4",
  "geometry",
  "json5",
+ "matrix",
  "rhai",
  "schedule",
  "serde",

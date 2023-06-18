@@ -17,16 +17,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::Float;
+use crate::{Float, SurfaceTrait};
 
 use derive::{ObjectAPI, ObjectIO};
 
-use geometry::{Loop3D, Polygon3D};
+use geometry::{Loop3D, Polygon3D, Vector3D};
 use serde::{Deserialize, Serialize};
 
 use crate::boundary::Boundary;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
+use crate::{SimulationState, SimulationStateElement, SimulationStateHeader};
 
 /// Defines whether the Fenestration is fixed or openable.
 ///
@@ -81,14 +82,17 @@ pub enum FenestrationPosition {
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
 /// as it is always embeded on a `Fenestration` object
 ///
-#[derive(Debug, Copy, Clone, Eq, PartialEq, ObjectIO, Serialize, Deserialize)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, ObjectIO, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(deny_unknown_fields)]
 pub enum FenestrationType {
-    /// This is a Window
+    /// This is a Window. This is the default.
+    #[default]
     Window,
     /// This is a Door
     Door,
+    /// This is an opening, meaning that it lets air through it.
+    Opening,
 }
 
 /// A surface that can potentially be opened and closed.
@@ -122,7 +126,8 @@ pub struct Fenestration {
 
     /// Defines whether a `Fenestration` is a Window, Door, or other.
     /// If none is given, the assumed behaviour is that it is a Window.
-    pub category: Option<FenestrationType>,
+    #[serde(default)]
+    pub category: FenestrationType,
 
     /// The opportunity for operating the Fenestration.
     /// If none is given, the window is assumed to be Fixed
@@ -140,13 +145,13 @@ pub struct Fenestration {
     pub back_boundary: Boundary,
 
     /// The front convection coefficient, in `W/m2K`
-    /// 
+    ///
     /// This value fixes the value, so the automatic calculations
     /// in SIMPLE have no effect.
     precalculated_front_convection_coef: Option<Float>,
 
     /// The back convection coefficient, in `W/m2K`
-    /// 
+    ///
     /// This value fixes the value, so the automatic calculations
     /// in SIMPLE have no effect.
     precalculated_back_convection_coef: Option<Float>,
@@ -217,16 +222,256 @@ pub struct Fenestration {
     back_ir_irradiance: StateElementField,
 }
 
+impl SurfaceTrait for Fenestration {
+    fn area(&self) -> Float {
+        self.vertices.area()
+    }
+
+    fn outer(&self) -> &Loop3D {
+        &self.vertices.outer()
+    }
+    fn front_boundary(&self) -> &Boundary {
+        &self.front_boundary
+    }
+
+    fn back_boundary(&self) -> &Boundary {
+        &self.back_boundary
+    }
+
+    fn normal(&self)->Vector3D{
+        self.vertices.normal()
+    }
+
+    fn fixed_front_hs(&self) -> Option<Float> {
+        match self.precalculated_front_convection_coef() {
+            Ok(v) => Some(*v),
+            Err(_) => None,
+        }
+    }
+
+    fn fixed_back_hs(&self) -> Option<Float> {
+        match self.precalculated_back_convection_coef() {
+            Ok(v) => Some(*v),
+            Err(_) => None,
+        }
+    }
+
+    fn set_front_convective_heat_flow(
+        &self,
+        state: &mut SimulationState,
+        v: Float,
+    ) -> Result<(), String> {
+        self.set_front_convective_heat_flow(state, v)
+    }
+
+    fn set_back_convective_heat_flow(
+        &self,
+        state: &mut SimulationState,
+        v: Float,
+    ) -> Result<(), String> {
+        self.set_back_convective_heat_flow(state, v)
+    }
+
+    fn front_infrared_irradiance(&self, state: &SimulationState) -> Float {
+        self.front_ir_irradiance(state).unwrap()
+    }
+    fn back_infrared_irradiance(&self, state: &SimulationState) -> Float {
+        self.back_ir_irradiance(state).unwrap()
+    }
+    fn front_solar_irradiance(&self, state: &SimulationState) -> Float {
+        self.front_incident_solar_irradiance(state).unwrap()
+    }
+    fn back_solar_irradiance(&self, state: &SimulationState) -> Float {
+        self.back_incident_solar_irradiance(state).unwrap()
+    }
+    fn set_front_convection_coefficient(
+        &self,
+        state: &mut SimulationState,
+        v: Float,
+    ) -> Result<(), String> {
+        self.set_front_convection_coefficient(state, v)
+    }
+
+    fn set_back_convection_coefficient(
+        &self,
+        state: &mut SimulationState,
+        v: Float,
+    ) -> Result<(), String> {
+        self.set_back_convection_coefficient(state, v)
+    }
+
+    fn front_convection_coefficient(&self, _state: &SimulationState) -> Option<Float> {
+        self.front_convection_coefficient(_state)
+    }
+    fn back_convection_coefficient(&self, state: &SimulationState) -> Option<Float> {
+        self.back_convection_coefficient(state)
+    }
+
+    fn first_node_temperature_index(&self) -> usize {
+        self.first_node_temperature_index()
+            .expect("Could not get first node index in surface")
+    }
+    fn last_node_temperature_index(&self) -> usize {
+        self.last_node_temperature_index()
+            .expect("Could not get last node index in surface")
+    }
+
+    fn add_front_convection_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_convection_coefficient_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationFrontConvectionCoefficient(ref_surface_index),
+                1.739658084820765,
+            )?;
+            self.set_front_convection_coefficient_index(i)?;
+            Ok(())
+        } else {
+            Err("FenestrationFrontConvectionCoefficient already in Fenestration".into())
+        }
+    }
+
+    fn add_back_convection_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_convection_coefficient_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationBackConvectionCoefficient(ref_surface_index),
+                1.739658084820765,
+            )?;
+            self.set_back_convection_coefficient_index(i)?;
+            Ok(())
+        } else {
+            Err("FenestrationBackConvectionCoefficient already in Fenestration".into())
+        }
+    }
+
+    fn add_front_convective_heatflow_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_convective_heat_flow_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationFrontConvectiveHeatFlow(ref_surface_index),
+                0.0,
+            )?;
+            self.set_front_convective_heat_flow_index(i)?;
+            Ok(())
+        } else {
+            Err("FenestrationFrontConvectiveHeatFlow already in Fenestration".into())
+        }
+    }
+    fn add_back_convective_heatflow_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_convective_heat_flow_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationBackConvectiveHeatFlow(ref_surface_index),
+                0.0,
+            )?;
+            self.set_back_convective_heat_flow_index(i)?;
+            Ok(())
+        } else {
+            Err("FenestrationBackConvectiveHeatFlow already in Fenestration".into())
+        }
+    }
+
+    fn add_front_solar_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_incident_solar_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationFrontSolarIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_front_incident_solar_irradiance_index(i)?;
+        }
+        Ok(())
+    }
+    fn add_back_solar_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_incident_solar_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationBackSolarIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_back_incident_solar_irradiance_index(i)?;
+        }
+        Ok(())
+    }
+
+    fn add_front_ir_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.front_ir_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationFrontIRIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_front_ir_irradiance_index(i)?;
+        }
+        Ok(())
+    }
+    fn add_back_ir_irradiance_state(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+    ) -> Result<(), String> {
+        if self.back_ir_irradiance_index().is_none() {
+            let i = state.push(
+                SimulationStateElement::FenestrationBackIRIrradiance(ref_surface_index),
+                0.0,
+            )?;
+            self.set_back_ir_irradiance_index(i)?;
+        }
+        Ok(())
+    }
+
+    fn add_node_temperature_states(
+        &self,
+        state: &mut SimulationStateHeader,
+        ref_surface_index: usize,
+        n_nodes: usize,
+    ) -> Result<(), String> {
+        if self.first_node_temperature_index().is_none() {
+            let first_node = state.len();
+            for node_index in 0..n_nodes {
+                state.push(
+                    SimulationStateElement::FenestrationNodeTemperature(
+                        ref_surface_index,
+                        node_index,
+                    ),
+                    22.0,
+                )?;
+            }
+            let last_node = state.len();
+            self.set_first_node_temperature_index(first_node)?;
+            self.set_last_node_temperature_index(last_node - 1)?;
+            Ok(())
+        } else {
+            Err("Fenestration has nodes assigned already".into())
+        }
+    }
+}
+
 impl Fenestration {
     /// Clones the outer [`Loop3D`] of the [`Fenestration`]
     pub fn clone_loop(&self) -> Loop3D {
         self.vertices.outer().clone()
-    }
-
-    /// Gets the area, based on the [`Polygon3D`] that represents
-    /// this [`Fenestration`]
-    pub fn area(&self) -> Float {
-        self.vertices.area()
     }
 
     /// Can the fenestration be operated?
@@ -374,8 +619,8 @@ mod testing {
         )
         .unwrap();
         assert_eq!(&hardcoded_ref.name, "Window 1");
-        assert_eq!(&hardcoded_ref.construction, "Double Clear Glass");        
-        assert!( matches!(&hardcoded_ref.front_boundary, Boundary::Outdoor ) );
+        assert_eq!(&hardcoded_ref.construction, "Double Clear Glass");
+        assert!(matches!(&hardcoded_ref.front_boundary, Boundary::Outdoor));
         if let Boundary::Space { space } = &hardcoded_ref.back_boundary {
             assert_eq!(space, "Space 1")
         } else {
@@ -388,11 +633,8 @@ mod testing {
             assert!(false, "Incorrect fenestration operat")
         }
 
-        if let Some(c) = &hardcoded_ref.category {
-            assert_eq!(&FenestrationType::Window, c);
-        } else {
-            assert!(false, "Incorrect fenestration cagetory")
-        }
+        assert_eq!(FenestrationType::Window, hardcoded_ref.category);
+        
 
         assert_eq!(&hardcoded_ref.vertices.outer().len(), &(4 as usize));
 
