@@ -64,11 +64,7 @@ impl Glazing {
         }
     }
 
-    fn get_glazing_from_iter<T>(
-        mut i: T,
-        model: &Model,
-        cap: usize,
-    ) -> Result<Vec<Glazing>, String>
+    fn get_glazing_from_iter<T>(mut i: T, model: &Model, cap: usize) -> Result<Vec<Glazing>, String>
     where
         T: std::iter::Iterator<Item = String>,
     {
@@ -502,10 +498,10 @@ mod testing {
         let exp_a2 = (tau1 * a_f2 * (1. - rho_b2 * rho_f3) + tau1 * tau2 * a_b2 * rho_f3) / denom;
         let exp_a3 = (tau1 * tau2 * a_f3) / denom;
 
-        #[cfg(feature="float")]
+        #[cfg(feature = "float")]
         const SMOL: Float = 1e-10;
-        #[cfg(not(feature="float"))]
-        const SMOL: Float = 1e-15;        
+        #[cfg(not(feature = "float"))]
+        const SMOL: Float = 1e-15;
 
         assert!(
             (alphas[0] - exp_a1).abs() < SMOL,

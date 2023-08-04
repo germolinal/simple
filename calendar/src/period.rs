@@ -107,8 +107,6 @@ impl Period {
     ///
     /// ```
     pub fn contains(&self, date: Date) -> bool {
-        
-
         if !self.goes_through_new_year {
             // (jan 1) ---- Start --------X------- End ---- (dec 31)
             self.end >= date && self.start <= date
@@ -123,15 +121,13 @@ impl Iterator for Period {
     type Item = Date;
 
     fn next(&mut self) -> Option<Self::Item> {
-        
-
         let old = self.current;
-        
+
         let mut new = self.current;
 
-        let vs_end_before = new <= self.end;        
+        let vs_end_before = new <= self.end;
         new.add_seconds(self.dt);
-        let vs_end_after = new <= self.end;        
+        let vs_end_after = new <= self.end;
         let crossed_end = vs_end_before != vs_end_after;
         let crossed_ny = new < old;
 
@@ -139,8 +135,7 @@ impl Iterator for Period {
 
         // if !self.goes_through_new_year && (crossed_end || crossed_ny)
         //     || self.goes_through_new_year && crossed_end && !crossed_ny
-        if (crossed_ny || crossed_end) && (!crossed_ny || !self.goes_through_new_year)
-        {
+        if (crossed_ny || crossed_end) && (!crossed_ny || !self.goes_through_new_year) {
             return None;
         }
         self.current = new;
@@ -253,7 +248,7 @@ mod tests {
     }
 
     #[test]
-    fn test_warmup_period(){
+    fn test_warmup_period() {
         let warmup_period = Period {
             end: Date {
                 month: 1,
@@ -274,7 +269,7 @@ mod tests {
             goes_through_new_year: true,
         };
 
-        for d in warmup_period{
+        for d in warmup_period {
             println!("{}", d)
         }
     }

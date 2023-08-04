@@ -35,7 +35,7 @@ use crate::{BBox3D, Point3D, Ray3D, Transform, Vector3D};
 /// Everything is in Local coordinates. Where $`\phi`$ describes the
 /// longitude (i.e., it goes from 0 to 360 degrees); and
 /// $`\theta`$ defines the latitude (i.e., it goes from 0 to 190 degrees).
-#[derive(Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 pub struct Sphere3D {
     /// The radius of the `Sphere3D`
     pub radius: Float,

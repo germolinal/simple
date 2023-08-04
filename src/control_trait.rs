@@ -23,11 +23,13 @@ use model::{Model, SimulationState};
 use crate::MultiphysicsModel;
 use std::borrow::Borrow;
 
-/// A trait that allows controling 
+/// A trait that allows controling
 pub trait SimpleControl {
-
-
     /// Adapts the simulation state
-    fn control<M: Borrow<Model>>(&self, model: M, physics_model: &MultiphysicsModel, state: &mut SimulationState)->Result<(), String>;
-
+    fn control<M: Borrow<Model>>(
+        &self,
+        model: M,
+        physics_model: &MultiphysicsModel,
+        state: &mut SimulationState,
+    ) -> Result<(), String>;
 }

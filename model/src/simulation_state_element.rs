@@ -21,7 +21,7 @@ SOFTWARE.
 use derive::StateElements;
 use std::sync::{Arc, Mutex};
 
-/// The type used for storing the fields of structures that represent 
+/// The type used for storing the fields of structures that represent
 /// values stored in the `SimulationState`.
 pub type StateElementField = Arc<Mutex<Option<usize>>>;
 

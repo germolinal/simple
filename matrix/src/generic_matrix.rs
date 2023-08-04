@@ -56,8 +56,8 @@ impl<T: Numberish> GenericMatrix<T> {
         let n_rows = data.len();
         let n_elements = n_rows * n_rows;
         let mut v = vec![T::zero(); n_elements];
-        
-        for (nrow,value) in data.iter().enumerate(){
+
+        for (nrow, value) in data.iter().enumerate() {
             let i = nrow * (n_rows + 1);
             // v[i] = data[nrow];
             v[i] = *value;
@@ -477,9 +477,7 @@ impl<T: Numberish> std::ops::Mul<T> for &GenericMatrix<T> {
         GenericMatrix {
             nrows: self.nrows,
             ncols: self.ncols,
-            data: self.data
-                .iter()
-                .map(|a| *a * s).collect(),
+            data: self.data.iter().map(|a| *a * s).collect(),
         }
     }
 }
@@ -494,7 +492,7 @@ impl<T: Numberish> std::ops::Mul<&GenericMatrix<T>> for &GenericMatrix<T> {
 }
 
 impl<T: Numberish> std::ops::MulAssign<T> for GenericMatrix<T> {
-    fn mul_assign(&mut self, s: T) {                
+    fn mul_assign(&mut self, s: T) {
         self.data.iter_mut().for_each(|a| *a *= s);
     }
 }
@@ -502,18 +500,17 @@ impl<T: Numberish> std::ops::MulAssign<T> for GenericMatrix<T> {
 impl<T: Numberish> std::ops::Div<T> for &GenericMatrix<T> {
     type Output = GenericMatrix<T>;
     fn div(self, s: T) -> Self::Output {
-
-        GenericMatrix{
+        GenericMatrix {
             nrows: self.nrows,
-            ncols:self.ncols,
-            data: self.data.iter().map(|a| *a / s).collect()
-        }   
+            ncols: self.ncols,
+            data: self.data.iter().map(|a| *a / s).collect(),
+        }
     }
 }
 
 impl<T: Numberish> std::ops::DivAssign<T> for GenericMatrix<T> {
-    fn div_assign(&mut self, s: T) {        
-        self.data.iter_mut().for_each(|a| *a /= s);        
+    fn div_assign(&mut self, s: T) {
+        self.data.iter_mut().for_each(|a| *a /= s);
     }
 }
 

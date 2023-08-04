@@ -38,7 +38,6 @@ pub fn uniform_sample_triangle(rng: &mut RandGen, a: Point3D, b: Point3D, c: Poi
     a + v1 * u + v2 * v
 }
 
-
 pub fn uniform_sample_horizontal_disc(rng: &mut RandGen, radius: Float) -> (f32, f32) {
     // Accurate, non-rejection
     // sqrt() and cos() and sin() are
@@ -104,6 +103,22 @@ pub fn sample_cosine_weighted_horizontal_hemisphere(rng: &mut RandGen) -> Vector
     Vector3D::new(local_x as Float, local_y as Float, local_z as Float)
 }
 
+/// Samples a hemisphere pointing UP, uniformly and randomly.
+pub fn uniform_upper_hemisphere(rng: &mut RandGen)->(f32, f32,f32){
+    let (rand1, rand2): (f32, f32) = rng.gen();
+    // let rand2: f32 = rng.gen();
+    let sq = (1.0 - rand1 * rand1).sqrt();
+    let pie2 = 2.0 * std::f32::consts::PI * rand2;
+    let (pie2_sin, pie2_cos) = pie2.sin_cos();
+    let x = pie2_cos * sq;
+    let y = pie2_sin * sq;
+    let z = rand1;
+
+    (x,y,z)
+}
+
+
+/// Samples a hemisphere pointing in N direction
 pub fn uniform_sample_hemisphere(
     rng: &mut RandGen,
     e1: Vector3D,
@@ -112,14 +127,7 @@ pub fn uniform_sample_hemisphere(
 ) -> Vector3D {
     // Calculate in
 
-    let (rand1, rand2): (f32, f32) = rng.gen();
-    // let rand2: f32 = rng.gen();
-    let sq = (1.0 - rand1 * rand1).sqrt();
-    let pie2 = 2.0 * std::f32::consts::PI * rand2;
-    let (pie2_sin, pie2_cos) = pie2.sin_cos();
-    let local_x = pie2_cos * sq;
-    let local_y = pie2_sin * sq;
-    let local_z = rand1;
+    let (local_x, local_y, local_z) = uniform_upper_hemisphere(rng);
 
     // Take back to world normal
     let (x, y, z) = local_to_world(

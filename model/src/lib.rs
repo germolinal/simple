@@ -205,7 +205,6 @@ pub use simulation_options::SolarOptions;
 pub mod error_msgs;
 pub use error_msgs::{print_error, print_warning};
 
-
-/// 
+///
 pub mod surface_trait;
 pub use surface_trait::SurfaceTrait;

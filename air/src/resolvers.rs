@@ -2,7 +2,7 @@ use crate::air_model::Resolver;
 use crate::Float;
 use std::sync::Arc;
 
-use model::{Building, ShelterClass, Model, SimulationState, Space};
+use model::{Building, Model, ShelterClass, SimulationState, Space};
 
 use crate::eplus::*;
 use weather::CurrentWeather;
@@ -12,8 +12,7 @@ pub fn constant_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, Strin
     Ok(Box::new(
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
-            let outdoor_temperature = current_weather
-                .dry_bulb_temperature;
+            let outdoor_temperature = current_weather.dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -29,8 +28,7 @@ pub fn blast_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> 
     Ok(Box::new(
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
-            let outdoor_temperature = current_weather
-                .dry_bulb_temperature;
+            let outdoor_temperature = current_weather.dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -47,8 +45,7 @@ pub fn doe2_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
     Ok(Box::new(
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
-            let outdoor_temperature = current_weather
-                .dry_bulb_temperature;
+            let outdoor_temperature = current_weather.dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -72,8 +69,7 @@ pub fn design_flow_rate_resolver(
     Ok(Box::new(
         move |current_weather: &CurrentWeather, state: &mut SimulationState| {
             // Set temperature
-            let outdoor_temperature = current_weather
-                .dry_bulb_temperature;
+            let outdoor_temperature = current_weather.dry_bulb_temperature;
             space_clone
                 .set_infiltration_temperature(state, outdoor_temperature)
                 .unwrap();
@@ -85,7 +81,10 @@ pub fn design_flow_rate_resolver(
     ))
 }
 
-fn resolve_stack_coefficient(space: &Arc<Space>, building: &Arc<Building>) -> Result<Float, String> {
+fn resolve_stack_coefficient(
+    space: &Arc<Space>,
+    building: &Arc<Building>,
+) -> Result<Float, String> {
     let cs = match building.stack_coefficient() {
         Ok(v)=>*v,
         Err(_)=>{
@@ -192,8 +191,7 @@ pub fn effective_air_leakage_resolver(
         Ok(Box::new(
             move |current_weather: &CurrentWeather, state: &mut SimulationState| {
                 // Set temperature
-                let outdoor_temperature = current_weather
-                    .dry_bulb_temperature;
+                let outdoor_temperature = current_weather.dry_bulb_temperature;
                 space_clone
                     .set_infiltration_temperature(state, outdoor_temperature)
                     .unwrap();

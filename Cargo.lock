@@ -349,6 +349,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "criterion"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2b12d017a929603d80db1831cd3a24082f8137ce19c69e6447f54f5fc8d692f"
+dependencies = [
+ "anes",
+ "cast",
+ "ciborium",
+ "clap 4.2.7",
+ "criterion-plot",
+ "is-terminal",
+ "itertools",
+ "num-traits",
+ "once_cell",
+ "oorandom",
+ "plotters",
+ "rayon",
+ "regex",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tinytemplate",
+ "walkdir",
+]
+
+[[package]]
 name = "criterion-plot"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -554,7 +580,7 @@ dependencies = [
 name = "geometry"
 version = "0.2.5"
 dependencies = [
- "criterion",
+ "criterion 0.5.1",
  "rand",
  "serde",
  "serde_json",
@@ -811,7 +837,7 @@ dependencies = [
 name = "matrix"
 version = "0.1.0"
 dependencies = [
- "criterion",
+ "criterion 0.4.0",
  "rayon",
  "serde",
  "serde_json",
@@ -1129,7 +1155,7 @@ version = "0.1.0"
 dependencies = [
  "calendar",
  "clap 4.2.7",
- "criterion",
+ "criterion 0.5.1",
  "geometry",
  "jpeg-encoder",
  "matrix",

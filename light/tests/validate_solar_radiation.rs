@@ -1,8 +1,8 @@
 use calendar::Date;
 use communication::{MetaOptions, SimulationModel};
 use light::{Float, SolarModel};
-use schedule::ScheduleConstant;
 use model::SolarOptions;
+use schedule::ScheduleConstant;
 use test_models::*;
 use validate::{valid, SeriesValidator, Validate, Validator};
 use weather::SyntheticWeather;
@@ -56,15 +56,14 @@ fn get_simple_results(
 
     let zone_volume = 600.;
 
-    let (model, mut state_header) =
-        get_single_zone_test_building(&SingleZoneTestBuildingOptions {
-            zone_volume,
-            surface_width: 20.,
-            surface_height: 3.,
-            construction: vec![TestMat::Concrete(0.2)],
-            orientation: orientation as Float,
-            ..Default::default()
-        });
+    let (model, mut state_header) = get_single_zone_test_building(&SingleZoneTestBuildingOptions {
+        zone_volume,
+        surface_width: 20.,
+        surface_height: 3.,
+        construction: vec![TestMat::Concrete(0.2)],
+        orientation: orientation as Float,
+        ..Default::default()
+    });
 
     // Finished model the Model
     let mut options = SolarOptions::new();
@@ -89,7 +88,8 @@ fn get_simple_results(
         // Set outdoor temp
         let mut weather = SyntheticWeather::default();
         weather.direct_normal_radiation = Box::new(ScheduleConstant::new(*direct_normal as Float));
-        weather.diffuse_horizontal_radiation = Box::new(ScheduleConstant::new(*diffuse_horizontal as Float));
+        weather.diffuse_horizontal_radiation =
+            Box::new(ScheduleConstant::new(*diffuse_horizontal as Float));
         weather.dew_point_temperature = Box::new(ScheduleConstant::new(11.)); // 11C is what Radiance uses by default.
         weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(21.)); // should be irrelevant
         weather.opaque_sky_cover = Box::new(ScheduleConstant::new(0.)); // should be irrelevant
@@ -103,10 +103,9 @@ fn get_simple_results(
 
         let front_radiation = surface.front_incident_solar_irradiance(&state).unwrap();
         ret.push(front_radiation);
-        
+
         // Advance
         date.add_hours(1. / n as Float);
-        
     }
     ret
 }

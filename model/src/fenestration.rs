@@ -223,13 +223,27 @@ pub struct Fenestration {
 }
 
 impl SurfaceTrait for Fenestration {
+
+    fn name(&self)->&String{
+        &self.name
+    }
+    
     fn area(&self) -> Float {
         self.vertices.area()
     }
 
-    fn outer(&self) -> &Loop3D {
-        &self.vertices.outer()
+    fn mut_vertices(&mut self) -> &mut Polygon3D {
+        &mut self.vertices
     }
+
+    fn outer(&self) -> &Loop3D {
+        self.vertices.outer()
+    }
+
+    fn mut_outer(&mut self) -> &mut Loop3D {
+        self.vertices.mut_outer()
+    }
+
     fn front_boundary(&self) -> &Boundary {
         &self.front_boundary
     }
@@ -238,7 +252,15 @@ impl SurfaceTrait for Fenestration {
         &self.back_boundary
     }
 
-    fn normal(&self)->Vector3D{
+    fn set_front_boundary(&mut self, boundary: Boundary) {
+        self.front_boundary = boundary;
+    }
+    
+    fn set_back_boundary(&mut self, boundary: Boundary) {
+        self.back_boundary = boundary;
+    }
+
+    fn normal(&self) -> Vector3D {
         self.vertices.normal()
     }
 
@@ -634,7 +656,6 @@ mod testing {
         }
 
         assert_eq!(FenestrationType::Window, hardcoded_ref.category);
-        
 
         assert_eq!(&hardcoded_ref.vertices.outer().len(), &(4 as usize));
 

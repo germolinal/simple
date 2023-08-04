@@ -71,6 +71,7 @@ serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1" }
 rhai = { version = "1.13.0" }
 json5 = { version = "0.4" }
+rand = { version = "0.8.5"}
 
 [dependencies]
 rhai = { workspace=true }

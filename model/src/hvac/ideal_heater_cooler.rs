@@ -81,7 +81,6 @@ pub struct IdealHeaterCooler {
     /// simulation (as opposed to the occupant/people control timestep,
     /// which is the one set by the user witht the simulation options)
     cooling_setpoint: Option<Float>,
-    
 
     /// The heating or cooling power consumption (not delivered to the `Space`)    
     #[operational("power_consumption")]
@@ -142,11 +141,10 @@ mod testing {
         );
 
         // check simple
-        let (model, ..) =
-            Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl").unwrap();
         assert_eq!(model.hvacs.len(), 1);
         if let HVAC::IdealHeaterCooler(hvac) = &model.hvacs[0] {
-            assert_eq!("Bedrooms heater", hvac.name());            
+            assert_eq!("Bedrooms heater", hvac.name());
             assert_eq!("Bedroom", hvac.target_space().unwrap());
         } else {
             assert!(false, "Incorrect heater!")

@@ -124,6 +124,7 @@ impl Node {
         end: usize,
         total_nodes: &mut usize,
         ordered_triangles: &mut Vec<Triangle>,
+        ordered_mapping: &mut Vec<usize>,
         ordered_front_materials: &mut Vec<usize>,
         ordered_back_materials: &mut Vec<usize>,
         ordered_normals: &mut Vec<(Vector3D, Vector3D, Vector3D)>,
@@ -142,9 +143,7 @@ impl Node {
 
         // Get a BBOX containing EVERYTHING within scope
         let mut bounds = primitives_info[start].bounds;
-        // for i in start+1..end{
-        //     bounds = BBox3D::from_union(&bounds, &primitives_info[i].bounds);
-        // }
+        
         for info in primitives_info.iter().take(end).skip(start + 1) {
             bounds = BBox3D::from_union(&bounds, &info.bounds);
         }
@@ -155,6 +154,7 @@ impl Node {
             for info in primitives_info.iter().take(end).skip(start) {
                 let index = info.index;
                 ordered_triangles.push(triangles[index]);
+                ordered_mapping.push(index);
                 ordered_back_materials.push(back_materials[index]);
                 ordered_front_materials.push(front_materials[index]);
                 ordered_normals.push(normals[index]);
@@ -205,6 +205,7 @@ impl Node {
             for prim_info in primitives_info.iter().take(end).skip(start) {
                 let index = prim_info.index;
                 ordered_triangles.push(triangles[index]);
+                ordered_mapping.push(index);
                 ordered_back_materials.push(back_materials[index]);
                 ordered_front_materials.push(front_materials[index]);
                 ordered_normals.push(normals[index]);
@@ -319,6 +320,7 @@ impl Node {
                     for prim in primitives_info.iter().take(end).skip(start) {
                         let prim_num = prim.index;
                         ordered_triangles.push(triangles[prim_num]);
+                        ordered_mapping.push(prim_num);
                         ordered_back_materials.push(back_materials[prim_num]);
                         ordered_front_materials.push(front_materials[prim_num]);
                         ordered_normals.push(normals[prim_num]);
@@ -335,7 +337,8 @@ impl Node {
             start,
             mid,
             total_nodes,
-            ordered_triangles,
+            ordered_triangles, 
+            ordered_mapping,           
             ordered_front_materials,
             ordered_back_materials,
             ordered_normals,
@@ -347,6 +350,7 @@ impl Node {
             end,
             total_nodes,
             ordered_triangles,
+            ordered_mapping,
             ordered_front_materials,
             ordered_back_materials,
             ordered_normals,
@@ -362,7 +366,7 @@ struct Leaf {
     first_prim_offset: usize,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct FlatNode {
     /// The Bounding Box of this node
     bounds: BBox3D,
@@ -384,16 +388,17 @@ impl FlatNode {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct BoundingVolumeTree {
     nodes: Vec<FlatNode>,
 }
 
 impl BoundingVolumeTree {
-    pub fn new(scene: &mut Scene) -> Self {
+    
+    pub fn new(scene: &mut Scene) -> (Self, Vec<usize>) {
         let n_objects = scene.triangles.len();
         if n_objects == 0 {
-            return Self::default();
+            return (Self::default(), Vec::with_capacity(0));
         }
         /*
         STEP 1:  First, bounding information about each primitive is computed and
@@ -413,6 +418,7 @@ impl BoundingVolumeTree {
         */
         let mut total_nodes = 0;
         let mut ordered_triangles: Vec<Triangle> = Vec::with_capacity(n_objects);
+        let mut ordered_mapping: Vec<usize> = Vec::with_capacity(n_objects);
         let mut ordered_front_materials: Vec<usize> = Vec::with_capacity(n_objects);
         let mut ordered_back_materials: Vec<usize> = Vec::with_capacity(n_objects);
         let mut ordered_normals: Vec<(Vector3D, Vector3D, Vector3D)> =
@@ -424,6 +430,7 @@ impl BoundingVolumeTree {
             n_objects,
             &mut total_nodes,
             &mut ordered_triangles,
+            &mut ordered_mapping, 
             &mut ordered_front_materials,
             &mut ordered_back_materials,
             &mut ordered_normals,
@@ -433,7 +440,7 @@ impl BoundingVolumeTree {
         scene.front_material_indexes = ordered_front_materials;
         scene.back_material_indexes = ordered_back_materials;
         scene.normals = ordered_normals;
-
+        
         /*
         STEP 3: Finally, this tree is converted to a more compact
         (and thus more efficient) pointerless representation for
@@ -443,7 +450,7 @@ impl BoundingVolumeTree {
         Self::flatten_node(&root, &mut nodes);
 
         // return
-        Self { nodes }
+        (Self { nodes }, ordered_mapping)
     }
 
     fn flatten_node(node: &Node, nodes: &mut Vec<FlatNode>) -> usize {
@@ -758,7 +765,7 @@ mod tests {
     fn test_empty() {
         let mut scene = Scene::new();
         let mut ray = Ray::default();
-        let bvh = BoundingVolumeTree::new(&mut scene);
+        let (bvh, _) = BoundingVolumeTree::new(&mut scene);
         let mut aux = vec![0; 10];
         assert!(bvh
             .intersect(&scene.triangles, &mut ray, &mut aux)
@@ -815,9 +822,15 @@ mod tests {
 
     #[test]
     fn test_build_horizontal_bvh() {
-        let mut scene = get_horizontal_scene();
-        let bvh = BoundingVolumeTree::new(&mut scene);
-        // assert_eq!(bvh.nodes.len(), 3);
+        let original_scene = get_horizontal_scene();        
+        let mut scene = get_horizontal_scene();        
+        let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
+        for (i,original_i) in mapping.into_iter().enumerate() {
+            assert_eq!(
+                &scene.triangles[i],
+                &original_scene.triangles[original_i]
+            );
+        }
 
         let node = &bvh.nodes[0];
         assert_eq!(node.n_prims, 0);
@@ -835,8 +848,15 @@ mod tests {
 
     #[test]
     fn test_build_vertical_bvh() {
+        let original_scene = get_vertical_scene();        
         let mut scene = get_vertical_scene();
-        let bvh = BoundingVolumeTree::new(&mut scene);
+        let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
+        for (i,original_i) in mapping.into_iter().enumerate() {
+            assert_eq!(
+                &scene.triangles[i],
+                &original_scene.triangles[original_i]
+            );
+        }
         // assert_eq!(bvh.nodes.len(), 3);
 
         let node = &bvh.nodes[0];
@@ -855,8 +875,15 @@ mod tests {
 
     #[test]
     fn test_intersect_horizontal() {
+        let original_scene = get_horizontal_scene();
         let mut scene = get_horizontal_scene();
-        let bvh = BoundingVolumeTree::new(&mut scene);
+        let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
+        for (i,original_i) in mapping.into_iter().enumerate() {
+            assert_eq!(
+                &scene.triangles[i],
+                &original_scene.triangles[original_i]
+            );
+        }
 
         let mut ray = Ray {
             geometry: Ray3D {
@@ -894,7 +921,7 @@ mod tests {
     #[test]
     fn test_intersect_vertical() {
         let mut scene = get_vertical_scene();
-        let bvh = BoundingVolumeTree::new(&mut scene);
+        let (bvh, ..) = BoundingVolumeTree::new(&mut scene);
 
         let mut ray = Ray {
             geometry: Ray3D {

@@ -24,7 +24,6 @@ use super::weather_line::EPWWeatherLine;
 use crate::location::Location;
 use crate::Weather;
 
-
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path};
 
@@ -55,13 +54,12 @@ impl EPWWeather {
     /// Creates an `EPWWeather` from a file
     pub fn from_file<P: AsRef<Path> + Display>(filename: P) -> Result<Self, String> {
         EPWScanner::from_file(filename)
-    }    
+    }
 }
 
 impl std::convert::From<EPWWeather> for Weather {
     fn from(epw: EPWWeather) -> Weather {
         let data = epw.data.iter().map(|ln| ln.into()).collect();
-        
 
         Weather {
             data,
@@ -69,5 +67,3 @@ impl std::convert::From<EPWWeather> for Weather {
         }
     }
 }
-
-

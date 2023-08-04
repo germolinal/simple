@@ -34,7 +34,7 @@ use crate::{BBox3D, Point3D, Ray3D, Transform, Vector3D};
 /// Z value of `zmin` and ending at `zmax`.
 ///
 /// It can be an 'open' cylinder, by setting a `phi_max` less than `2.*PI`
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Cylinder3D {
     /// The radius of the `Cylinder3D`
     radius: Float,

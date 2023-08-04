@@ -27,9 +27,7 @@ use crate::material::Material;
 use crate::primitive::Primitive;
 use crate::scene::Scene;
 
-use geometry::{
-    DistantSource3D, Loop3D, Point3D, Polygon3D, Sphere3D, Triangulation3D, Vector3D,
-};
+use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Sphere3D, Triangulation3D, Vector3D};
 
 use std::fs;
 
@@ -266,9 +264,7 @@ impl RadianceReader {
 
         self.modifiers.push(name.to_string());
 
-        let mirror = Material::Mirror(Mirror(Spectrum([
-            red, green, blue,
-        ])));
+        let mirror = Material::Mirror(Mirror(Spectrum([red, green, blue])));
         scene.push_material(mirror);
     }
 
@@ -408,9 +404,8 @@ impl RadianceReader {
 
         the_loop.close().unwrap();
         let polygon = Polygon3D::new(the_loop).unwrap();
-        let triangles = Triangulation3D::from_polygon(&polygon)
-            .unwrap()
-            .get_trilist();
+        let t : Triangulation3D = polygon.try_into().unwrap();
+        let triangles = t.get_trilist();        
 
         for tri in triangles {
             scene.push_object(mod_index, mod_index, Primitive::Triangle(tri));
