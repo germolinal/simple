@@ -31,7 +31,7 @@ pub enum ThermalHVAC {
         parent: IdealHeaterCooler,
 
         /// The space this HVAC is heating/cooling
-        target_space_index: usize,        
+        target_space_index: usize,
     },
 
     /// Electric heater.
@@ -60,7 +60,7 @@ impl ThermalHVAC {
                 }
                 Err(format!("ElectricHeater is supposed to be in a space called '{}'... but it was not found", parent.target_space()?))
             }
-            HVAC::IdealHeaterCooler(e) => {                
+            HVAC::IdealHeaterCooler(e) => {
                 let parent = (**e).clone();
                 for (i, s) in model.spaces.iter().enumerate() {
                     if s.name() == parent.target_space()? {
@@ -71,7 +71,6 @@ impl ThermalHVAC {
                     }
                 }
                 Err(format!("IdealHeaterCooler is supposed to be in a space called '{}'... but it was not found", parent.target_space()?))
-                
             }
         }
     }
@@ -83,20 +82,19 @@ impl ThermalHVAC {
         state: &SimulationState,
     ) -> Result<Vec<(usize, Float)>, String> {
         match self {
-            Self::IdealHeaterCooler {                
+            Self::IdealHeaterCooler {
                 parent,
                 target_space_index,
             } => {
                 let mut ret = Vec::with_capacity(1);
                 if let Ok(_space) = parent.target_space() {
-                    let consumption_power =
-                        match parent.heating_cooling_consumption(state) {
-                            Some(v) => v,
-                            None => return Err(format!(
-                                "Could not get Heating consumption if IdealHeaterCooler called '{}'",
-                                parent.name()
-                            )),
-                        };
+                    let consumption_power = match parent.heating_cooling_consumption(state) {
+                        Some(v) => v,
+                        None => return Err(format!(
+                            "Could not get Heating consumption if IdealHeaterCooler called '{}'",
+                            parent.name()
+                        )),
+                    };
                     ret.push((*target_space_index, consumption_power))
                 }
                 Ok(ret)
@@ -107,14 +105,15 @@ impl ThermalHVAC {
             } => {
                 let mut ret = Vec::with_capacity(1);
                 if let Ok(_space) = parent.target_space() {
-                    let consumption_power =
-                        match parent.heating_cooling_consumption(state) {
-                            Some(v) => v,
-                            None => return Err(format!(
+                    let consumption_power = match parent.heating_cooling_consumption(state) {
+                        Some(v) => v,
+                        None => {
+                            return Err(format!(
                                 "Could not get Heating consumption of ElectricHeater called '{}'",
                                 parent.name()
-                            )),
-                        };
+                            ))
+                        }
+                    };
                     ret.push((*target_space_index, consumption_power))
                 }
                 Ok(ret)

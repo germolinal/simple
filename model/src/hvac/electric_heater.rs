@@ -129,8 +129,7 @@ mod testing {
         );
 
         // check simple
-        let (model, ..) =
-            Model::from_file("./tests/scanner/hvac_electric_heater.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/hvac_electric_heater.spl").unwrap();
         assert_eq!(model.hvacs.len(), 1);
         if let HVAC::ElectricHeater(hvac) = &model.hvacs[0] {
             assert_eq!("Bedrooms heater", hvac.name());

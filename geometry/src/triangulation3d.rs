@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use std::convert::TryInto;
+
 use crate::Float;
 /*
     This section was heavily influenced by
@@ -198,67 +200,10 @@ impl Default for Triangulation3D {
     }
 }
 
-impl Triangulation3D {
-    /// Creates  a new empty [`Triangulation3D`]
-    pub fn new() -> Triangulation3D {
-        Triangulation3D {
-            n_valid_triangles: 0,
-            triangles: Vec::new(),
-        }
-    }
+impl std::convert::TryFrom<&Polygon3D> for Triangulation3D {
+    type Error = String;
 
-    /// Creates  a new empty [`Triangulation3D`] with a certain capacity
-    pub fn with_capacity(i: usize) -> Triangulation3D {
-        Triangulation3D {
-            n_valid_triangles: 0,
-            triangles: Vec::with_capacity(i),
-        }
-    }
-
-    /// Transforms the `Triangulation3D` into a `Vec<Triangle3D>`.
-    pub fn get_trilist(&self) -> Vec<Triangle3D> {
-        self.triangles.iter().map(|t| t.triangle).collect()
-    }
-
-    /// Triangulates a [`Polygon3D`] using the simple ear
-    /// clipping algorithm and then progresively refines the mesh in order to get
-    /// a relatively healthy set of Delaunay triangles
-    pub fn mesh_polygon(
-        poly: &Polygon3D,
-        max_area: Float,
-        max_aspect_ratio: Float,
-    ) -> Result<Triangulation3D, String> {
-        let mut t = Self::from_polygon(poly)?;
-        t.refine(max_area, max_aspect_ratio)?;
-        Ok(t)
-    }
-
-    /// Loops over all [`Triangle3D`], setting the neighbours. THis is
-    /// quite slow, but does the job.
-    fn mark_neighbourhouds(&mut self) -> Result<(), String> {
-        let n = self.triangles.len();
-        for this_i in 0..n {
-            for other_i in this_i + 1..n {
-                for edge_i in 0..3 {
-                    let edge = self.triangles[this_i].triangle.segment(edge_i)?;
-
-                    if self.triangles[other_i]
-                        .triangle
-                        .get_edge_index_from_segment(&edge)
-                        .is_some()
-                    {
-                        self.mark_as_neighbours(this_i, Edge::from_i(edge_i), other_i)?;
-                        break; // dont test other edges
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
-    /// Triangulates a [`Polygon3D`] without refining it, using the simple ear
-    /// clipping algorithm.
-    pub fn from_polygon(poly: &Polygon3D) -> Result<Triangulation3D, String> {
+    fn try_from(poly: &Polygon3D) -> Result<Self, Self::Error> {
         let mut the_loop = poly.get_closed_loop();
         the_loop.close()?;
         // This is a theorem, apparently.
@@ -318,8 +263,78 @@ impl Triangulation3D {
             } else {
                 anchor += 1;
             }
-        } //end of loop{}
+        }     
     }
+}
+
+
+impl std::convert::TryFrom<Polygon3D> for Triangulation3D {
+    type Error = String;
+
+    fn try_from(poly: Polygon3D) -> Result<Self, Self::Error> {        
+        (&poly).try_into()
+    }
+}
+
+impl Triangulation3D {
+    /// Creates a new empty [`Triangulation3D`]
+    pub fn new() -> Triangulation3D {
+        Triangulation3D {
+            n_valid_triangles: 0,
+            triangles: Vec::new(),
+        }
+    }
+
+    /// Creates  a new empty [`Triangulation3D`] with a certain capacity
+    pub fn with_capacity(i: usize) -> Triangulation3D {
+        Triangulation3D {
+            n_valid_triangles: 0,
+            triangles: Vec::with_capacity(i),
+        }
+    }
+
+    /// Transforms the `Triangulation3D` into a `Vec<Triangle3D>`.
+    pub fn get_trilist(&self) -> Vec<Triangle3D> {
+        self.triangles.iter().map(|t| t.triangle).collect()
+    }
+
+    /// Triangulates a [`Polygon3D`] using the simple ear
+    /// clipping algorithm and then progresively refines the mesh in order to get
+    /// a relatively healthy set of Delaunay triangles
+    pub fn mesh_polygon(
+        poly: &Polygon3D,
+        max_area: Float,
+        max_aspect_ratio: Float,
+    ) -> Result<Triangulation3D, String> {
+        let mut t : Triangulation3D = poly.try_into()?;        
+        t.refine(max_area, max_aspect_ratio)?;
+        Ok(t)
+    }
+
+    /// Loops over all [`Triangle3D`], setting the neighbours. THis is
+    /// quite slow, but does the job.
+    fn mark_neighbourhouds(&mut self) -> Result<(), String> {
+        let n = self.triangles.len();
+        for this_i in 0..n {
+            for other_i in this_i + 1..n {
+                for edge_i in 0..3 {
+                    let edge = self.triangles[this_i].triangle.segment(edge_i)?;
+
+                    if self.triangles[other_i]
+                        .triangle
+                        .get_edge_index_from_segment(&edge)
+                        .is_some()
+                    {
+                        self.mark_as_neighbours(this_i, Edge::from_i(edge_i), other_i)?;
+                        break; // dont test other edges
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    
 
     /// Returns the number of [`Triangle3D`] in the [`Triangulation3D`]
     /// including invalid ones.
@@ -976,7 +991,7 @@ impl Triangulation3D {
     /// Finds the location of a [`Point3D`] within the triangulation
     /// and inserts it. Returns a `bool` indicating if the addition of the new [`Point3D`]
     /// produced any change
-    fn add_point(&mut self, point: Point3D) -> Result<bool, String> {
+    pub fn add_point(&mut self, point: Point3D) -> Result<bool, String> {
         // Iterate through triangles to check
 
         for (i, tripiece) in self.triangles.iter().enumerate() {
@@ -2381,7 +2396,7 @@ mod testing {
         outer.close().unwrap();
 
         let poly = Polygon3D::new(outer).unwrap();
-        let t = Triangulation3D::from_polygon(&poly).unwrap();
+        let t : Triangulation3D = poly.clone().try_into().unwrap();        
         let case0 = get_svg(&t, &poly);
         test_triangulation_results(&t, &poly, 1000., 1000.).unwrap();
 
@@ -2402,8 +2417,8 @@ mod testing {
         outer.push(p5).unwrap();
         outer.close().unwrap();
 
-        let poly = Polygon3D::new(outer).unwrap();
-        let t = Triangulation3D::from_polygon(&poly).unwrap();
+        let poly = Polygon3D::new(outer).unwrap();        
+        let t : Triangulation3D = (&poly).try_into().unwrap();        
 
         let case1 = get_svg(&t, &poly);
         test_triangulation_results(&t, &poly, 1000., 1000.).unwrap();
@@ -2431,8 +2446,8 @@ mod testing {
         outer.close().unwrap();
 
         let poly = Polygon3D::new(outer).unwrap();
-
-        let t = Triangulation3D::from_polygon(&poly).unwrap();
+        
+        let t : Triangulation3D = (&poly).try_into().unwrap();        
         let case2 = get_svg(&t, &poly);
         test_triangulation_results(&t, &poly, 9999999., 9999999.).unwrap();
 
@@ -2477,7 +2492,7 @@ mod testing {
         inner.close().unwrap();
         poly.cut_hole(inner).unwrap();
 
-        let t = Triangulation3D::from_polygon(&poly).unwrap();
+        let t : Triangulation3D = (&poly).try_into().unwrap();        
         test_triangulation_results(&t, &poly, 1000., 1000.).unwrap();
 
         let mut closed = poly.get_closed_loop();

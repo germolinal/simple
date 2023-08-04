@@ -27,10 +27,6 @@ SOFTWARE.
 //! over `usize`, `i32`, `f32` and even structures (e.g., `Colour{red:f32, green: f32, blue: f32}`)
 //! to which numeric operations apply
 
-
-
-
-
 /// The kind of Ting point number used in the
 /// library... the `"T"` feature means it becomes `f32`
 /// and `f64` is used otherwise.
@@ -43,8 +39,6 @@ type Float = f32;
 #[cfg(not(feature = "float"))]
 type Float = f64;
 
-
-
 /// A macro indicating how many non-zero elements exist on each side of
 /// an n-diagonal matrix
 macro_rules! one_sided_n {
@@ -53,13 +47,11 @@ macro_rules! one_sided_n {
     }};
 }
 
-
-
-/// Traits used to make the `GenericMatrix` generic.
-pub mod traits;
-/// Contains a structure that allows performing mathematical operations over 
+/// Contains a structure that allows performing mathematical operations over
 /// matrices that do not contain numbers, but also other structures.
 pub mod generic_matrix;
+/// Traits used to make the `GenericMatrix` generic.
+pub mod traits;
 pub use generic_matrix::GenericMatrix;
 
 /// A `generic_matrix` that contains a `Float`

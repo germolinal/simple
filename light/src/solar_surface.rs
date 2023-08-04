@@ -25,9 +25,7 @@ use crate::Float;
 use matrix::Matrix;
 use rendering::{colour_matrix::*, DCFactory, Ray, Scene};
 
-use model::{
-    Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface,
-};
+use model::{Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface};
 
 use geometry::{Point3D, Polygon3D, Ray3D, Triangulation3D, Vector3D};
 use rendering::primitive_samplers::sample_triangle_surface;
@@ -78,7 +76,8 @@ impl SolarSurface {
         let normal = polygon.normal();
 
         // Triangulate the polygon
-        let triangles = Triangulation3D::from_polygon(polygon)?.get_trilist();
+        let t : Triangulation3D = polygon.try_into()?;        
+        let triangles = t.get_trilist();
         let triangles_areas: Vec<Float> = triangles.iter().map(|t| t.area()).collect();
 
         // Build a triangle sampler
@@ -628,9 +627,9 @@ mod testing {
     fn test_boundary_receives_sun() {
         // This should not receive
         assert!(!SolarSurface::boundary_receives_sun(&Boundary::Ground));
-        assert!(!SolarSurface::boundary_receives_sun(&Boundary::AmbientTemperature {
-            temperature: 12.
-        }));
+        assert!(!SolarSurface::boundary_receives_sun(
+            &Boundary::AmbientTemperature { temperature: 12. }
+        ));
         // These do receive
         assert!(SolarSurface::boundary_receives_sun(&Boundary::Outdoor));
         assert!(SolarSurface::boundary_receives_sun(&Boundary::Space {

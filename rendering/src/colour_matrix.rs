@@ -250,11 +250,7 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
             };
 
             matrix
-                .set(
-                    nrow,
-                    ncol,
-                    Spectrum([red, green, blue]),
-                )
+                .set(nrow, ncol, Spectrum([red, green, blue]))
                 .unwrap();
 
             ncol += 1;

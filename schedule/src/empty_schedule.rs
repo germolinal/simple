@@ -18,13 +18,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use calendar::Date;
 use crate::schedule_trait::Schedule;
+use calendar::Date;
 
 pub struct EmptySchedule;
 
-impl <T>Schedule<T> for EmptySchedule where T: Copy{
-    fn get(&self, _date: Date)->Option<T>{
+impl<T> Schedule<T> for EmptySchedule
+where
+    T: Copy,
+{
+    fn get(&self, _date: Date) -> Option<T> {
         None
     }
 }

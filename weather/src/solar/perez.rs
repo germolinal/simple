@@ -19,12 +19,11 @@ SOFTWARE.
 */
 
 const WHTEFFICACY: Float = 179.;
+use super::*;
 use crate::{Float, PI};
 use calendar::Date;
 use geometry::Vector3D;
 use matrix::Matrix;
-use super::*;
-
 
 /// Specifies which units do we want returned
 /// from the sky model
@@ -92,7 +91,7 @@ impl PerezSky {
         //         "A clearness index of {} is too low for Perez's Sky",
         //         clearness_index
         //     );
-        // } else 
+        // } else
         if clearness_index < 1.065 {
             0
         } else if clearness_index < 1.230 {
@@ -107,9 +106,11 @@ impl PerezSky {
             5
         } else if clearness_index < 6.2 {
             6
-        } else /*if clearness_index < 12.01 */{
+        } else
+        /*if clearness_index < 12.01 */
+        {
             7
-        } 
+        }
         // else {
         //     panic!(
         //         "A clearness index of {} is too high for Perez's Sky",
@@ -346,9 +347,9 @@ impl PerezSky {
             // to calculate it.
             let ret = (1. + params[0] * (params[1] / cos_zeta).exp())
                 * (1. + params[2] * (params[3] * gamma).exp() + params[4] * cosgamma * cosgamma);
-            if ret.is_nan(){
+            if ret.is_nan() {
                 0.0
-            }else{
+            } else {
                 ret
             }
         };
@@ -369,10 +370,9 @@ impl PerezSky {
         }
         let norm_diff_illum = if norm_diff_illum > 1e-4 {
             diff_illum / (norm_diff_illum * WHTEFFICACY)
-        }else{
+        } else {
             0.0
         };
-         
 
         // Return
         Box::new(move |dir: Vector3D| -> Float {
@@ -433,12 +433,9 @@ impl PerezSky {
             return Err(format!("when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)", rows, mf, r.n_bins));
         }
 
-        let dew_point = weather_data
-            .dew_point_temperature;
-        let diffuse_horizontal_irrad = weather_data
-            .diffuse_horizontal_radiation;
-        let direct_normal_irrad = weather_data
-            .direct_normal_radiation;
+        let dew_point = weather_data.dew_point_temperature;
+        let diffuse_horizontal_irrad = weather_data.diffuse_horizontal_radiation;
+        let direct_normal_irrad = weather_data.direct_normal_radiation;
 
         // If it is nighttime, just fill with zeroes
         if direct_normal_irrad + diffuse_horizontal_irrad < 1e-4 {
@@ -506,8 +503,8 @@ impl PerezSky {
                 global_horizontal += dir_illum * cos_zenit;
             }
             let ground = albedo * global_horizontal / PI / WHTEFFICACY;
-            if !ground.is_nan(){                
-                vec.add_to_element(0,0, ground)?
+            if !ground.is_nan() {
+                vec.add_to_element(0, 0, ground)?
             }
         }
 
@@ -524,7 +521,7 @@ impl PerezSky {
             for bin in 1..r.n_bins {
                 let dir = r.bin_dir(bin);
                 let v = sky_func(dir);
-                if !v.is_nan(){
+                if !v.is_nan() {
                     // vec.set(bin, 0, v)?;
                     vec.add_to_element(bin, 0, v)?;
                 }
@@ -570,7 +567,7 @@ impl PerezSky {
                 // Add
                 // let old = vec.get(bin, 0).unwrap();
                 // vec.set(bin, 0, old + val_add).unwrap();
-                if !val_add.is_nan(){
+                if !val_add.is_nan() {
                     vec.add_to_element(bin, 0, val_add)?;
                 }
             }

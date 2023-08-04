@@ -4,20 +4,17 @@ use validate::{valid, ScatterValidator, Validate, Validator};
 #[test]
 #[ignore]
 fn box_sim() {
-    // cargo test --release --package simple --test box -- box_sim --exact --nocapture 
+    // cargo test --release --package simple --test box -- box_sim --exact --nocapture
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
         std::fs::create_dir(p).unwrap();
     }
     let target_file = format!("{}/cold_wellington_box.html", p);
-    let mut validations = Validator::new(
-        "Simulation of a single room",
-        &target_file,
-    );
+    let mut validations = Validator::new("Simulation of a single room", &target_file);
 
     #[valid(Simulate a single-zone building in Wellington, New Zealand)]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
-    /// 
+    ///
     /// It includes:     
     /// * Dynamic Heat Transfer through walls
     /// * Convection Coefficients
@@ -25,7 +22,7 @@ fn box_sim() {
     /// * Direct and Diffuse Solar Radiation
     fn series() -> Box<dyn Validate> {
         let options = SimOptions {
-            input_file: "./tests/box/box.spl".into(),            
+            input_file: "./tests/box/box.spl".into(),
             weather_file: "./tests/wellington.epw".into(),
             output: Some("./tests/box/check.csv".into()),
             control_file: None,
@@ -55,8 +52,7 @@ fn box_sim() {
         // Load produced data
         let found = validate::from_csv::<simple::Float>(res, &[1]);
         let expected = validate::from_csv::<simple::Float>("tests/box/cold_box_eplus.csv", &[0]);
-        
-        
+
         Box::new(ScatterValidator {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),

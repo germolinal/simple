@@ -177,9 +177,7 @@ impl RayTracer {
             // Did not hit... so, let's check the sky
             if let Some(sky) = &scene.sky {
                 let sky_brightness = sky(ray.geometry.direction);
-                let colour = scene
-                    .sky_colour
-                    .unwrap_or_else(|| Spectrum::gray(1.0));
+                let colour = scene.sky_colour.unwrap_or_else(|| Spectrum::gray(1.0));
                 ray.colour *= colour * sky_brightness;
                 (colour * sky_brightness, 1. / 2. / crate::PI)
             } else {

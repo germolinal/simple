@@ -32,9 +32,9 @@ type Float = f64;
 
 use model::{Model, SimulationState, SimulationStateHeader, SolarOptions};
 
+use air::air_model::{AirFlowModel, AirFlowModelMemory};
 use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
-use air::air_model::{AirFlowModel, AirFlowModelMemory};
 use heat::heat_model::{ThermalModel, ThermalModelMemory};
 use light::solar_model::{SolarModel, SolarModelMemory};
 use std::borrow::Borrow;
@@ -47,7 +47,6 @@ pub struct MultiphysicsModelMemory {
     thermal: ThermalModelMemory,
     solar: SolarModelMemory,
     air: AirFlowModelMemory,
-
 }
 
 /// The structure that connects all the SIMPLE simulation modules.
@@ -74,21 +73,18 @@ impl ErrorHandling for MultiphysicsModel {
     }
 }
 
-
-
 impl SimulationModel for MultiphysicsModel {
     type OutputType = Self;
     type AllocType = MultiphysicsModelMemory;
     type OptionType = ();
 
-    fn allocate_memory(&self)->Result<Self::AllocType, String>{
-
+    fn allocate_memory(&self) -> Result<Self::AllocType, String> {
         let thermal = self.thermal_model.allocate_memory()?;
         #[allow(clippy::let_unit_value)]
         let solar = self.solar_model.allocate_memory()?;
         #[allow(clippy::let_unit_value)]
         let air = self.air_flow_model.allocate_memory()?;
-        
+
         let ret = MultiphysicsModelMemory {
             thermal,
             solar,
@@ -133,10 +129,11 @@ impl SimulationModel for MultiphysicsModel {
             }
         };
 
-        let solar_model = match SolarModel::new(meta_options, solar_options, model.borrow(), state, n) {
-            Ok(v) => v,
-            Err(e) => return MultiphysicsModel::user_error(e),
-        };
+        let solar_model =
+            match SolarModel::new(meta_options, solar_options, model.borrow(), state, n) {
+                Ok(v) => v,
+                Err(e) => return MultiphysicsModel::user_error(e),
+            };
 
         Ok(Self {
             thermal_model,
@@ -158,16 +155,19 @@ impl SimulationModel for MultiphysicsModel {
         alloc: &mut MultiphysicsModelMemory,
     ) -> Result<(), String> {
         // First solar,
-        self.solar_model.march(date, weather, model.borrow(), state, &mut alloc.solar)?;
+        self.solar_model
+            .march(date, weather, model.borrow(), state, &mut alloc.solar)?;
 
         // Then noise
         // self.acoustic_model.march(date, weather, building, state)?;
 
         // Then air flow
-        self.air_flow_model.march(date, weather, model.borrow(), state, &mut alloc.air )?;
+        self.air_flow_model
+            .march(date, weather, model.borrow(), state, &mut alloc.air)?;
 
         // Then temperature
-        self.thermal_model.march(date, weather, model.borrow(), state, &mut alloc.thermal)?;
+        self.thermal_model
+            .march(date, weather, model.borrow(), state, &mut alloc.thermal)?;
 
         Ok(())
     }

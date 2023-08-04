@@ -281,6 +281,30 @@ impl Triangle3D {
         self.c
     }
 
+    /// Sets the first vertex of an A,B,C [`Triangle3D`], 
+    /// updating the triangle's normal and area.
+    pub fn set_a(&mut self, p: Point3D) {
+        self.a = p;
+        self.set_area();
+        self.set_normal();
+    }
+
+    /// Sets the first vertex of an A,B,C [`Triangle3D`], 
+    /// updating the triangle's normal and area.
+    pub fn set_b(&mut self, p: Point3D) {
+        self.b = p;
+        self.set_area();
+        self.set_normal();
+    }
+
+    /// Sets the first vertex of an A,B,C [`Triangle3D`], 
+    /// updating the triangle's normal and area.
+    pub fn set_c(&mut self, p: Point3D) {
+        self.c = p;
+        self.set_area();
+        self.set_normal();
+    }
+
     /// Retrieves a segment of an A,B,C [`Triangle3D`]
     pub fn segment(&self, i: usize) -> Result<Segment3D, String> {
         match i {

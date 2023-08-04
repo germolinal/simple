@@ -17,63 +17,83 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use model::{Model,SimulationState, SimulationStateHeader};
-use weather::WeatherTrait;
 use calendar::Date;
-use communication::{MetaOptions, SimulationModel, ErrorHandling};
+use communication::{ErrorHandling, MetaOptions, SimulationModel};
+use model::{Model, SimulationState, SimulationStateHeader};
 use std::borrow::Borrow;
+use weather::WeatherTrait;
 
 struct ModelA {}
-impl ErrorHandling for ModelA{
-    fn module_name()->&'static str {
+impl ErrorHandling for ModelA {
+    fn module_name() -> &'static str {
         "A"
-    }    
+    }
 }
-impl SimulationModel for ModelA{
+impl SimulationModel for ModelA {
     type OutputType = Self;
     type OptionType = OptionsA;
     type AllocType = ();
-    fn new<M: Borrow<Model>>(_meta: &MetaOptions, _options: Self::OptionType, _model : M, _state: &mut SimulationStateHeader, _n: usize)->Result<Self::OutputType,String>{
+    fn new<M: Borrow<Model>>(
+        _meta: &MetaOptions,
+        _options: Self::OptionType,
+        _model: M,
+        _state: &mut SimulationStateHeader,
+        _n: usize,
+    ) -> Result<Self::OutputType, String> {
         todo!()
     }
-    fn march<W: WeatherTrait, M: Borrow<Model>>(&self, _date: Date, _weather: &W, _model: M, _state: &mut SimulationState, _alloc: &mut () )->Result<(),String>{
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
+        &self,
+        _date: Date,
+        _weather: &W,
+        _model: M,
+        _state: &mut SimulationState,
+        _alloc: &mut (),
+    ) -> Result<(), String> {
         todo!()
     }
 
-    fn allocate_memory(&self)->Result<Self::AllocType, String>{
+    fn allocate_memory(&self) -> Result<Self::AllocType, String> {
         Ok(())
     }
-
-
 }
 
 struct OptionsA {
     _n: usize,
 }
 
-
-
-
-
 struct ModelB {}
-impl ErrorHandling for ModelB{
-    fn module_name()->&'static str {
+impl ErrorHandling for ModelB {
+    fn module_name() -> &'static str {
         "A"
-    }    
+    }
 }
-impl SimulationModel for ModelB{
+impl SimulationModel for ModelB {
     type OutputType = Self;
     type OptionType = OptionsB;
     type AllocType = ();
 
-    fn new<M: Borrow<Model>>(_meta: &MetaOptions, _options: Self::OptionType, _model : M, _state: &mut SimulationStateHeader, _n: usize)->Result<Self::OutputType,String>{
+    fn new<M: Borrow<Model>>(
+        _meta: &MetaOptions,
+        _options: Self::OptionType,
+        _model: M,
+        _state: &mut SimulationStateHeader,
+        _n: usize,
+    ) -> Result<Self::OutputType, String> {
         todo!()
     }
-    fn march<W: WeatherTrait, M: Borrow<Model>>(&self, _date: Date, _weather: &W, _model: M, _state: &mut SimulationState, _alloc: &mut ())->Result<(),String>{
+    fn march<W: WeatherTrait, M: Borrow<Model>>(
+        &self,
+        _date: Date,
+        _weather: &W,
+        _model: M,
+        _state: &mut SimulationState,
+        _alloc: &mut (),
+    ) -> Result<(), String> {
         todo!()
     }
 
-    fn allocate_memory(&self)->Result<Self::AllocType, String>{
+    fn allocate_memory(&self) -> Result<Self::AllocType, String> {
         Ok(())
     }
 }
@@ -83,13 +103,10 @@ struct OptionsB {
 }
 
 #[allow(dead_code)]
-struct MultiModel{
+struct MultiModel {
     a: ModelA,
     b: ModelB,
 }
 
-
 #[test]
-fn test_compile(){
-
-}
+fn test_compile() {}

@@ -20,9 +20,9 @@ SOFTWARE.
 
 #![deny(missing_docs)]
 
-//! The main `SIMPLE` Simulation crate, combining pretty much every other 
+//! The main `SIMPLE` Simulation crate, combining pretty much every other
 //! development.
-//! 
+//!
 //! This crate provides a high-level simulation framework, hidding all the physics
 //! behind the different modules (thermal, light, etc.)
 
@@ -62,26 +62,24 @@ pub use occupant_behaviour::OccupantBehaviour;
 pub mod run_simulation;
 
 // Re-exports
+pub use rendering::{
+    SimpleModelReader, 
+    Scene, 
+    Wavelengths,
+    Ray,
+    SceneElement,
+    samplers,
+    rand::RandGen, rand::get_rng, rand::Rng,
+};
 pub use calendar::{Date, Period};
 pub use communication::{MetaOptions, SimulationModel};
-pub use model;
-pub use model::{
-    Model, SimulationState, SimulationStateElement,
-    SimulationStateHeader, *,
-};
-pub use weather::{
-    Weather,
-    WeatherTrait,
-    SyntheticWeather,
-    EPWWeather, 
-    EPWWeatherLine,
-    CurrentWeather,
-    Location,
-    Time,
-    Solar,
-};
-pub use light::OpticalInfo;
 pub use geometry;
+pub use light::OpticalInfo;
+pub use model;
+pub use model::{Model, SimulationState, SimulationStateElement, SimulationStateHeader, *};
 pub use polynomial::*;
 pub use schedule::*;
-
+pub use weather::{
+    CurrentWeather, EPWWeather, EPWWeatherLine, Location, Solar, SyntheticWeather, Time, Weather,
+    WeatherTrait,
+};

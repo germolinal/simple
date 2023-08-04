@@ -22,9 +22,7 @@ SOFTWARE.
 use crate::resolvers::*;
 use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
-use model::{
-    Infiltration, Model, SimulationState, SimulationStateElement, SimulationStateHeader,
-};
+use model::{Infiltration, Model, SimulationState, SimulationStateElement, SimulationStateHeader};
 use std::borrow::Borrow;
 use weather::{CurrentWeather, WeatherTrait};
 
@@ -48,10 +46,9 @@ impl SimulationModel for AirFlowModel {
     type OptionType = ();
     type AllocType = AirFlowModelMemory;
 
-    fn allocate_memory(&self)->Result<Self::AllocType, String>{
+    fn allocate_memory(&self) -> Result<Self::AllocType, String> {
         Ok(())
     }
-    
 
     /// Creates a new AirFlowModel from a Model.    
     fn new<M: Borrow<Model>>(
@@ -127,8 +124,8 @@ impl SimulationModel for AirFlowModel {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use schedule::ScheduleConstant;
     use model::Space;
+    use schedule::ScheduleConstant;
     use weather::SyntheticWeather;
 
     const META_OPTIONS: MetaOptions = MetaOptions {

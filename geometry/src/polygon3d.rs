@@ -101,10 +101,24 @@ impl Polygon3D {
         })
     }
 
-    // pub fn normal_at_intersection(&self, ray: &Ray3D, t: Float) -> (Vector3D, SurfaceSide) {
-    //     let p = self.outer[0];
-    //     SurfaceSide::get_side(self.normal, ray.direction)
-    // }
+    /// Reverses the order of all the [`Loop3D`] in the [`Polygon3D`], and also
+    /// the normal [`Vector3D`]
+    /// 
+    /// 
+    pub fn reverse(&mut self){        
+        self.outer.reverse();
+        for i in self.inner.iter_mut(){
+            i.reverse()
+        }
+        self.normal = self.outer.normal();
+    }
+
+    /// Returns a clone of this [`Polygon3D`], reversed.
+    pub fn get_reversed(&self)->Self{
+        let mut ret = self.clone();
+        ret.reverse();
+        ret
+    }
 
     /// Retrieves the normal to the Polygon
     pub fn normal(&self) -> Vector3D {
@@ -126,6 +140,11 @@ impl Polygon3D {
         &self.outer
     }
 
+    /// Borrows a mutable reference to the Outer [`Loop3D`]
+    pub fn mut_outer(&mut self) -> &mut Loop3D {
+        &mut self.outer
+    }
+
     /// Clones the Outer [`Loop3D`]
     pub fn clone_outer(&self) -> Loop3D {
         self.outer.clone()
@@ -140,6 +159,15 @@ impl Polygon3D {
     pub fn inner(&self, i: usize) -> Result<&Loop3D, String> {
         if i < self.inner.len() {
             return Ok(&self.inner[i]);
+        }
+        let msg = "Index out of bounds when trying to retrieve inner loop".to_string();
+        Err(msg)
+    }
+
+    /// Borrows a mutable reference to an inner [`Loop3D`]
+    pub fn mut_inner(&mut self, i: usize) -> Result<&mut Loop3D, String> {
+        if i < self.inner.len() {
+            return Ok(&mut self.inner[i]);
         }
         let msg = "Index out of bounds when trying to retrieve inner loop".to_string();
         Err(msg)
@@ -352,6 +380,46 @@ impl Polygon3D {
         }
         false
     }
+
+    /// Projects into the plane of a [`Loop3D`].
+    ///
+    /// This means translating all points of `self` to the plane of `other`.
+    pub fn project_into_plane(&mut self, other: &Loop3D) -> Result<(), String> {
+        self.outer.project_into_plane(other)?;
+
+        for l in self.inner.iter_mut() {
+            l.project_into_plane(other)?;
+        }
+
+        Ok(())
+    }
+
+    /// Goes through all the the [`Point3D`]s in `self.outer` and `self.inner` and in `points`
+    /// (this is a slow algorithm) and—when a point in `self` is "very close" to
+    /// one in `points`—it modifies the formet to match the latter.
+    ///
+    /// The criteria for `very_close` is modulated by the `snap_distance` value.
+    ///
+    /// Returns `None` if no point was snapped; and `Some(i)` when `i` points were snapped.
+    pub fn snap(&mut self, points: &[Point3D], snap_distance: Float) -> Option<usize> {
+        let mut count = 0;
+
+        if let Some(c) = self.outer.snap(points, snap_distance) {
+            count += c;
+        }
+
+        for l in self.inner.iter_mut() {
+            if let Some(c) = l.snap(points, snap_distance) {
+                count += c;
+            }
+        }
+
+        if count == 0 {
+            None
+        } else {
+            Some(count)
+        }
+    }
 }
 
 /***********/
@@ -389,49 +457,6 @@ mod testing {
 
         println!("{}", serde_json::to_string(&pol).unwrap());
     }
-
-    // use crate::vector3d::Vector3D;
-
-    // #[test]
-    // fn test_polygon_intersect() {
-    //     // It should not work if we don't close it.
-    //     let mut the_loop = Loop3D::new();
-    //     let l = 20. as Float;
-    //     the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-    //     the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-    //     the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-    //     the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-
-    //     the_loop.close().unwrap();
-
-    //     let polygon = Polygon3D::new(the_loop).unwrap();
-
-    //     let ray = Ray3D {
-    //         origin: Point3D::new(2.1, -3.1, 100.),
-    //         direction: Vector3D::new(0., 0., -1.),
-    //     };
-    //     if let Some(t) = polygon.intersect(&ray) {
-    //         let (normal, side) = polygon.normal_at_intersection(&ray, t);
-    //         assert_eq!(side, SurfaceSide::Front);
-    //         assert_eq!(normal, Vector3D::new(0., 0., 1.));
-    //         assert_eq!(t, 100.);
-    //     } else {
-    //         panic!("Did not intersect!")
-    //     }
-
-    //     let ray = Ray3D {
-    //         origin: Point3D::new(2.1, -3.1, -100.),
-    //         direction: Vector3D::new(0., 0., 1.),
-    //     };
-    //     if let Some(t) = polygon.intersect(&ray) {
-    //         let (normal, side) = polygon.normal_at_intersection(&ray, t);
-    //         assert_eq!(side, SurfaceSide::Back);
-    //         assert_eq!(normal, Vector3D::new(0., 0., -1.));
-    //         assert_eq!(t, 100.);
-    //     } else {
-    //         panic!("Did not intersect!")
-    //     }
-    // }
 
     #[test]
     fn test_new() {
@@ -761,5 +786,111 @@ mod testing {
         )));
     }
 
+    
+    #[test]
+    fn test_reverse() {
+        let mut outer = Loop3D::with_capacity(4);
+        let oa = Point3D::new(0., 0., 0.);
+        let ob = Point3D::new(1., 1., 0.);
+        let oc = Point3D::new(0., 1., 0.);
+
+        outer.push(oa).unwrap();
+        outer.push(ob).unwrap();
+        outer.push(oc).unwrap();
+        outer.close().unwrap();
+
+        let mut p = Polygon3D::new(outer).unwrap();
+
+        let mut inner = Loop3D::with_capacity(4);
+        let ia = Point3D::new(0.25, 0.25, 0.);
+        let ib = Point3D::new(0.5, 0.5, 0.);
+        let ic = Point3D::new(0.25, 0.5, 0.);
+
+        inner.push(ia).unwrap();
+        inner.push(ib).unwrap();
+        inner.push(ic).unwrap();
+        inner.close().unwrap();
+        p.cut_hole(inner).unwrap();
+
+
+        let normal = p.normal();
+
+        // reverse
+        p.reverse();        
+
+        assert!((normal * -1.0).compare(p.normal()));
+        // check outer
+        let v = p.outer().vertices();
+        assert!(oa.compare(v[2]));
+        assert!(ob.compare(v[1]));
+        assert!(oc.compare(v[0]));
+
+        // check inner
+        let v = p.inner(0).unwrap().vertices();
+        assert!(ia.compare(v[2]));
+        assert!(ib.compare(v[1]));
+        assert!(ic.compare(v[0]));
+    }
+
+    #[test]
+    fn test_get_reversed() {
+        let mut outer = Loop3D::with_capacity(4);
+        let oa = Point3D::new(0., 0., 0.);
+        let ob = Point3D::new(1., 1., 0.);
+        let oc = Point3D::new(0., 1., 0.);
+
+        outer.push(oa).unwrap();
+        outer.push(ob).unwrap();
+        outer.push(oc).unwrap();
+        outer.close().unwrap();
+
+        let mut p = Polygon3D::new(outer).unwrap();
+
+        let mut inner = Loop3D::with_capacity(4);
+        let ia = Point3D::new(0.25, 0.25, 0.);
+        let ib = Point3D::new(0.5, 0.5, 0.);
+        let ic = Point3D::new(0.25, 0.5, 0.);
+
+        inner.push(ia).unwrap();
+        inner.push(ib).unwrap();
+        inner.push(ic).unwrap();
+        inner.close().unwrap();
+        p.cut_hole(inner).unwrap();
+
+
+
+        // reverse
+        let rev_p = p.get_reversed();
+        
+
+        // check outer
+        assert_eq!(rev_p.outer().len(), p.outer().len());
+        let v = p.outer().vertices();
+        let rev_v = rev_p.outer().vertices();
+        let n = v.len();
+
+        for i in 0..n {
+            let p = v[i];
+            let rev_p = rev_v[n - 1 - i];
+            assert!(p.compare(rev_p));
+        }
+
+        // check inner
+        assert_eq!(rev_p.inner(0).unwrap().len(), p.inner(0).unwrap().len());
+        let v = p.inner(0).unwrap().vertices();
+        let rev_v = rev_p.inner(0).unwrap().vertices();
+        let n = v.len();
+
+        for i in 0..n {
+            let p = v[i];
+            let rev_p = rev_v[n - 1 - i];
+            assert!(p.compare(rev_p));
+        }
+
+        // check Normal
+        assert!((p.normal() * -1.0).compare(rev_p.normal()));
+
+        
+    }
     
 }

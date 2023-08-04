@@ -1,5 +1,3 @@
-
-
 use serde::Serialize;
 
 use crate::Float;
@@ -22,7 +20,6 @@ impl OneZero for Float {
         1.
     }
 }
-
 
 /// Define the basic algebraic requirements for T
 pub trait Numberish:
