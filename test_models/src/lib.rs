@@ -33,7 +33,7 @@ type Float = f64;
 
 use geometry::{Loop3D, Point3D, Polygon3D};
 
-use model::{    
+use model::{
     hvac::ElectricHeater,
     substance::{gas::GasSpecification, Gas, Normal as NormalSubstance},
     Boundary, Construction, Fenestration, Infiltration, Luminaire, Material, Model,
@@ -130,7 +130,6 @@ impl Default for SingleZoneTestBuildingOptions {
         }
     }
 }
-
 
 /// Adds a luminare to the model
 pub fn add_luminaire(model: &mut Model, options: &SingleZoneTestBuildingOptions) {

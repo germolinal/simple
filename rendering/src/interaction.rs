@@ -22,7 +22,7 @@ use geometry::intersection::IntersectionInfo;
 use geometry::{Point3D, Transform, Vector3D};
 
 /// The data for a SurfaceInteraction]
-#[derive( Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct Interaction {
     /* GENERAL INTERACTION DATA */
     /// The [`Point3D`] of the interaction
@@ -61,8 +61,8 @@ impl Interaction {
     pub fn interpolate_normal(&mut self, normals: (Vector3D, Vector3D, Vector3D)) {
         let n0 = normals.0;
         let n1 = normals.1;
-        let n2 = normals.2;        
-        let u = self.geometry_shading.u;        
+        let n2 = normals.2;
+        let u = self.geometry_shading.u;
         let v = self.geometry_shading.v;
 
         let mut n = (n0 * u + n1 * v + n2 * (1. - u - v)).get_normalized();

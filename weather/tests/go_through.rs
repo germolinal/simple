@@ -28,15 +28,15 @@ fn test_go_through() {
 
         let dt = 60. * 60. / 20.;
         let sim_period = Period::new(start, end, dt);
-        
-        let weather: Weather = EPWWeather::from_file("./tests/wellington.epw").unwrap().into();
+
+        let weather: Weather = EPWWeather::from_file("./tests/wellington.epw")
+            .unwrap()
+            .into();
 
         let mut expected = Vec::with_capacity(n);
-        let mut found = Vec::with_capacity(n);        
-        for (date,exp) in sim_period
-            .into_iter()
-            .zip(exp_dry_bulb)
-            .skip(20) // We skip 20 beacause EnergyPlus seems to be making up data between midningt and 1am?
+        let mut found = Vec::with_capacity(n);
+        for (date, exp) in sim_period.into_iter().zip(exp_dry_bulb).skip(20)
+        // We skip 20 beacause EnergyPlus seems to be making up data between midningt and 1am?
         {
             expected.push(*exp as Float);
             let data = weather.find_weather_line(date);
@@ -46,7 +46,7 @@ fn test_go_through() {
         }
 
         Box::new(ScatterValidator {
-            // label: Some("time step"),            
+            // label: Some("time step"),
             units: Some("C"),
 
             expected_legend: Some("EnergyPlus"),
@@ -66,10 +66,7 @@ fn test_go_through() {
     }
 
     let target_file = format!("{}/weather.html", p);
-    let mut validations = Validator::new(
-        "SIMPLE EPW File Parser",
-        &target_file,
-    );
+    let mut validations = Validator::new("SIMPLE EPW File Parser", &target_file);
 
     validations.push(drybulb());
 

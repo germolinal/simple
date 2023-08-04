@@ -57,10 +57,10 @@ impl std::default::Default for Ray {
                 direction: Vector3D::new(0., 0., 0.),
             },
             refraction_index: 1.,
-            interaction: Interaction { 
-                point: Point3D::new(0., 0., 0.), 
-                wo: Vector3D::new(0., 0., 0.), 
-                geometry_shading: IntersectionInfo::default() 
+            interaction: Interaction {
+                point: Point3D::new(0., 0., 0.),
+                wo: Vector3D::new(0., 0., 0.),
+                geometry_shading: IntersectionInfo::default(),
             },
             depth: 0,
             value: 1.,

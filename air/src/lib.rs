@@ -33,6 +33,6 @@ type Float = f32;
 #[cfg(not(feature = "float"))]
 type Float = f64;
 
-mod eplus;
 pub mod air_model;
+mod eplus;
 mod resolvers;

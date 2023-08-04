@@ -407,9 +407,9 @@ mod testing {
     fn test_nusselt() {
         // https://github.com/LBNL-ETA/Windows-CalcEngine/blob/main/src/Tarcog/tst/units/NusseltNumber.unit.cpp
 
-        #[cfg(feature="float")]
+        #[cfg(feature = "float")]
         const SMOL: Float = 1e-3;
-        #[cfg(not(feature="float"))]
+        #[cfg(not(feature = "float"))]
         const SMOL: Float = 1e-5;
 
         // Test 1

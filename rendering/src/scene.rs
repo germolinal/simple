@@ -31,7 +31,7 @@ use calendar::Date;
 use geometry::{Ray3D, Vector3D};
 use model::Model;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Object {
     pub primitive: Primitive,
     pub front_material_index: usize,
@@ -90,7 +90,8 @@ impl Scene {
     /// Lighting or Solar Radiation, respectively.
     pub fn from_simple_model(model: &Model, wavelength: Wavelengths) -> Result<Self, String> {
         let mut reader = SimpleModelReader::default();
-        reader.build_scene(model, &wavelength)
+        let(model, _) = reader.build_scene(model, &wavelength)?;
+        Ok(model)
     }
 
     /// Creates an empty scene
@@ -173,9 +174,7 @@ impl Scene {
 
             let sun_brightness = dir_illum / omega / crate::colour::WHITE_EFFICACY;
             let sun_mat =
-                self.push_material(Material::Light(Light(
-                    Spectrum::gray(sun_brightness),
-                )));
+                self.push_material(Material::Light(Light(Spectrum::gray(sun_brightness))));
 
             self.push_object(
                 sun_mat,
@@ -185,16 +184,31 @@ impl Scene {
         } // end of "if there is a sun"
     }
 
-    pub fn build_accelerator(&mut self) {
+    /// Builds an [`BoundingVolumeTree`] for this scene.
+    /// 
+    /// Because the process will reorder the triangles in the scene, 
+    /// this methor returns a `Vec<usize>` mapping original indices of 
+    /// the triangles into the new one. (e.g., if—after reorganizing—triangle 
+    /// 21 was moved to the first position, then the mapping will be `vec![21, ...]`)
+    pub fn build_accelerator(&mut self) ->Vec<usize> {
         if self.accelerator.is_some() {
             panic!("Trying to re-build accelerator structure. If you really want this, use rebuild_accelerator")
         }
-        self.accelerator = Some(BoundingVolumeTree::new(self));
+        let (bvh, mapping) = BoundingVolumeTree::new(self);
+        self.accelerator = Some(bvh);
+        mapping
     }
 
-    /// Builds the accelerator
-    pub fn rebuild_accelerator(&mut self) {
-        self.accelerator = Some(BoundingVolumeTree::new(self));
+    /// Re-Builds the accelerator
+    /// 
+    /// Because the process will reorder the triangles in the scene, 
+    /// this methor returns a `Vec<usize>` mapping original indices of 
+    /// the triangles into the new one. (e.g., if—after reorganizing—triangle 
+    /// 21 was moved to the first position, then the mapping will be `vec![21, ...]`)
+    pub fn rebuild_accelerator(&mut self) -> Vec<usize>{
+        let (bvh, mapping) = BoundingVolumeTree::new(self);
+        self.accelerator = Some(bvh);
+        mapping
     }
 
     /// Returns the number of total lights; that is,
@@ -204,7 +218,7 @@ impl Scene {
         self.lights.len() + self.distant_lights.len()
     }
 
-    /// Casts a [`Ray3D`] and returns an `Option<usize>` indicating the index
+    /// Casts a [`Ray`] and returns an `Option<usize>` indicating the index
     /// of the first primitive hit by the ray, if any. The `ray` passed will now contain
     /// the Interaction
     pub fn cast_ray(&self, ray: &mut Ray, node_aux: &mut Vec<usize>) -> Option<usize> {
@@ -260,7 +274,7 @@ impl Scene {
         let is_light = if self.materials[front_material_index].emits_direct_light()
             || self.materials[back_material_index].emits_direct_light()
         {
-            let ob_id = primitive.id();
+            let object_id = primitive.id();
             let object = Object {
                 front_material_index,
                 back_material_index,
@@ -270,7 +284,7 @@ impl Scene {
             // I know this is not very fast... but we will
             // only do this while creating the scene, not while
             // rendering
-            if ob_id == "source" {
+            if object_id == "source" {
                 self.distant_lights.push(object);
             } else {
                 // register object as light

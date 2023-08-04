@@ -46,6 +46,7 @@ pub use specular::*;
 
 mod ward;
 
+#[derive(Clone, Debug)]
 pub enum Material {
     Plastic(Plastic),
     Metal(Metal),

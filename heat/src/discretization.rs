@@ -220,15 +220,9 @@ impl Discretization {
                     }
                     Substance::Gas(s) => {
                         let gas = match s.gas() {
-                            Ok(model::substance::gas::GasSpecification::Air) => {
-                                crate::gas::AIR
-                            }
-                            Ok(model::substance::gas::GasSpecification::Argon) => {
-                                crate::gas::ARGON
-                            }
-                            Ok(model::substance::gas::GasSpecification::Xenon) => {
-                                crate::gas::XENON
-                            }
+                            Ok(model::substance::gas::GasSpecification::Air) => crate::gas::AIR,
+                            Ok(model::substance::gas::GasSpecification::Argon) => crate::gas::ARGON,
+                            Ok(model::substance::gas::GasSpecification::Xenon) => crate::gas::XENON,
                             Ok(model::substance::gas::GasSpecification::Krypton) => {
                                 crate::gas::KRYPTON
                             }

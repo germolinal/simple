@@ -19,7 +19,7 @@ SOFTWARE.
 */
 
 use geometry::Triangulation3D;
-use model::{Model, Substance};
+use model::{Model, Substance, FenestrationType};
 
 use crate::colour::Spectrum;
 use crate::material::{Glass, Material, Plastic};
@@ -37,16 +37,33 @@ fn transmittance_to_transmissivity(tau: crate::Float) -> crate::Float {
     ((0.8402528435 + 0.0072522239 * tau.powi(2)).sqrt() - 0.9166530661) / 0.0036261119 / tau
 }
 
+/// Used for indicating whether a triangle in the [`Scene`]
+/// was part of a fenestration or a surface.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum SceneElement {
+    /// Leads to a Surface
+    Surface,
+    /// Leads to a Fenestration
+    Fenestration,
+}
+
 impl SimpleModelReader {
-    pub fn build_scene(&mut self, model: &Model, wavelength: &Wavelengths) -> Result<Scene, String> {
+    /// Builds a scene, returning a [`Scene`] object and also a vector
+    /// mapping each triangle in the scene to a surface
+    pub fn build_scene(
+        &mut self,
+        model: &Model,
+        wavelength: &Wavelengths,
+    ) -> Result<(Scene, Vec<(SceneElement, usize)>), String> {
         if matches!(wavelength, Wavelengths::Visible) {
             unimplemented!()
         }
 
         let mut scene = Scene::new();
+        let mut triangle_map = Vec::with_capacity(model.surfaces.len() * 3);
 
         // Add surfaces
-        for s in &model.surfaces {
+        for (surface_i, s) in model.surfaces.iter().enumerate() {            
             let polygon = &s.vertices;
             let c_name = &s.construction;
             let construction = model.get_construction(c_name)?;
@@ -56,7 +73,7 @@ impl SimpleModelReader {
                 "Found an empty construction, called {}",
                 construction.name()
             );
-            
+
             let front_mat_name = &construction.materials[0];
 
             let front_substance = model.get_material_substance(front_mat_name)?;
@@ -68,7 +85,7 @@ impl SimpleModelReader {
                     construction.name()
                 )
                 });
-            
+
             let last_mat_name = construction.materials.last().unwrap();
             let back_substance = model.get_material_substance(last_mat_name)?;
             let back_mat_index = self
@@ -81,20 +98,28 @@ impl SimpleModelReader {
                 });
 
             // Add all the triangles necessary
-            let triangles = Triangulation3D::from_polygon(polygon)
-                .unwrap()
-                .get_trilist();
+            let t: Triangulation3D = polygon.try_into()?;
+
+            let triangles = t.get_trilist();
             for tri in triangles {
                 scene.push_object(front_mat_index, back_mat_index, Primitive::Triangle(tri));
+                triangle_map.push((SceneElement::Surface, surface_i));
             }
         }
 
         // Add fenestrations
-        for s in &model.fenestrations {
+        for (fen_i, s) in model.fenestrations.iter().enumerate() {
+            
+            // Openings are not material surfaces.
+            if let FenestrationType::Opening = s.category{
+                continue;
+            }
+            
+
             let polygon = &s.vertices;
             let con_name = &s.construction;
             let construction = model.get_construction(con_name)?;
-            
+
             assert!(
                 !construction.materials.is_empty(),
                 "Found an empty construction, called {}",
@@ -123,16 +148,16 @@ impl SimpleModelReader {
                 });
 
             // Add all the triangles necessary
-            let triangles = Triangulation3D::from_polygon(polygon)
-                .unwrap()
-                .get_trilist();
+            let t: Triangulation3D = polygon.try_into().unwrap();
+
+            let triangles = t.get_trilist();
             for tri in triangles {
                 scene.push_object(front_mat_index, back_mat_index, Primitive::Triangle(tri));
+                triangle_map.push((SceneElement::Fenestration, fen_i));
             }
         }
 
-        // return
-        Ok(scene)
+        Ok((scene, triangle_map))
     }
 
     /// Adds a Substance to the Scene, checking if it has been added before (by name).
@@ -234,7 +259,8 @@ mod tests {
     use crate::material::Light;
     use crate::ray_tracer::RayTracer;
     use crate::Float;
-    use geometry::{DistantSource3D, Point3D, Vector3D};
+    use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Vector3D};
+    use model::{Construction, Fenestration, Surface};
     use std::time::Instant;
     use validate::assert_close;
 
@@ -250,7 +276,9 @@ mod tests {
         let (model, _state_header) =
             Model::from_file("./tests/scenes/room.spl".to_string()).unwrap();
         let mut reader = SimpleModelReader::default();
-        let mut scene = reader.build_scene(&model, &Wavelengths::Solar).unwrap();
+        let (mut scene, map) = reader.build_scene(&model, &Wavelengths::Solar).unwrap();
+
+        assert_eq!(map.len(), scene.triangles.len());
 
         let light_index = scene.push_material(Material::Light(Light(Spectrum::gray(10000.))));
         scene.push_object(
@@ -293,5 +321,123 @@ mod tests {
         buffer.save_hdre(std::path::Path::new(
             "./tests/scenes/images/simple_room.hdr",
         ));
+    }
+
+    #[test]
+    fn test_map() {
+        let mut model = Model::default();
+        let construction_name = "the construction";
+        let sub = model::substance::Normal::new("the sub").wrap();
+        let sub = model.add_substance(sub);
+        let mat = model::Material::new("some_mat", sub.name(), 0.1);
+        let mat = model.add_material(mat);
+        let mut c = Construction::new(construction_name);
+        c.materials.push(mat.name().clone());
+
+        model.add_construction(c);
+
+        /* SINGLE SURFACE -  A TRIANGLE */
+        let mut the_l = Loop3D::with_capacity(3);
+        the_l.push(Point3D::new(0., 0., 0.)).unwrap();
+        the_l.push(Point3D::new(1., 0., 0.)).unwrap();
+        the_l.push(Point3D::new(0., 1., 0.)).unwrap();
+        the_l.close().unwrap();
+
+        let poly = Polygon3D::new(the_l).unwrap();
+
+        let s = Surface::new(
+            "some surf",
+            poly,
+            construction_name,
+            model::Boundary::default(),
+            model::Boundary::default(),
+        );
+        model.add_surface(s);
+
+        let mut r = SimpleModelReader::default();
+        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar).unwrap();
+        assert_eq!(scene.triangles.len(), map.len());
+
+        assert_eq!(map.len(), 1);
+        let (element_type, index) = map[0];
+        assert_eq!(element_type, SceneElement::Surface);
+        assert_eq!(0, index);
+
+        /* A TRIANGLE AND A SQUARE */
+        let mut the_l = Loop3D::with_capacity(3);
+        the_l.push(Point3D::new(0., 0., 0.)).unwrap();
+        the_l.push(Point3D::new(1., 0., 0.)).unwrap();
+        the_l.push(Point3D::new(1., 1., 0.)).unwrap();
+        the_l.push(Point3D::new(0., 1., 0.)).unwrap();
+        the_l.close().unwrap();
+
+        let poly = Polygon3D::new(the_l).unwrap();
+
+        let s = Surface::new(
+            "another surf",
+            poly,
+            construction_name,
+            model::Boundary::default(),
+            model::Boundary::default(),
+        );
+        model.add_surface(s);
+
+        let mut r = SimpleModelReader::default();
+        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar).unwrap();
+        assert_eq!(scene.triangles.len(), map.len());
+
+        assert_eq!(map.len(), 3);
+
+        let (element_type, index) = map[0];
+        assert_eq!(element_type, SceneElement::Surface);
+        assert_eq!(0, index);
+        let (element_type, index) = map[1];
+        assert_eq!(element_type, SceneElement::Surface);
+        assert_eq!(1, index);
+        let (element_type, index) = map[2];
+        assert_eq!(element_type, SceneElement::Surface);
+        assert_eq!(1, index);
+
+        /* A TRIANGLE AND A SQUARE AND A FENESTRATION */
+        let mut the_l = Loop3D::with_capacity(3);
+        the_l.push(Point3D::new(0., 0., 1.)).unwrap();
+        the_l.push(Point3D::new(1., 0., 1.)).unwrap();
+        the_l.push(Point3D::new(1., 1., 1.)).unwrap();
+        the_l.push(Point3D::new(0., 1., 1.)).unwrap();
+        the_l.close().unwrap();
+
+        let poly = Polygon3D::new(the_l).unwrap();
+
+        let s = Fenestration::new(
+            "some fen",
+            poly,
+            construction_name,
+            model::FenestrationType::Window,
+            model::Boundary::default(),
+            model::Boundary::default(),
+        );
+        model.add_fenestration(s).unwrap();
+
+        let mut r = SimpleModelReader::default();
+        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar).unwrap();
+        assert_eq!(scene.triangles.len(), map.len());
+
+        assert_eq!(map.len(), 5);
+
+        let (element_type, index) = map[0];
+        assert_eq!(element_type, SceneElement::Surface);
+        assert_eq!(0, index);
+        let (element_type, index) = map[1];
+        assert_eq!(element_type, SceneElement::Surface);
+        assert_eq!(1, index);
+        let (element_type, index) = map[2];
+        assert_eq!(element_type, SceneElement::Surface);
+        assert_eq!(1, index);
+        let (element_type, index) = map[3];
+        assert_eq!(element_type, SceneElement::Fenestration);
+        assert_eq!(0, index);
+        let (element_type, index) = map[4];
+        assert_eq!(element_type, SceneElement::Fenestration);
+        assert_eq!(0, index);
     }
 }

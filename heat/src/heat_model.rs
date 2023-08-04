@@ -17,10 +17,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use model::SurfaceTrait;
 use crate::discretization::Discretization;
 use crate::Float;
 use calendar::Date;
+use model::SurfaceTrait;
 
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use geometry::Vector3D;
@@ -78,7 +78,7 @@ pub struct ThermalModel {
 }
 
 fn get_boundary_temperature(
-    b: &Boundary,    
+    b: &Boundary,
     t_out: Float,
     model: &Model,
     state: &SimulationState,
@@ -120,26 +120,16 @@ pub(crate) fn iterate_surfaces<T: SurfaceTrait + Send + Sync>(
     let boundary_temps: Vec<(Float, Float)> = surfaces
         .iter()
         .map(|s| {
-            let t_front = match &s.front_boundary{
-                Boundary::Adiabatic => {
-                    s.parent.back_temperature(state)
-                },
-                _ => {
-                    get_boundary_temperature(&s.front_boundary, t_out, model, state)
-                        .unwrap()
-                }
+            let t_front = match &s.front_boundary {
+                Boundary::Adiabatic => s.parent.back_temperature(state),
+                _ => get_boundary_temperature(&s.front_boundary, t_out, model, state).unwrap(),
             };
-            
-            let t_back =  match &s.back_boundary{
-                Boundary::Adiabatic => {
-                    t_front
-                },
-                _ => {
-                    get_boundary_temperature(&s.back_boundary, t_out, model, state)
-                    .unwrap()
-                }
-            }; 
-                        
+
+            let t_back = match &s.back_boundary {
+                Boundary::Adiabatic => t_front,
+                _ => get_boundary_temperature(&s.back_boundary, t_out, model, state).unwrap(),
+            };
+
             (t_front, t_back)
         })
         .collect();

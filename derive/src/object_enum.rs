@@ -3,7 +3,6 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use std::fmt::Write as _; // import without risk of name clashing
 
-
 #[derive(Clone)]
 pub struct VariantData {
     pub ident: syn::Ident,
@@ -310,7 +309,7 @@ impl EnumObject {
 
             )
         }
-        
+
         let api_doc_string = format!(" Registers the Rhai API for `{}`", object_name);
         quote!(
             impl #object_name {

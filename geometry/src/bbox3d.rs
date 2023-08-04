@@ -44,7 +44,7 @@ pub enum BBoxAxis {
 
 /// An Axis-aligned Bounding Box, represented by
 /// two corners (i.e., by two `Point3D` objects)
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct BBox3D {
     /// The lower corner
     pub min: Point3D,
@@ -97,7 +97,7 @@ impl BBox3D {
     }
 
     /// Creates a new `BBox3D` that contains an existing `BBox3D`
-    /// and a `Point3D`
+    /// and a [`Point3D`]
     pub fn from_union_point(bbox: &Self, pt: Point3D) -> Self {
         let (min_x, min_y, min_z, ..) =
             get_mins_maxs(bbox.min.x, bbox.min.y, bbox.min.z, pt.x, pt.y, pt.z);

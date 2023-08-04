@@ -24,6 +24,7 @@ use crate::ray::Ray;
 use geometry::{Point3D, Vector3D};
 
 /// A mirror material
+#[derive(Debug, Clone)]
 pub struct Mirror(pub Spectrum);
 
 impl Mirror {
@@ -45,10 +46,7 @@ impl Mirror {
         let mut ray = *ray;
         let v = mirror_bsdf(*intersection_pt, &mut ray, *normal);
         let cos_theta = (*normal * ray.geometry.direction).abs();
-        [
-            Some((ray, Spectrum::ONE * v * cos_theta)),
-            None,
-        ]
+        [Some((ray, Spectrum::ONE * v * cos_theta)), None]
     }
 
     // pub fn sample_bsdf(

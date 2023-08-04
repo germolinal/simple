@@ -19,13 +19,13 @@ SOFTWARE.
 */
 use crate::control_trait::SimpleControl;
 use crate::Float;
+use crate::RhaiControlScript;
 use calendar::{Date, Period};
 use clap::Parser;
 use communication::{MetaOptions, SimulationModel};
-use serde_json;
 use model::{Model, SimulationStateHeader};
+use serde_json;
 use std::borrow::Borrow;
-use crate::RhaiControlScript;
 
 use crate::multiphysics_model::MultiphysicsModel;
 use weather::{EPWWeather, Weather};
@@ -63,16 +63,10 @@ pub struct SimOptions {
     // /// The final date
     // #[clap(short = 'e')]
     // pub end: Date,
-    
     /// The number of timesteps per hour in the simulation
     #[clap(short = 'n')]
     pub n: usize,
-
-    
 }
-
-
-
 
 struct PreProcessData {
     sim_period: Period,
@@ -82,7 +76,11 @@ struct PreProcessData {
     weather: Weather,
 }
 
-fn pre_process(model: &Model, options: &SimOptions, state_header: &mut SimulationStateHeader)->Result<PreProcessData, String> {
+fn pre_process(
+    model: &Model,
+    options: &SimOptions,
+    state_header: &mut SimulationStateHeader,
+) -> Result<PreProcessData, String> {
     // Check consistency with dates and create Period
     // if options.start == options.end || options.start.is_later(options.end) {
     //     return Err(format!("Time period inconsistency... Start = {} | End = {}", options.start, options.end));
@@ -106,7 +104,7 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
     let sim_period = Period::new(start, end, dt);
 
     // Load weather
-    let weather : Weather = EPWWeather::from_file(options.weather_file.to_string())?.into();
+    let weather: Weather = EPWWeather::from_file(options.weather_file.to_string())?.into();
 
     let meta_options = MetaOptions {
         latitude: weather.location.latitude,
@@ -114,15 +112,10 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
         standard_meridian: (weather.location.timezone as Float * 15.).to_radians(),
         elevation: weather.location.elevation,
     };
-    
+
     // Create physics model
-    let physics_model = MultiphysicsModel::new(
-        &meta_options,
-        (),
-        model.borrow(),
-        state_header,
-        options.n,
-    )?;
+    let physics_model =
+        MultiphysicsModel::new(&meta_options, (), model.borrow(), state_header, options.n)?;
 
     // Collect variables we need to report
     let full_header: Vec<String> = state_header
@@ -141,15 +134,15 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
                 .position(|x| x == &serde_json::to_string(item).unwrap())
         })
         .collect();
-    
-    let report_indexes = if report_indexes.is_empty(){
+
+    let report_indexes = if report_indexes.is_empty() {
         (0..full_header.len()).collect()
-    }else{
+    } else {
         report_indexes
     };
 
-    Ok(PreProcessData { 
-        sim_period, 
+    Ok(PreProcessData {
+        sim_period,
         report_indexes,
         full_header,
         weather,
@@ -157,13 +150,11 @@ fn pre_process(model: &Model, options: &SimOptions, state_header: &mut Simulatio
     })
 }
 
-
-
 /// This function drives the simulation, after having parsed and built
 /// the Building, State and Peoeple.
 pub fn run<T, C, M>(
     model: M,
-    state_header: &mut SimulationStateHeader,       
+    state_header: &mut SimulationStateHeader,
     options: &SimOptions,
     mut out: T,
     controller: C,
@@ -172,32 +163,27 @@ where
     T: std::io::Write,
     C: SimpleControl,
     M: Borrow<Model>,
-{    
-   
-    let pre_process_data = pre_process(
-        model.borrow(),
-        options,
-        state_header
-    )?;
+{
+    let pre_process_data = pre_process(model.borrow(), options, state_header)?;
 
-    let mut state = state_header.take_values().ok_or("Could not take values from SimulationStateHeader")?;
+    let mut state = state_header
+        .take_values()
+        .ok_or("Could not take values from SimulationStateHeader")?;
 
-    let report_len = if model.borrow().outputs.is_empty(){
+    let report_len = if model.borrow().outputs.is_empty() {
         state_header.elements.len()
-    }else{
+    } else {
         model.borrow().outputs.len()
     };
 
     let mut memory = pre_process_data.model.allocate_memory()?;
-
-    
 
     // Write header
     let _u = out
         .write(b"Date,")
         .expect("Could not write to output file (header => 'Date').");
     for (index, i) in pre_process_data.report_indexes.iter().enumerate() {
-        let s: &String = &pre_process_data.full_header[*i];        
+        let s: &String = &pre_process_data.full_header[*i];
         if index < report_len - 1 {
             let s = format!("{s},");
             let _u = out
@@ -225,8 +211,14 @@ where
 
         controller.control(model.borrow(), &pre_process_data.model, &mut state)?;
 
-        // Physics        
-        pre_process_data.model.march(date, &pre_process_data.weather, model.borrow(), &mut state, &mut memory)?;
+        // Physics
+        pre_process_data.model.march(
+            date,
+            &pre_process_data.weather,
+            model.borrow(),
+            &mut state,
+            &mut memory,
+        )?;
 
         // Print all the values in the state
         let ds = format!("{},", date);
@@ -252,43 +244,33 @@ where
     Ok(())
 }
 
-
 /// This function drives the simulation, after having parsed and built
 /// the Building, State and Peoeple.
 pub fn run_rhai<T>(
     model: Model,
-    state_header: &mut SimulationStateHeader,    
+    state_header: &mut SimulationStateHeader,
     options: &SimOptions,
     control_file: &String,
-    mut out: T,    
+    mut out: T,
 ) -> Result<(), String>
 where
-    T: std::io::Write
-{    
+    T: std::io::Write,
+{
     let model = std::sync::Arc::new(model);
 
-    
-    
-    let pre_process_data = pre_process(
-        model.borrow(),
-        options,
-        state_header
-    )?;
+    let pre_process_data = pre_process(model.borrow(), options, state_header)?;
     let mut memory = pre_process_data.model.allocate_memory()?;
 
+    let state = state_header
+        .take_values()
+        .ok_or("Could not take values from SimulationStateHeader")?;
 
-    let state = state_header.take_values().ok_or("Could not take values from SimulationStateHeader")?;
-    
-    let (controller, state)  = RhaiControlScript::new(
-        &model,
-        state,
-        control_file,
-        options.research_mode,
-    )?;
+    let (controller, state) =
+        RhaiControlScript::new(&model, state, control_file, options.research_mode)?;
 
-    let report_len = if model.outputs.is_empty(){
+    let report_len = if model.outputs.is_empty() {
         state_header.elements.len()
-    }else{
+    } else {
         model.outputs.len()
     };
 
@@ -303,7 +285,7 @@ where
             let _u = out
                 .write(s.as_bytes())
                 .expect("Could not write to output file (header).");
-        } else {            
+        } else {
             let _u = out
                 .write(s.as_bytes())
                 .expect("Could not write to output file (header).");
@@ -330,7 +312,13 @@ where
         // Physics
         // let model = model.as_ref();
         // let mut state = (*state).borrow_mut();
-        pre_process_data.model.march(date, &pre_process_data.weather, model.borrow(), &mut state, &mut memory)?;
+        pre_process_data.model.march(
+            date,
+            &pre_process_data.weather,
+            model.borrow(),
+            &mut state,
+            &mut memory,
+        )?;
 
         // Print all the values in the state
         let ds = format!("{},", date);
@@ -339,7 +327,6 @@ where
             .unwrap_or_else(|_| panic!("Could not write to output file (Date '{}')", date));
 
         for (index, i) in pre_process_data.report_indexes.iter().enumerate() {
-            
             let st = if index < report_len - 1 {
                 format!("{:.3},", state[*i])
             } else {

@@ -26,7 +26,7 @@ use serde::ser::SerializeSeq;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
 
-use crate::Float;
+use crate::{BBox3D, Float};
 use crate::{Point3D, Segment3D, Vector3D};
 
 /// A set of [`Point3D`] in sequence, forming a closed loop.
@@ -61,12 +61,12 @@ use crate::{Point3D, Segment3D, Vector3D};
 ///
 /// the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
 /// the_loop.push(Point3D::new(1., 1., 0.)).unwrap();
-/// assert_eq!(2, the_loop.n_vertices());
+/// assert_eq!(2, the_loop.len());
 ///
 /// // Adding a collinear point will not extend.
 /// let collinear = Point3D::new(2., 2., 0.);
 /// the_loop.push(collinear).unwrap();
-/// assert_eq!(2, the_loop.n_vertices());
+/// assert_eq!(2, the_loop.len());
 /// assert_eq!(the_loop[1], collinear);
 /// ```
 ///
@@ -183,6 +183,78 @@ impl Loop3D {
         }
     }
 
+    /// Reverses the order of the vertices in the [`Loop3D`]
+    /// and also the normal.
+    ///
+    /// # Example
+    /// ```
+    /// use geometry::{Loop3D, Point3D};
+    ///
+    /// let mut l = Loop3D::with_capacity(4);
+    /// let a = Point3D::new(0., 0., 0.);
+    /// let b = Point3D::new(1., 1., 0.);
+    /// let c = Point3D::new(0., 1., 0.);
+    ///
+    /// l.push(a).unwrap();
+    /// l.push(b).unwrap();
+    /// l.push(c).unwrap();
+    ///
+    /// let normal = l.normal();
+    ///
+    /// // reverse
+    /// l.reverse();
+    ///
+    /// let v = l.vertices();
+    /// assert!((normal * -1.0).compare(l.normal()));
+    /// assert!(a.compare(v[2]));
+    /// assert!(b.compare(v[1]));
+    /// assert!(c.compare(v[0]));
+    ///
+    /// ```
+    pub fn reverse(&mut self) {
+        self.normal *= -1.0;
+        self.vertices = self.vertices.iter().rev().map(|v| *v).collect();
+    }
+
+    /// Returns a clone of the [`Loop3D`] but reversed (vertices in the
+    /// opposite order, and the normal [`Vector3D`] pointing on the
+    /// opposite direction)      
+    ///
+    /// # Example
+    /// ```
+    /// use geometry::{Loop3D, Point3D};
+    ///
+    /// let mut l = Loop3D::with_capacity(4);
+    /// let a = Point3D::new(0., 0., 0.);
+    /// let b = Point3D::new(1., 1., 0.);
+    /// let c = Point3D::new(0., 1., 0.);
+    ///
+    /// l.push(a).unwrap();
+    /// l.push(b).unwrap();
+    /// l.push(c).unwrap();
+    ///    
+    /// // reverse
+    /// let rev_l = l.get_reversed();
+    ///
+    /// assert_eq!(rev_l.len(), l.len());
+    /// assert!((l.normal()*-1.0).compare(rev_l.normal()));
+    /// let v = l.vertices();
+    /// let rev_v = rev_l.vertices();
+    /// let n = v.len();
+    ///
+    /// for i in 0..n {
+    ///     let p = v[i];
+    ///     let rev_p = rev_v[n-1-i];
+    ///     assert!(p.compare(rev_p));
+    /// }
+    ///
+    /// ```   
+    pub fn get_reversed(&self) -> Self {
+        let mut ret = self.clone();
+        ret.reverse();
+        ret
+    }
+
     /// Creates a new and empty [`Loop3D`] with a specific `capacity`. It has a Zero Normal and an
     /// area of -1. These attributes are filled automatically when pushing
     /// vertices into the Loop.
@@ -199,6 +271,21 @@ impl Loop3D {
     /// is closed?
     pub fn closed(&self) -> bool {
         self.closed
+    }
+
+    /// Gets a [`BBox3D`] containing the `Loop3D`
+    pub fn bbox(&self) -> Result<BBox3D, String> {
+        if self.vertices.len() == 0 {
+            return Err("Trying to get a BBox3D of an empty Loop3D".to_string());
+        }
+        let first_point = self.vertices[0]; // safe because we know this exists
+        let mut ret = BBox3D::from_point(first_point);
+
+        for v in self.vertices.iter().skip(1) {
+            ret = BBox3D::from_union_point(&ret, *v);
+        }
+
+        Ok(ret)
     }
 
     /// Creates a clone of `self`, removing the
@@ -242,6 +329,11 @@ impl Loop3D {
     /// Borrows the vertices
     pub fn vertices(&self) -> &[Point3D] {
         &self.vertices
+    }
+
+    /// Borrows a mutable reference to the vertices
+    pub fn mut_vertices(&mut self) -> &mut Vec<Point3D> {
+        &mut self.vertices
     }
 
     /// Removes a vertex
@@ -306,6 +398,12 @@ impl Loop3D {
         // Check the point
         self.valid_to_add(point)?;
 
+        if let Some(last) = self.vertices.last() {
+            if last.compare(point) {
+                return Ok(());
+            }
+        }
+
         let n = self.vertices.len();
 
         // If there are previous points, Check the points before the new addition
@@ -313,7 +411,7 @@ impl Loop3D {
             let a = self.vertices[n - 2];
             let b = self.vertices[n - 1];
 
-            if a.is_collinear(b, point).unwrap() {
+            if a.is_collinear(b, point)? {
                 // if it is collinear, update last point instead of
                 // adding a new one
                 self.vertices[n - 1] = point;
@@ -329,12 +427,6 @@ impl Loop3D {
             self.set_normal()?;
         }
         Ok(())
-    }
-
-    /// Counts the vertices in the [`Loop3D`]
-    #[deprecated = "Use len() instead"]
-    pub fn n_vertices(&self) -> usize {
-        self.vertices.len()
     }
 
     /// Counts the vertices in the [`Loop3D`]    
@@ -660,6 +752,306 @@ impl Loop3D {
         }
         false
     }
+
+    /// Projects one [`Loop3D`] into the plane of another [`Loop3D`].
+    ///
+    /// This means translating all points of `self` to the plane of `other`.
+    pub fn project_into_plane(&mut self, other: &Self) -> Result<(), String> {
+        if self.is_empty() {
+            return Err("when projecting Loop3D: self is empty".to_string());
+        }
+        if other.is_empty() {
+            return Err("when projecting Loop3D: other is empty".to_string());
+        }
+        if !self.is_closed() {
+            return Err("when projecting Loop3D: self is not closed".to_string());
+        }
+        if !other.is_closed() {
+            return Err("when projecting Loop3D: other is not closed".to_string());
+        }
+
+        let anchor = other.vertices.get(0).unwrap();
+        let normal = other.normal();
+
+        for p in self.vertices.iter_mut() {
+            *p = p.project_into_plane(*anchor, normal);
+        }
+        Ok(())
+    }
+
+    /// Calculates the distance between two [`Loop3D`] in their
+    /// normal direction.
+    ///
+    /// Returns an error if their normal is not the same.
+    pub fn normal_distance(&self, other: &Self) -> Result<Float, String> {
+        if self.is_empty() {
+            return Err(
+                "when calculating normal distance between Loop3D: self is empty".to_string(),
+            );
+        }
+        if other.is_empty() {
+            return Err(
+                "when calculating normal distance between Loop3D: other is empty".to_string(),
+            );
+        }
+        if !self.is_closed() {
+            return Err(
+                "when calculating normal distance between Loop3D: self is not closed".to_string(),
+            );
+        }
+        if !other.is_closed() {
+            return Err(
+                "when calculating normal distance between Loop3D: other is not closed".to_string(),
+            );
+        }
+        let normal = self.normal;
+
+        if !normal.is_parallel(other.normal) {
+            return Err(
+                "trying to calculate the distance of two loops that do not share a normal"
+                    .to_string(),
+            );
+        }
+        let anchor = other.vertices.get(0).unwrap();
+        let p = self.vertices.get(0).unwrap();
+        let d = p.distance_to_plane(*anchor, normal);
+
+        Ok(d)
+    }
+
+    /// Goes through all the the [`Point3D`]s in `self.vertices` and in `points`
+    /// (this is a slow algorithm) and—when a point in `self` is "very close" to
+    /// one in `points`—it modifies the formet to match the latter.
+    ///
+    /// The criteria for `very_close` is modulated by the `snap_distance` value.
+    ///
+    /// Returns `None` if no point was snapped; and `Some(i)` when `i` points were snapped.
+    pub fn snap(&mut self, points: &[Point3D], snap_distance: Float) -> Option<usize> {
+        let d2 = snap_distance.powi(2);
+        let mut count = 0;
+
+        for p in self.vertices.iter_mut() {
+            for other_p in points {
+                if p.squared_distance(*other_p) <= d2 {
+                    *p = *other_p;
+                    count += 1;
+                }
+            }
+        }
+
+        if count == 0 {
+            None
+        } else {
+            Some(count)
+        }
+    }
+
+    /// Intersects a [`Loop3D`] with a [`Segment3D`], returning
+    /// a vector with all the [`Point3D`] where intersection
+    /// happens.
+    pub fn intersect(&self, s: &Segment3D) -> Vec<(usize, Point3D)> {
+        let mut ret = Vec::new();
+
+        let n = self.vertices.len();
+        let mut inter = Point3D::default();
+        for i in 0..n {
+            let current_segment = Segment3D::new(self.vertices[i], self.vertices[(i + 1) % n]);
+
+            if current_segment.intersect(s, &mut inter) {
+                ret.push((i, inter))
+            }
+        }
+
+        ret
+    }
+
+    /// Clips a [`Loop3D`] as determined by another [`Loop3D`], returning a `Vec` of new [`Loop3D`]
+    /// created by the clipping.
+    ///
+    /// Uses the Sutherland-Hodgman algorithm. The algorithm proceeds by iteratively clipping
+    /// the polygon against each edge of the cutting segment.
+    pub fn clip(&self, cutter: &Loop3D) -> Result<Loop3D, String> {
+        let edge_count = self.len();
+
+        // let mut input_polygon = self.clone();
+        let mut output_polygon: Loop3D = Loop3D::new();
+
+        for i in 0..edge_count {
+            let start = self.vertices[i];
+            let end = self.vertices[(i + 1) % edge_count];
+
+            let inside_start = cutter.test_point(start)?;
+            let inside_end = cutter.test_point(end)?;
+
+            let current_segment = Segment3D::new(start, end);
+
+            if inside_start && inside_end {
+                // Both start and end points are inside the loop, add the end point to the output polygon
+                output_polygon.push(start)?;
+            } else if inside_start && !inside_end {
+                // Start point is inside, end point is outside,
+                // add the `start` point and the intersection
+                output_polygon.push(start)?;
+
+                let intersections = cutter.intersect(&current_segment);
+                assert!(intersections.len() <= 1, "Expecting None or One intersection points between segment and Loop3D when clipping.");
+                if intersections.len() == 1 {
+                    let (.., inter_pt) = intersections[0];
+                    output_polygon.push(inter_pt)?;
+                } else {
+                    // we had established that one was inside and the other outside...
+                    unreachable!()
+                }
+            } else if !inside_start && inside_end {
+                // Start point is outside, end point is inside, add the intersection point to the output polygon
+                let intersections = cutter.intersect(&current_segment);
+                assert!(intersections.len() <= 1, "Expecting None or One intersection points between segment and Loop3D when clipping.");
+                if intersections.len() == 1 {
+                    output_polygon.push(intersections[0].1)?;
+                } else {
+                    unreachable!()
+                }
+            } else {
+                // Both outside... but they can go THROUGH
+                let intersections = cutter.intersect(&current_segment);
+                if !intersections.is_empty() {
+                    todo!()
+                }
+            }
+        }
+
+        output_polygon.close()?;
+
+        Ok(output_polygon)
+    }
+
+    /// Splits a [`Loop3D`] into two pieces according to a
+    /// [`Segment3D`] that goes through it
+    pub fn split(&self, seg: &Segment3D) -> Result<Vec<Self>, String> {
+        const TINY: Float = 0.001;
+        let mut seg = *seg;
+
+        // Snap Segment to Loop, if they are very close.
+        if self.closed {
+            let normal = self.normal;
+            let anchor = self.vertices[0];
+
+            let d_start = seg.start.distance_to_plane(anchor, normal).abs();
+            let d_end = seg.end.distance_to_plane(anchor, normal).abs();
+            if d_start < TINY && d_end < TINY {
+                seg.start = seg.start.project_into_plane(anchor, normal);
+                seg.end = seg.end.project_into_plane(anchor, normal);
+            }
+        } else {
+            return Err("trying to split an open Loop3D".to_string());
+        }
+
+        if self.contains_segment(&seg) || seg.length() < 1e-6 {
+            return Ok(vec![self.clone()]);
+        }
+
+        let intersections = self.intersect(&seg);
+
+        if intersections.is_empty() || intersections.len() == 1 {
+            // No intersections, or no cutting... just return original
+            return Ok(vec![self.clone()]);
+        }
+
+        if intersections.len() != 2 {
+            // this might as well happen... we will postpone this for now
+            todo!()
+        }
+
+        // We intersect twice... meaning that we branch (first) and merge (after)
+        let (mut branch_index, mut branch_pt) = intersections[0];
+        let (mut merge_index, mut merge_pt) = intersections[1];
+
+        // Same point? (e.g., corner), just return
+        if branch_pt.compare(merge_pt) {
+            return Ok(vec![self.clone()]);
+        }
+
+        // Ensure that we branch befor emerging
+        assert_ne!(
+            branch_index, merge_index,
+            "Intersecting twice the same segment???"
+        ); // they cannot be equal
+        if branch_index > merge_index {
+            std::mem::swap(&mut branch_index, &mut merge_index);
+            std::mem::swap(&mut branch_pt, &mut merge_pt);
+        }
+
+        let mut left = Loop3D::new();
+        let mut right = Loop3D::new();
+
+        let n = self.len();
+        for i in 0..=n {
+            let current_point = self.vertices[i % n];
+            if i <= branch_index {
+                left.push(current_point)?;
+            } else if i == branch_index + 1 {
+                left.push(branch_pt)?;
+                right.push(branch_pt)?;
+                right.push(current_point)?;
+            } else if i < merge_index + 1 {
+                right.push(current_point)?;
+            } else if i == merge_index + 1 {
+                right.push(merge_pt)?;
+                left.push(merge_pt)?;
+                left.push(current_point)?;
+            } else {
+                left.push(current_point)?;
+            }
+        }
+
+        let mut ret = Vec::with_capacity(2);
+        if left.len() > 2 {
+            left.close()?;
+            ret.push(left)
+        }
+        if right.len() > 2 {
+            right.close()?;
+            ret.push(right);
+        }
+        Ok(ret)
+    }
+
+    /// Recursively splits a [`Loop3D`] based on the [`Segment3D`] in `segments`
+    ///
+    /// This can be a slow algorithm.
+    pub fn split_from_slice(&self, segments: &[Segment3D]) -> Result<Vec<Self>, String> {
+        // initialize.
+        let mut ret = vec![self.clone()];
+
+        // cut each loop with the cutter.
+        for cutter in segments.iter() {
+            let mut new_ret = Vec::new();
+
+            for the_loop in ret.iter() {
+                let new_loops = the_loop.split(cutter)?;
+
+                new_ret.extend_from_slice(&new_loops);
+            }
+
+            ret = new_ret;
+        }
+
+        Ok(ret)
+    }
+
+    /// Retrieves a vector with all the segments in this [`Loop3D`]
+    pub fn segments(&self) -> Vec<Segment3D> {
+        let n = self.len();
+        let mut ret = Vec::with_capacity(n);
+
+        for i in 0..n {
+            let start = self.vertices[i];
+            let end = self.vertices[(i + 1) % n];
+            ret.push(Segment3D::new(start, end));
+        }
+
+        ret
+    }
 }
 
 /***********/
@@ -668,6 +1060,8 @@ impl Loop3D {
 
 #[cfg(test)]
 mod testing {
+
+    use std::convert::TryInto;
 
     use crate::{Polygon3D, Triangulation3D};
 
@@ -1366,7 +1760,7 @@ mod testing {
         l.close().unwrap();
 
         let poly = Polygon3D::new(l).unwrap();
-        Triangulation3D::from_polygon(&poly).unwrap();
+        let _: Triangulation3D = poly.try_into().unwrap();
     }
 
     #[test]
@@ -1437,7 +1831,7 @@ mod testing {
 
         let mut poly = Polygon3D::new(outer).unwrap();
         poly.cut_hole(inner).unwrap();
-        Triangulation3D::from_polygon(&poly).unwrap();
+        let _: Triangulation3D = poly.try_into().unwrap();
     }
 
     #[test]
@@ -1504,6 +1898,650 @@ mod testing {
         outer.close().unwrap();
 
         let poly = Polygon3D::new(outer).unwrap();
-        Triangulation3D::from_polygon(&poly).unwrap();
+        let _: Triangulation3D = poly.try_into().unwrap();
+    }
+
+    #[test]
+    fn test_project_into_plane_self() {
+        // Project into self.
+        let lstr = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(lstr).unwrap();
+
+        let mut this_loop_projected = this_loop.clone();
+
+        let other_loop = this_loop.clone();
+        this_loop_projected.project_into_plane(&other_loop).unwrap();
+
+        assert_eq!(this_loop.len(), this_loop_projected.len());
+        for (i, this_p) in this_loop.vertices.iter().enumerate() {
+            assert!(this_p.compare(this_loop_projected.vertices[i]))
+        }
+    }
+
+    #[test]
+    fn test_project_into_plane_fails() {
+        let mut this_loop = Loop3D::new();
+
+        this_loop.push(Point3D::new(0.0, 0.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(1.0, 0.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(1.0, 1.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(0.0, 1.0, 0.0)).unwrap();
+
+        let mut other_loop: Loop3D = this_loop.clone();
+
+        // None of them are not closed... this should fail
+        assert!(this_loop.project_into_plane(&other_loop).is_err());
+
+        // Other is not closed... should fail
+        let mut this_closed = this_loop.clone();
+        this_closed.close().unwrap();
+        assert!(this_closed.project_into_plane(&other_loop).is_err());
+
+        // This is not closed... shold fail
+        other_loop.close().unwrap();
+        assert!(this_loop.project_into_plane(&other_loop).is_err());
+    }
+
+    #[test]
+    fn test_normal_distance_fails() {
+        let mut this_loop = Loop3D::new();
+
+        this_loop.push(Point3D::new(0.0, 0.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(1.0, 0.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(1.0, 1.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(0.0, 1.0, 0.0)).unwrap();
+
+        let mut other_loop: Loop3D = this_loop.clone();
+
+        // None of them are not closed... this should fail
+        assert!(this_loop.normal_distance(&other_loop).is_err());
+
+        // Other is not closed... should fail
+        let mut this_closed = this_loop.clone();
+        this_closed.close().unwrap();
+        assert!(this_closed.normal_distance(&other_loop).is_err());
+
+        // This is not closed... shold fail
+        other_loop.close().unwrap();
+        assert!(this_loop.normal_distance(&other_loop).is_err());
+    }
+
+    #[test]
+    fn test_project_into_plane_z() {
+        // Project into a Loop above it.
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let other_str = "[
+            0, 0, 2.0,  
+            1, 0, 2.0,  
+            1, 1, 2.0,
+            0, 1, 2.0
+        ]";
+
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        // Both closed... is should work now
+        this_loop.project_into_plane(&other_loop).unwrap();
+
+        assert_eq!(this_loop.len(), other_loop.len());
+        for (i, this_p) in this_loop.vertices.iter().enumerate() {
+            assert!(this_p.compare(other_loop.vertices[i]))
+        }
+    }
+
+    #[test]
+    fn test_project_into_plane_neg_z() {
+        // Project into a Loop above it.
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let other_str = "[
+            0, 0, -2.0,  
+            1, 0, -2.0,  
+            1, 1, -2.0,
+            0, 1, -2.0
+        ]";
+
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        // Both closed... is should work now
+        this_loop.project_into_plane(&other_loop).unwrap();
+
+        assert_eq!(this_loop.len(), other_loop.len());
+        for (i, this_p) in this_loop.vertices.iter().enumerate() {
+            assert!(this_p.compare(other_loop.vertices[i]))
+        }
+    }
+
+    #[test]
+    fn test_normal_distance() {
+        // Project into a Loop above it.
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let other_str = "[
+            0, 0, 2.0,  
+            1, 0, 2.0,  
+            1, 1, 2.0,
+            0, 1, 2.0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        // Both closed... is should work now
+        let d = this_loop.normal_distance(&other_loop).unwrap().abs();
+        assert!((d - 2.0).abs() < 1e-4);
+    }
+
+    #[test]
+    fn test_normal_fail_not_normal() {
+        // Project into a Loop above it.
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0
+        ]";
+
+        let other_str = "[
+            0, 0, 2.0,  
+            1, 0, 1.0,  
+            1, 1, 2.0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        // Both closed... is should work now
+        assert!(this_loop.normal_distance(&other_loop).is_err());
+    }
+
+    #[test]
+    fn test_snap_too_far() {
+        // Project into a Loop above it.
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0
+        ]";
+
+        let other_str = "[
+            0, 0, 2.0,  
+            1, 0, 2.0,  
+            1, 1, 2.0
+        ]";
+
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        let res = this_loop.snap(&other_loop.vertices(), 0.1);
+        assert!(res.is_none());
+    }
+
+    #[test]
+    fn test_snap() {
+        // Project into a Loop above it.
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0
+        ]";
+
+        let other_str = "[
+            0, 0, 0.001,  
+            1, 0, 0.001,  
+            1, 1, 0.001 
+        ]";
+
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        let res = this_loop.snap(&other_loop.vertices(), 0.1);
+        assert_eq!(res, Some(3));
+
+        assert_eq!(this_loop.len(), other_loop.len());
+        for (i, this_p) in this_loop.vertices.iter().enumerate() {
+            assert!(this_p.compare(other_loop.vertices[i]))
+        }
+    }
+
+    #[test]
+    fn test_snap_2() {
+        // Project into a Loop above it.
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0
+        ]";
+
+        let other_str = "[
+            0, 0, 0.001,  
+            1, 0, 0.001,  
+            1, 1, 1.01 
+        ]";
+
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        let res = this_loop.snap(&other_loop.vertices(), 0.1);
+        assert_eq!(res, Some(2));
+    }
+
+    #[test]
+    fn test_intersect() {
+        let this_str = "[
+            0, 0, 0,  
+            1, 0, 0,  
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let seg = Segment3D::new(Point3D::new(0.5, -1., 0.), Point3D::new(0.5, 2., 0.));
+        let intersections = this_loop.intersect(&seg);
+        assert_eq!(intersections.len(), 2);
+        assert!(
+            (intersections[0].1.compare(Point3D::new(0.5, 0.0, 0.0))
+                || intersections[0].1.compare(Point3D::new(0.5, 1.0, 0.0)))
+        );
+        assert!(
+            (intersections[1].1.compare(Point3D::new(0.5, 0.0, 0.0))
+                || intersections[1].1.compare(Point3D::new(0.5, 1.0, 0.0)))
+        );
+
+        let seg = Segment3D::new(Point3D::new(0.5, -1., 1.), Point3D::new(0.5, 2., 1.));
+        let intersections = this_loop.intersect(&seg);
+        assert_eq!(intersections.len(), 0);
+
+        let seg = Segment3D::new(Point3D::new(0.5, -1., 0.), Point3D::new(0.5, 0.5, 0.));
+        let intersections = this_loop.intersect(&seg);
+        assert_eq!(intersections.len(), 1);
+        assert!(intersections[0].1.compare(Point3D::new(0.5, 0., 0.)));
+    }
+
+    #[test]
+    fn test_clip() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let other_str = "[
+            -0.5, -1, 0,
+            0.5,  -1, 0,
+            0.5, 2, 0,
+            -0.5, 2, 0
+        ]";
+        let other: Loop3D = serde_json::from_str(other_str).unwrap();
+
+        let v = this_loop.clip(&other).unwrap();
+        // assert_eq!(v.len(), 2);
+
+        let exp_pts = vec![
+            Point3D::new(0., 0., 0.),
+            Point3D::new(0.5, 0., 0.),
+            Point3D::new(0.5, 1., 0.),
+            Point3D::new(0., 1., 0.),
+        ];
+        for (i, p) in v.vertices.iter().enumerate() {
+            assert!(p.compare(exp_pts[i]))
+        }
+    }
+
+    #[test]
+    fn test_split_vertical() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let seg = Segment3D::new(Point3D::new(0.5, -1.0, 0.0), Point3D::new(0.5, 2.0, 0.0));
+
+        let v = this_loop.split(&seg).unwrap();
+        assert_eq!(v.len(), 2);
+
+        let left = &v[0];
+        let left_exp_pts = vec![
+            Point3D::new(0., 0., 0.),
+            Point3D::new(0.5, 0., 0.),
+            Point3D::new(0.5, 1., 0.),
+            Point3D::new(0., 1., 0.),
+        ];
+        println!("Left");
+        for (i, p) in left.vertices.iter().enumerate() {
+            println!("    {}", p);
+            assert!(p.compare(left_exp_pts[i]))
+        }
+
+        let right = &v[1];
+        println!("Right");
+        let right_exp_pts = vec![
+            Point3D::new(0.5, 0., 0.),
+            Point3D::new(1., 0., 0.),
+            Point3D::new(1., 1., 0.),
+            Point3D::new(0.5, 1., 0.),
+        ];
+        for (i, p) in right.vertices.iter().enumerate() {
+            println!("    {}", p);
+            assert!(p.compare(right_exp_pts[i]))
+        }
+    }
+
+    #[test]
+    fn test_split_horizontal() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let seg = Segment3D::new(Point3D::new(-0.5, 0.5, 0.0), Point3D::new(1.5, 0.5, 0.0));
+
+        let v = this_loop.split(&seg).unwrap();
+        assert_eq!(v.len(), 2);
+
+        let left = &v[0];
+        let left_exp_pts = vec![
+            Point3D::new(0., 0., 0.),
+            Point3D::new(1.0, 0., 0.),
+            Point3D::new(1.0, 0.5, 0.),
+            Point3D::new(0.0, 0.5, 0.),
+        ];
+        println!("Left");
+        for (i, p) in left.vertices.iter().enumerate() {
+            println!("    {}", p);
+            assert!(p.compare(left_exp_pts[i]))
+        }
+
+        let right = &v[1];
+        println!("Right");
+        let right_exp_pts = vec![
+            Point3D::new(1.0, 0.5, 0.),
+            Point3D::new(1., 1., 0.),
+            Point3D::new(0., 1., 0.),
+            Point3D::new(0.0, 0.5, 0.),
+        ];
+        for (i, p) in right.vertices.iter().enumerate() {
+            println!("    {}", p);
+            assert!(p.compare(right_exp_pts[i]))
+        }
+    }
+
+    #[test]
+    fn test_split_edge() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let seg = Segment3D::new(Point3D::new(0., 0., 0.0), Point3D::new(1., 0., 0.0));
+
+        let v = this_loop.split(&seg).unwrap();
+        assert_eq!(v.len(), 1);
+
+        let left = &v[0];
+        let left_exp_pts = vec![
+            Point3D::new(0., 0., 0.),
+            Point3D::new(1.0, 0., 0.),
+            Point3D::new(1.0, 1.0, 0.),
+            Point3D::new(0.0, 1., 0.),
+        ];
+        for (i, p) in left.vertices.iter().enumerate() {
+            println!("    {}", p);
+            assert!(p.compare(left_exp_pts[i]))
+        }
+    }
+
+    #[test]
+    fn test_split_longer_edge() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let seg = Segment3D::new(Point3D::new(-10., 0., 0.0), Point3D::new(10., 0., 0.0));
+
+        let v = this_loop.split(&seg).unwrap();
+        assert_eq!(v.len(), 1);
+
+        let left = &v[0];
+        let left_exp_pts = vec![
+            Point3D::new(0., 0., 0.),
+            Point3D::new(1.0, 0., 0.),
+            Point3D::new(1.0, 1.0, 0.),
+            Point3D::new(0.0, 1., 0.),
+        ];
+        for (i, p) in left.vertices.iter().enumerate() {
+            println!("    {}", p);
+            assert!(p.compare(left_exp_pts[i]))
+        }
+    }
+
+    #[test]
+    fn test_split_corner() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let seg = Segment3D::new(Point3D::new(-10., 10., 0.0), Point3D::new(10., -10., 0.0));
+
+        let v = this_loop.split(&seg).unwrap();
+        assert_eq!(v.len(), 1);
+
+        let left = &v[0];
+        let left_exp_pts = vec![
+            Point3D::new(0., 0., 0.),
+            Point3D::new(1.0, 0., 0.),
+            Point3D::new(1.0, 1.0, 0.),
+            Point3D::new(0.0, 1., 0.),
+        ];
+        for (i, p) in left.vertices.iter().enumerate() {
+            println!("    {}", p);
+            assert!(p.compare(left_exp_pts[i]))
+        }
+    }
+
+    #[test]
+    fn test_split_from_slice() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let v = this_loop
+            .split_from_slice(&vec![
+                Segment3D::new(Point3D::new(0.5, -1.0, 0.0), Point3D::new(0.5, 2.0, 0.0)),
+                Segment3D::new(Point3D::new(-0.5, 0.5, 0.0), Point3D::new(1.5, 0.5, 0.0)),
+            ])
+            .unwrap();
+        assert_eq!(v.len(), 4);
+
+        let exp = vec![
+            vec![
+                Point3D::new(0.00000, 0.00000, 0.00000),
+                Point3D::new(0.50000, 0.00000, 0.00000),
+                Point3D::new(0.50000, 0.50000, 0.00000),
+                Point3D::new(0.00000, 0.50000, 0.00000),
+            ],
+            vec![
+                Point3D::new(0.50000, 0.50000, 0.00000),
+                Point3D::new(0.50000, 1.00000, 0.00000),
+                Point3D::new(0.00000, 1.00000, 0.00000),
+                Point3D::new(0.00000, 0.50000, 0.00000),
+            ],
+            vec![
+                Point3D::new(0.50000, 0.00000, 0.00000),
+                Point3D::new(1.00000, 0.00000, 0.00000),
+                Point3D::new(1.00000, 0.50000, 0.00000),
+                Point3D::new(0.50000, 0.50000, 0.00000),
+            ],
+            vec![
+                Point3D::new(1.00000, 0.50000, 0.00000),
+                Point3D::new(1.00000, 1.00000, 0.00000),
+                Point3D::new(0.50000, 1.00000, 0.00000),
+                Point3D::new(0.50000, 0.50000, 0.00000),
+            ],
+        ];
+
+        for (i, l) in v.iter().enumerate() {
+            println!("Loop {}", i);
+            for (j, p) in l.vertices.iter().enumerate() {
+                println!("     {}", p);
+
+                assert!(p.compare(exp[i][j]))
+            }
+        }
+    }
+
+    #[test]
+    fn test_segments() {
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+
+        let segments = this_loop.segments();
+
+        assert_eq!(segments.len(), 4);
+
+        let expected = vec![
+            Segment3D::new(Point3D::new(0., 0., 0.), Point3D::new(1., 0., 0.)),
+            Segment3D::new(Point3D::new(1., 0., 0.), Point3D::new(1., 1., 0.)),
+            Segment3D::new(Point3D::new(1., 1., 0.), Point3D::new(0., 1., 0.)),
+            Segment3D::new(Point3D::new(0., 1., 0.), Point3D::new(0., 0., 0.)),
+        ];
+
+        for i in 0..4 {
+            assert!(expected[i].compare(&segments[i]));
+        }
+    }
+
+    #[test]
+    fn test_reverse() {
+        let mut l = Loop3D::with_capacity(4);
+        let a = Point3D::new(0., 0., 0.);
+        let b = Point3D::new(1., 1., 0.);
+        let c = Point3D::new(0., 1., 0.);
+
+        l.push(a).unwrap();
+        l.push(b).unwrap();
+        l.push(c).unwrap();
+        l.close().unwrap();
+
+        let normal = l.normal();
+
+        // reverse
+        l.reverse();
+
+        let v = l.vertices();
+        assert!((normal * -1.0).compare(l.normal()));
+        assert!(a.compare(v[2]));
+        assert!(b.compare(v[1]));
+        assert!(c.compare(v[0]));
+    }
+
+    #[test]
+    fn test_get_reversed() {
+        let mut l = Loop3D::with_capacity(4);
+        let a = Point3D::new(0., 0., 0.);
+        let b = Point3D::new(1., 1., 0.);
+        let c = Point3D::new(0., 1., 0.);
+
+        l.push(a).unwrap();
+        l.push(b).unwrap();
+        l.push(c).unwrap();
+        l.close().unwrap();
+
+        // reverse
+        let rev_l = l.get_reversed();
+
+        assert_eq!(rev_l.len(), l.len());
+        assert!((l.normal() * -1.0).compare(rev_l.normal()));
+        let v = l.vertices();
+        let rev_v = rev_l.vertices();
+        let n = v.len();
+
+        for i in 0..n {
+            let p = v[i];
+            let rev_p = rev_v[n - 1 - i];
+            assert!(p.compare(rev_p));
+        }
+    }
+
+    #[test]
+    fn test_bbox() {
+        let mut l = Loop3D::with_capacity(4);
+        let a = Point3D::new(0., 0., 0.);
+        let b = Point3D::new(1., 1., 0.);
+        let c = Point3D::new(0., 1., 0.);
+
+        l.push(a).unwrap();
+        let bbox = l.bbox().unwrap();
+        assert!(bbox.min.compare(a));
+        assert!(bbox.max.compare(a));
+
+        l.push(b).unwrap();
+        let bbox = l.bbox().unwrap();
+        assert!(bbox.min.compare(a));
+        assert!(bbox.max.compare(b));
+
+        l.push(c).unwrap();
+        let bbox = l.bbox().unwrap();
+        assert!(bbox.min.compare(a));
+        assert!(bbox.max.compare(b));
     }
 }

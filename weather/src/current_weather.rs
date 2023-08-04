@@ -18,15 +18,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use serde::{Serialize, Deserialize};
-use calendar::Date;
 use crate::Float;
+use calendar::Date;
+use serde::{Deserialize, Serialize};
 
 /// A structure containing weather data necessary to simulate the performance
 /// of buildings.
 #[derive(Default, Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct CurrentWeather {
-
     /// The date of the current weather
     pub date: Date,
 
@@ -92,10 +91,10 @@ impl CurrentWeather {
     /// ```math
     /// \epsilon_{sky, clear} = 0.787 + 0.764 ln \left( \frac{T_{dewpoint}}{273} \right)
     /// ```
-    /// # Examples 
-    /// 
+    /// # Examples
+    ///
     /// ```rust
-    /// 
+    ///
     /// # use weather::current_weather::CurrentWeather;
     /// let cw = CurrentWeather {
     ///     // This method returns an error if this info is not available.
@@ -110,7 +109,7 @@ impl CurrentWeather {
     /// assert!( (expected - found).abs() < 0.1, "expected = {} | found = {}", expected, found );
     ///
     /// // This example compares an actual value (in an EPW file) and a derived one
-    /// 
+    ///
     /// let cw = CurrentWeather {
     ///     // This method returns an error if this info is not available.
     ///     dry_bulb_temperature: 13.625,
@@ -126,10 +125,10 @@ impl CurrentWeather {
     pub fn derive_horizontal_ir(&self) -> Float {
         pub const SIGMA: Float = 5.670374419e-8;
         let n = self.opaque_sky_cover;
-            
+
         let dp = self.dew_point_temperature + 273.15;
 
-        let temp = self.dry_bulb_temperature + 273.15; 
+        let temp = self.dry_bulb_temperature + 273.15;
 
         let e_sky_clear = 0.787 + 0.764 * (dp / 273.).ln();
         let e_sky = e_sky_clear * (1.0 + 0.0224 * n - 0.0035 * n.powi(2) + 0.00028 * n.powi(3));
@@ -146,22 +145,16 @@ impl CurrentWeather {
                 None
             }
         };
-        let interp = |a, b| {
-            a + x * (b - a)
-        };
-
+        let interp = |a, b| a + x * (b - a);
 
         let date = self.date.interpolate(other.date, x);
 
-        Self {            
-            date,          
+        Self {
+            date,
             dry_bulb_temperature: interp(self.dry_bulb_temperature, other.dry_bulb_temperature),
             dew_point_temperature: interp(self.dew_point_temperature, other.dew_point_temperature),
             relative_humidity: interp(self.relative_humidity, other.relative_humidity),
-            pressure: interp(
-                self.pressure,
-                other.pressure,
-            ),            
+            pressure: interp(self.pressure, other.pressure),
             horizontal_infrared_radiation_intensity: interp_opt(
                 self.horizontal_infrared_radiation_intensity,
                 other.horizontal_infrared_radiation_intensity,
@@ -177,11 +170,11 @@ impl CurrentWeather {
             diffuse_horizontal_radiation: interp(
                 self.diffuse_horizontal_radiation,
                 other.diffuse_horizontal_radiation,
-            ),            
+            ),
             wind_direction: interp(self.wind_direction, other.wind_direction),
             wind_speed: interp(self.wind_speed, other.wind_speed),
             // total_sky_cover: interp(self.total_sky_cover, other.total_sky_cover),
-            opaque_sky_cover: interp(self.opaque_sky_cover, other.opaque_sky_cover),            
+            opaque_sky_cover: interp(self.opaque_sky_cover, other.opaque_sky_cover),
         }
     }
 }
