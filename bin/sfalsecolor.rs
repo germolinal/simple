@@ -1,4 +1,4 @@
-use clap::{ValueEnum, Parser};
+use clap::{Parser, ValueEnum};
 use rendering::colourmap::Colourmap;
 
 use rendering::image::ImageBuffer;

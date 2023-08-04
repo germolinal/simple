@@ -21,6 +21,7 @@ SOFTWARE.
 use crate::colour::Spectrum;
 
 /// A mirror material
+#[derive(Debug, Clone)]
 pub struct Light(pub Spectrum);
 
 impl Light {

@@ -292,10 +292,7 @@ pub fn triangle_intersect(t: &Triangle, ray: &geometry::Ray3D) -> Option<Interse
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the `Point3D` of
 /// intersection
-pub fn simple_triangle_intersect(
-    t: &Triangle,
-    ray: &geometry::Ray3D,
-) -> Option<geometry::Point3D> {
+pub fn simple_triangle_intersect(t: &Triangle, ray: &geometry::Ray3D) -> Option<geometry::Point3D> {
     let ax = t[0];
     let ay = t[1];
     let az = t[2];
@@ -382,9 +379,9 @@ pub fn new_info(
         p: point,
         side,
         #[cfg(feature = "textures")]
-        u:_u,
+        u: _u,
         #[cfg(feature = "textures")]
-        v:_v,
+        v: _v,
         #[cfg(feature = "textures")]
         dndu: Vector3D::new(0., 0., 0.),
         #[cfg(feature = "textures")]

@@ -30,7 +30,7 @@ use crate::Float;
 use crate::Vector3D;
 
 /// A very simple implementation of a 3D-Point
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Point3D {
     /// The X component
     pub x: Float,
@@ -138,6 +138,50 @@ impl Point3D {
         let cross = ab.cross(bc).length();
 
         Ok(cross < 1e-5)
+    }
+
+    /// Calculates the ditance of from a [`Point3D`] to a plane, defined based on
+    /// a [`Point3D`] `p` and a `normal` [`Vector3D`].
+    ///
+    /// The distance can be negative, if the normal is not pointing into `self`
+    /// direction.
+    pub fn distance_to_plane(self, p: Self, normal: Vector3D) -> Float {
+        let aux = self - p;
+
+        aux * normal
+    }
+
+    /// Projects a point into a plane, defined by an `anchor` [`Point3D`] and a `normal` [`Vector3D`]
+    /// 
+    /// # Example
+    /// 
+    /// ```
+    /// # use geometry::{Vector3D, Point3D};
+    /// 
+    /// let origin = Point3D::new(0., 0., 0.);
+    /// let up = Vector3D::new(0., 0., 1.);
+    /// let right = Vector3D::new(1., 0., 0.);
+    /// 
+    /// let p = Point3D::new(0., 1., 1.);    
+    /// let proj = p.project_into_plane(origin, up);
+    /// assert!(proj.compare(Point3D::new(0., 1., 0.)));
+    /// 
+    /// let p = Point3D::new(0., 1., -1.);    
+    /// let proj = p.project_into_plane(origin, up);
+    /// assert!(proj.compare(Point3D::new(0., 1., 0.)));
+    /// 
+    /// let p = Point3D::new(2., 1., 1.);    
+    /// let proj = p.project_into_plane(origin, right);
+    /// assert!(proj.compare(Point3D::new(0., 1., 1.)));
+    /// 
+    /// let p = Point3D::new(-2., 1., -1.);    
+    /// let proj = p.project_into_plane(origin, right);
+    /// assert!(proj.compare(Point3D::new(0., 1., -1.)));
+    /// 
+    /// ```
+    pub fn project_into_plane(self, anchor: Self, normal: Vector3D)->Self{
+        let distance = self.distance_to_plane(anchor, normal);
+        self - normal * distance
     }
 }
 
@@ -522,5 +566,27 @@ mod testing {
         assert!(c.is_collinear(c, c).is_err());
         assert!(a.is_collinear(a, a).is_err());
         assert!(b.is_collinear(b, b).is_err());
+    }
+
+    #[test]
+    fn test_distance_to_plane() {
+        let point = Point3D {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+        };
+        let plane_point = Point3D {
+            x: 4.0,
+            y: 5.0,
+            z: 6.0,
+        };
+        let plane_normal = Vector3D {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0,
+        };
+
+        let distance = point.distance_to_plane(plane_point, plane_normal);
+        println!("Distance to the plane: {}", distance);
     }
 } // end of Testing module

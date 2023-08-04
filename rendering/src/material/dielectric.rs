@@ -24,6 +24,7 @@ use crate::ray::Ray;
 use crate::Float;
 use geometry::{Point3D, Vector3D};
 
+#[derive(Debug, Clone)]
 pub struct Dielectric {
     pub colour: Spectrum,
     pub refraction_index: Float,
@@ -87,10 +88,7 @@ impl Dielectric {
         } else {
             // pure reflection
             // (1. / cos1, 0.)
-            (
-                Spectrum::ONE / cos1,
-                Spectrum::BLACK,
-            )
+            (Spectrum::ONE / cos1, Spectrum::BLACK)
         }
     }
 }

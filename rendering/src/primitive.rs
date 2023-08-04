@@ -28,12 +28,19 @@ use crate::primitive_samplers::*;
 use crate::samplers::uniform_sample_disc;
 use geometry::intersection::IntersectionInfo;
 
-#[derive(Clone)]
-pub enum Primitive {
+
+#[derive(Clone, Debug)]
+pub enum Primitive {    
     Sphere(Sphere3D),
     Triangle(Triangle3D),
     Cylinder(Cylinder3D),
     Source(DistantSource3D),
+}
+
+impl std::default::Default for Primitive {
+    fn default()->Self{
+        Self::Sphere(Sphere3D::new(1.0, Point3D::new(0.,0.,0.)))
+    }
 }
 
 impl Primitive {

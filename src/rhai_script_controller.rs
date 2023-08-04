@@ -18,36 +18,38 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use rhai::{AST, Engine};
-use model::{Model, SimulationState};
-use model::rhai_api::register_control_api;
 use crate::control_trait::SimpleControl;
+use crate::MultiphysicsModel;
+use model::rhai_api::register_control_api;
+use model::{Model, SimulationState};
+use rhai::{Engine, AST};
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::sync::Arc;
-use crate::MultiphysicsModel;
-use std::borrow::Borrow;
 
-
-
-/// A controller that adapts the state of the building based on a user-defined 
+/// A controller that adapts the state of the building based on a user-defined
 /// script written in [Rhai](https://rhai.rs) programming language.
-/// 
+///
 /// This is quite a powerful feature as it allows the user to specify quite complex
 /// control algorythms.
 pub struct RhaiControlScript {
     ast: AST,
-    engine: Engine
+    engine: Engine,
 }
 
 impl RhaiControlScript {
-    
     /// Creates a new Rhai-based controller.
-    /// 
-    /// This kind of 
-    pub fn new(model: &Arc<Model>, state: SimulationState, control_file: &String, research_mode: bool ) -> Result<(Self, Arc<RefCell<SimulationState>>), String> {
+    ///
+    /// This kind of
+    pub fn new(
+        model: &Arc<Model>,
+        state: SimulationState,
+        control_file: &String,
+        research_mode: bool,
+    ) -> Result<(Self, Arc<RefCell<SimulationState>>), String> {
         // Register API
         let mut engine = rhai::Engine::new();
-        
+
         let state = Arc::new(RefCell::new(state));
         let model = Arc::new(model);
         register_control_api(&mut engine, &model, &state, research_mode);
@@ -55,19 +57,19 @@ impl RhaiControlScript {
             Ok(v) => v,
             Err(e) => return Err(format!("Rhai {}", e)),
         };
-        
-        Ok((Self{
-            ast,
-            engine
-        }, state))
+
+        Ok((Self { ast, engine }, state))
     }
 }
 
 impl SimpleControl for RhaiControlScript {
-    
-    
-    fn control<M: Borrow<Model>>(&self, _simple_model: M, _physics_model: &MultiphysicsModel, _state: &mut SimulationState)->Result<(), String>{
-        // Control        
+    fn control<M: Borrow<Model>>(
+        &self,
+        _simple_model: M,
+        _physics_model: &MultiphysicsModel,
+        _state: &mut SimulationState,
+    ) -> Result<(), String> {
+        // Control
         if let Err(e) = self.engine.eval_ast::<()>(&self.ast) {
             return Err(format!("Rhai {}", e));
         }

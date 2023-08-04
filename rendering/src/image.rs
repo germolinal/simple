@@ -146,20 +146,14 @@ impl ImageBuffer {
             .pixels
             .iter()
             .zip(other.pixels.iter())
-            .map(|(a, b)| {
-                Spectrum::gray((a.radiance() - b.radiance()).abs())
-            })
+            .map(|(a, b)| Spectrum::gray((a.radiance() - b.radiance()).abs()))
             .collect();
 
         Ok(Self::from_pixels(self.width, self.height, pixels))
     }
 
     /// Creates a new empty [`ImageBuffer`]
-    pub fn from_pixels(
-        width: usize,
-        height: usize,
-        pixels: Vec<Spectrum>,
-    ) -> Self {
+    pub fn from_pixels(width: usize, height: usize, pixels: Vec<Spectrum>) -> Self {
         if pixels.len() != width * height {
             panic!("Width ({}) and Height ({}) does not match the number of pixels (n_pixels is {}... expecting width*height={})", width, height, pixels.len(), width*height)
         }
@@ -516,9 +510,7 @@ mod tests {
 
     #[test]
     fn test_rgbe_to_colour() {
-        let check = |a: Spectrum,
-                     b: Spectrum|
-         -> Result<(), String> {
+        let check = |a: Spectrum, b: Spectrum| -> Result<(), String> {
             let a_r = a.radiance();
             let b_r = b.radiance();
             let percent_error = (b_r - a_r).abs() / b_r;

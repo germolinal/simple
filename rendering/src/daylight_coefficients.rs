@@ -109,8 +109,7 @@ impl DCFactory {
                         );
                         let new_ray_dir = Vector3D::new(x, y, z);
 
-                        let mut this_ret =
-                            ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
+                        let mut this_ret = ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
 
                         debug_assert!(
                             (1. - new_ray_dir.length()).abs() < 0.0000001,
@@ -131,13 +130,7 @@ impl DCFactory {
 
                         let mut rng = get_rng();
                         // let current_weight = cos_theta;
-                        self.trace_ray(
-                            scene,
-                            &mut new_ray,                            
-                            &mut this_ret,
-                            &mut rng,
-                            &mut aux,
-                        );
+                        self.trace_ray(scene, &mut new_ray, &mut this_ret, &mut rng, &mut aux);
 
                         let mut c = counter.lock().unwrap();
                         *c += 1;
@@ -153,8 +146,7 @@ impl DCFactory {
                     })
                     .collect(); // End of iterating primary rays
 
-                let mut ret =
-                    ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
+                let mut ret = ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
                 ray_contributions.iter().for_each(|v| {
                     ret += v;
                 });
@@ -164,8 +156,7 @@ impl DCFactory {
             .collect(); // End of iterating rays
 
         // Write down the results
-        let mut ret =
-            ColourMatrix::new(Spectrum::BLACK, rays.len(), n_bins);
+        let mut ret = ColourMatrix::new(Spectrum::BLACK, rays.len(), n_bins);
         for (sensor_index, contribution) in dcs.iter().enumerate() {
             // add contribution
             for patch_index in 0..n_bins {
@@ -183,7 +174,7 @@ impl DCFactory {
     fn trace_ray(
         &self,
         scene: &Scene,
-        ray: &mut Ray,        
+        ray: &mut Ray,
         contribution: &mut ColourMatrix,
         rng: &mut RandGen,
         aux: &mut RayTracerHelper,
@@ -229,13 +220,7 @@ impl DCFactory {
                         new_ray.depth += 1
                     }
 
-                    self.trace_ray(
-                        scene,
-                        &mut new_ray,                        
-                        contribution,
-                        rng,
-                        aux,
-                    )
+                    self.trace_ray(scene, &mut new_ray, contribution, rng, aux)
                 }
                 return;
             }
@@ -266,18 +251,10 @@ impl DCFactory {
                 ray.colour *= bsdf_value * cos_theta / weight;
                 ray.depth += 1;
 
-                self.trace_ray(
-                    scene,
-                    ray,                    
-                    contribution,
-                    rng,
-                    aux,
-                );
+                self.trace_ray(scene, ray, contribution, rng, aux);
             }); // End the foreach spawned ray
         } else {
             let bin_n = self.reinhart.dir_to_bin(ray.geometry.direction);
-
-            // if ray.depth > 0 {
 
             let li = Spectrum::ONE;
             let old_value = contribution.get(0, bin_n).unwrap();
@@ -288,15 +265,6 @@ impl DCFactory {
                     old_value + li * ray.colour / self.n_ambient_samples as Float, // accum_denom_samples as Float,
                 )
                 .unwrap();
-            // }else{
-            //     contribution
-            //         .set(
-            //             0,
-            //             bin_n,
-            //             Spectrum::gray(1./0.),
-            //         )
-            //         .unwrap();
-            // }
         }
     }
 }

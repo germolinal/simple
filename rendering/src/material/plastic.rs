@@ -25,6 +25,7 @@ use crate::Float;
 use geometry::{Point3D, Vector3D};
 
 /// Information required for modelling Radiance's Plastic and Plastic
+#[derive(Debug, Clone)]
 pub struct Plastic {
     pub colour: Spectrum,
     pub specularity: Float,

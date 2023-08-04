@@ -20,8 +20,7 @@ SOFTWARE.
 
 #![deny(missing_docs)]
 
-
-//! A light-weight representation of a polynomial. 
+//! A light-weight representation of a polynomial.
 //! It contains a maximum of 12 coefficients.
 //!
 //! ## Quickstart
@@ -34,7 +33,7 @@ SOFTWARE.
 //!    // 0 + 1 + 2 + 3
 //!    assert_eq!(p.eval(1.0), 6.0);
 //!
-//!    // 0 + 1*2^1 + 2*2^2 + 3*2^3 = 
+//!    // 0 + 1*2^1 + 2*2^2 + 3*2^3 =
 //!    // 0 + 2     + 8     + 24    = 34
 //!    assert_eq!(p.eval(2.0), 34.0);
 //!
@@ -47,26 +46,23 @@ SOFTWARE.
 //!
 //! By default, this crate works with `f64`. Use the feature `float` to use `f32`.
 
-
-
-/// The floating point type to use. Defaults to `f64`... enable 
+/// The floating point type to use. Defaults to `f64`... enable
 /// `f32` by using the `float` feature
 #[cfg(not(feature = "float"))]
 type Float = f64;
 
-/// The floating point type to use. Defaults to `f64`... enable 
+/// The floating point type to use. Defaults to `f64`... enable
 /// `f32` by using the `float` feature
 #[cfg(feature = "float")]
 type Float = f32;
-
 
 /// A simple polynomial structure in the form A0 + A1*x + A2*x^2....
 ///
 /// It contains the coefficients and
 /// can be evaluated for any Float value
-/// 
+///
 /// # Example
-/// 
+///
 /// ```
 ///     use polynomial::*;
 ///     // p = 0. + 1.0 * x^2 + 2.0*x^3 + 3.0*x^4
@@ -76,17 +72,17 @@ type Float = f32;
 ///     assert_eq!(p.eval(1.0), 6.0);
 /// ```
 #[derive(Debug, Copy, Clone, Default)]
-pub struct Polynomial{
-    /// The coefficients of the polynomial, starting from the 
+pub struct Polynomial {
+    /// The coefficients of the polynomial, starting from the
     /// constant and increasing with the power.
     pub coefficients: [Float; 12],
 
-    /// The number of valid coefficients (any further 
+    /// The number of valid coefficients (any further
     /// than this will be ignored during evaluation)
     pub len: usize,
 }
 
-impl Polynomial{
+impl Polynomial {
     /// Creates a new empty Polynomial where all coefficients are Zero
     /// and the len is Zero
     pub const fn new() -> Self {
@@ -129,19 +125,17 @@ impl Polynomial{
     }
 }
 
-
-
 /// A convenient way of defining a `Polynomial`.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 ///     use polynomial::{poly, Polynomial};
 ///     let p = poly![0.0, 1.0, 2.0, 3.0];
 /// ```
-/// 
+///
 /// It can also be used for constants
-/// 
+///
 /// ```
 ///     use polynomial::{poly, Polynomial};
 ///     const P : Polynomial = poly![0.0, 1.0, 2.0, 3.0];
@@ -175,8 +169,6 @@ macro_rules! poly {
     }};
 
 }
-
-
 
 /***********/
 /* TESTING */

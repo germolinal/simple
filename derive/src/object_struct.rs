@@ -266,17 +266,17 @@ impl StructObject {
                         #sets
 
                         #[doc = #sets_index_doc_string]
-                        pub fn #set_ident(&self, i: usize)->Result<(), String>{                            
+                        pub fn #set_ident(&self, i: usize)->Result<(), String>{
                             // todo!();
                             if let Ok(mut guard) = self.#f_ident.lock(){
                                 if guard.is_some() {
                                     return Err(#already_there_err);
                                 }
-                                *guard = Some(i);                                
+                                *guard = Some(i);
                                 return Ok(())
                             }else{
                                 return Err(format!(#cant_lock_err))
-                                
+
                             }
                         }
                     );
@@ -294,7 +294,7 @@ impl StructObject {
                         #sets
 
                         #[doc = #sets_doc_string]
-                        pub fn #set_ident(&self, state: &mut crate::simulation_state::SimulationState, v : crate::Float) -> Result<(), String>{                                                        
+                        pub fn #set_ident(&self, state: &mut crate::simulation_state::SimulationState, v : crate::Float) -> Result<(), String>{
                             if let Ok(guard) = self.#f_ident.lock(){
                                 if let Some(i) = *guard {
                                     state[i] = v;
@@ -320,13 +320,13 @@ impl StructObject {
                         #gets
 
                         #[doc = #get_index_doc_string]
-                        pub fn #get_index_ident(&self) -> Option<usize> {                            
+                        pub fn #get_index_ident(&self) -> Option<usize> {
                             if let Ok(guard) = self.#f_ident.lock(){
-                                *guard                                
-                            }else{                                
-                                panic!(#cant_lock_err)                                
-                            }                            
-                            
+                                *guard
+                            }else{
+                                panic!(#cant_lock_err)
+                            }
+
                         }
                     );
 
@@ -338,16 +338,16 @@ impl StructObject {
                         #gets
 
                         #[doc = #get_doc_string]
-                        pub fn #f_ident(&self, state: &crate::simulation_state::SimulationState) -> Option<crate::Float> {                            
-                            
-                            if let Ok(guard) = self.#f_ident.lock(){                                
+                        pub fn #f_ident(&self, state: &crate::simulation_state::SimulationState) -> Option<crate::Float> {
+
+                            if let Ok(guard) = self.#f_ident.lock(){
                                 if let Some(i) = *guard {
                                     return Some(state[i]);
-                                }else{                                    
+                                }else{
                                     return None
                                 }
                             }else{
-                                panic!(#cant_lock_err)                                
+                                panic!(#cant_lock_err)
                             }
                         }
                     );

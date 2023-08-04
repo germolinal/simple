@@ -1,30 +1,42 @@
-use crate::{
-    Float, 
-    SimulationStateHeader, 
-    SimulationState, Boundary
-};
-use geometry::{Loop3D, Vector3D};
+use crate::{Boundary, Float, SimulationState, SimulationStateHeader};
+use geometry::{Loop3D, Polygon3D, Vector3D, BBox3D};
 use matrix::Matrix;
-
 
 /// A trait utilized to have shared behaviour between
 /// Fenestration and Surfaces
 pub trait SurfaceTrait: Clone + Send + Sync {
+
+    /// Returns a reference to the name of the surface
+    fn name(&self)->&String;
+
     /// Returns the area in m2, calculated
     /// based on the [`Polygon3D`] that represents it
     fn area(&self) -> Float;
 
+    /// Borrows a mutable reference to the [`Polygon3D`] describing
+    /// this surface
+    fn mut_vertices(&mut self) -> &mut Polygon3D;
+
     /// Borrows the outer loop
-    fn outer(&self)->&Loop3D;
-    
+    fn outer(&self) -> &Loop3D;
+        
+    /// Borrows a mutable reference to the outer loop
+    fn mut_outer(&mut self) -> &mut Loop3D;
+
     /// Gets the front boundary
-    fn front_boundary(&self)->&Boundary;
+    fn front_boundary(&self) -> &Boundary;
 
     /// Gets the back boundary
-    fn back_boundary(&self)->&Boundary;
+    fn back_boundary(&self) -> &Boundary;
+
+    /// Sets the front boundary
+    fn set_front_boundary(&mut self, boundary: Boundary);
+
+    /// Sets the back boundary
+    fn set_back_boundary(&mut self, boundary: Boundary);
 
     /// Gets the normal based on the [`Polygon3D`] that represents it
-    fn normal(&self)->Vector3D;
+    fn normal(&self) -> Vector3D;
 
     /// Adds the front-convection state element
     fn add_front_convection_state(
@@ -95,6 +107,11 @@ pub trait SurfaceTrait: Clone + Send + Sync {
 
     /// Gets the index (in the simulation state) of the temperature last (i.e., back) node
     fn last_node_temperature_index(&self) -> usize;
+
+    /// Gets a Bounding Box surrounding the surface
+    fn bbox(&self)->Result<BBox3D, String>{
+        self.outer().bbox()
+    }
 
     /// Gets the  temperature first (i.e., front) node
     fn front_temperature(&self, state: &SimulationState) -> Float {

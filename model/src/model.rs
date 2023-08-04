@@ -18,16 +18,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 use crate::error_msgs::print_warning_no_module;
-use std::collections::HashMap;
-use std::fmt::Display;
-use crate::SurfaceTrait;
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
-use crate::{hvac::*, SolarOptions, SurfaceType, Boundary};
+use crate::SurfaceTrait;
+use crate::{hvac::*, Boundary, SolarOptions, SurfaceType};
 use crate::{Float, SiteDetails};
 use crate::{Output, SimulationStateHeader};
 use serde::{self, de::Visitor};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fmt::Display;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
@@ -221,7 +221,7 @@ impl<'de> Deserialize<'de> for Model {
 
 impl Model {
     /// Gets the (lat,lon, stdmer) tuple in degrees. If either `site_details` is not there,
-    /// or if any of the `latitude`, `longitude`, or `standard_meridian` 
+    /// or if any of the `latitude`, `longitude`, or `standard_meridian`
     /// in the `site_details` aren't there,
     /// it returns None.
     ///
@@ -243,7 +243,9 @@ impl Model {
     /// ```
     pub fn geolocation(&self) -> Option<(Float, Float, Float)> {
         if let Some(site) = &self.site_details {
-            if let (Ok(lat), Ok(lon), Ok(stdmer)) = (site.latitude(), site.longitude(), site.standard_meridian()) {
+            if let (Ok(lat), Ok(lon), Ok(stdmer)) =
+                (site.latitude(), site.longitude(), site.standard_meridian())
+            {
                 return Some((*lat, *lon, *stdmer));
             }
             return None;
@@ -1131,12 +1133,11 @@ impl Model {
         self.get_substance(name)
     }
 
-
-    /// Retrieves a dictionary with the heating/cooling setpoints of the different 
-    /// HVACs in the model. The dictionary will be empty if 
+    /// Retrieves a dictionary with the heating/cooling setpoints of the different
+    /// HVACs in the model. The dictionary will be empty if
     /// there are no HVACs. If an hvac does not have a setpoint,
     /// the content will be none.
-    /// 
+    ///
     /// ```
     /// use model::{Model, hvac::ElectricHeater};
     /// let mut model = Model::default();
@@ -1145,96 +1146,99 @@ impl Model {
     /// let mut heater = ElectricHeater::new(heater_name.clone());
     /// heater.set_heating_setpoint(19.);
     /// model.add_hvac(heater.wrap()).unwrap();
-    /// 
+    ///
     /// let setpoints = model.get_hvac_setpoints();
     /// assert_eq!(setpoints.len(), 1);
     /// assert!( setpoints[&heater_name][0].is_some() );
     /// assert!( (19.0 - setpoints[&heater_name][0].unwrap()).abs() < 1e-9 );
     /// assert!( setpoints[&heater_name][1].is_none() );
     /// ```
-    pub fn get_hvac_setpoints(&self)->HashMap<String, [Option<Float>;2]>{
-        let mut hvac_setpoints : HashMap<String, [Option<Float>;2]> = HashMap::with_capacity(self.hvacs.len());
-        for hvac in self.hvacs.iter(){
-            let (name, heating,cooling) = match hvac {
-                HVAC::ElectricHeater(heater)=>{
-                    let heating = match heater.heating_setpoint(){
-                        Ok(v)=>Some(*v),
-                        Err(_)=>None
+    pub fn get_hvac_setpoints(&self) -> HashMap<String, [Option<Float>; 2]> {
+        let mut hvac_setpoints: HashMap<String, [Option<Float>; 2]> =
+            HashMap::with_capacity(self.hvacs.len());
+        for hvac in self.hvacs.iter() {
+            let (name, heating, cooling) = match hvac {
+                HVAC::ElectricHeater(heater) => {
+                    let heating = match heater.heating_setpoint() {
+                        Ok(v) => Some(*v),
+                        Err(_) => None,
                     };
                     (hvac.name().clone(), heating, None)
-                },
-                HVAC::IdealHeaterCooler(h)=>{
-                    let heating = match h.heating_setpoint(){
-                        Ok(v)=>Some(*v),
-                        Err(_)=>None
+                }
+                HVAC::IdealHeaterCooler(h) => {
+                    let heating = match h.heating_setpoint() {
+                        Ok(v) => Some(*v),
+                        Err(_) => None,
                     };
-                    let cooling = match h.cooling_setpoint(){
-                        Ok(v)=>Some(*v),
-                        Err(_)=>None
+                    let cooling = match h.cooling_setpoint() {
+                        Ok(v) => Some(*v),
+                        Err(_) => None,
                     };
 
-                    (hvac.name().clone(), heating,cooling)
+                    (hvac.name().clone(), heating, cooling)
                 }
             };
-            hvac_setpoints.insert(name, [heating,cooling]);
+            hvac_setpoints.insert(name, [heating, cooling]);
         }
         hvac_setpoints
     }
 
-    /// Calculates the total floor area of the model, and the floor areas on each space 
+    /// Calculates the total floor area of the model, and the floor areas on each space
     /// within it.
-    /// 
+    ///
     /// # NOTE:
-    /// 
+    ///
     /// * It does not separate by building or anything
-    /// * It only accounts for surfaces labelled as 
-    /// 
+    /// * It only accounts for surfaces labelled as
+    ///
     /// ```
     /// use model::Model;
     /// let mut model = Model::default();
     /// let (total_area, areas) = model.get_space_sizes();
     /// ```
-    pub fn get_space_sizes(&self)->(Float,HashMap<String, Float>){
+    pub fn get_space_sizes(&self) -> (Float, HashMap<String, Float>) {
         let mut total_area = 0.0;
 
-        
-        let mut floor_areas  = HashMap::with_capacity(self.spaces.len());
-        self.spaces.iter().for_each(|s|{
+        let mut floor_areas = HashMap::with_capacity(self.spaces.len());
+        self.spaces.iter().for_each(|s| {
             floor_areas.insert(s.name().clone(), 0.0);
         });
-        
-        fn get_space(s: &Arc<Surface>)->Option<String>{
-            if let Boundary::Space{space} = &s.front_boundary {
+
+        fn get_space(s: &Arc<Surface>) -> Option<String> {
+            if let Boundary::Space { space } = &s.front_boundary {
                 Some(space.clone())
-            }else if let Boundary::Space{space} = &s.back_boundary {
+            } else if let Boundary::Space { space } = &s.back_boundary {
                 Some(space.clone())
-            }else{
+            } else {
                 None
             }
         }
 
-        for s in self.surfaces.iter(){            
-            if let (Ok(cat), Some(space)) = (s.category(), get_space(s)){
-                let area = s.area();                
-                match cat{
+        for s in self.surfaces.iter() {
+            if let (Ok(cat), Some(space)) = (s.category(), get_space(s)) {
+                let area = s.area();
+                match cat {
                     SurfaceType::GroundFloor => {
                         total_area += area;
-                        let k = floor_areas.get_mut(&space).unwrap_or_else(|| panic!("Unexpected space {}", space));
+                        let k = floor_areas
+                            .get_mut(&space)
+                            .unwrap_or_else(|| panic!("Unexpected space {}", space));
                         *k += area;
-
                     }
                     SurfaceType::InteriorFloor => {
                         total_area += area;
-                        let k = floor_areas.get_mut(&space).unwrap_or_else(|| panic!("Unexpected space {}", space));
+                        let k = floor_areas
+                            .get_mut(&space)
+                            .unwrap_or_else(|| panic!("Unexpected space {}", space));
                         *k += area;
-                        
                     }
                     SurfaceType::ExteriorFloor => {
                         total_area += area;
-                        let k = floor_areas.get_mut(&space).unwrap_or_else(|| panic!("Unexpected space {}", space));
+                        let k = floor_areas
+                            .get_mut(&space)
+                            .unwrap_or_else(|| panic!("Unexpected space {}", space));
                         *k += area;
-                        
-                    },
+                    }
                     _ => {} // ignore
                 }
             }
@@ -1242,12 +1246,6 @@ impl Model {
 
         (total_area, floor_areas)
     }
-
-
-
-
-
-    
 }
 
 /***********/
@@ -1260,8 +1258,6 @@ mod testing {
     use super::*;
 
     use crate::substance::Normal;
-
-    
 
     #[test]
     fn serde() {
@@ -1309,7 +1305,7 @@ mod testing {
         use crate::ShelterClass;
         use crate::SolarOptions;
         use crate::TerrainClass;
-        
+
         let dir = "../docs/ioreference/src";
 
         let summary_template = format!("{}/SUMMARY_TEMPLATE.md", dir);
@@ -1495,7 +1491,7 @@ mod testing {
         }"#;
 
         let (model, _header) = Model::from_json(&json_str).unwrap();
-        assert_eq!(Some((1.2, 5.21,123.1)), model.geolocation());
+        assert_eq!(Some((1.2, 5.21, 123.1)), model.geolocation());
 
         // No site details
         let json_str = r#"{
@@ -1809,13 +1805,13 @@ mod testing {
     }
 
     #[test]
-    fn test_get_space_sizes(){
-        let (model,_) = Model::from_file("./tests/cold_wellington_apartment.spl").unwrap();
+    fn test_get_space_sizes() {
+        let (model, _) = Model::from_file("./tests/cold_wellington_apartment.spl").unwrap();
         let (total_area, areas) = model.get_space_sizes();
 
-        fn check_close(a: Float, b: Float)->Result<(),String>{
-            if (a-b).abs() > 1e-1{
-                return Err(format!("{} and {} are too different", a, b))
+        fn check_close(a: Float, b: Float) -> Result<(), String> {
+            if (a - b).abs() > 1e-1 {
+                return Err(format!("{} and {} are too different", a, b));
             }
             Ok(())
         }
@@ -1830,6 +1826,5 @@ mod testing {
         check_close(areas["Livingroom"], 18.76).unwrap();
         check_close(areas["Main Bedroom"], 17.765).unwrap();
         check_close(areas["Hallway"], 5.884).unwrap();
-        
     }
 }

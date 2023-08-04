@@ -57,6 +57,9 @@ pub struct Space {
     /// The building in which this `Space` is inserted
     building: Option<String>,
 
+    /// The storey in which the space is located
+    storey: Option<usize>,
+
     #[physical]
     #[serde(skip)]
     dry_bulb_temperature: StateElementField,
@@ -154,7 +157,6 @@ mod testing {
         let vol = 987.12312;
         space.set_volume(vol);
         assert_eq!(*space.volume().unwrap(), vol);
-
 
         let i = 91;
         assert!(space.dry_bulb_temperature.lock().unwrap().is_none());

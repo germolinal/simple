@@ -20,6 +20,6 @@ SOFTWARE.
 
 use calendar::Date;
 
-pub trait Schedule<T> : Sync {
+pub trait Schedule<T>: Sync {
     fn get(&self, date: Date) -> Option<T>;
 }

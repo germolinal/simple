@@ -38,6 +38,7 @@ fn any_transmission(colour: &mut Spectrum) -> bool {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Glass {
     pub colour: Spectrum,
     pub refraction_index: Float,
@@ -51,10 +52,7 @@ impl Glass {
         normal: Vector3D,
         direction: Vector3D,
         cos1: Float,
-    ) -> (
-        Spectrum,
-        Spectrum,
-    ) {
+    ) -> (Spectrum, Spectrum) {
         debug_assert!(cos1 > 0.0);
 
         // Check if there is any transmission
