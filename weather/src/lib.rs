@@ -54,13 +54,7 @@ const PI: Float = std::f64::consts::PI;
 ///
 /// North points in the Y direction. East points in the X direction. Up points in Z.
 pub mod solar;
-pub use self::solar::{
-    Time,
-    Solar,
-    PerezSky,
-    SkyUnits,    
-    ReinhartSky,
-};
+pub use self::solar::{PerezSky, ReinhartSky, SkyUnits, Solar, Time};
 
 /// Data associated to a specific Location
 pub mod location;
@@ -145,46 +139,47 @@ impl Weather {
     /// from an array of [`CurrentWeather`].
     pub fn fill_solar_radiation_data(&mut self) -> Result<(), String> {
         let solar = self.location.get_solar();
-        
-        let solar_data : Vec<(Float,Float,Float)> =
-            self.data
-                .iter()
-                .enumerate()
-                .map(|(line_index, current_data)| {
-                    let date = current_data.date;                    
-                    if let Some(sun_direction) = solar.sun_position_from_standard_time(date) {
-                        let three_hours_prior_data = if line_index >= 3 {
-                            self.data[line_index - 3]                            
-                        } else {
-                            *current_data
-                        };
-                        let prior_data: Option<CurrentWeather> = if line_index >= 1 {
-                            let r = self.data[line_index - 1];
-                            Some(r)
-                        } else {
-                            None
-                        };
 
-                        let next_data: Option<CurrentWeather> = if line_index + 1 < self.data.len() {
-                            let r = self.data[line_index + 1];
-                            Some(r)
-                        } else {
-                            None
-                        };
-
-                        let (direct_normal, diffuse_horizontal, global) = solar
-                            .direct_diffuse_from_cloud_generic(
-                                sun_direction,
-                                *current_data,
-                                next_data,
-                                prior_data,
-                                three_hours_prior_data,
-                            );                            
-                        (direct_normal, diffuse_horizontal, global)
+        let solar_data: Vec<(Float, Float, Float)> = self
+            .data
+            .iter()
+            .enumerate()
+            .map(|(line_index, current_data)| {
+                let date = current_data.date;
+                if let Some(sun_direction) = solar.sun_position_from_standard_time(date) {
+                    let three_hours_prior_data = if line_index >= 3 {
+                        self.data[line_index - 3]
                     } else {
-                        (0.0, 0.0, 0.0)
-                    }
-                }).collect();
+                        *current_data
+                    };
+                    let prior_data: Option<CurrentWeather> = if line_index >= 1 {
+                        let r = self.data[line_index - 1];
+                        Some(r)
+                    } else {
+                        None
+                    };
+
+                    let next_data: Option<CurrentWeather> = if line_index + 1 < self.data.len() {
+                        let r = self.data[line_index + 1];
+                        Some(r)
+                    } else {
+                        None
+                    };
+
+                    let (direct_normal, diffuse_horizontal, global) = solar
+                        .direct_diffuse_from_cloud_generic(
+                            sun_direction,
+                            *current_data,
+                            next_data,
+                            prior_data,
+                            three_hours_prior_data,
+                        );
+                    (direct_normal, diffuse_horizontal, global)
+                } else {
+                    (0.0, 0.0, 0.0)
+                }
+            })
+            .collect();
 
         // write results
         for (w, calculated) in self.data.iter_mut().zip(solar_data) {

@@ -18,7 +18,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-
 use model::{Model, SimulationState};
 
 use crate::control_trait::SimpleControl;
@@ -26,14 +25,17 @@ use crate::MultiphysicsModel;
 use std::borrow::Borrow;
 
 /// A controler that does not control anything.
-/// 
+///
 /// This controller will simply not modify the state.
-pub struct VoidControl{}
+pub struct VoidControl {}
 
-
-impl SimpleControl for VoidControl{
-    
-    fn control<M: Borrow<Model>>(&self, _simple_model: M, _physics_model: &MultiphysicsModel, _state: &mut SimulationState)->Result<(), String>{
+impl SimpleControl for VoidControl {
+    fn control<M: Borrow<Model>>(
+        &self,
+        _simple_model: M,
+        _physics_model: &MultiphysicsModel,
+        _state: &mut SimulationState,
+    ) -> Result<(), String> {
         Ok(())
     }
 }

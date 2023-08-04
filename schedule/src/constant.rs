@@ -18,19 +18,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use calendar::Date;
 use crate::schedule_trait::Schedule;
+use calendar::Date;
 
 pub struct ScheduleConstant<T>(T);
 
-impl <T>Schedule<T> for ScheduleConstant<T> where T: Copy + Sync{
-    fn get(&self, _date: Date)->Option<T>{
+impl<T> Schedule<T> for ScheduleConstant<T>
+where
+    T: Copy + Sync,
+{
+    fn get(&self, _date: Date) -> Option<T> {
         Some(self.0)
     }
 }
 
-impl <T>ScheduleConstant<T>{
-    pub fn new(v: T)->Self{
+impl<T> ScheduleConstant<T> {
+    pub fn new(v: T) -> Self {
         Self(v)
     }
 }
@@ -45,42 +48,40 @@ mod tests {
 
     #[test]
     fn test_get() {
-
         // with usize
-        let date = Date{
+        let date = Date {
             month: 1,
             day: 1,
-            hour: 13.
+            hour: 13.,
         };
 
-        let v : usize = 1;
+        let v: usize = 1;
         let constant = ScheduleConstant(v);
         assert_eq!(constant.get(date).unwrap(), v);
         assert_eq!(constant.get(date).unwrap(), v);
-        assert_eq!(constant.get(date).unwrap(), v) ;
-
+        assert_eq!(constant.get(date).unwrap(), v);
 
         // With char
-        let date = Date{
+        let date = Date {
             month: 1,
             day: 1,
-            hour: 13.
+            hour: 13.,
         };
 
-        let v : char = 'a';
+        let v: char = 'a';
         let constant = ScheduleConstant(v);
         assert_eq!(constant.get(date).unwrap(), v);
         assert_eq!(constant.get(date).unwrap(), v);
         assert_eq!(constant.get(date).unwrap(), v);
 
         // With float
-        let date = Date{
+        let date = Date {
             month: 1,
             day: 1,
-            hour: 13.
+            hour: 13.,
         };
 
-        let v  = 123.1;
+        let v = 123.1;
         let constant = ScheduleConstant(v);
         assert_eq!(constant.get(date).unwrap(), v);
         assert_eq!(constant.get(date).unwrap(), v);

@@ -22,36 +22,36 @@ SOFTWARE.
 
 //! This is a library containing nn extremely simple Date object. The
 //! purpose is to help perform Building Performance calculations, so it only
-//! contains month, day and hour (in decimals). **It does not consider years at all**, 
-//! days and Months are counted from 1 (e.g. January is 1, not 0). 
+//! contains month, day and hour (in decimals). **It does not consider years at all**,
+//! days and Months are counted from 1 (e.g. January is 1, not 0).
 //! We don't need anything else, I think.
-//! 
+//!
 //! # Interaction with Serde
-//! 
+//!
 //! You can enable the `serde` feature and do stuff like this:
-//! 
+//!
 //! ```ignore
 //! use calendar::Date;
 //! use serde_json; // import "serde_json" and enable feature "serde"
-//! 
+//!
 //! let v = r#"{"month": 9,"day": 4, "hour": 21}"#;
 //! let d : Date = serde_json::from_str(&v).unwrap();
 //! assert_eq!(d.month, 9);
 //! assert_eq!(d.day, 4);
 //! assert!((d.hour - 21.).abs() < 1e-5);
 //! ```
-//! 
+//!
 //! # Interaction with Chrono
-//! 
+//!
 //! You can enable the `chrono` feature and do stuff like this
-//! 
+//!
 //! ```ignore
 //! use chrono::NaiveDateTime; // enable feature "chrono"
 //! use calendar::Date;
 //!        
 //! let v = "2014-11-28T21:00:09+09:00";
 //! let chrono_datetime  = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").unwrap();
-//! 
+//!
 //! let d : Date = chrono_datetime.into();
 //! assert_eq!(d.month, 11);
 //! assert_eq!(d.day, 28);
@@ -69,7 +69,6 @@ type Float = f32;
 /// and `f64` is used otherwise.
 #[cfg(not(feature = "float"))]
 type Float = f64;
-
 
 mod date;
 pub use crate::date::Date;

@@ -19,15 +19,14 @@ SOFTWARE.
 */
 use crate::Float;
 
-use super::weather::EPWWeather;
 use super::ground_temperature::EPWGroundTemperature;
+use super::weather::EPWWeather;
 use super::weather_line::EPWWeatherLine;
 use std::fmt::Display;
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
-
-pub (crate)struct EPWScanner<'a> {
+pub(crate) struct EPWScanner<'a> {
     /// Indicates the position of current character being
     /// scanned
     current: usize,
@@ -75,9 +74,9 @@ impl<'a> EPWScanner<'a> {
 
         // create an empty .EPW
         let mut epw = EPWWeather::default();
-        
+
         scanner.parse_file(&mut epw);
-        
+
         Ok(epw)
     }
 
@@ -247,7 +246,7 @@ impl<'a> EPWScanner<'a> {
                 year: EPWScanner::scan_number(self.scan_element()).unwrap() as usize,
                 month: EPWScanner::scan_number(self.scan_element()).unwrap() as u8,
                 day: EPWScanner::scan_number(self.scan_element()).unwrap() as u8,
-                hour: EPWScanner::scan_number(self.scan_element()).unwrap() ,
+                hour: EPWScanner::scan_number(self.scan_element()).unwrap(),
                 minute: EPWScanner::scan_number(self.scan_element()).unwrap() as u8,
                 uncertainty_flags: EPWScanner::skip_string(self.scan_element()).unwrap(),
                 dry_bulb_temperature: EPWScanner::scan_number(self.scan_element()).unwrap(),
@@ -305,8 +304,12 @@ impl<'a> EPWScanner<'a> {
         epw.location.source = EPWScanner::scan_string(self.scan_element()).unwrap();
         epw.location.wmo = EPWScanner::scan_string(self.scan_element()).unwrap();
 
-        epw.location.latitude = EPWScanner::scan_number(self.scan_element()).unwrap().to_radians();
-        epw.location.longitude = EPWScanner::scan_number(self.scan_element()).unwrap().to_radians();
+        epw.location.latitude = EPWScanner::scan_number(self.scan_element())
+            .unwrap()
+            .to_radians();
+        epw.location.longitude = EPWScanner::scan_number(self.scan_element())
+            .unwrap()
+            .to_radians();
         epw.location.timezone = EPWScanner::scan_number(self.scan_element()).unwrap() as i8;
         epw.location.elevation = EPWScanner::scan_number(self.scan_element()).unwrap();
     }

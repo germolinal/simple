@@ -44,8 +44,7 @@ use serde::{Deserialize, Serialize};
 #[serde(tag = "type")]
 #[serde(deny_unknown_fields)]
 pub enum Boundary {
-
-    /// Leads Outdoors. This is also the default (i.e., when no 
+    /// Leads Outdoors. This is also the default (i.e., when no
     /// Boundary is set)
     #[default]
     Outdoor,
@@ -55,7 +54,7 @@ pub enum Boundary {
 
     /// The Surface leads to another space whose temperature
     /// and other properties are part of the simulation
-    /// 
+    ///
     /// Border conditions:
     /// * **Solar Radiation**: As calculated by the Solar module
     /// * **Net Shortwave (IR) Radiation: Zero, for now at least (this is a good assumption if the surfaces inside the `Space` are at similar temperatures)
@@ -74,7 +73,7 @@ pub enum Boundary {
     /// an apartment's room with the hall of the building. In that case, we don't
     /// need to simulate the temperature of the hall... but we can assume a certain
     /// temperature.
-    /// 
+    ///
     /// Border conditions:
     /// * **Solar Radiation**: None
     /// * **Net Shortwave (IR) Radiation: Calculated based on the set ambient temperature and the surface temperature
@@ -88,7 +87,6 @@ pub enum Boundary {
     /// The temperature of the other side of the wall will be
     /// the same as the one measured at the interior of the space
     Adiabatic,
-
 }
 
 /***********/
@@ -190,7 +188,6 @@ mod testing {
         assert_eq!(model.surfaces.len(), 1);
         assert!("the surface" == model.surfaces[0].name());
 
-        
         if let Boundary::Space { space } = &model.surfaces[0].front_boundary {
             assert_eq!(space, "Some Space")
         } else {

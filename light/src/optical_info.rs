@@ -20,9 +20,9 @@ SOFTWARE.
 use crate::solar_surface::SolarSurface;
 use crate::Float;
 use matrix::Matrix;
+use model::{Model, SimulationStateHeader, SolarOptions};
 use rendering::{DCFactory, Scene, Wavelengths};
 use serde::{Deserialize, Serialize};
-use model::{Model, SimulationStateHeader, SolarOptions};
 use weather::ReinhartSky;
 
 /// A set of view factors as seen by a `ThermalSurface`.
@@ -79,7 +79,8 @@ impl OpticalInfo {
     ) -> Result<Self, String> {
         // Collect calculation options
         let mf = options.solar_sky_discretization_or(crate::solar_model::MODULE_NAME, 1);
-        let n_solar_rays = options.n_solar_irradiance_points_or(crate::solar_model::MODULE_NAME, 10);
+        let n_solar_rays =
+            options.n_solar_irradiance_points_or(crate::solar_model::MODULE_NAME, 10);
 
         // Create Surfaces and Fenestrations
         let surfaces = SolarSurface::make_surfaces(&model.surfaces, state, n_solar_rays)?;
@@ -93,7 +94,8 @@ impl OpticalInfo {
         // calculator
         let solar_dc_factory = DCFactory {
             max_depth: 0,
-            n_ambient_samples: options.solar_ambient_divitions_or(crate::solar_model::MODULE_NAME, 300),
+            n_ambient_samples: options
+                .solar_ambient_divitions_or(crate::solar_model::MODULE_NAME, 300),
             reinhart: ReinhartSky::new(mf),
             ..DCFactory::default()
         };
@@ -154,8 +156,8 @@ mod testing {
 
     use json5;
     use model::{
-        substance::Normal,  Construction, Fenestration, Material, Model,
-        SimulationStateHeader, SolarOptions, Surface,
+        substance::Normal, Construction, Fenestration, Material, Model, SimulationStateHeader,
+        SolarOptions, Surface,
     };
 
     use crate::OpticalInfo;
@@ -287,7 +289,7 @@ mod testing {
             }
          }",
         )
-        .unwrap();        
+        .unwrap();
         model.add_surface(s);
 
         let s: Surface = json5::from_str(
@@ -336,7 +338,7 @@ mod testing {
             }
         }",
         )
-        .unwrap();        
+        .unwrap();
         model.add_fenestration(fen).unwrap();
 
         let info = OpticalInfo::new(&options, &model, &mut state).unwrap();

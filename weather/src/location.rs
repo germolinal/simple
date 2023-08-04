@@ -18,8 +18,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::{Float, solar::Solar};
-use serde::{Serialize,Deserialize};
+use crate::{solar::Solar, Float};
+use serde::{Deserialize, Serialize};
 
 /// A Location
 #[derive(Debug, Default, Clone, Serialize, Deserialize, PartialEq)]
@@ -58,12 +58,11 @@ pub struct Location {
     pub elevation: Float,
 }
 
-
 impl Location {
-    /// Builds a [`Solar`] object corresponding to 
+    /// Builds a [`Solar`] object corresponding to
     /// this location
-    pub fn get_solar(&self)->Solar{
-        let stdmer = ((self.timezone as Float)*15.0).to_radians();                
+    pub fn get_solar(&self) -> Solar {
+        let stdmer = ((self.timezone as Float) * 15.0).to_radians();
         Solar::new(self.latitude, -self.longitude, -stdmer)
     }
 }

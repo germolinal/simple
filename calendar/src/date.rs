@@ -105,14 +105,14 @@ impl PartialOrd for Date {
 
 impl Ord for Date {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self.month.cmp(&other.month){
+        match self.month.cmp(&other.month) {
             Ordering::Less => Ordering::Less,
             Ordering::Greater => Ordering::Greater,
-            Ordering::Equal => {                
-                match self.day.cmp(&other.day){
+            Ordering::Equal => {
+                match self.day.cmp(&other.day) {
                     Ordering::Less => Ordering::Less,
                     Ordering::Greater => Ordering::Greater,
-                    Ordering::Equal => {                        
+                    Ordering::Equal => {
                         // Same day and month; compare by hour
                         if self.hour < other.hour {
                             Ordering::Less
@@ -123,24 +123,22 @@ impl Ord for Date {
                             Ordering::Equal
                         }
                     }
-                }                
+                }
             }
         }
-        
     }
 }
 
 impl Date {
-    
     /// Transforms a Date into a `chrono` `NaiveDateTime`.
-    /// 
+    ///
     /// Because `Date` does not have a year, we need to pass it as a parameter.        
     #[cfg(feature = "chrono")]
     pub fn into_naive_datetime(self, year: i32) -> NaiveDateTime {
-        let hour = self.hour.floor();        
+        let hour = self.hour.floor();
         let remainder = self.hour - hour;
-        let min = remainder * 60.0; 
-        let sec = (60.0 - min)*60.0;
+        let min = remainder * 60.0;
+        let sec = (60.0 - min) * 60.0;
 
         let mut min = min.round() as u32;
         let mut sec = sec.round() as u32;
@@ -152,12 +150,10 @@ impl Date {
 
         sec %= 60;
 
-        
-        NaiveDate::from_ymd_opt(year, self.month as u32, self.day as u32).expect("Could not build chronos::Date").and_hms_opt(
-            hour.round() as u32,
-            min,
-            sec,
-        ).unwrap()
+        NaiveDate::from_ymd_opt(year, self.month as u32, self.day as u32)
+            .expect("Could not build chronos::Date")
+            .and_hms_opt(hour.round() as u32, min, sec)
+            .unwrap()
     }
 
     /// Interpolates between two dates
@@ -332,8 +328,6 @@ impl Date {
         }
         self <= &other
     }
-
-    
 }
 
 #[cfg(test)]
@@ -967,13 +961,13 @@ mod tests {
 
     #[test]
     #[cfg(feature = "chrono")]
-    fn test_into_naive_datetime(){
+    fn test_into_naive_datetime() {
         use chrono::{Datelike, Timelike};
 
-        let d = Date{
+        let d = Date {
             month: 1,
             day: 1,
-            hour: 23.9999
+            hour: 23.9999,
         };
 
         let year = 2025;
@@ -987,7 +981,5 @@ mod tests {
         assert_eq!(out.hour(), 23);
         assert_eq!(out.minute(), 59);
         assert_eq!(out.second(), 59);
-
-
     }
 }

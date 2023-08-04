@@ -7,22 +7,22 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-model = {path = "../model"}
-matrix = {path = "../matrix"}
-geometry = {version="0.2.0", path = "../geometry"}
-weather = {path = "../weather"}
+model = { path = "../model" }
+matrix = { path = "../matrix" }
+geometry = { version = "0.2.0", path = "../geometry" }
+weather = { path = "../weather" }
 calendar = { path = "../calendar" }
-rand = { version = "0.8.5", features=["small_rng"]}
-rayon = {workspace=true, optional = true}
-serde = { workspace=true, features=['derive']}
-clap = {version="4.0.14", features=["derive"]}
+rand = { workspace = true, features = ["small_rng"] }
+rayon = { workspace = true, optional = true }
+serde = { workspace = true, features = ['derive'] }
+clap = { version = "4.0.14", features = ["derive"] }
 obj-rs = "0.7.0"
 jpeg-encoder = "0.5.1"
 
 
 [dev-dependencies]
-criterion = "0.4"
-validate = {git="https://github.com/germolinal/validate"}
+criterion = "0.5.1"
+validate = { git = "https://github.com/germolinal/validate" }
 
 [[bench]]
 name = "benchmark"
@@ -30,18 +30,9 @@ path = "./benches/benchmark.rs"
 harness = false
 
 [features]
-default = [] 
-float = [
-    "model/float",
-    "geometry/float", 
-    "matrix/float",  
-    "weather/float"
-]
-parallel = [
-    "geometry/parallel", 
-    "matrix/parallel",
-    "rayon",
-]
+default = []
+float = ["model/float", "geometry/float", "matrix/float", "weather/float"]
+parallel = ["geometry/parallel", "matrix/parallel", "rayon"]
 textures = ["geometry/textures"]
 
 

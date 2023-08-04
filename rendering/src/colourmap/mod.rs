@@ -80,12 +80,7 @@ pub fn map_linear_colour(
 }
 
 /// Maps a Spectrum
-pub fn map_linear_spectrum(
-    x: Float,
-    min: Float,
-    max: Float,
-    map: &[Spectrum],
-) -> Spectrum {
+pub fn map_linear_spectrum(x: Float, min: Float, max: Float, map: &[Spectrum]) -> Spectrum {
     if x <= min {
         return map[0];
     } else if x >= max {

@@ -1,4 +1,3 @@
-
 use crate::generic_matrix::GenericMatrix;
 use crate::Float;
 

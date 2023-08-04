@@ -57,6 +57,7 @@ pub use ray::Ray;
 pub mod samplers;
 mod scene;
 pub use scene::{Scene, Wavelengths};
+
 pub mod triangle;
 
 // Climate Based Daylight Model
@@ -69,10 +70,12 @@ pub use daylight_coefficients::DCFactory;
 pub mod from_obj;
 pub mod from_radiance;
 pub mod from_simple_model;
+pub use from_simple_model::{SimpleModelReader, SceneElement};
 
 // Ray-tracer
 mod ray_tracer;
 pub use ray_tracer::{RayTracer, RayTracerHelper};
+
 
 // mod backward_metropolis;
 // pub use crate::backward_metropolis::{

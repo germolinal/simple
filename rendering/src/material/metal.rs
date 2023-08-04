@@ -25,6 +25,7 @@ use crate::Float;
 use geometry::{Point3D, Vector3D};
 
 /// Information required for modelling Radiance's Metal and Metal
+#[derive(Debug, Clone)]
 pub struct Metal {
     pub colour: Spectrum,
     pub specularity: Float,

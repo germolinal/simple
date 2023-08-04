@@ -37,8 +37,6 @@ pub fn air_mass(solar_zenith: Float) -> Float {
     1. / (solar_zenith.cos() + 0.15 * (93.885 - solar_zenith.to_degrees()).powf(-1.253))
 }
 
-
-
 /// The solar equivalent of Date's "day of the year". The
 /// distinction is there so that we don't mistake solar and
 /// standard time

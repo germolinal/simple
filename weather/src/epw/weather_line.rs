@@ -17,10 +17,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::{Float, CurrentWeather};
+use crate::{CurrentWeather, Float};
 
 use calendar::Date;
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Contains all the information in an EPW Weather line
 #[derive(Copy, Clone, Debug, Serialize, Deserialize)]
@@ -100,7 +100,7 @@ pub struct EPWWeatherLine {
     pub zenith_luminance: Float,
 
     /// Element N20 in the EPW dictionary
-    /// in degrees. 
+    /// in degrees.
     pub wind_direction: Float,
 
     /// Element N21 in the EPW dictionary
@@ -157,14 +157,12 @@ pub struct EPWWeatherLine {
 }
 
 impl std::convert::From<&EPWWeatherLine> for CurrentWeather {
-    fn from(epw: &EPWWeatherLine)->CurrentWeather{
-
-        let date = Date{
-            month: epw.month, 
+    fn from(epw: &EPWWeatherLine) -> CurrentWeather {
+        let date = Date {
+            month: epw.month,
             day: epw.day,
-            hour: epw.hour-0.000001,
+            hour: epw.hour - 0.000001,
         };
-        
 
         CurrentWeather {
             date,
@@ -178,10 +176,9 @@ impl std::convert::From<&EPWWeatherLine> for CurrentWeather {
             horizontal_infrared_radiation_intensity: Some(
                 epw.horizontal_infrared_radiation_intensity,
             ),
-            opaque_sky_cover: epw.opaque_sky_cover/10.0, // convert units
-            relative_humidity: epw.relative_humidity/100.0, // convert units
-            pressure: epw.atmospheric_station_pressure
-
+            opaque_sky_cover: epw.opaque_sky_cover / 10.0, // convert units
+            relative_humidity: epw.relative_humidity / 100.0, // convert units
+            pressure: epw.atmospheric_station_pressure,
         }
     }
 }
@@ -194,7 +191,7 @@ impl EPWWeatherLine {
             day: self.day,
             // We count hours from 0 to 23.9999, EPW files include
             // hours from 1 to 24.99
-            hour: self.hour,// - 1.0,
+            hour: self.hour, // - 1.0,
         }
     }
 }

@@ -1,14 +1,14 @@
 use calendar::Date;
 use communication::{MetaOptions, SimulationModel};
 use light::{Float, SolarModel};
-use schedule::ScheduleConstant;
 use model::SolarOptions;
+use schedule::ScheduleConstant;
 use test_models::*;
 use validate::{valid, ScatterValidator, Validate, Validator};
 use weather::SyntheticWeather;
 const SIGMA: Float = 5.670374419e-8;
-fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidator<Float>> {    
-    Box::new(ScatterValidator {    
+fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidator<Float>> {
+    Box::new(ScatterValidator {
         units: Some("W/m2"),
         expected_legend: Some("EnergyPlus"),
         found_legend: Some("SIMPLE"),
@@ -59,15 +59,14 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<Float>, Vec<Flo
 
     let zone_volume = 600.;
 
-    let (model, mut state_header) =
-        get_single_zone_test_building(&SingleZoneTestBuildingOptions {
-            zone_volume,
-            surface_width: 20.,
-            surface_height: 3.,
-            construction: vec![TestMat::Concrete(0.2)],
-            orientation,
-            ..Default::default()
-        });
+    let (model, mut state_header) = get_single_zone_test_building(&SingleZoneTestBuildingOptions {
+        zone_volume,
+        surface_width: 20.,
+        surface_height: 3.,
+        construction: vec![TestMat::Concrete(0.2)],
+        orientation,
+        ..Default::default()
+    });
 
     // Finished model the Model
     let mut options = SolarOptions::new();
@@ -97,7 +96,8 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<Float>, Vec<Flo
         // gain = area * emissivity*(incident  - sigma  * ts^4)
         // --> gain/area/emissivity = incident - sigma * ts^4
         // --> gain/area/emissivity  + sigma * ts^4 = incident
-        let expected_v : Float = gain / surface_area / emmisivity + SIGMA * (ts as Float + 273.15).powi(4);
+        let expected_v: Float =
+            gain / surface_area / emmisivity + SIGMA * (ts as Float + 273.15).powi(4);
 
         // Set outdoor temp
         let mut weather = SyntheticWeather::default();
@@ -113,7 +113,7 @@ fn get_simple_results(city: &str, orientation_str: &str) -> (Vec<Float>, Vec<Flo
 
         // March
         solar_model
-            .march(date, &weather, &model, &mut state,&mut ())
+            .march(date, &weather, &model, &mut state, &mut ())
             .unwrap();
 
         let front_radiation = surface.front_ir_irradiance(&state).unwrap();

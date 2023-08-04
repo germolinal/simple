@@ -108,12 +108,11 @@ mod testing {
         );
 
         // Check simple
-        let (model, ..) =
-            Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl").unwrap();
         assert_eq!(model.hvacs.len(), 1);
 
         if let HVAC::IdealHeaterCooler(hvac) = &model.hvacs[0] {
-            assert_eq!("Bedrooms heater", hvac.name());            
+            assert_eq!("Bedrooms heater", hvac.name());
             assert_eq!("Bedroom", hvac.target_space().unwrap());
         } else {
             assert!(false, "Wrong space!")
@@ -164,8 +163,7 @@ mod testing {
         );
 
         // Check simple
-        let (model, ..) =
-            Model::from_file("./tests/scanner/hvac_electric_heater.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/hvac_electric_heater.spl").unwrap();
         assert_eq!(model.hvacs.len(), 1);
 
         if let HVAC::ElectricHeater(hvac) = &model.hvacs[0] {

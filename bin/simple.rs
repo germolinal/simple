@@ -30,22 +30,22 @@ use simple::{Model, SimulationStateHeader};
 
 fn run_sim<C, M, S>(
     model: &Model,
-    state_header: &mut SimulationStateHeader,    
+    state_header: &mut SimulationStateHeader,
     options: &SimOptions,
     controller: C,
 ) -> Result<(), String>
 where
     C: SimpleControl,
-    M: Borrow<Model>,    
+    M: Borrow<Model>,
 {
     match &options.output {
         Some(v) => {
             let out = std::fs::File::create(v).unwrap();
-            run(model, state_header,  options, out, controller)
+            run(model, state_header, options, out, controller)
         }
         None => run(
             model,
-            state_header,            
+            state_header,
             options,
             std::io::stdout().lock(),
             controller,
@@ -58,53 +58,56 @@ fn choose_controller(
     state_header: &mut SimulationStateHeader,
     options: &SimOptions,
 ) -> Result<(), String> {
-    
     match &options.control_file {
         None => {
             let controller = VoidControl {};
-            run_sim::<VoidControl, &Model, SimulationState>(&model, state_header,  options, controller)
+            run_sim::<VoidControl, &Model, SimulationState>(
+                &model,
+                state_header,
+                options,
+                controller,
+            )
         }
         Some(v) => match v.as_str() {
             "people" => {
                 let controller = OccupantBehaviour::new(&model)?;
-                run_sim::<OccupantBehaviour, &Model, SimulationState>(&model, state_header,  options, controller)
+                run_sim::<OccupantBehaviour, &Model, SimulationState>(
+                    &model,
+                    state_header,
+                    options,
+                    controller,
+                )
             }
             _ => {
-                
-
-                if let Some(control_file) = &options.control_file{                    
+                if let Some(control_file) = &options.control_file {
                     match &options.output {
                         Some(v) => {
                             let out = std::fs::File::create(v).unwrap();
-                            run_rhai(model, state_header,  options, control_file, out)
+                            run_rhai(model, state_header, options, control_file, out)
                         }
                         None => run_rhai(
                             model,
-                            state_header,                            
+                            state_header,
                             options,
                             control_file,
-                            std::io::stdout().lock(),                            
+                            std::io::stdout().lock(),
                         ),
                     }
-
-                }else{
+                } else {
                     unreachable!()
-                }                
+                }
             }
         },
     }
 }
 
 fn main() {
-    
     // cargo instruments --release --template Allocations -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
     // cargo instruments --release --template 'CPU Profiler' --package simple --bin simple -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
-    
-    
+
     let options = SimOptions::parse();
 
-    let (model, mut state_header) = match Model::from_file(options.input_file.to_string())
-    {
+    let (model, mut state_header) = match Model::from_file(options.input_file.to_string()) {
         Ok(o) => o,
         Err(e) => {
             simple::error_msgs::print_error("", e);

@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 use crate::Float;
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 
 /// Ground Temperature information gotten from from an EPW file
 #[derive(Default, Debug, Copy, Clone, Serialize, Deserialize)]

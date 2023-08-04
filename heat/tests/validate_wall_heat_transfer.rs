@@ -1,11 +1,11 @@
-use communication::SimulationModel;
 use communication::MetaOptions;
+use communication::SimulationModel;
 use heat::heat_model::ThermalModel;
 use heat::Float;
 
 use calendar::Date;
-use schedule::ScheduleConstant;
 use model::{Model, SimulationStateElement, SimulationStateHeader, HVAC};
+use schedule::ScheduleConstant;
 use test_models::{get_single_zone_test_building, SingleZoneTestBuildingOptions, TestMat};
 use validate::*;
 use weather::SyntheticWeather;
