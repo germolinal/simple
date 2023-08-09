@@ -65,7 +65,7 @@ impl DCFactory {
         let n_bins = self.reinhart.n_bins;
 
         let counter = std::sync::Arc::new(std::sync::Mutex::new(0));
-        let last_progress = std::sync::Arc::new(std::sync::Mutex::new(0.0));
+        // let last_progress = std::sync::Arc::new(std::sync::Mutex::new(0.0));
 
         // Process... This can be in parallel, or not.
         #[cfg(not(feature = "parallel"))]
@@ -134,13 +134,13 @@ impl DCFactory {
 
                         let mut c = counter.lock().unwrap();
                         *c += 1;
-                        let nrays = rays.len() * self.n_ambient_samples;
-                        let mut lp = last_progress.lock().unwrap();
-                        let progress = (100. * *c as Float / nrays as Float).round() as Float;
-                        if (*lp - progress.floor()) < 0.1 && (progress - *lp).abs() > 1. {
-                            *lp = progress;
-                            println!("... Done {:.0}%", progress);
-                        }
+                        // let nrays = rays.len() * self.n_ambient_samples;
+                        // let mut lp = last_progress.lock().unwrap();
+                        // let progress = (100. * *c as Float / nrays as Float).round() as Float;
+                        // if (*lp - progress.floor()) < 0.1 && (progress - *lp).abs() > 1. {
+                        //     *lp = progress;
+                        //     println!("... Done {:.0}%", progress);
+                        // }
 
                         this_ret
                     })
