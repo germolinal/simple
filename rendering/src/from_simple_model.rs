@@ -199,7 +199,7 @@ impl SimpleModelReader {
                         Ok(v) => *v,
                         Err(_) => {
                             let v = 0.7;
-                            eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
+                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             v
                         }
                     },
@@ -207,7 +207,7 @@ impl SimpleModelReader {
                         Ok(v) => *v,
                         Err(_) => {
                             let v = 0.7;
-                            eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
+                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             v
                         }
                     },
@@ -218,7 +218,7 @@ impl SimpleModelReader {
                         Ok(v) => transmittance_to_transmissivity(*v),
                         Err(_) => {
                             let v = 0.;
-                            eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
+                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             v
                         }
                     },
@@ -226,7 +226,7 @@ impl SimpleModelReader {
                         Ok(v) => *v,
                         Err(_) => {
                             let v = 0.;
-                            eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
+                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             v
                         }
                     },
