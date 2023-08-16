@@ -1205,13 +1205,22 @@ impl Model {
         });
 
         fn get_space(s: &Arc<Surface>) -> Option<String> {
-            if let Boundary::Space { space } = &s.front_boundary {
-                Some(space.clone())
-            } else if let Boundary::Space { space } = &s.back_boundary {
-                Some(space.clone())
-            } else {
-                None
+
+            let normal = s.normal();
+            if normal.z > 0.0 {
+                // Points Up... check front
+                if let Boundary::Space { space } = &s.front_boundary {
+                    return Some(space.clone())
+                } 
+            }else{
+                // Points down... check back
+                if let Boundary::Space { space } = &s.back_boundary {
+                    return Some(space.clone())
+                }
             }
+            None
+
+            
         }
 
         for s in self.surfaces.iter() {
