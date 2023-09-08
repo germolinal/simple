@@ -29,12 +29,12 @@ use serde::{Deserialize, Serialize};
 ///
 /// ##### `.spl`
 /// ```json
-/// {{#include ../../../tests/scanner/luminaire.spl}}
+/// {{#include ../../../model/tests/scanner/luminaire.spl}}
 /// ```
 ///
 /// ##### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/luminaire.json}}
+/// {{#include ../../../model/tests/scanner/luminaire.json}}
 /// ```
 #[derive(Debug, ObjectIO, ObjectAPI, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
