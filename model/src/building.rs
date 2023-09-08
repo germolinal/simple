@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
 /// #### `.json`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/shelter_class.json}}
+/// {{#include ../../../model/tests/scanner/shelter_class.json}}
 /// ```
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
 /// as it is always embeded on a `Building` object
@@ -61,11 +61,11 @@ pub enum ShelterClass {
 ///
 /// #### `.spl`
 /// ```json
-/// {{#include ../../../tests/scanner/building.spl}}
+/// {{#include ../../../model/tests/scanner/building.spl}}
 /// ```
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/building.json}}
+/// {{#include ../../../model/tests/scanner/building.json}}
 /// ```
 ///
 #[derive(Default, Debug, ObjectIO, Clone, Serialize, Deserialize)]

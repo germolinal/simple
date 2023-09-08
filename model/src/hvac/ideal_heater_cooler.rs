@@ -34,13 +34,13 @@ use serde::{Deserialize, Serialize};
 /// #### `.spl`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/hvac_ideal_heater_cooler.spl}}
+/// {{#include ../../../model/tests/scanner/hvac_ideal_heater_cooler.spl}}
 /// ```
 ///
 /// #### `.json`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/hvac_ideal_heater_cooler.json}}
+/// {{#include ../../../model/tests/scanner/hvac_ideal_heater_cooler.json}}
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, ObjectIO, GroupMemberAPI)]
 #[serde(deny_unknown_fields)]
