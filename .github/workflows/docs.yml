@@ -23,8 +23,8 @@ jobs:
       
     - name: Run tests parallel
       run: |
-        cargo test --release --features parallel --verbose --workspace 
-        cargo test --release --features parallel --verbose -p simple -- --ignored 
+        cargo test --features parallel --verbose --workspace 
+        cargo test --features parallel --verbose -p simple -- --ignored 
     
     - name: Install MdBook
       run: cargo install mdbook
