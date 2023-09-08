@@ -115,13 +115,13 @@ fn pre_process(
 
     // Create physics model
     let physics_model =
-        MultiphysicsModel::new(&meta_options, (), model.borrow(), state_header, options.n)?;
+        MultiphysicsModel::new(&meta_options, (), model, state_header, options.n)?;
 
     // Collect variables we need to report
     let full_header: Vec<String> = state_header
         .elements
         .iter()
-        .map(|x| x.stringify(model.borrow()))
+        .map(|x| x.stringify(model))
         .collect();
 
     let report_indexes: Vec<usize> = model
