@@ -20,17 +20,23 @@ jobs:
         profile: minimal
         toolchain: stable
         override: true
-      
+
+      # The runs in parallel/release create the validation results.
+      # The run `cargo test -p model` writes the IOReference.
     - name: Run tests parallel
-      run: |
-        cargo test --features parallel --verbose --workspace 
-        cargo test --features parallel --verbose -p simple -- --ignored 
+      run: |        
+        cargo test --release --features parallel --verbose --workspace 
+        cargo test --release --features parallel --verbose -p simple -- --ignored 
+        cargo test -p model
     
     - name: Install MdBook
       run: cargo install mdbook
 
     - name: Build mdbook
       run: mdbook build ./docs/ioreference
+
+    - name: Install MDBook Katex
+      run: cargo install mdbook-katex
 
     - name: Setup Pages
       uses: actions/configure-pages@v3

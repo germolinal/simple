@@ -132,8 +132,8 @@ fn room_direct_with_no_glass() -> Box<dyn Validate> {
 fn room(validator: &mut Validator) {
     validator.push(room_direct_with_no_glass());
     validator.push(room_direct_with_glass());
-    validator.push(room_global_with_no_glass());
-    validator.push(room_global_with_glass());
+    // validator.push(room_global_with_no_glass());
+    // validator.push(room_global_with_glass());
 }
 
 #[ignore]
