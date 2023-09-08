@@ -40,11 +40,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/infiltration_design_flow_rate.json}}
+/// {{#include ../../../model/tests/scanner/infiltration_design_flow_rate.json}}
 /// ```
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/infiltration_constant.json}}
+/// {{#include ../../../model/tests/scanner/infiltration_constant.json}}
 /// ```
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
 /// as it is always embeded on a `Space`

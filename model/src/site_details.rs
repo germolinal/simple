@@ -53,11 +53,11 @@ impl std::default::Default for TerrainClass {
 ///
 /// #### `.spl`
 /// ```json
-/// {{#include ../../../tests/scanner/site_details.spl }}
+/// {{#include ../../../model/tests/scanner/site_details.spl }}
 /// ```
 ///  #### `.json`
 /// ```rs
-/// {{#include ../../../tests/scanner/site_details.spl }}
+/// {{#include ../../../model/tests/scanner/site_details.spl }}
 /// ```
 #[derive(Clone, Debug, ObjectIO, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

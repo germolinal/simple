@@ -36,13 +36,13 @@ use derive::{GroupMemberAPI, ObjectIO};
 /// #### `.spl`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/hvac_electric_heater.spl}}
+/// {{#include ../../../model/tests/scanner/hvac_electric_heater.spl}}
 /// ```
 ///
 /// #### `.json`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/hvac_electric_heater.json}}
+/// {{#include ../../../model/tests/scanner/hvac_electric_heater.json}}
 /// ```
 #[derive(Debug, Serialize, Deserialize, Clone, ObjectIO, GroupMemberAPI)]
 #[serde(deny_unknown_fields)]

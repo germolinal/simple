@@ -26,11 +26,11 @@ use serde::{Deserialize, Serialize};
 /// ## Examples
 /// ##### `.spl`
 /// ```json
-/// {{#include ../../../tests/scanner/solar_options.spl}}
+/// {{#include ../../../model/tests/scanner/solar_options.spl}}
 /// ```
 /// ##### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/solar_options.json}}
+/// {{#include ../../../model/tests/scanner/solar_options.json}}
 /// ```
 #[derive(Default, Debug, Clone, ObjectIO, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

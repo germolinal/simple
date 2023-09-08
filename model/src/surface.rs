@@ -38,10 +38,10 @@ use crate::simulation_state_element::StateElementField;
 ///
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/surface_type.json}}
+/// {{#include ../../../model/tests/scanner/surface_type.json}}
 /// ```
 /// ```json
-/// {{#include ../../../tests/scanner/surface_type_2.json}}
+/// {{#include ../../../model/tests/scanner/surface_type_2.json}}
 /// ```
 ///
 #[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, PartialEq, Eq)]
@@ -89,11 +89,11 @@ pub enum SurfaceType {
 ///
 /// #### `.spl`
 /// ```json
-/// {{#include ../../../tests/scanner/surface.spl}}
+/// {{#include ../../../model/tests/scanner/surface.spl}}
 /// ```
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/surface.json}}
+/// {{#include ../../../model/tests/scanner/surface.json}}
 /// ```
 #[derive(Debug, ObjectIO, ObjectAPI, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

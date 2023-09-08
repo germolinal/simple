@@ -34,11 +34,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// #### A `Space` boundary (in `.json`)
 /// ```json
-/// {{#include ../../../tests/scanner/boundary_space.json}}
+/// {{#include ../../../model/tests/scanner/boundary_space.json}}
 /// ```
 /// #### A `Ground` boundary (in `.json`)
 /// ```json
-/// {{#include ../../../tests/scanner/boundary_ground.json}}
+/// {{#include ../../../model/tests/scanner/boundary_ground.json}}
 /// ```
 #[derive(Clone, Debug, ObjectIO, Serialize, Deserialize, Default)]
 #[serde(tag = "type")]
