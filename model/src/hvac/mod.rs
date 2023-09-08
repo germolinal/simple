@@ -32,7 +32,7 @@ use std::sync::Arc;
 /// ## Example `.spl`
 ///
 /// ```rs
-/// {{ #include ../../../tests/scanner/hvac_electric_heater.spl }}
+/// {{ #include ../../../model/tests/scanner/hvac_electric_heater.spl }}
 ///
 /// ```
 ///

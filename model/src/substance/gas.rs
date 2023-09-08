@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/gas_specification.json}}
+/// {{#include ../../../model/tests/scanner/gas_specification.json}}
 /// ```
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
@@ -59,13 +59,13 @@ pub enum GasSpecification {
 /// #### `.spl`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/substance_gas.spl}}
+/// {{#include ../../../model/tests/scanner/substance_gas.spl}}
 /// ```
 ///
 /// #### `.json`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/substance_gas.json}}
+/// {{#include ../../../model/tests/scanner/substance_gas.json}}
 /// ```
 #[derive(Debug, Clone, ObjectIO, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

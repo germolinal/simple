@@ -34,13 +34,13 @@ use serde::{Deserialize, Serialize};
 /// #### `.spl`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/substance_normal.spl}}
+/// {{#include ../../../model/tests/scanner/substance_normal.spl}}
 /// ```
 ///
 /// #### `.json`
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/substance_normal.json}}
+/// {{#include ../../../model/tests/scanner/substance_normal.json}}
 /// ```
 #[derive(Default, Clone, Debug, ObjectIO, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

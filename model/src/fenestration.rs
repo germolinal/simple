@@ -35,7 +35,7 @@ use crate::{SimulationState, SimulationStateElement, SimulationStateHeader};
 ///
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/fenestration_position.json}}
+/// {{#include ../../../model/tests/scanner/fenestration_position.json}}
 /// ```
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
@@ -76,7 +76,7 @@ pub enum FenestrationPosition {
 ///
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/fenestration_type.json}}
+/// {{#include ../../../model/tests/scanner/fenestration_type.json}}
 /// ```
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
@@ -103,12 +103,12 @@ pub enum FenestrationType {
 ///
 /// #### `.spl`
 /// ```json
-/// {{#include ../../../tests/scanner/fenestration.spl}}
+/// {{#include ../../../model/tests/scanner/fenestration.spl}}
 /// ```
 ///
 /// #### `.json`
 /// ```json
-/// {{#include ../../../tests/scanner/fenestration.json}}
+/// {{#include ../../../model/tests/scanner/fenestration.json}}
 /// ```
 #[derive(Debug, ObjectIO, ObjectAPI, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

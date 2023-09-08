@@ -22,6 +22,7 @@ tests/*/*
 docs/ioreference/src/auto-*.md
 docs/ioreference/src/SUMMARY.md
 docs/ioreference/book
+docs/validation.html
 model/model.json 
 
 # GEOMETRY

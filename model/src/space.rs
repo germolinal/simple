@@ -34,11 +34,11 @@ use serde::{Deserialize, Serialize};
 ///
 /// #### `.spl`
 /// ```rs
-/// {{#include ../../../tests/scanner/space.spl}}
+/// {{#include ../../../model/tests/scanner/space.spl}}
 /// ```
 /// #### `.json`
 /// ```rs
-/// {{#include ../../../tests/scanner/space.json}}
+/// {{#include ../../../model/tests/scanner/space.json}}
 /// ```
 #[derive(Debug, ObjectIO, ObjectAPI, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -57,7 +57,8 @@ pub struct Space {
     /// The building in which this `Space` is inserted
     building: Option<String>,
 
-    /// The storey in which the space is located
+    /// The storey in which the space is located,
+    /// indexing from 0 (i.e., ground floor is 0)
     storey: Option<usize>,
 
     #[physical]
