@@ -28,15 +28,16 @@ use serde::{Deserialize, Serialize};
 /// indoor (it depends exclusively on the `Boundary` set to the
 /// surface)
 ///
-/// ## Examples
+///
+///  ## Examples
 ///
 /// #### `.spl`
 /// ```rs
-/// {{#include ../../../tests/scanner/construction.spl}}
+/// {{#include ../../../model/tests/scanner/construction.spl}}
 /// ```
 /// #### `.json`
 /// ```rs
-/// {{#include ../../../tests/scanner/construction.json}}
+/// {{#include ../../../model/tests/scanner/construction.json}}
 /// ```
 #[derive(Default, Debug, ObjectIO, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

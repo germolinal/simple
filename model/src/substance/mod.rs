@@ -49,12 +49,12 @@ use std::sync::Arc;
 /// A normal substance
 ///
 /// ```json
-/// {{#include ../../../tests/scanner/substance_normal.spl}}
+/// {{#include ../../../model/tests/scanner/substance_normal.spl}}
 /// ```
 ///
 /// A gas
 /// ```json
-/// {{#include ../../../tests/scanner/substance_gas.spl}}
+/// {{#include ../../../model/tests/scanner/substance_gas.spl}}
 /// ```
 ///
 #[derive(Debug, Clone, GroupAPI, GroupIO, Serialize, Deserialize)]
