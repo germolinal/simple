@@ -7,5 +7,7 @@ title = "SIMPLE Simulation Input Output reference"
 
 
 [preprocessor.katex]
-[output.katex]
-[output.html]
+after = ["links"]
+# [preprocessor.katex]
+# [output.katex]
+# [output.html]
