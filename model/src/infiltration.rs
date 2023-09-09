@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 /// #### `.spl`
 /// ```json
 /// // Note that Infiltration is always attached to a Space
-/// {{#include ../../../tests/box.spl:bedroom}}
+/// {{#include ../../../model/tests/box.spl:bedroom}}
 /// ```
 ///
 /// #### `.json`
@@ -127,9 +127,9 @@ pub enum Infiltration {
     /// ## Example
     ///
     /// ```json
-    /// {{#include ../../../tests/cold_wellington_apartment.spl:building}}
+    /// {{#include ../../../model/tests/cold_wellington_apartment.spl:building}}
     ///
-    /// {{#include ../../../tests/cold_wellington_apartment.spl:kids_bedroom}}
+    /// {{#include ../../../model/tests/cold_wellington_apartment.spl:kids_bedroom}}
     /// ```
     ///
     /// ### Values for $A_L$
