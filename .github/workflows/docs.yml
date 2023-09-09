@@ -32,11 +32,12 @@ jobs:
     - name: Install MdBook
       run: cargo install mdbook
 
+    - name: Install MDBook Katex
+      run: cargo install mdbook-katex
+
     - name: Build mdbook
       run: mdbook build ./docs/ioreference
 
-    - name: Install MDBook Katex
-      run: cargo install mdbook-katex
 
     - name: Setup Pages
       uses: actions/configure-pages@v3
