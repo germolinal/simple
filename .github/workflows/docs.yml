@@ -38,7 +38,6 @@ jobs:
     - name: Build mdbook
       run: mdbook build ./docs/ioreference
 
-
     - name: Setup Pages
       uses: actions/configure-pages@v3
 

@@ -279,8 +279,8 @@ pub fn derive_output(
     ## Example   
 
     ```json
-    {{#include ../../../tests/box.spl:bedroom}}
-    {{#include ../../../tests/box.spl:bedroom_output}}
+    {{#include ../../../model/tests/box.spl:bedroom}}
+    {{#include ../../../model/tests/box.spl:bedroom_output}}
     ```
     ";
 
