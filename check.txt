@@ -1,4 +1,0 @@
-2023-09-09 14:11:36 [INFO] (mdbook::book): Book building has started
-2023-09-09 14:11:36 [INFO] (mdbook::book): Running the html backend
-2023-09-09 14:11:36 [INFO] (mdbook::book): Running the katex backend
-2023-09-09 14:11:36 [INFO] (mdbook::renderer): Invoking the "katex" renderer
