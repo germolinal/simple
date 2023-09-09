@@ -39,7 +39,7 @@ use std::sync::Arc;
 /// ## Example `.json`
 ///
 /// ```rs
-/// {{ #include ../../../tests//scanner/hvac_electric_heater.json }}
+/// {{ #include ../../../model/tests//scanner/hvac_electric_heater.json }}
 ///
 /// ```
 ///
