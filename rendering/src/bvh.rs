@@ -299,7 +299,7 @@ impl Node {
                     // Sort based on centroid position
                     primitives_info[start..end].sort_unstable_by(cmp_centroids);
                     // Identify the first primitive that is
-                    for (index, i) in (start..end).into_iter().enumerate() {
+                    for (index, i) in (start..end).enumerate() {
                         let bucket_index = get_bucket_index(
                             primitives_info[i].centroid,
                             len_axis,

@@ -83,7 +83,7 @@ fn rgbe_to_colour(r: u8, g: u8, b: u8, e: u8) -> Spectrum {
         return Spectrum::BLACK;
     }
 
-    let n = e as i32 - (128 + 8) as i32;
+    let n = e as i32 - (128 + 8);
     let f = rusty_ldexp(1., n);
     let red = r as Float * f;
     let green = g as Float * f;
@@ -226,7 +226,6 @@ impl ImageBuffer {
                 // Size
                 let tuple: Vec<&[u8]> = line
                     .split(|c| c.is_ascii_whitespace())
-                    .into_iter()
                     .collect();
                 if tuple.len() != 4 || tuple[2].ne(b"+X") {
                     return errmsg;
@@ -250,7 +249,7 @@ impl ImageBuffer {
 
             if line.starts_with(b"FORMAT") {
                 // Format
-                let tuple: Vec<&[u8]> = line.split(|c| *c == b'=').into_iter().collect();
+                let tuple: Vec<&[u8]> = line.split(|c| *c == b'=').collect();
                 if tuple.len() != 2 {
                     let l = std::str::from_utf8(line).map_err(|e| e.to_string())?;
                     return Err(format!(
