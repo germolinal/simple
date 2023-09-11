@@ -284,8 +284,8 @@ impl SimulationModel for ThermalModel {
             let height = 1.; // we need to update this. https://github.com/wisehouse-app/simple/issues/8
             let angle = cos_tilt.acos();
             let area = surf.area();
-            let perimeter = surf.vertices.outer().perimeter().unwrap();
-            let centroid = surf.vertices.outer().centroid().unwrap();
+            let perimeter = surf.vertices.outer().perimeter()?;
+            let centroid = surf.vertices.outer().centroid()?;
 
             let d =
                 Discretization::new(&construction, model, main_dt, max_dx, min_dt, height, angle)?;
@@ -321,8 +321,8 @@ impl SimulationModel for ThermalModel {
             let cos_tilt = normal * Vector3D::new(0., 0., 1.);
             let angle = cos_tilt.acos();
             let area = surf.area();
-            let perimeter = surf.vertices.outer().perimeter().unwrap();
-            let centroid = surf.vertices.outer().centroid().unwrap();
+            let perimeter = surf.vertices.outer().perimeter()?;
+            let centroid = surf.vertices.outer().centroid()?;
 
             #[cfg(debug_assertions)]
             dbg!("height is 1");
@@ -587,13 +587,19 @@ impl ThermalModel {
         ) -> Result<(), String> {
             for surface in surfaces {
                 let parent = &surface.parent;
-                let h_front = parent.front_convection_coefficient(state).unwrap();
-                let h_back = parent.back_convection_coefficient(state).unwrap();
+                let h_front = parent
+                    .front_convection_coefficient(state)
+                    .ok_or("could not get front convection coefficient")?;
+                let h_back = parent
+                    .back_convection_coefficient(state)
+                    .ok_or("could not get back convection coefficient")?;
 
                 let ai = surface.area;
                 // if front leads to a Zone
                 if let Boundary::Space { .. } = &surface.front_boundary {
-                    let z_index = surface.front_space_index.unwrap(); // Should have one of these if boundary is Space
+                    let z_index = surface
+                        .front_space_index
+                        .ok_or("could not get front space index")?;
 
                     let temp = surface.parent.front_temperature(state);
                     a[z_index] += h_front * ai * temp;
@@ -602,7 +608,9 @@ impl ThermalModel {
 
                 // if back leads to a Zone
                 if let Boundary::Space { .. } = &surface.back_boundary {
-                    let z_index = surface.back_space_index.unwrap(); // Should have one of these if boundary is Space
+                    let z_index = surface
+                        .back_space_index
+                        .ok_or("could not get back space index")?;
 
                     let temp = surface.parent.back_temperature(state);
                     a[z_index] += h_back * ai * temp;

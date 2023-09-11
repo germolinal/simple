@@ -83,7 +83,7 @@ fn rgbe_to_colour(r: u8, g: u8, b: u8, e: u8) -> Spectrum {
         return Spectrum::BLACK;
     }
 
-    let n = e as i32 - (128 + 8) as i32;
+    let n = e as i32 - (128 + 8);
     let f = rusty_ldexp(1., n);
     let red = r as Float * f;
     let green = g as Float * f;
@@ -165,23 +165,26 @@ impl ImageBuffer {
     }
 
     /// Saves the image in HDRE format
-    pub fn save_hdre(&self, filename: &Path) {
+    pub fn save_hdre(&self, filename: &Path) -> Result<(), String> {
         // Create the file
-        let mut file = std::fs::File::create(filename).unwrap();
+        let mut file = std::fs::File::create(filename).map_err(|e| e.to_string())?;
         // Write header
         // let gamma = 1.0;
         // let exposure = 1.0;
-        file.write_all(b"#?RGBE\n").unwrap();
-        // file.write_all(format!("GAMMA={}\n", gamma).as_bytes()).unwrap();
-        // file.write_all(format!("EXPOSURE={}\n", exposure).as_bytes()).unwrap();
-        file.write_all(b"FORMAT=32-bit_rle_rgbe\n\n").unwrap();
+        file.write_all(b"#?RGBE\n").map_err(|e| e.to_string())?;
+        // file.write_all(format!("GAMMA={}\n", gamma).as_bytes()).map_err(|e| e.to_string())?;
+        // file.write_all(format!("EXPOSURE={}\n", exposure).as_bytes()).map_err(|e| e.to_string())?;
+        file.write_all(b"FORMAT=32-bit_rle_rgbe\n\n")
+            .map_err(|e| e.to_string())?;
         file.write_all(format!("-Y {} +X {}\n", self.height, self.width).as_bytes())
-            .unwrap();
+            .map_err(|e| e.to_string())?;
 
         for pixel in self.pixels.iter() {
             file.write_all(&colour_to_rgbe(pixel.0[0], pixel.0[1], pixel.0[2]))
-                .unwrap();
+                .map_err(|e| e.to_string())?;
         }
+
+        Ok(())
     }
 
     /// Creates a new empty [`ImageBuffer`] from a File
@@ -191,12 +194,16 @@ impl ImageBuffer {
             Err(_) => {
                 return Err(format!(
                     "Could not read image file '{}'",
-                    filename.to_str().unwrap()
+                    filename
+                        .to_str()
+                        .ok_or("Could not transform filename into string")?
                 ))
             }
         };
         let mut content = content.as_slice();
-        let filename = filename.to_str().unwrap();
+        let filename = filename
+            .to_str()
+            .ok_or("Could not transform filename into string")?;
 
         // READ HEADER
         let height: Option<usize>;
@@ -212,26 +219,25 @@ impl ImageBuffer {
 
             if line.starts_with(b"-Y") {
                 let errmsg = {
-                    let l = std::str::from_utf8(line).unwrap();
+                    let l = std::str::from_utf8(line).map_err(|e| e.to_string())?;
                     Err(format!("When reading file '{}' : Expecting SIZE line to be in the format '-Y number +X number'... found '{}'",filename, l))
                 };
 
                 // Size
                 let tuple: Vec<&[u8]> = line
                     .split(|c| c.is_ascii_whitespace())
-                    .into_iter()
                     .collect();
                 if tuple.len() != 4 || tuple[2].ne(b"+X") {
                     return errmsg;
                 }
-                let l = std::str::from_utf8(tuple[1]).unwrap();
+                let l = std::str::from_utf8(tuple[1]).map_err(|e| e.to_string())?;
                 height = match l.parse::<usize>() {
                     Ok(v) => Some(v),
                     Err(_) => {
                         return errmsg;
                     }
                 };
-                let l = std::str::from_utf8(tuple[3]).unwrap();
+                let l = std::str::from_utf8(tuple[3]).map_err(|e| e.to_string())?;
                 width = match l.parse::<usize>() {
                     Ok(v) => Some(v),
                     Err(_) => {
@@ -243,9 +249,9 @@ impl ImageBuffer {
 
             if line.starts_with(b"FORMAT") {
                 // Format
-                let tuple: Vec<&[u8]> = line.split(|c| *c == b'=').into_iter().collect();
+                let tuple: Vec<&[u8]> = line.split(|c| *c == b'=').collect();
                 if tuple.len() != 2 {
-                    let l = std::str::from_utf8(line).unwrap();
+                    let l = std::str::from_utf8(line).map_err(|e| e.to_string())?;
                     return Err(format!(
                         "Expecting FORMAT line to be in the format 'FORMAT=number'... found '{}'",
                         l
@@ -253,8 +259,8 @@ impl ImageBuffer {
                 }
                 let exp_format = b"32-bit_rle_rgbe";
                 if tuple[1].ne(exp_format) {
-                    let exp_format = std::str::from_utf8(exp_format).unwrap();
-                    let found_format = std::str::from_utf8(tuple[1]).unwrap();
+                    let exp_format = std::str::from_utf8(exp_format).map_err(|e| e.to_string())?;
+                    let found_format = std::str::from_utf8(tuple[1]).map_err(|e| e.to_string())?;
                     return Err(format!(
                         "Expecting FORMAT to be '{}'... found '{}'",
                         exp_format, found_format
@@ -264,8 +270,8 @@ impl ImageBuffer {
             }
         }
         // Setup
-        let width = width.unwrap();
-        let height = height.unwrap();
+        let width = width.ok_or("no width?")?;
+        let height = height.ok_or("no height")?;
 
         // Read body
         let pixels = content
@@ -291,7 +297,7 @@ impl ImageBuffer {
         max: Option<Float>,
         scale: Colourmap,
         outfile: &Path,
-    ) {
+    ) -> Result<(), String> {
         let log_luminance: Vec<Float> = self.pixels.iter().map(|x| x.luminance().log10()).collect();
         const MIN_MIN: Float = 0.001;
         // Get min and max
@@ -334,10 +340,12 @@ impl ImageBuffer {
             data.push((s[2] * 256.).round() as u8);
         });
 
-        let encoder = Encoder::new_file(outfile, 100).unwrap();
+        let encoder = Encoder::new_file(outfile, 100).map_err(|e| e.to_string())?;
         encoder
             .encode(&data, self.width as u16, self.height as u16, ColorType::Rgb)
-            .unwrap();
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
     /// Creates a new version of an image, but in (linear) falsecolour
@@ -347,7 +355,7 @@ impl ImageBuffer {
         max: Option<Float>,
         scale: Colourmap,
         outfile: &Path,
-    ) {
+    ) -> Result<(), String> {
         let luminance: Vec<Float> = self.pixels.iter().map(|x| x.luminance()).collect();
 
         const MIN_MIN: Float = 0.000;
@@ -402,10 +410,12 @@ impl ImageBuffer {
             data.push((s[2] * 256.).round() as u8);
         });
 
-        let encoder = Encoder::new_file(outfile, 100).unwrap();
+        let encoder = Encoder::new_file(outfile, 100).map_err(|e| e.to_string())?;
         encoder
             .encode(&data, self.width as u16, self.height as u16, ColorType::Rgb)
-            .unwrap();
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 }
 
@@ -509,7 +519,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rgbe_to_colour() {
+    fn test_rgbe_to_colour() -> Result<(), String> {
         let check = |a: Spectrum, b: Spectrum| -> Result<(), String> {
             let a_r = a.radiance();
             let b_r = b.radiance();
@@ -538,49 +548,42 @@ mod tests {
         check(
             rgbe_to_colour(201, 62, 18, 138),
             Spectrum([807., 249., 73.]),
-        )
-        .unwrap();
+        )?;
         check(
             rgbe_to_colour(117, 136, 56, 159),
             Spectrum([984943658., 1144108930., 470211272.]),
-        )
-        .unwrap();
+        )?;
         check(
             rgbe_to_colour(12, 173, 173, 159),
             Spectrum([101027544., 1457850878., 1458777923.]),
-        )
-        .unwrap();
+        )?;
         check(
             rgbe_to_colour(239, 98, 132, 159),
             Spectrum([2007237709., 823564440., 1115438165.]),
-        )
-        .unwrap();
+        )?;
         check(
             rgbe_to_colour(212, 8, 13, 159),
             Spectrum([1784484492., 74243042., 114807987.]),
-        )
-        .unwrap();
+        )?;
 
         check(
             rgbe_to_colour(196, 34, 213, 158),
             Spectrum([823378840., 143542612., 896544303.]),
-        )
-        .unwrap();
+        )?;
         check(
             rgbe_to_colour(175, 150, 238, 159),
             Spectrum([1474833169., 1264817709., 1998097157.]),
-        )
-        .unwrap();
+        )?;
         check(
             rgbe_to_colour(216, 134, 23, 159),
             Spectrum([1817129560., 1131570933., 197493099.]),
-        )
-        .unwrap();
+        )?;
         check(
             rgbe_to_colour(167, 106, 179, 159),
             Spectrum([1404280278., 893351816., 1505795335.]),
-        )
-        .unwrap();
+        )?;
+
+        Ok(())
     }
 
     // #[test]

@@ -223,11 +223,10 @@ pub struct Fenestration {
 }
 
 impl SurfaceTrait for Fenestration {
-
-    fn name(&self)->&String{
+    fn name(&self) -> &String {
         &self.name
     }
-    
+
     fn area(&self) -> Float {
         self.vertices.area()
     }
@@ -255,7 +254,7 @@ impl SurfaceTrait for Fenestration {
     fn set_front_boundary(&mut self, boundary: Boundary) {
         self.front_boundary = boundary;
     }
-    
+
     fn set_back_boundary(&mut self, boundary: Boundary) {
         self.back_boundary = boundary;
     }

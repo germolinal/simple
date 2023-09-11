@@ -136,7 +136,7 @@ impl Triangle3D {
         }
 
         // Check that they are not collinear
-        if vertex_a.is_collinear(vertex_b, vertex_c).unwrap() {
+        if vertex_a.is_collinear(vertex_b, vertex_c)? {
             let msg = "Trying to build a Triangle3D from collinear points".to_string();
             return Err(msg);
         }
@@ -281,7 +281,7 @@ impl Triangle3D {
         self.c
     }
 
-    /// Sets the first vertex of an A,B,C [`Triangle3D`], 
+    /// Sets the first vertex of an A,B,C [`Triangle3D`],
     /// updating the triangle's normal and area.
     pub fn set_a(&mut self, p: Point3D) {
         self.a = p;
@@ -289,7 +289,7 @@ impl Triangle3D {
         self.set_normal();
     }
 
-    /// Sets the first vertex of an A,B,C [`Triangle3D`], 
+    /// Sets the first vertex of an A,B,C [`Triangle3D`],
     /// updating the triangle's normal and area.
     pub fn set_b(&mut self, p: Point3D) {
         self.b = p;
@@ -297,7 +297,7 @@ impl Triangle3D {
         self.set_normal();
     }
 
-    /// Sets the first vertex of an A,B,C [`Triangle3D`], 
+    /// Sets the first vertex of an A,B,C [`Triangle3D`],
     /// updating the triangle's normal and area.
     pub fn set_c(&mut self, p: Point3D) {
         self.c = p;
@@ -624,7 +624,7 @@ mod testing {
     use super::*;
 
     #[test]
-    fn test_new() {
+    fn test_new() -> Result<(), String> {
         // Buid triangle
         // This is a right triangle, so it fits
         // within a circle, and has a circumradius equals
@@ -633,30 +633,30 @@ mod testing {
         let b = Point3D::new(6., 0., 0.);
         let c = Point3D::new(0., 8., 0.);
 
-        let t = Triangle3D::new(a, b, c).unwrap();
+        let t = Triangle3D::new(a, b, c)?;
 
         // Test vertices
         assert!(t.a.compare(a));
         assert!(t.b.compare(b));
         assert!(t.c.compare(c));
 
-        let a = t.vertex(0).unwrap();
+        let a = t.vertex(0)?;
         assert!(a.compare(a));
-        let b = t.vertex(1).unwrap();
+        let b = t.vertex(1)?;
         assert!(b.compare(b));
-        let c = t.vertex(2).unwrap();
+        let c = t.vertex(2)?;
         assert!(c.compare(c));
 
         // test segments
-        let ab = t.segment(0).unwrap();
+        let ab = t.segment(0)?;
         let ab_ref = Segment3D::new(a, b);
         assert!(ab.compare(&ab_ref));
 
-        let bc = t.segment(1).unwrap();
+        let bc = t.segment(1)?;
         let bc_ref = Segment3D::new(b, c);
         assert!(bc.compare(&bc_ref));
 
-        let ca = t.segment(2).unwrap();
+        let ca = t.segment(2)?;
         let ca_ref = Segment3D::new(c, a);
         assert!(ca.compare(&ca_ref));
 
@@ -677,15 +677,16 @@ mod testing {
 
         // check centroid
         assert!(t.centroid().compare(Point3D::new(6. / 3., 8. / 3., 0.)));
+        Ok(())
     }
 
     #[test]
-    fn test_triangle_intersect() {
+    fn test_triangle_intersect() -> Result<(), String> {
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(0., 1., 0.);
 
-        let triangle = Triangle3D::new(a, b, c).unwrap();
+        let triangle = Triangle3D::new(a, b, c)?;
 
         let test_hit = |pt: Point3D, offset: Vector3D, expect_hit: bool| -> Result<(), String> {
             let offset = offset.get_normalized();
@@ -721,42 +722,44 @@ mod testing {
 
         let offset = Vector3D::new(0., 0., -1.);
         // Vertex A.
-        test_hit(triangle.a(), offset, true).unwrap();
+        test_hit(triangle.a(), offset, true)?;
 
         // Vertex B.
-        test_hit(triangle.b(), offset, true).unwrap();
+        test_hit(triangle.b(), offset, true)?;
 
         // Vertex C.
-        test_hit(triangle.c(), offset, true).unwrap();
+        test_hit(triangle.c(), offset, true)?;
 
         // Segment AB.
         let p = Point3D::new(0.5, 0., 0.);
-        test_hit(p, offset, true).unwrap();
+        test_hit(p, offset, true)?;
 
         // Segment AC.
         let p = Point3D::new(0., 0.5, 0.);
-        test_hit(p, offset, true).unwrap();
+        test_hit(p, offset, true)?;
 
         // Segment BC.
         let p = Point3D::new(0.5, 0.5, 0.);
-        test_hit(p, offset, true).unwrap();
+        test_hit(p, offset, true)?;
 
         // Point outside
         let p = Point3D::new(0., -1., 0.);
-        test_hit(p, offset, false).unwrap();
+        test_hit(p, offset, false)?;
 
         // Point inside
         let p = Point3D::new(0.1, 0.1, 0.);
-        test_hit(p, offset, true).unwrap();
+        test_hit(p, offset, true)?;
+
+        Ok(())
     }
 
     #[test]
-    fn test_test_point() {
+    fn test_test_point() -> Result<(), String> {
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(0., 1., 0.);
 
-        let triangle = Triangle3D::new(a, b, c).unwrap();
+        let triangle = Triangle3D::new(a, b, c)?;
 
         // Vertex A.
         assert_eq!(PointInTriangle::VertexA, triangle.test_point(a));
@@ -791,21 +794,22 @@ mod testing {
         let a = Point3D::new(2., 2., 0.);
         let b = Point3D::new(0., 0., 0.);
         let c = Point3D::new(4., 0., 0.);
-        let triangle = Triangle3D::new(a, b, c).unwrap();
+        let triangle = Triangle3D::new(a, b, c)?;
         let p = Point3D::new(2., 0., 0.);
 
         assert_eq!(PointInTriangle::EdgeBC, triangle.test_point(p));
+        Ok(())
     }
 
     #[test]
-    fn test_circumcenter() {
+    fn test_circumcenter() -> Result<(), String> {
         // TEST 1... centerd in origin
         let mut l = 3.;
         let a = Point3D::new(-l, 0., 0.);
         let b = Point3D::new(l, 0., 0.);
         let c = Point3D::new(0., l, 0.);
 
-        let t = Triangle3D::new(a, b, c).unwrap();
+        let t = Triangle3D::new(a, b, c)?;
 
         let center1 = t.circumcenter();
         assert!(center1.compare(Point3D::new(0., 0., 0.)));
@@ -819,7 +823,7 @@ mod testing {
         let b2 = Point3D::new(l + cx, 0. + cy, cz);
         let c2 = Point3D::new(0. + cx, l + cy, cz);
 
-        let t2 = Triangle3D::new(a2, b2, c2).unwrap();
+        let t2 = Triangle3D::new(a2, b2, c2)?;
 
         let center2 = t2.circumcenter();
 
@@ -830,18 +834,20 @@ mod testing {
         let b3 = Point3D::new(1., 4., 0.);
         let c3 = Point3D::new(5., 4., 0.);
 
-        let t3 = Triangle3D::new(a3, b3, c3).unwrap();
+        let t3 = Triangle3D::new(a3, b3, c3)?;
         let center3 = t3.circumcenter();
         assert!(center3.compare(Point3D::new(3., 4., 0.)));
+
+        Ok(())
     }
 
     #[test]
-    fn test_get_edge_index_from_points() {
+    fn test_get_edge_index_from_points() -> Result<(), String> {
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(6., 0., 0.);
         let c = Point3D::new(0., 8., 0.);
 
-        let t = Triangle3D::new(a, b, c).unwrap();
+        let t = Triangle3D::new(a, b, c)?;
 
         assert_eq!(
             t.get_edge_index_from_segment(&Segment3D::new(a, b)),
@@ -869,28 +875,29 @@ mod testing {
         );
 
         // test segments
-        let ab = t.segment(0).unwrap();
+        let ab = t.segment(0)?;
         let ab_ref = Segment3D::new(a, b);
         assert!(ab.compare(&ab_ref));
 
-        let bc = t.segment(1).unwrap();
+        let bc = t.segment(1)?;
         let bc_ref = Segment3D::new(b, c);
         assert!(bc.compare(&bc_ref));
 
-        let ca = t.segment(2).unwrap();
+        let ca = t.segment(2)?;
         let ca_ref = Segment3D::new(c, a);
         assert!(ca.compare(&ca_ref));
+        Ok(())
     }
 
     #[test]
-    fn test_has_vertex() {
+    fn test_has_vertex() -> Result<(), String> {
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(6., 0., 0.);
         let c = Point3D::new(0., 8., 0.);
 
         let not_there = Point3D::new(12., 1., 99.);
 
-        let t = Triangle3D::new(a, b, c).unwrap();
+        let t = Triangle3D::new(a, b, c)?;
 
         assert!(t.has_vertex(a));
         assert!(t.has_vertex(b));
@@ -898,10 +905,12 @@ mod testing {
 
         assert!(!t.has_vertex(not_there));
 
-        let t2 = Triangle3D::new(a, c, b).unwrap();
+        let t2 = Triangle3D::new(a, c, b)?;
         assert!(t.compare(&t2));
 
-        let t3 = Triangle3D::new(a, c, not_there).unwrap();
+        let t3 = Triangle3D::new(a, c, not_there)?;
         assert!(!t.compare(&t3));
+
+        Ok(())
     }
 }

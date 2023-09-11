@@ -25,6 +25,7 @@ use model::{Model, SimulationState};
 use rhai::{Engine, AST};
 use std::borrow::Borrow;
 use std::cell::RefCell;
+// use std::sync::RwLock;
 use std::sync::Arc;
 
 /// A controller that adapts the state of the building based on a user-defined

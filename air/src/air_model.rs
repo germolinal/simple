@@ -26,7 +26,7 @@ use model::{Infiltration, Model, SimulationState, SimulationStateElement, Simula
 use std::borrow::Borrow;
 use weather::{CurrentWeather, WeatherTrait};
 
-pub type Resolver = Box<dyn Fn(&CurrentWeather, &mut SimulationState)>;
+pub type Resolver = Box<dyn Fn(&CurrentWeather, &mut SimulationState) -> Result<(), String>>;
 
 pub struct AirFlowModel {
     infiltration_calcs: Vec<Resolver>,
@@ -92,7 +92,9 @@ impl SimulationModel for AirFlowModel {
             } else {
                 // Does nothing
                 infiltration_calcs.push(Box::new(
-                    move |_current_weather: &CurrentWeather, _state: &mut SimulationState| {},
+                    move |_current_weather: &CurrentWeather,
+                          _state: &mut SimulationState|
+                          -> Result<(), String> { Ok(()) },
                 ));
             }
         }
@@ -114,7 +116,7 @@ impl SimulationModel for AirFlowModel {
         // Process infiltration
         let current_weather = weather.get_weather_data(date);
         for func in self.infiltration_calcs.iter() {
-            func(&current_weather, state)
+            func(&current_weather, state)?;
         }
 
         Ok(())
@@ -136,16 +138,14 @@ mod tests {
     };
 
     #[test]
-    fn test_infiltration() {
+    fn test_infiltration() -> Result<(), String> {
         let mut model = Model::default();
         let mut state_header = SimulationStateHeader::new();
 
         let mut space = Space::new("some space".to_string());
         space.set_infiltration(Infiltration::Doe2 { flow: 1. });
-        let i = state_header
-            .push(SimulationStateElement::SpaceDryBulbTemperature(0), 22.)
-            .unwrap();
-        space.set_dry_bulb_temperature_index(i).unwrap();
+        let i = state_header.push(SimulationStateElement::SpaceDryBulbTemperature(0), 22.)?;
+        space.set_dry_bulb_temperature_index(i)?;
         let space = model.add_space(space);
 
         let air_model = AirFlowModel::new(&META_OPTIONS, (), &model, &mut state_header, 1)
@@ -175,27 +175,31 @@ mod tests {
         };
 
         // It should be initialized as Zero
-        let inf = space.infiltration_volume(&state).unwrap();
+        let inf = space
+            .infiltration_volume(&state)
+            .ok_or("No infiltration volume 1")?;
         assert!(inf < 1e-9);
 
-        air_model
-            .march(date, &weather, &model, &mut state, &mut ())
-            .unwrap();
+        air_model.march(date, &weather, &model, &mut state, &mut ())?;
 
         // Check values.
-        let inf = space.infiltration_volume(&state).unwrap();
+        let inf = space
+            .infiltration_volume(&state)
+            .ok_or("No infiltration volume 2")?;
         assert!((1.34 - inf).abs() < 0.02);
 
         // ... A windspeed of 4.47 m/s (10 mph) gives a factor of 1.0.
         let mut weather = SyntheticWeather::default();
         weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(space_temp - 40.));
         weather.wind_speed = Box::new(ScheduleConstant::new(4.47));
-        air_model
-            .march(date, &weather, &model, &mut state, &mut ())
-            .unwrap();
+        air_model.march(date, &weather, &model, &mut state, &mut ())?;
 
         // Check values.
-        let inf = space.infiltration_volume(&state).unwrap();
+        let inf = space
+            .infiltration_volume(&state)
+            .ok_or("No infiltration volume 3")?;
         assert!((1. - inf).abs() < 0.02);
+
+        Ok(())
     }
 }

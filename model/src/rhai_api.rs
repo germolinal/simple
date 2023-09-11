@@ -23,6 +23,8 @@ use crate::{
     Fenestration, Luminaire, Model, SimulationState, Space, Surface,
 };
 use std::cell::RefCell;
+// use std::sync::RwLock;
+
 use std::sync::Arc;
 
 /// Registers the functions used to operate the building

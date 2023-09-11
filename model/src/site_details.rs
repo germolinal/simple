@@ -104,7 +104,7 @@ mod testing {
     use crate::Model;
 
     #[test]
-    fn serde_site_details() {
+    fn serde_site_details() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -122,7 +122,7 @@ mod testing {
             }
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
@@ -131,25 +131,27 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/site_details";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: SiteDetails = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: SiteDetails =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: SiteDetails = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: SiteDetails =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
 
         // check simple
-        let (model, ..) = Model::from_file("./tests/scanner/site_details.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/site_details.spl")?;
         if let Some(d) = &model.site_details {
-            assert!((123. - d.altitude.unwrap()).abs() < 1e-8);
+            assert!((123. - d.altitude.ok_or("Could not get altitude")?).abs() < 1e-8);
 
             if let Some(terrain) = d.terrain {
                 assert_eq!(terrain, TerrainClass::Urban);
@@ -159,11 +161,12 @@ mod testing {
         } else {
             assert!(false, "No site details!")
         }
+        Ok(())
     }
 
     #[test]
-    fn site_details_from_file() {
-        let (model, ..) = Model::from_file("./tests/box_with_window.spl").unwrap();
+    fn site_details_from_file() -> Result<(), String> {
+        let (model, ..) = Model::from_file("./tests/box_with_window.spl")?;
 
         if let Some(opt) = model.site_details {
             if let Some(altitude) = opt.altitude {
@@ -179,5 +182,6 @@ mod testing {
         } else {
             unreachable!()
         }
+        Ok(())
     }
 }

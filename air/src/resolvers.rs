@@ -10,15 +10,16 @@ use weather::CurrentWeather;
 pub fn constant_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
     let space_clone = Arc::clone(space);
     Ok(Box::new(
-        move |current_weather: &CurrentWeather, state: &mut SimulationState| {
+        move |current_weather: &CurrentWeather,
+              state: &mut SimulationState|
+              -> Result<(), String> {
             // Set temperature
             let outdoor_temperature = current_weather.dry_bulb_temperature;
-            space_clone
-                .set_infiltration_temperature(state, outdoor_temperature)
-                .unwrap();
+            space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
             // Set volume
-            space_clone.set_infiltration_volume(state, v).unwrap();
+            space_clone.set_infiltration_volume(state, v)?;
+            Ok(())
         },
     ))
 }
@@ -26,16 +27,17 @@ pub fn constant_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, Strin
 pub fn blast_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
     let space_clone = Arc::clone(space);
     Ok(Box::new(
-        move |current_weather: &CurrentWeather, state: &mut SimulationState| {
+        move |current_weather: &CurrentWeather,
+              state: &mut SimulationState|
+              -> Result<(), String> {
             // Set temperature
             let outdoor_temperature = current_weather.dry_bulb_temperature;
-            space_clone
-                .set_infiltration_temperature(state, outdoor_temperature)
-                .unwrap();
+            space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
             // Set volume
             let volume = blast_design_flow_rate(current_weather, &space_clone, state, v);
-            space_clone.set_infiltration_volume(state, volume).unwrap();
+            space_clone.set_infiltration_volume(state, volume)?;
+            Ok(())
         },
     ))
 }
@@ -43,16 +45,17 @@ pub fn blast_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> 
 pub fn doe2_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
     let space_clone = Arc::clone(space);
     Ok(Box::new(
-        move |current_weather: &CurrentWeather, state: &mut SimulationState| {
+        move |current_weather: &CurrentWeather,
+              state: &mut SimulationState|
+              -> Result<(), String> {
             // Set temperature
             let outdoor_temperature = current_weather.dry_bulb_temperature;
-            space_clone
-                .set_infiltration_temperature(state, outdoor_temperature)
-                .unwrap();
+            space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
             // Set volume
             let volume = doe2_design_flow_rate(current_weather, &space_clone, state, v);
-            space_clone.set_infiltration_volume(state, volume).unwrap();
+            space_clone.set_infiltration_volume(state, volume)?;
+            Ok(())
         },
     ))
 }
@@ -67,16 +70,17 @@ pub fn design_flow_rate_resolver(
 ) -> Result<Resolver, String> {
     let space_clone = Arc::clone(space);
     Ok(Box::new(
-        move |current_weather: &CurrentWeather, state: &mut SimulationState| {
+        move |current_weather: &CurrentWeather,
+              state: &mut SimulationState|
+              -> Result<(), String> {
             // Set temperature
             let outdoor_temperature = current_weather.dry_bulb_temperature;
-            space_clone
-                .set_infiltration_temperature(state, outdoor_temperature)
-                .unwrap();
+            space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
             // Set volume
             let volume = design_flow_rate(current_weather, &space_clone, state, a, b, c, d, v);
-            space_clone.set_infiltration_volume(state, volume).unwrap();
+            space_clone.set_infiltration_volume(state, volume)?;
+            Ok(())
         },
     ))
 }
@@ -189,17 +193,18 @@ pub fn effective_air_leakage_resolver(
 
         let space_clone = Arc::clone(space);
         Ok(Box::new(
-            move |current_weather: &CurrentWeather, state: &mut SimulationState| {
+            move |current_weather: &CurrentWeather,
+                  state: &mut SimulationState|
+                  -> Result<(), String> {
                 // Set temperature
                 let outdoor_temperature = current_weather.dry_bulb_temperature;
-                space_clone
-                    .set_infiltration_temperature(state, outdoor_temperature)
-                    .unwrap();
+                space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
                 // Set volume
                 let volume =
                     effective_leakage_area(current_weather, &space_clone, state, al, cw, cs);
-                space_clone.set_infiltration_volume(state, volume).unwrap();
+                space_clone.set_infiltration_volume(state, volume)?;
+                Ok(())
             },
         ))
     } else {

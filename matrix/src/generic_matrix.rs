@@ -73,7 +73,6 @@ impl<T: Numberish> GenericMatrix<T> {
             nrows: n,
             ncols: n,
             data: (0..(n * n))
-                .into_iter()
                 .map(|i| {
                     let col = i % n;
                     let row = (i - col) / n;

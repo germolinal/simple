@@ -29,6 +29,7 @@ use std::sync::Arc;
 /// Represents a thermal connection in the thermal network.
 /// It can be a Cavity, a Solid, or other.
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub enum UValue {
     /// A normal (i.e., $`\lambda/\Delta x`$) U-value
     Solid(Float),
@@ -40,6 +41,7 @@ pub enum UValue {
     Back,
 
     /// Undefined yet
+    #[default]
     None,
 }
 
@@ -55,11 +57,7 @@ impl UValue {
     }
 }
 
-impl std::default::Default for UValue {
-    fn default() -> Self {
-        UValue::None
-    }
-}
+
 
 /// Represents the discretization of a [`Construction`] for heat transfer
 /// calculation purposes.
@@ -240,8 +238,11 @@ impl Discretization {
                                 construction.name
                             ));
                         }
-                        let prev_mat_name = construction.materials.get(n_layer - 1).unwrap(); // we already checked this
-                                                                                              // let prev_mat = model.get_material(prev_mat_name)?;
+                        let prev_mat_name = construction
+                            .materials
+                            .get(n_layer - 1)
+                            .ok_or("No previous layer found")?; // we already checked this
+                                                                // let prev_mat = model.get_material(prev_mat_name)?;
 
                         let next_mat_name = match construction.materials.get(n_layer + 1) {
                             Some(v) => v,
@@ -510,9 +511,9 @@ impl Discretization {
                     let thickness = material.thickness;
                     let (k, rho, cp) = match substance {
                         Substance::Normal(s) => {
-                            let k = s.thermal_conductivity().unwrap();
-                            let rho = s.density().unwrap();
-                            let cp = s.specific_heat_capacity().unwrap();
+                            let k = s.thermal_conductivity()?;
+                            let rho = s.density()?;
+                            let cp = s.specific_heat_capacity()?;
                             (*k, *rho, *cp)
                         }
                         Substance::Gas(_) => continue,
@@ -667,12 +668,12 @@ impl Discretization {
             (u, u * t_before)
         };
 
-        memory.q.add_to_element(0, 0, front_q).unwrap();
-        memory.k.add_to_element(0, 0, -hs_front).unwrap();
+        memory.q.add_to_element(0, 0, front_q)?;
+        memory.k.add_to_element(0, 0, -hs_front)?;
 
         // Add back border conditions
         let (hs_back, back_q) = if fin == nrows {
-            let ts = temperatures.get(fin - 1, 0).unwrap();
+            let ts = temperatures.get(fin - 1, 0)?;
             // Solar radiation is added later because it also depends
             // on the solar absorption of different layers.
             let back_q = back_env.air_temperature * back_hs  // convection
@@ -748,7 +749,7 @@ mod testing {
     }
 
     #[test]
-    fn build_normal_mass() {
+    fn build_normal_mass() -> Result<(), String> {
         let thermal_cond = 1.;
         let density = 2.1;
         let cp = 1.312;
@@ -756,7 +757,7 @@ mod testing {
         let tstep_sub = 10;
 
         let (model, construction) = get_normal(thermal_cond, density, cp, thickness);
-        let d = Discretization::build(&construction, &model, tstep_sub, vec![1], 1., 0.).unwrap();
+        let d = Discretization::build(&construction, &model, tstep_sub, vec![1], 1., 0.)?;
         // normal --> linear
 
         assert_eq!(d.tstep_subdivision, tstep_sub);
@@ -781,10 +782,12 @@ mod testing {
             "Expecting mass to be {exp_mass}... found {mass}"
         );
         assert!(matches!(d.segments[1].1, UValue::Back));
+
+        Ok(())
     }
 
     #[test]
-    fn test_build_normal_no_mass() {
+    fn test_build_normal_no_mass() -> Result<(), String> {
         let thermal_cond = 1.;
         let density = 2.1;
         let cp = 1.312;
@@ -793,7 +796,7 @@ mod testing {
 
         let (model, construction) = get_normal(thermal_cond, density, cp, thickness);
 
-        let d = Discretization::build(&construction, &model, tstep_sub, vec![0], 1., 0.).unwrap();
+        let d = Discretization::build(&construction, &model, tstep_sub, vec![0], 1., 0.)?;
 
         // normal --> linear
         assert_eq!(d.tstep_subdivision, tstep_sub);
@@ -821,10 +824,11 @@ mod testing {
         } else {
             panic!("Expecting Back!")
         }
+        Ok(())
     }
 
     #[test]
-    fn build_normal_gas_normal_mass() {
+    fn build_normal_gas_normal_mass() -> Result<(), String> {
         let thermal_cond = 1.;
         let density = 2.1;
         let cp = 1.312;
@@ -877,8 +881,7 @@ mod testing {
 
         // Test
         ///////////////////////////
-        let d =
-            Discretization::build(&construction, &model, tstep_sub, vec![1, 1, 1], 1., 0.).unwrap();
+        let d = Discretization::build(&construction, &model, tstep_sub, vec![1, 1, 1], 1., 0.)?;
 
         // has gas --> linear
         assert_eq!(d.tstep_subdivision, tstep_sub);
@@ -933,10 +936,12 @@ mod testing {
         } else {
             panic!("Expecting Solid!")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn build_normal_gas_normal_no_mass() {
+    fn build_normal_gas_normal_no_mass() -> Result<(), String> {
         let thermal_cond = 1.;
         let density = 2.1;
         let cp = 1.312;
@@ -987,8 +992,7 @@ mod testing {
 
         // Test
         ///////////////////////////
-        let d =
-            Discretization::build(&construction, &model, tstep_sub, vec![0, 0, 0], 1., 0.).unwrap();
+        let d = Discretization::build(&construction, &model, tstep_sub, vec![0, 0, 0], 1., 0.)?;
 
         // has gas --> linear
         assert_eq!(d.tstep_subdivision, tstep_sub);
@@ -1049,6 +1053,8 @@ mod testing {
         } else {
             panic!("Expecting Solid!")
         }
+
+        Ok(())
     }
 
     fn get_solid_test_system(
@@ -1103,7 +1109,7 @@ mod testing {
     }
 
     #[test]
-    fn test_get_q_k_solid() {
+    fn test_get_q_k_solid() -> Result<(), String> {
         let n = 5;
         let thickness = 0.5;
         let thermal_cond = 2.12;
@@ -1137,14 +1143,14 @@ mod testing {
             back_hs,
             back_rad_hs,
             &mut memory,
-        )
-        .unwrap();
+        )?;
+
         println!("k = {}", memory.k);
         println!("heat_flows = {}", memory.q);
 
         for r in 0..n + 1 {
             // Check q
-            let heat_flow = memory.q.get(r, 0).unwrap();
+            let heat_flow = memory.q.get(r, 0)?;
             if r == 0 {
                 // exterior temp is lower, so heat flow is negative
                 assert!(heat_flow < -1e-5);
@@ -1156,7 +1162,7 @@ mod testing {
             }
 
             for c in 0..n + 1 {
-                let v = memory.k.get(r, c).unwrap();
+                let v = memory.k.get(r, c)?;
 
                 if c == r {
                     // Diagonal
@@ -1184,10 +1190,11 @@ mod testing {
                 }
             }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_get_q_k_solid_partial() {
+    fn test_get_q_k_solid_partial() -> Result<(), String> {
         let n = 5;
         let thickness = 0.5;
         let thermal_cond = 2.12;
@@ -1222,14 +1229,13 @@ mod testing {
             back_hs,
             back_rad_hs,
             &mut memory,
-        )
-        .unwrap();
+        )?;
         println!("k = {}", memory.k);
         println!("heat_flows = {}", memory.q);
 
         for r in 0..3 {
             // Check q
-            let heat_flow = memory.q.get(r, 0).unwrap();
+            let heat_flow = memory.q.get(r, 0)?;
             if r == 0 {
                 // exterior temp is lower, so heat flow is negative
                 assert!(heat_flow < -1e-5);
@@ -1241,7 +1247,7 @@ mod testing {
             }
 
             for c in 0..3 {
-                let v = memory.k.get(r, c).unwrap();
+                let v = memory.k.get(r, c)?;
 
                 if c == r {
                     // Diagonal
@@ -1269,10 +1275,11 @@ mod testing {
                 }
             }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_get_q_k_solid_partial_2() {
+    fn test_get_q_k_solid_partial_2() -> Result<(), String> {
         let n = 5;
         let thickness = 0.5;
         let thermal_cond = 0.1;
@@ -1306,14 +1313,13 @@ mod testing {
             back_hs,
             back_rad_hs,
             &mut memory,
-        )
-        .unwrap();
+        )?;
         println!("k = {}", memory.k);
         println!("heat_flows = {}", memory.q);
 
         for r in 0..3 {
             // Check q
-            let heat_flow = memory.q.get(r, 0).unwrap();
+            let heat_flow = memory.q.get(r, 0)?;
             if r == 1 {
                 // This element is Zero
                 assert!(heat_flow.abs() < 1e-29);
@@ -1323,7 +1329,7 @@ mod testing {
             }
 
             for c in 0..3 {
-                let v = memory.k.get(r, c).unwrap();
+                let v = memory.k.get(r, c)?;
 
                 if c == r {
                     // Diagonal
@@ -1351,10 +1357,11 @@ mod testing {
                 }
             }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_get_q_k_partial() {
+    fn test_get_q_k_partial() -> Result<(), String> {
         let thickness = 0.5;
         let n = 5;
         let dx = thickness / n as Float;
@@ -1415,14 +1422,13 @@ mod testing {
             back_hs,
             back_rad_hs,
             &mut memory,
-        )
-        .unwrap();
+        )?;
         println!("k = {}", memory.k);
         println!("heat_flows = {}", memory.q);
 
         for r in 0..n - 1 {
             // Check q
-            let heat_flow = memory.q.get(r, 0).unwrap();
+            let heat_flow = memory.q.get(r, 0)?;
             if r == 0 {
                 assert!(heat_flow > 1e-5);
             } else if r == n - 2 {
@@ -1432,7 +1438,7 @@ mod testing {
             }
 
             for c in 0..n - 1 {
-                let v = memory.k.get(r, c).unwrap();
+                let v = memory.k.get(r, c)?;
 
                 if c == r {
                     // Diagonal
@@ -1460,6 +1466,8 @@ mod testing {
                 }
             }
         }
+
+        Ok(())
     }
 
     #[test]
