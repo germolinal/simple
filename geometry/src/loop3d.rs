@@ -213,7 +213,7 @@ impl Loop3D {
     /// ```
     pub fn reverse(&mut self) {
         self.normal *= -1.0;
-        self.vertices = self.vertices.iter().rev().map(|v| *v).collect();
+        self.vertices = self.vertices.iter().rev().copied().collect();
     }
 
     /// Returns a clone of the [`Loop3D`] but reversed (vertices in the
@@ -275,7 +275,7 @@ impl Loop3D {
 
     /// Gets a [`BBox3D`] containing the `Loop3D`
     pub fn bbox(&self) -> Result<BBox3D, String> {
-        if self.vertices.len() == 0 {
+        if self.vertices.is_empty() {
             return Err("Trying to get a BBox3D of an empty Loop3D".to_string());
         }
         let first_point = self.vertices[0]; // safe because we know this exists

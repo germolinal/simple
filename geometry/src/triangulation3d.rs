@@ -532,7 +532,7 @@ impl Triangulation3D {
 
         // Check if valid
         if !&self.triangles[index].valid {
-            return Err(format!("Trying to flip diagonal with an invalid triangle"));
+            return Err("Trying to flip diagonal with an invalid triangle".to_string());
         }
         // get neighbour index... There needs to be one, or error
         let neighbour_index = match self.triangles[index].neighbour(edge) {
