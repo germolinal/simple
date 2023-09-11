@@ -47,7 +47,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get() {
+    fn test_get() -> Result<(), String> {
         // with usize
         let date = Date {
             month: 1,
@@ -57,9 +57,9 @@ mod tests {
 
         let v: usize = 1;
         let constant = ScheduleConstant(v);
-        assert_eq!(constant.get(date).unwrap(), v);
-        assert_eq!(constant.get(date).unwrap(), v);
-        assert_eq!(constant.get(date).unwrap(), v);
+        assert_eq!(constant.get(date).ok_or("no value 0")?, v);
+        assert_eq!(constant.get(date).ok_or("no value 1")?, v);
+        assert_eq!(constant.get(date).ok_or("no value 2")?, v);
 
         // With char
         let date = Date {
@@ -70,9 +70,9 @@ mod tests {
 
         let v: char = 'a';
         let constant = ScheduleConstant(v);
-        assert_eq!(constant.get(date).unwrap(), v);
-        assert_eq!(constant.get(date).unwrap(), v);
-        assert_eq!(constant.get(date).unwrap(), v);
+        assert_eq!(constant.get(date).ok_or("no value 3")?, v);
+        assert_eq!(constant.get(date).ok_or("no value 4")?, v);
+        assert_eq!(constant.get(date).ok_or("no value 5")?, v);
 
         // With float
         let date = Date {
@@ -83,8 +83,10 @@ mod tests {
 
         let v = 123.1;
         let constant = ScheduleConstant(v);
-        assert_eq!(constant.get(date).unwrap(), v);
-        assert_eq!(constant.get(date).unwrap(), v);
-        assert_eq!(constant.get(date).unwrap(), v);
+        assert_eq!(constant.get(date).ok_or("no value 6")?, v);
+        assert_eq!(constant.get(date).ok_or("no value 7")?, v);
+        assert_eq!(constant.get(date).ok_or("no value 8")?, v);
+
+        Ok(())
     }
 }

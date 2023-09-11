@@ -384,7 +384,7 @@ mod testing {
     use super::*;
 
     #[test]
-    fn test_next_float() {
+    fn test_next_float() -> Result<(), String> {
         fn check(a: Float) -> Result<(), String> {
             let aup = next_float_up(a);
             let adown = next_float_down(a);
@@ -398,12 +398,13 @@ mod testing {
             Ok(())
         }
 
-        check(0.).unwrap();
-        check(Float::EPSILON).unwrap();
-        check(-Float::EPSILON).unwrap();
-        check(-12312.).unwrap();
+        check(0.)?;
+        check(Float::EPSILON)?;
+        check(-Float::EPSILON)?;
+        check(-12312.)?;
 
-        check(Float::MAX).unwrap();
+        check(Float::MAX)?;
+        Ok(())
     }
 
     #[test]

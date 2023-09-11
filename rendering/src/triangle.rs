@@ -437,7 +437,7 @@ pub fn mesh_sphere(s: &Sphere3D) -> (Vec<Triangle>, Vec<(Vector3D, Vector3D, Vec
     // Points
     let top = Point3D::new(0., 0., r) + c;
     let bottom = Point3D::new(0., 0., -r) + c;
-    let midtop: Vec<Point3D> = vec![36., 3. * 36., 5. * 36., 7. * 36., 9. * 36.]
+    let midtop: Vec<Point3D> = [36., 3. * 36., 5. * 36., 7. * 36., 9. * 36.]
         .iter()
         .map(|angle: &Float| {
             Point3D::new(
@@ -447,7 +447,7 @@ pub fn mesh_sphere(s: &Sphere3D) -> (Vec<Triangle>, Vec<(Vector3D, Vector3D, Vec
             ) + c
         })
         .collect();
-    let midbottom: Vec<Point3D> = vec![0., 72., 2. * 72., 3. * 72., 4. * 72.]
+    let midbottom: Vec<Point3D> = [0., 72., 2. * 72., 3. * 72., 4. * 72.]
         .iter()
         .map(|angle: &Float| {
             Point3D::new(
@@ -567,7 +567,7 @@ mod testing {
     }
 
     #[test]
-    fn test_mesh_triangle() {
+    fn test_mesh_triangle() -> Result<(), String> {
         let a: (Float, Float, Float) = (0., 1., 2.);
         let b: (Float, Float, Float) = (3., 4., 5.);
         let c: (Float, Float, Float) = (6., -7., 8.);
@@ -575,8 +575,7 @@ mod testing {
             Point3D::new(a.0, a.1, a.2),
             Point3D::new(b.0, b.1, b.2),
             Point3D::new(c.0, c.1, c.2),
-        )
-        .unwrap();
+        )?;
         let input: Triangle = [a.0, a.1, a.2, b.0, b.1, b.2, c.0, c.1, c.2];
         let (output, normals) = mesh_triangle(&tri);
         assert_eq!(1, output.len());
@@ -585,6 +584,8 @@ mod testing {
         assert_eq!(normals[0].0, tri.normal());
         assert_eq!(normals[0].1, tri.normal());
         assert_eq!(normals[0].2, tri.normal());
+
+        Ok(())
     }
 
     #[test]
@@ -643,7 +644,7 @@ mod testing {
     };
 
     #[test]
-    fn test_triangle_intersect() {
+    fn test_triangle_intersect() -> Result<(), String> {
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(0., 1., 0.);
@@ -690,67 +691,69 @@ mod testing {
 
         /* FROM THE BOTTOM, GOING UP */
         // Vertex A
-        test_hit(a + DOWN, UP, Some(a), SurfaceSide::Back).unwrap();
+        test_hit(a + DOWN, UP, Some(a), SurfaceSide::Back)?;
 
         // Vertex B.
-        test_hit(b + DOWN, UP, Some(b), SurfaceSide::Back).unwrap();
+        test_hit(b + DOWN, UP, Some(b), SurfaceSide::Back)?;
 
         // Vertex C.
-        test_hit(c + DOWN, UP, Some(c), SurfaceSide::Back).unwrap();
+        test_hit(c + DOWN, UP, Some(c), SurfaceSide::Back)?;
 
         // Segment AB.
         let p = Point3D::new(0.5, 0., 0.);
-        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back).unwrap();
+        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back)?;
 
         // Segment AC.
         let p = Point3D::new(0., 0.5, 0.);
-        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back).unwrap();
+        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back)?;
 
         // Segment BC.
         let p = Point3D::new(0.5, 0.5, 0.);
-        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back).unwrap();
+        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back)?;
 
         // Point outside
         let p = Point3D::new(0., -1., 0.);
-        test_hit(p + DOWN, UP, None, SurfaceSide::Back).unwrap();
+        test_hit(p + DOWN, UP, None, SurfaceSide::Back)?;
 
         // Point inside
         let p = Point3D::new(0.1, 0.1, 0.);
-        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back).unwrap();
+        test_hit(p + DOWN, UP, Some(p), SurfaceSide::Back)?;
 
         /* FROM THE TOP, GOING DOWN */
         // Vertex A
-        test_hit(a + UP, DOWN, Some(a), SurfaceSide::Front).unwrap();
+        test_hit(a + UP, DOWN, Some(a), SurfaceSide::Front)?;
 
         // Vertex B.
-        test_hit(b + UP, DOWN, Some(b), SurfaceSide::Front).unwrap();
+        test_hit(b + UP, DOWN, Some(b), SurfaceSide::Front)?;
 
         // Vertex C.
-        test_hit(c + UP, DOWN, Some(c), SurfaceSide::Front).unwrap();
+        test_hit(c + UP, DOWN, Some(c), SurfaceSide::Front)?;
 
         // Segment AB.
         let p = Point3D::new(0.5, 0., 0.);
-        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front).unwrap();
+        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front)?;
 
         // Segment AC.
         let p = Point3D::new(0., 0.5, 0.);
-        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front).unwrap();
+        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front)?;
 
         // Segment BC.
         let p = Point3D::new(0.5, 0.5, 0.);
-        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front).unwrap();
+        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front)?;
 
         // Point outside
         let p = Point3D::new(0., -1., 0.);
-        test_hit(p + UP, DOWN, None, SurfaceSide::Front).unwrap();
+        test_hit(p + UP, DOWN, None, SurfaceSide::Front)?;
 
         // Point inside
         let p = Point3D::new(0.1, 0.1, 0.);
-        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front).unwrap();
+        test_hit(p + UP, DOWN, Some(p), SurfaceSide::Front)?;
+
+        Ok(())
     }
 
     // #[test]
-    // fn test_triangle_intersect_pack() {
+    // fn test_triangle_intersect_pack() -> Result<(),String> {
     //     let a = Point3D::new(0., 0., 0.);
     //     let b = Point3D::new(1., 0., 0.);
     //     let c = Point3D::new(0., 1., 0.);
@@ -809,63 +812,63 @@ mod testing {
 
     //     /* FROM THE BOTTOM, GOING UP */
     //     // Vertex A
-    //     test_hit(a + DOWN, UP, 0, Some(a), SurfaceSide::Back).unwrap();
+    //     test_hit(a + DOWN, UP, 0, Some(a), SurfaceSide::Back)?;
 
     //     // Vertex B.
-    //     test_hit(b + DOWN, UP, 0, Some(b), SurfaceSide::Back).unwrap();
+    //     test_hit(b + DOWN, UP, 0, Some(b), SurfaceSide::Back)?;
 
     //     // Vertex C.
-    //     test_hit(c + DOWN, UP, 0, Some(c), SurfaceSide::Back).unwrap();
+    //     test_hit(c + DOWN, UP, 0, Some(c), SurfaceSide::Back)?;
 
     //     // Segment AB.
     //     let p = Point3D::new(0.5, 0., 0.);
-    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back).unwrap();
+    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back)?;
 
     //     // Segment AC.
     //     let p = Point3D::new(0., 0.5, 0.);
-    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back).unwrap();
+    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back)?;
 
     //     // Segment BC.
     //     let p = Point3D::new(0.5, 0.5, 0.);
-    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back).unwrap();
+    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back)?;
 
     //     // Point outside
     //     let p = Point3D::new(0., -1., 0.);
-    //     test_hit(p + DOWN, UP, 0, None, SurfaceSide::Back).unwrap();
+    //     test_hit(p + DOWN, UP, 0, None, SurfaceSide::Back)?;
 
     //     // Point inside
     //     let p = Point3D::new(0.1, 0.1, 0.);
-    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back).unwrap();
+    //     test_hit(p + DOWN, UP, 0, Some(p), SurfaceSide::Back)?;
 
     //     /* FROM THE TOP, GOING DOWN */
     //     // Vertex A
-    //     test_hit(a + UP, DOWN, 3, Some(a + UP * 0.3), SurfaceSide::Front).unwrap();
+    //     test_hit(a + UP, DOWN, 3, Some(a + UP * 0.3), SurfaceSide::Front)?;
 
     //     // Vertex B.
-    //     test_hit(b + UP, DOWN, 3, Some(b + UP * 0.3), SurfaceSide::Front).unwrap();
+    //     test_hit(b + UP, DOWN, 3, Some(b + UP * 0.3), SurfaceSide::Front)?;
 
     //     // Vertex C.
-    //     test_hit(c + UP, DOWN, 3, Some(c + UP * 0.3), SurfaceSide::Front).unwrap();
+    //     test_hit(c + UP, DOWN, 3, Some(c + UP * 0.3), SurfaceSide::Front)?;
 
     //     // Segment AB.
     //     let p = Point3D::new(0.5, 0., 0.);
-    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front).unwrap();
+    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front)?;
 
     //     // Segment AC.
     //     let p = Point3D::new(0., 0.5, 0.);
-    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front).unwrap();
+    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front)?;
 
     //     // Segment BC.
     //     let p = Point3D::new(0.5, 0.5, 0.);
-    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front).unwrap();
+    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front)?;
 
     //     // Point outside
     //     let p = Point3D::new(0., -1., 0.);
-    //     test_hit(p + UP, DOWN, 3, None, SurfaceSide::Front).unwrap();
+    //     test_hit(p + UP, DOWN, 3, None, SurfaceSide::Front)?;
 
     //     // Point inside
     //     let p = Point3D::new(0.1, 0.1, 0.);
-    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front).unwrap();
+    //     test_hit(p + UP, DOWN, 3, Some(p + UP * 0.3), SurfaceSide::Front)?;
 
     //     /* FROM THE TOP, GOING DOWN... BUT STARTING BETWEEN TRIANGLES */
     //     // Vertex A
@@ -875,8 +878,7 @@ mod testing {
     //         1,
     //         Some(a + UP * 0.1),
     //         SurfaceSide::Front,
-    //     )
-    //     .unwrap();
+    //     )?;
 
     //     // Vertex B.
     //     test_hit(
@@ -885,8 +887,7 @@ mod testing {
     //         1,
     //         Some(b + UP * 0.1),
     //         SurfaceSide::Front,
-    //     )
-    //     .unwrap();
+    //     )?;
 
     //     // Vertex C.
     //     test_hit(
@@ -895,8 +896,7 @@ mod testing {
     //         1,
     //         Some(c + UP * 0.1),
     //         SurfaceSide::Front,
-    //     )
-    //     .unwrap();
+    //     )?;
 
     //     // Segment AB.
     //     let p = Point3D::new(0.5, 0., 0.);
@@ -906,8 +906,7 @@ mod testing {
     //         1,
     //         Some(p + UP * 0.1),
     //         SurfaceSide::Front,
-    //     )
-    //     .unwrap();
+    //     )?;
 
     //     // Segment AC.
     //     let p = Point3D::new(0., 0.5, 0.);
@@ -917,8 +916,7 @@ mod testing {
     //         1,
     //         Some(p + UP * 0.1),
     //         SurfaceSide::Front,
-    //     )
-    //     .unwrap();
+    //     )?;
 
     //     // Segment BC.
     //     let p = Point3D::new(0.5, 0.5, 0.);
@@ -928,12 +926,11 @@ mod testing {
     //         1,
     //         Some(p + UP * 0.1),
     //         SurfaceSide::Front,
-    //     )
-    //     .unwrap();
+    //     )?;
 
     //     // Point outside
     //     let p = Point3D::new(0., -1., 0.);
-    //     test_hit(p + UP * 0.15, DOWN, 1, None, SurfaceSide::Front).unwrap();
+    //     test_hit(p + UP * 0.15, DOWN, 1, None, SurfaceSide::Front)?;
 
     //     // Point inside
     //     let p = Point3D::new(0.1, 0.1, 0.);
@@ -943,7 +940,6 @@ mod testing {
     //         1,
     //         Some(p + UP * 0.1),
     //         SurfaceSide::Front,
-    //     )
-    //     .unwrap();
+    //     )?;
     // }
 }

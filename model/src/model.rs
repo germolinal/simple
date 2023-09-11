@@ -1205,22 +1205,19 @@ impl Model {
         });
 
         fn get_space(s: &Arc<Surface>) -> Option<String> {
-
             let normal = s.normal();
             if normal.z > 0.0 {
                 // Points Up... check front
                 if let Boundary::Space { space } = &s.front_boundary {
-                    return Some(space.clone())
-                } 
-            }else{
+                    return Some(space.clone());
+                }
+            } else {
                 // Points down... check back
                 if let Boundary::Space { space } = &s.back_boundary {
-                    return Some(space.clone())
+                    return Some(space.clone());
                 }
             }
             None
-
-            
         }
 
         for s in self.surfaces.iter() {
@@ -1304,7 +1301,7 @@ mod testing {
 
     #[cfg(debug_assertions)]
     #[test]
-    fn write_io_doc() {
+    fn write_io_doc() -> Result<(), String> {
         use crate::boundary::Boundary;
         use crate::building::Building;
         use crate::fenestration::{FenestrationPosition, FenestrationType};
@@ -1319,18 +1316,18 @@ mod testing {
 
         let summary_template = format!("{}/SUMMARY_TEMPLATE.md", dir);
         if !std::path::Path::new(&summary_template).exists() {
-            return;
+            return Err(format!("File '{}' already exist", &summary_template));
         }
 
-        let mut summary = std::fs::read_to_string(summary_template).unwrap();
+        let mut summary = std::fs::read_to_string(summary_template).map_err(|e| e.to_string())?;
 
         // Add automatic documentation
         // let dir = "../src";
         let summary_file = format!("{}/SUMMARY.md", dir);
 
         // clear summary
-        let f = std::fs::File::create(&summary_file).unwrap();
-        f.set_len(0).unwrap();
+        let f = std::fs::File::create(&summary_file).map_err(|e| e.to_string())?;
+        f.set_len(0).map_err(|e| e.to_string())?;
 
         /////////////////////
 
@@ -1342,14 +1339,14 @@ mod testing {
         /* B */
         /*****/
         // Boundary
-        Boundary::print_doc(&dir, &mut summary).unwrap();
+        Boundary::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
-        Building::print_doc(&dir, &mut summary).unwrap();
+        Building::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* C */
         /*****/
-        Construction::print_doc(&dir, &mut summary).unwrap();
+        Construction::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* D */
@@ -1362,10 +1359,10 @@ mod testing {
         /*****/
         /* F */
         /*****/
-        Fenestration::print_doc(&dir, &mut summary).unwrap();
-        Fenestration::print_api_doc(&dir, &mut summary).unwrap();
-        FenestrationPosition::print_doc(&dir, &mut summary).unwrap();
-        FenestrationType::print_doc(&dir, &mut summary).unwrap();
+        Fenestration::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Fenestration::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        FenestrationPosition::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        FenestrationType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* G */
@@ -1374,19 +1371,20 @@ mod testing {
         /*****/
         /* H */
         /*****/
-        HVAC::print_doc(&dir, &mut summary).unwrap();
+        HVAC::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         summary.push_str(&format!("\t"));
-        hvac::ElectricHeater::print_doc(&dir, &mut summary).unwrap();
-        hvac::ElectricHeater::print_api_doc(&dir, &mut summary).unwrap();
+        hvac::ElectricHeater::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        hvac::ElectricHeater::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         summary.push_str(&format!("\t"));
-        hvac::IdealHeaterCooler::print_doc(&dir, &mut summary).unwrap();
-        hvac::IdealHeaterCooler::print_api_doc(&dir, &mut summary).unwrap();
+        hvac::IdealHeaterCooler::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        hvac::IdealHeaterCooler::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* I */
         /*****/
-        crate::infiltration::Infiltration::print_doc(&dir, &mut summary).unwrap();
+        crate::infiltration::Infiltration::print_doc(&dir, &mut summary)
+            .map_err(|e| e.to_string())?;
 
         /*****/
         /* J */
@@ -1399,13 +1397,13 @@ mod testing {
         /*****/
         /* L */
         /*****/
-        Luminaire::print_doc(&dir, &mut summary).unwrap();
-        Luminaire::print_api_doc(&dir, &mut summary).unwrap();
+        Luminaire::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Luminaire::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* M */
         /*****/
-        Material::print_doc(&dir, &mut summary).unwrap();
+        Material::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* N */
@@ -1414,7 +1412,7 @@ mod testing {
         /*****/
         /* O */
         /*****/
-        Output::print_doc(&dir, &mut summary).unwrap();
+        Output::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* P */
@@ -1431,29 +1429,30 @@ mod testing {
         /*****/
         /* S */
         /*****/
-        SiteDetails::print_doc(dir, &mut summary).unwrap();
-        SolarOptions::print_doc(&dir, &mut summary).unwrap();
-        Space::print_doc(&dir, &mut summary).unwrap();
-        Space::print_api_doc(&dir, &mut summary).unwrap();
+        SiteDetails::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        SolarOptions::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Space::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Space::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
-        Substance::print_doc(&dir, &mut summary).unwrap();
+        Substance::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         summary.push_str(&format!("\t"));
-        substance::Normal::print_doc(&dir, &mut summary).unwrap();
+        substance::Normal::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         summary.push_str(&format!("\t"));
-        substance::Gas::print_doc(&dir, &mut summary).unwrap();
+        substance::Gas::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         summary.push_str(&format!("\t"));
-        substance::gas::GasSpecification::print_doc(dir, &mut summary).unwrap();
+        substance::gas::GasSpecification::print_doc(dir, &mut summary)
+            .map_err(|e| e.to_string())?;
 
-        ShelterClass::print_doc(&dir, &mut summary).unwrap();
+        ShelterClass::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
-        Surface::print_doc(&dir, &mut summary).unwrap();
-        Surface::print_api_doc(&dir, &mut summary).unwrap();
-        crate::surface::SurfaceType::print_doc(&dir, &mut summary).unwrap();
+        Surface::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Surface::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        crate::surface::SurfaceType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* T */
         /*****/
-        TerrainClass::print_doc(dir, &mut summary).unwrap();
+        TerrainClass::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* U */
@@ -1484,11 +1483,12 @@ mod testing {
         let current_summary =
             fs::read_to_string(summary_file.clone()).expect("Could not read summary file");
         let whole_summary = format!("{}\n\n{}", current_summary, summary);
-        std::fs::write(summary_file, whole_summary.as_bytes()).unwrap();
+        std::fs::write(summary_file, whole_summary.as_bytes()).map_err(|e| e.to_string())?;
+        Ok(())
     }
 
     #[test]
-    fn test_geolocation() {
+    fn test_geolocation() -> Result<(), String> {
         // Successful workflow
 
         let json_str = r#"{
@@ -1499,7 +1499,7 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str).unwrap();
+        let (model, _header) = Model::from_json(&json_str)?;
         assert_eq!(Some((1.2, 5.21, 123.1)), model.geolocation());
 
         // No site details
@@ -1512,7 +1512,7 @@ mod testing {
             }]
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str).unwrap();
+        let (model, _header) = Model::from_json(&json_str)?;
         assert!(model.geolocation().is_none());
 
         // No longitude
@@ -1523,7 +1523,7 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str).unwrap();
+        let (model, _header) = Model::from_json(&json_str)?;
         assert!(model.geolocation().is_none());
 
         // No latitude
@@ -1534,7 +1534,7 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str).unwrap();
+        let (model, _header) = Model::from_json(&json_str)?;
         assert!(model.geolocation().is_none());
 
         // No standard_meridian
@@ -1545,8 +1545,10 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str).unwrap();
+        let (model, _header) = Model::from_json(&json_str)?;
         assert!(model.geolocation().is_none());
+
+        Ok(())
     }
 
     #[test]
@@ -1571,13 +1573,13 @@ mod testing {
     }
 
     #[test]
-    fn building_hvac() {
+    fn building_hvac() -> Result<(), String> {
         let mut building = Model::default();
 
         let heater_name = "Heater".to_string();
         let heater = ElectricHeater::new(heater_name.clone());
 
-        let h0 = building.add_hvac(heater.wrap()).unwrap();
+        let h0 = building.add_hvac(heater.wrap())?;
 
         if let HVAC::ElectricHeater(h) = h0 {
             assert_eq!(heater_name, h.name);
@@ -1586,10 +1588,12 @@ mod testing {
         if let HVAC::ElectricHeater(h) = &building.hvacs[0] {
             assert_eq!(heater_name, h.name);
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_add_fenestration() {
+    fn test_add_fenestration() -> Result<(), String> {
         let mut model = Model::default();
         let s: Surface = json5::from_str(
             "{
@@ -1611,7 +1615,7 @@ mod testing {
             ]
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let fen: Fenestration = json5::from_str(
@@ -1627,9 +1631,9 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
 
-        model.add_fenestration(fen).unwrap();
+        model.add_fenestration(fen)?;
 
         let fen = model.fenestrations[0].clone();
         let s = model.surfaces[0].clone();
@@ -1646,10 +1650,12 @@ mod testing {
             format!("{:?}", fen.back_boundary),
             format!("{:?}", s.back_boundary)
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_add_fenestration_cross_boundary() {
+    fn test_add_fenestration_cross_boundary() -> Result<(), String> {
         let mut model = Model::default();
         let s: Surface = json5::from_str(
             "{
@@ -1671,7 +1677,7 @@ mod testing {
             ]
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let fen: Fenestration = json5::from_str(
@@ -1687,9 +1693,9 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
 
-        model.add_fenestration(fen).unwrap();
+        model.add_fenestration(fen)?;
 
         let fen = model.fenestrations[0].clone();
         let s = model.surfaces[0].clone();
@@ -1705,6 +1711,8 @@ mod testing {
             format!("{:?}", fen.front_boundary),
             format!("{:?}", s.back_boundary)
         );
+
+        Ok(())
     }
 
     use crate::simulation_state::SimulationStateHeader;
@@ -1713,36 +1721,32 @@ mod testing {
     use crate::simulation_state_element::SimulationStateElement;
     use std::cell::RefCell;
     #[test]
-    fn test_api() {
+    fn test_api() -> Result<(), String> {
         let mut model = Model::default();
         let mut state_header = SimulationStateHeader::new();
 
         let electric = ElectricHeater::new("electric heater".to_string());
-        let electric = model.add_hvac(electric.wrap()).unwrap();
+        let electric = model.add_hvac(electric.wrap())?;
         let ideal = IdealHeaterCooler::new("ideal hvac".to_string());
-        let ideal = model.add_hvac(ideal.wrap()).unwrap();
+        let ideal = model.add_hvac(ideal.wrap())?;
 
         let space = Space::new("some space".to_string());
-        let state_index = state_header
-            .push(SimulationStateElement::SpaceInfiltrationVolume(0), 2.1)
-            .unwrap();
-        space.set_infiltration_volume_index(state_index).unwrap();
-        let state_index = state_header
-            .push(SimulationStateElement::SpaceDryBulbTemperature(0), 22.2)
-            .unwrap();
-        space.set_dry_bulb_temperature_index(state_index).unwrap();
+        let state_index =
+            state_header.push(SimulationStateElement::SpaceInfiltrationVolume(0), 2.1)?;
+        space.set_infiltration_volume_index(state_index)?;
+        let state_index =
+            state_header.push(SimulationStateElement::SpaceDryBulbTemperature(0), 22.2)?;
+        space.set_dry_bulb_temperature_index(state_index)?;
         model.add_space(space);
 
-        let mut state = state_header.take_values().unwrap();
+        let mut state = state_header.take_values().ok_or("Could not get values")?;
 
         if let HVAC::ElectricHeater(hvac) = electric {
-            hvac.set_heating_cooling_consumption(&mut state, 91.2)
-                .unwrap();
+            hvac.set_heating_cooling_consumption(&mut state, 91.2)?;
         }
 
         if let HVAC::IdealHeaterCooler(hvac) = ideal {
-            hvac.set_heating_cooling_consumption(&mut state, 23.14)
-                .unwrap();
+            hvac.set_heating_cooling_consumption(&mut state, 23.14)?;
         }
 
         // Wrap and send to the Heap
@@ -1808,14 +1812,16 @@ mod testing {
             
         ",
             )
-            .unwrap();
+            .map_err(|e| e.to_string())?;
 
-        let _result: () = engine.eval_ast(&ast).unwrap();
+        let _result: () = engine.eval_ast(&ast).map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
     #[test]
-    fn test_get_space_sizes() {
-        let (model, _) = Model::from_file("./tests/cold_wellington_apartment.spl").unwrap();
+    fn test_get_space_sizes() -> Result<(), String> {
+        let (model, _) = Model::from_file("./tests/cold_wellington_apartment.spl")?;
         let (total_area, areas) = model.get_space_sizes();
 
         fn check_close(a: Float, b: Float) -> Result<(), String> {
@@ -1825,15 +1831,17 @@ mod testing {
             Ok(())
         }
 
-        check_close(total_area, 61.839).unwrap();
+        check_close(total_area, 61.839)?;
 
-        check_close(areas["Kids Bedroom"], 7.12).unwrap();
-        check_close(areas["Bathroom"], 3.877).unwrap();
-        check_close(areas["Storage"], 1.12).unwrap();
-        check_close(areas["Kitchen"], 5.6918).unwrap();
-        check_close(areas["Laundry"], 1.7056).unwrap();
-        check_close(areas["Livingroom"], 18.76).unwrap();
-        check_close(areas["Main Bedroom"], 17.765).unwrap();
-        check_close(areas["Hallway"], 5.884).unwrap();
+        check_close(areas["Kids Bedroom"], 7.12)?;
+        check_close(areas["Bathroom"], 3.877)?;
+        check_close(areas["Storage"], 1.12)?;
+        check_close(areas["Kitchen"], 5.6918)?;
+        check_close(areas["Laundry"], 1.7056)?;
+        check_close(areas["Livingroom"], 18.76)?;
+        check_close(areas["Main Bedroom"], 17.765)?;
+        check_close(areas["Hallway"], 5.884)?;
+
+        Ok(())
     }
 }

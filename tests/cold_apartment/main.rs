@@ -62,7 +62,6 @@ fn apartment_sim() {
             // allowed_r2: Some(0.93),
             // allowed_intersect_delta: Some(0.8),
             // allowed_slope_delta: Some(0.12),
-
             ..Default::default()
         })
     }

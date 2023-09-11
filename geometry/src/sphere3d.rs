@@ -471,7 +471,7 @@ mod testing {
     }
 
     #[test]
-    fn test_sphere_intersect() {
+    fn test_sphere_intersect() -> Result<(), String> {
         const ALLOWED_ERROR: Float = 0.00001;
 
         fn get_intersect(r: Float, centre: Point3D, p: Point3D) -> Option<Point3D> {
@@ -529,7 +529,7 @@ mod testing {
         let centre = Point3D::new(0.0, 0.0, 0.0);
         let origin = Point3D::new(0.0, -10.0, 0.0);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("No intersection")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., 1., 0.),
@@ -539,9 +539,9 @@ mod testing {
 
             //let (normal, side) = sphere.normal_at_intersection(&ray, t);
             let exp_t = 10. - r;
-            floats_are_close(t, exp_t).unwrap();
-            points_are_close(exp.unwrap(), info.p).unwrap();
-            vectors_are_close(info.normal, Vector3D::new(0., -1., 0.)).unwrap();
+            floats_are_close(t, exp_t)?;
+            points_are_close(exp, info.p)?;
+            vectors_are_close(info.normal, Vector3D::new(0., -1., 0.))?;
             assert!(matches![info.side, SurfaceSide::Front]);
         } else {
             panic!("Wrong intersection!!")
@@ -552,7 +552,7 @@ mod testing {
         let centre = Point3D::new(0.0, 0.0, 0.0);
         let origin = Point3D::new(0.0, 0.0, 0.0);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("no exp")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., -1., 0.),
@@ -560,9 +560,9 @@ mod testing {
         if let Some(info) = sphere.intersect(&ray) {
             let t = (info.p - ray.origin).length();
             let exp_t = r;
-            floats_are_close(t, exp_t).unwrap();
-            points_are_close(exp.unwrap(), info.p).unwrap();
-            vectors_are_close(info.normal, Vector3D::new(0., 1., 0.)).unwrap();
+            floats_are_close(t, exp_t)?;
+            points_are_close(exp, info.p).unwrap();
+            vectors_are_close(info.normal, Vector3D::new(0., 1., 0.))?;
             assert!(matches![info.side, SurfaceSide::Back]);
         } else {
             panic!("Wrong intersection!!")
@@ -573,7 +573,7 @@ mod testing {
         let centre = Point3D::new(3.0, 0.0, -2.0);
         let origin = Point3D::new(3.0, -10.0, -2.0);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("no exp...?")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., 1., 0.),
@@ -581,9 +581,9 @@ mod testing {
         if let Some(info) = sphere.intersect(&ray) {
             let t = (info.p - ray.origin).length();
             let exp_t = 10. - r;
-            floats_are_close(t, exp_t).unwrap();
-            points_are_close(exp.unwrap(), info.p).unwrap();
-            vectors_are_close(info.normal, Vector3D::new(0., -1., 0.)).unwrap();
+            floats_are_close(t, exp_t)?;
+            points_are_close(exp, info.p)?;
+            vectors_are_close(info.normal, Vector3D::new(0., -1., 0.))?;
             assert!(matches![info.side, SurfaceSide::Front]);
         } else {
             panic!("Wrong intersection!!")
@@ -594,7 +594,7 @@ mod testing {
         let centre = Point3D::new(7.1, 0.0, 2.0);
         let origin = Point3D::new(7.1, 0.0, 2.0);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("no exp....12")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., -1., 0.),
@@ -602,9 +602,9 @@ mod testing {
         if let Some(info) = sphere.intersect(&ray) {
             let t = (info.p - ray.origin).length();
             let exp_t = r;
-            floats_are_close(t, exp_t).unwrap();
-            points_are_close(exp.unwrap(), info.p).unwrap();
-            vectors_are_close(info.normal, Vector3D::new(0., 1., 0.)).unwrap();
+            floats_are_close(t, exp_t)?;
+            points_are_close(exp, info.p)?;
+            vectors_are_close(info.normal, Vector3D::new(0., 1., 0.))?;
             assert!(matches![info.side, SurfaceSide::Back]);
         } else {
             panic!("Wrong intersection!!")
@@ -617,13 +617,13 @@ mod testing {
         let centre = Point3D::new(1.0, 0.0, 1.0);
         let origin = Point3D::new(2.0, -10.0, 2.0);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("no exp......?")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., 1., 0.),
         };
         if let Some(info) = sphere.intersect(&ray) {
-            points_are_close(exp.unwrap(), info.p).unwrap();
+            points_are_close(exp, info.p)?;
             assert!(matches![info.side, SurfaceSide::Front]);
             assert!(info.normal.z > 0.);
         } else {
@@ -635,13 +635,13 @@ mod testing {
         let centre = Point3D::new(1.0, 0.0, -2.0);
         let origin = Point3D::new(1.0, 0.0, -0.05);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("no exP")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., -1., 0.),
         };
         if let Some(info) = sphere.intersect(&ray) {
-            points_are_close(exp.unwrap(), info.p).unwrap();
+            points_are_close(exp, info.p)?;
             assert!(matches![info.side, SurfaceSide::Back]);
             assert!(info.normal.z < 0.);
         } else {
@@ -653,7 +653,7 @@ mod testing {
         let centre = Point3D::new(3.0, 0.0, -2.0);
         let origin = Point3D::new(3.0, -10.0, -2.0);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("askjha no exp")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., 1., 0.),
@@ -661,9 +661,9 @@ mod testing {
         if let Some(info) = sphere.intersect(&ray) {
             let t = (info.p - ray.origin).length();
             let exp_t = 9.;
-            floats_are_close(t, exp_t).unwrap();
-            points_are_close(exp.unwrap(), info.p).unwrap();
-            vectors_are_close(info.normal, Vector3D::new(0., -1., 0.)).unwrap();
+            floats_are_close(t, exp_t)?;
+            points_are_close(exp, info.p)?;
+            vectors_are_close(info.normal, Vector3D::new(0., -1., 0.))?;
             assert!(matches![info.side, SurfaceSide::Front]);
         } else {
             panic!("Wrong intersection!!")
@@ -674,7 +674,7 @@ mod testing {
         let centre = Point3D::new(7.1, 0.0, 2.0);
         let origin = Point3D::new(7.1, 0.0, 2.0);
         let sphere = Sphere3D::new(r, centre);
-        let exp = get_intersect(r, centre, origin);
+        let exp = get_intersect(r, centre, origin).ok_or("kaaaa1 no exp")?;
         let ray = Ray3D {
             origin,
             direction: Vector3D::new(0., -1., 0.),
@@ -683,12 +683,14 @@ mod testing {
             let t = (info.p - ray.origin).length();
 
             let exp_t = r;
-            floats_are_close(t, exp_t).unwrap();
-            points_are_close(exp.unwrap(), info.p).unwrap();
-            vectors_are_close(info.normal, Vector3D::new(0., 1., 0.)).unwrap();
+            floats_are_close(t, exp_t)?;
+            points_are_close(exp, info.p)?;
+            vectors_are_close(info.normal, Vector3D::new(0., 1., 0.))?;
             assert!(matches![info.side, SurfaceSide::Back]);
         } else {
             panic!("Wrong intersection!!")
         }
+
+        Ok(())
     }
 }

@@ -40,7 +40,7 @@ impl ThermalZone {
         state: &mut SimulationStateHeader,
         space_index: usize,
     ) -> Result<Self, String> {
-        let volume = *space.volume().unwrap();
+        let volume = *space.volume()?;
         // Add Space Temperature state
         let state_index = state.push(
             // start, by default, at 22.0 C

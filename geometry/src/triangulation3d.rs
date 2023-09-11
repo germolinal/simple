@@ -50,6 +50,7 @@ impl Edge {
             1 => Self::Bc,
             2 => Self::Ca,
             _ => {
+                // return Err(format!("Index given for Edge is out of bound (given was {})", i))
                 panic!("Index given for Edge is out of bound (given was {})", i)
             }
         }
@@ -263,15 +264,14 @@ impl std::convert::TryFrom<&Polygon3D> for Triangulation3D {
             } else {
                 anchor += 1;
             }
-        }     
+        }
     }
 }
-
 
 impl std::convert::TryFrom<Polygon3D> for Triangulation3D {
     type Error = String;
 
-    fn try_from(poly: Polygon3D) -> Result<Self, Self::Error> {        
+    fn try_from(poly: Polygon3D) -> Result<Self, Self::Error> {
         (&poly).try_into()
     }
 }
@@ -306,7 +306,7 @@ impl Triangulation3D {
         max_area: Float,
         max_aspect_ratio: Float,
     ) -> Result<Triangulation3D, String> {
-        let mut t : Triangulation3D = poly.try_into()?;        
+        let mut t: Triangulation3D = poly.try_into()?;
         t.refine(max_area, max_aspect_ratio)?;
         Ok(t)
     }
@@ -333,8 +333,6 @@ impl Triangulation3D {
         }
         Ok(())
     }
-
-    
 
     /// Returns the number of [`Triangle3D`] in the [`Triangulation3D`]
     /// including invalid ones.
@@ -384,7 +382,7 @@ impl Triangulation3D {
         if !self.triangles[i1].valid {
             return Err("Accessing invalid triangle within mark_as_neighbours()".to_string());
         }
-        // Get segment... we should panic here, as this is not a user error
+        // Get segment...
         let seg1 = &self.triangles[i1].triangle.segment(edge_1.as_i())?;
 
         // Check neighbour
@@ -392,10 +390,10 @@ impl Triangulation3D {
             return Err("Accessing invalid triangle within mark_as_neighbours()".to_string());
         }
 
-        // Get edge segment from the other triangle... panic if does not work.
+        // Get edge segment from the other triangle...
         let edge_2 = match self.triangles[i2].triangle.get_edge_index_from_segment(seg1){
             Some(e)=>e,
-            None => panic!("The triangles that you are trying to mark as neighbours don't share a segment.\n Triangle 1 : {}\nTriangle 2: {}", self.triangles[i1].triangle, self.triangles[i2].triangle)
+            None => return Err(format!("The triangles that you are trying to mark as neighbours don't share a segment.\n Triangle 1 : {}\nTriangle 2: {}", self.triangles[i1].triangle, self.triangles[i2].triangle))
         };
         let edge_2 = Edge::from_i(edge_2);
 
@@ -471,7 +469,7 @@ impl Triangulation3D {
         // do not modify constraints
         let tripiece = &self.triangles[index];
         if !tripiece.valid {
-            panic!("Found an invalid triangle when getting flipped aspect ratio")
+            return Err("Found an invalid triangle when getting flipped aspect ratio".to_string());
         }
 
         if tripiece.is_constrained(edge) {
@@ -486,11 +484,11 @@ impl Triangulation3D {
 
         let neighbour = &self.triangles[neighbour_i];
         if !neighbour.valid {
-            panic!("Found an invalid neighbour when getting flipped aspect ratio");
+            return Err("Found an invalid neighbour when getting flipped aspect ratio".to_string());
         }
 
         if neighbour.index == tripiece.index {
-            panic!("Triangle is its own neighbor!");
+            return Err("Triangle is its own neighbor!".to_string());
         }
 
         // get vertices
@@ -534,17 +532,17 @@ impl Triangulation3D {
 
         // Check if valid
         if !&self.triangles[index].valid {
-            panic!("Trying to flip diagonal with an invalid triangle");
+            return Err("Trying to flip diagonal with an invalid triangle".to_string());
         }
-        // get neighbour index... There needs to be one, or panic
+        // get neighbour index... There needs to be one, or error
         let neighbour_index = match self.triangles[index].neighbour(edge) {
-            None => panic!("Trying to flip diagonal of Triangle with no neighbour"),
+            None => return Err("Trying to flip diagonal of Triangle with no neighbour".to_string()),
             Some(i) => i,
         };
 
         // check if neighbour is valid
         if !self.triangles[neighbour_index].valid {
-            panic!("Trying to flip diagonal with an invalid neighbour triangle");
+            return Err("Trying to flip diagonal with an invalid neighbour triangle".to_string());
         }
 
         // get vertices
@@ -568,7 +566,7 @@ impl Triangulation3D {
         {
             Some(i) => *i,
             None => {
-                panic!("Segment AC not found on triangle when flipping diagonals.")
+                return Err("Segment AC not found on triangle when flipping diagonals.".to_string())
             }
         };
         let ac_edge = Edge::from_i(ac_i);
@@ -582,7 +580,7 @@ impl Triangulation3D {
         {
             Some(i) => *i,
             None => {
-                panic!("Segment CB not found on triangle when flipping diagonals.")
+                return Err("Segment CB not found on triangle when flipping diagonals.".to_string())
             }
         };
         let cb_edge = Edge::from_i(cb_i);
@@ -596,7 +594,9 @@ impl Triangulation3D {
         {
             Some(i) => i,
             None => {
-                panic!("Segment B-Opposite not found on triangle when flipping diagonals.")
+                return Err(
+                    "Segment B-Opposite not found on triangle when flipping diagonals.".to_string(),
+                )
             }
         };
         let bopp_edge = Edge::from_i(bopp_i);
@@ -610,7 +610,9 @@ impl Triangulation3D {
         {
             Some(i) => i,
             None => {
-                panic!("Segment A-Opposite not found on triangle when flipping diagonals.")
+                return Err(
+                    "Segment A-Opposite not found on triangle when flipping diagonals.".to_string(),
+                )
             }
         };
         let aopp_edge = Edge::from_i(aopp_i);
@@ -963,7 +965,7 @@ impl Triangulation3D {
         p_location: PointInTriangle,
     ) -> Result<bool, String> {
         if !self.triangles[index].valid {
-            panic!("{}", "Trying to add point into an obsolete triangle");
+            return Err("Trying to add point into an obsolete triangle".to_string());
         }
 
         if p_location.is_vertex() {
@@ -975,7 +977,10 @@ impl Triangulation3D {
                 PointInTriangle::EdgeBC => Edge::Bc,
                 PointInTriangle::EdgeAC => Edge::Ca,
                 _ => {
-                    panic!("Trying to split edge with a point that does not fall on an edge")
+                    return Err(
+                        "Trying to split edge with a point that does not fall on an edge"
+                            .to_string(),
+                    )
                 }
             };
             self.split_edge(index, edge, point)?;
@@ -1183,7 +1188,7 @@ mod testing {
             // an edge in the polygon... in such a case,
             // it should be constrained.
             for e in 0..3 {
-                let edge = tripiece.triangle.segment(e).unwrap();
+                let edge = tripiece.triangle.segment(e)?;
 
                 // Check neighbour in this edge
                 let neighbour_i = tripiece.neighbour(Edge::from_i(e));
@@ -1192,17 +1197,15 @@ mod testing {
                     let neigh_edge = neigh
                         .triangle
                         .get_edge_index_from_points(edge.start, edge.end)
-                        .ok_or("Could not find edge index from points")
-                        .unwrap();
+                        .ok_or("Could not find edge index from points")?;
                     let neighbours_neighbour = neigh
                         .neighbour(Edge::from_i(neigh_edge))
-                        .ok_or("Could not find neighbour")
-                        .unwrap() as usize;
+                        .ok_or("Could not find neighbour")?;
                     if neighbours_neighbour != i {
-                        panic!(
+                        return Err(format!(
                             " ... This({}).neighbour({})={} != Neighbour({}).neighbour({})={}",
                             i, e, neighbour_i, neighbour_i, neigh_edge, neighbours_neighbour
-                        );
+                        ));
                     }
                 }
 
@@ -1214,7 +1217,7 @@ mod testing {
                     let b = outer[(j + 1) % n_out];
                     let _outer_segment = Segment3D::new(a, b);
 
-                    // if outer_segment.contains(&edge).unwrap() {
+                    // if outer_segment.contains(&edge)? {
                     //     if !tripiece.is_constrained(Edge::from_i(e)) {
                     //         return Err(format!(
                     //             "Edge {} of Triangle {} in triangulation should be constrained",
@@ -1226,7 +1229,7 @@ mod testing {
 
                 // Go through inner loops.
                 for l_i in 0..p.n_inner_loops() {
-                    let inner = p.inner(l_i).unwrap();
+                    let inner = p.inner(l_i)?;
                     let n_in = inner.len();
 
                     for j in 0..n_in {
@@ -1234,7 +1237,7 @@ mod testing {
                         let b = inner[(j + 1) % n_in];
                         let inner_segment = Segment3D::new(a, b);
 
-                        if inner_segment.contains(&edge).unwrap() {
+                        if inner_segment.contains(&edge)? {
                             if !tripiece.is_constrained(Edge::from_i(e)) {
                                 return Err(format!("Edge {} of Triangle3D {} in triangulation should be constrained",e,i));
                             }
@@ -1257,21 +1260,21 @@ mod testing {
     }
 
     #[test]
-    fn test_test_triangulation_results() {
+    fn test_test_triangulation_results() -> Result<(), String> {
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(1., 1., 0.);
 
         let mut outer = Loop3D::new();
-        outer.push(a).unwrap();
-        outer.push(b).unwrap();
-        outer.push(c).unwrap();
-        outer.close().unwrap();
+        outer.push(a)?;
+        outer.push(b)?;
+        outer.push(c)?;
+        outer.close()?;
 
-        let poly = Polygon3D::new(outer).unwrap();
+        let poly = Polygon3D::new(outer)?;
 
         let mut t = Triangulation3D::new();
-        t.push(a, b, c, 0).unwrap();
+        t.push(a, b, c, 0)?;
 
         // No contraints... should fail
         // assert!(test_triangulation_results(&t, &poly, 1000., 1000.).is_err());
@@ -1284,28 +1287,32 @@ mod testing {
 
         // Add another triangle... should not work.
         let d = Point3D::new(-1., 1., 0.);
-        t.push(a, c, d, 0).unwrap();
+        t.push(a, c, d, 0)?;
 
         assert!(test_triangulation_results(&t, &poly, 1000., 1000.).is_err());
+        Ok(())
     }
 
     use std::fs::File;
     use std::io::prelude::*;
 
-    fn draw_triangulation(filename: &str, cases: Vec<(&str, String)>) {
-        let mut file = File::create(format!("./test_data/{}", filename)).unwrap();
-        file.write(b"<html><head></head><body>").unwrap();
+    fn draw_triangulation(filename: &str, cases: Vec<(&str, String)>) -> Result<(), String> {
+        let mut file =
+            File::create(format!("./test_data/{}", filename)).map_err(|e| e.to_string())?;
+        file.write(b"<html><head></head><body>")
+            .map_err(|e| e.to_string())?;
 
         for (title, svg) in cases.iter() {
-            file.write(b"<div>").unwrap();
+            file.write(b"<div>").map_err(|e| e.to_string())?;
 
             file.write(format!("<h1>{}</h1>", title).as_bytes())
-                .unwrap();
-            file.write(svg.as_bytes()).unwrap();
-            file.write(b"</div>").unwrap();
+                .map_err(|e| e.to_string())?;
+            file.write(svg.as_bytes()).map_err(|e| e.to_string())?;
+            file.write(b"</div>").map_err(|e| e.to_string())?;
         }
 
-        file.write(b"</body></html>").unwrap();
+        file.write(b"</body></html>").map_err(|e| e.to_string())?;
+        Ok(())
     }
 
     fn get_triangulation_svg(
@@ -1314,7 +1321,7 @@ mod testing {
         max_x: Float,
         min_y: Float,
         max_y: Float,
-    ) -> String {
+    ) -> Result<String, String> {
         // Arrange a transformation
         const SCALE: Float = 50.;
         const PADDING: Float = 5.; // PErcentage of BBOX
@@ -1343,7 +1350,7 @@ mod testing {
             }
             ret += &"<polygon points='";
             for vertex_i in 0..3 {
-                let v = tri.triangle.vertex(vertex_i).unwrap();
+                let v = tri.triangle.vertex(vertex_i)?;
                 let svg_point = into_svg_coordinates(v);
                 ret += &format!("{},{} ", SCALE * svg_point.x, SCALE * svg_point.y);
             }
@@ -1360,8 +1367,8 @@ mod testing {
             for vertex_i in 0..3 {
                 let this_edge = Edge::from_i(vertex_i);
                 // Edges
-                let v = tri.triangle.vertex(vertex_i).unwrap();
-                let next_v = tri.triangle.vertex((vertex_i + 1) % 3).unwrap();
+                let v = tri.triangle.vertex(vertex_i)?;
+                let next_v = tri.triangle.vertex((vertex_i + 1) % 3)?;
                 let svg_point = into_svg_coordinates(v) * SCALE;
                 let next_svg_point = into_svg_coordinates(next_v) * SCALE;
 
@@ -1381,10 +1388,10 @@ mod testing {
                 if let Some(neighbour_i) = neighbour_i {
                     let neighbour = &t.triangles[neighbour_i];
                     if !neighbour.valid {
-                        panic!(
+                        return Err(format!(
                             "Triangle {} is neighbour of an invalid Triangle, {}",
                             i, neighbour_i
-                        );
+                        ));
                     }
 
                     let this_center = into_svg_coordinates(tri.centroid) * SCALE;
@@ -1405,10 +1412,10 @@ mod testing {
             }
         }
         ret += "</svg>";
-        ret
+        Ok(ret)
     }
 
-    fn get_svg(t: &Triangulation3D, p: &Polygon3D) -> String {
+    fn get_svg(t: &Triangulation3D, p: &Polygon3D) -> Result<String, String> {
         // Get polygon bounding box
         let mut min_x = Float::MAX;
         let mut max_x = Float::MIN;
@@ -1459,7 +1466,7 @@ mod testing {
         let n_inner = p.n_inner_loops();
 
         for i in 0..n_inner {
-            let inner = p.inner(i).unwrap();
+            let inner = p.inner(i)?;
             ret += &"<polygon points='";
             for v in inner.vertices().iter() {
                 let svg_point = into_svg_coordinates(*v);
@@ -1470,9 +1477,9 @@ mod testing {
 
         ret += "</svg>";
 
-        ret += &get_triangulation_svg(t, min_x, max_x, min_y, max_y);
+        ret += &get_triangulation_svg(t, min_x, max_x, min_y, max_y)?;
 
-        ret
+        Ok(ret)
     }
 
     #[test]
@@ -1496,56 +1503,57 @@ mod testing {
     }
 
     #[test]
-    fn test_add_point_to_triangle() {
+    fn test_add_point_to_triangle() -> Result<(), String> {
         let a = Point3D::new(-1., 0., 0.);
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(0., 1., 0.);
 
         // Point inside (calls split_triangle())
         let mut t = Triangulation3D::new();
-        let i = t.push(a, b, c, 0).unwrap();
-        t.add_point_to_triangle(i, Point3D::new(0.0, 0.1, 0.), PointInTriangle::Inside)
-            .unwrap();
+        let i = t.push(a, b, c, 0)?;
+        t.add_point_to_triangle(i, Point3D::new(0.0, 0.1, 0.), PointInTriangle::Inside)?;
+
         assert_eq!(3, t.triangles.len());
 
         // Point on AB edge (calls split_edge())
         let mut t = Triangulation3D::new();
-        let i = t.push(a, b, c, 0).unwrap();
-        t.add_point_to_triangle(i, Point3D::new(0.0, 0.0, 0.), PointInTriangle::EdgeAB)
-            .unwrap();
+        let i = t.push(a, b, c, 0)?;
+        t.add_point_to_triangle(i, Point3D::new(0.0, 0.0, 0.), PointInTriangle::EdgeAB)?;
         assert_eq!(2, t.triangles.len());
 
         // Point on Vertex (does nothing)
         let mut t = Triangulation3D::new();
-        let i = t.push(a, b, c, 0).unwrap();
-        t.add_point_to_triangle(i, a, PointInTriangle::VertexA)
-            .unwrap();
+        let i = t.push(a, b, c, 0)?;
+        t.add_point_to_triangle(i, a, PointInTriangle::VertexA)?;
         assert_eq!(1, t.triangles.len());
+
+        Ok(())
     }
 
     #[test]
-    fn test_add_point() {
+    fn test_add_point() -> Result<(), String> {
         let a = Point3D::new(-1., 0., 0.);
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(0., 1., 0.);
 
         // Point inside (calls split_triangle())
         let mut t = Triangulation3D::new();
-        t.push(a, b, c, 0).unwrap();
-        t.add_point(Point3D::new(0.0, 0.1, 0.)).unwrap();
+        t.push(a, b, c, 0)?;
+        t.add_point(Point3D::new(0.0, 0.1, 0.))?;
         assert_eq!(3, t.triangles.len());
 
         // Point on AB edge (calls split_edge())
         let mut t = Triangulation3D::new();
-        t.push(a, b, c, 0).unwrap();
-        t.add_point(Point3D::new(0.0, 0.0, 0.)).unwrap();
+        t.push(a, b, c, 0)?;
+        t.add_point(Point3D::new(0.0, 0.0, 0.))?;
         assert_eq!(2, t.triangles.len());
 
         // Point on Vertex (does nothing)
         let mut t = Triangulation3D::new();
-        t.push(a, b, c, 0).unwrap();
-        t.add_point(a).unwrap();
+        t.push(a, b, c, 0)?;
+        t.add_point(a)?;
         assert_eq!(1, t.triangles.len());
+        Ok(())
     }
 
     #[test]
@@ -1570,7 +1578,7 @@ mod testing {
     }
 
     #[test]
-    fn test_push() {
+    fn test_push() -> Result<(), String> {
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
         let c = Point3D::new(1., 1., 0.);
@@ -1580,20 +1588,20 @@ mod testing {
 
         let mut t = Triangulation3D::new();
 
-        assert_eq!(t.push(a, b, c, 0).unwrap(), 0);
+        assert_eq!(t.push(a, b, c, 0)?, 0);
         assert_eq!(t.n_valid_triangles, 1);
         assert_eq!(t.n_valid_triangles(), 1);
         assert_eq!(t.n_triangles(), 1);
         assert_eq!(t.triangles.len(), 1);
 
-        assert_eq!(t.push(b, c, d, 0).unwrap(), 1);
+        assert_eq!(t.push(b, c, d, 0)?, 1);
         assert_eq!(t.n_valid_triangles, 2);
         assert_eq!(t.n_valid_triangles(), 2);
         assert_eq!(t.n_triangles(), 2);
         assert_eq!(t.triangles.len(), 2);
 
         // invalidate the first one
-        t.invalidate(0).unwrap();
+        t.invalidate(0)?;
         // Check that there is only one valid,
         // but two in total
         assert_eq!(t.n_valid_triangles(), 1);
@@ -1601,7 +1609,7 @@ mod testing {
 
         // Add a new one.. it should be in the
         // first position (replaced the old one)
-        assert_eq!(t.push(b, c, e, 0).unwrap(), 0);
+        assert_eq!(t.push(b, c, e, 0)?, 0);
 
         // there should be two valid now, and two
         // in total
@@ -1609,13 +1617,15 @@ mod testing {
         assert_eq!(t.n_triangles(), 2);
 
         // Push the first one again
-        assert_eq!(t.push(a, b, c, 0).unwrap(), 2);
+        assert_eq!(t.push(a, b, c, 0)?, 2);
         assert_eq!(t.n_valid_triangles(), 3);
         assert_eq!(t.n_triangles(), 3);
+
+        Ok(())
     }
 
     #[test]
-    fn test_invalidate() {
+    fn test_invalidate() -> Result<(), String> {
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
         let c = Point3D::new(1., 1., 0.);
@@ -1623,17 +1633,18 @@ mod testing {
 
         let mut t = Triangulation3D::new();
 
-        t.push(a, b, c, 0).unwrap();
-        t.push(b, c, d, 0).unwrap();
+        t.push(a, b, c, 0)?;
+        t.push(b, c, d, 0)?;
         assert_eq!(t.n_valid_triangles(), 2);
 
         assert!(t.invalidate(0).is_ok());
         assert_eq!(t.n_valid_triangles(), 1);
         assert!(t.invalidate(2).is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_get_first_invalid() {
+    fn test_get_first_invalid() -> Result<(), String> {
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
         let c = Point3D::new(1., 1., 0.);
@@ -1641,21 +1652,21 @@ mod testing {
 
         let mut t = Triangulation3D::new();
 
-        t.push(a, b, c, 0).unwrap();
-        t.push(b, c, d, 0).unwrap();
+        t.push(a, b, c, 0)?;
+        t.push(b, c, d, 0)?;
 
         match t.get_first_invalid(0) {
             Some(_i) => assert!(false),
             None => assert!(true),
         };
 
-        t.invalidate(1).unwrap();
+        t.invalidate(1)?;
         match t.get_first_invalid(0) {
             Some(i) => assert_eq!(1, i),
             None => assert!(false),
         };
 
-        t.invalidate(0).unwrap();
+        t.invalidate(0)?;
         match t.get_first_invalid(0) {
             Some(i) => assert_eq!(0, i),
             None => assert!(false),
@@ -1665,10 +1676,11 @@ mod testing {
             Some(i) => assert_eq!(1, i),
             None => assert!(false),
         };
+        Ok(())
     }
 
     #[test]
-    fn test_borrow_triangle() {
+    fn test_borrow_triangle() -> Result<(), String> {
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
         let c = Point3D::new(1., 1., 0.);
@@ -1677,16 +1689,17 @@ mod testing {
         let mut t = Triangulation3D::new();
 
         let mut last_added: usize = 0;
-        last_added = t.push(a, b, c, last_added).unwrap();
-        t.push(b, c, d, last_added).unwrap();
+        last_added = t.push(a, b, c, last_added)?;
+        t.push(b, c, d, last_added)?;
 
         // Borrow the first one.
         let _a = &t.triangles[0];
+
+        Ok(())
     }
 
     #[test]
-    #[should_panic]
-    fn test_mark_as_neighbours_panic() {
+    fn test_mark_as_neighbours_2() -> Result<(), String> {
         // This should work.
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
@@ -1697,19 +1710,21 @@ mod testing {
         let mut t = Triangulation3D::new();
 
         let mut last_added: usize = 0;
-        last_added = t.push(a, b, c, last_added).unwrap();
-        last_added = t.push(c, a, d, last_added).unwrap();
-        t.push(a, b, e, last_added).unwrap();
+        last_added = t.push(a, b, c, last_added)?;
+        last_added = t.push(c, a, d, last_added)?;
+        t.push(a, b, e, last_added)?;
 
         // This should not work... the edge is incorrect
         assert!(t.mark_as_neighbours(0, Edge::Ab, 1).is_err());
 
         // This should not work... they are not neighbours.
         assert!(t.mark_as_neighbours(0, Edge::Bc, 2).is_err());
+
+        Ok(())
     }
 
     #[test]
-    fn test_mark_as_neighbours() {
+    fn test_mark_as_neighbours() -> Result<(), String> {
         // This should work.
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
@@ -1720,18 +1735,19 @@ mod testing {
         let mut t = Triangulation3D::new();
 
         let mut last_added: usize = 0;
-        last_added = t.push(a, b, c, last_added).unwrap();
-        last_added = t.push(c, a, d, last_added).unwrap();
-        t.push(a, b, e, last_added).unwrap();
+        last_added = t.push(a, b, c, last_added)?;
+        last_added = t.push(c, a, d, last_added)?;
+        t.push(a, b, e, last_added)?;
 
         // This should work.
         assert!(t.mark_as_neighbours(0, Edge::Ca, 1).is_ok());
-        assert_eq!(t.triangles[0].neighbour(Edge::Ca).unwrap(), 1);
-        assert_eq!(t.triangles[1].neighbour(Edge::Ab).unwrap(), 0);
+        assert_eq!(t.triangles[0].neighbour(Edge::Ca).ok_or("no Ca")?, 1);
+        assert_eq!(t.triangles[1].neighbour(Edge::Ab).ok_or("no Ab")?, 0);
+        Ok(())
     }
 
     #[test]
-    fn test_get_opposite_vertex() {
+    fn test_get_opposite_vertex() -> Result<(), String> {
         // This should work.
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
@@ -1739,24 +1755,24 @@ mod testing {
 
         let mut t = Triangulation3D::new();
 
-        t.push(a, b, c, 0).unwrap();
+        t.push(a, b, c, 0)?;
 
         let s = Segment3D::new(a, b);
-        let p = t.get_opposite_vertex(&t.triangles[0].triangle, s).unwrap();
+        let p = t.get_opposite_vertex(&t.triangles[0].triangle, s)?;
         assert!(p.compare(c));
 
         let s = Segment3D::new(b, c);
-        let p = t.get_opposite_vertex(&t.triangles[0].triangle, s).unwrap();
+        let p = t.get_opposite_vertex(&t.triangles[0].triangle, s)?;
         assert!(p.compare(a));
 
         let s = Segment3D::new(a, c);
-        let p = t.get_opposite_vertex(&t.triangles[0].triangle, s).unwrap();
+        let p = t.get_opposite_vertex(&t.triangles[0].triangle, s)?;
         assert!(p.compare(b));
+        Ok(())
     }
 
     #[test]
-    #[should_panic]
-    fn test_flip_diagonal_panic() {
+    fn test_flip_diagonal_2() -> Result<(), String> {
         let l = 5.;
 
         // This should work.
@@ -1772,21 +1788,22 @@ mod testing {
 
         let mut t = Triangulation3D::new();
 
-        t.push(a, b, c, 0).unwrap(); // 0
-        t.push(a, b, opp, 0).unwrap(); // 1
+        t.push(a, b, c, 0)?; // 0
+        t.push(a, b, opp, 0)?; // 1
 
-        t.push(p1, opp, a, 0).unwrap(); // 2
-        t.push(opp, p2, b, 0).unwrap(); // 3
-        t.push(b, p3, c, 0).unwrap(); // 4
-        t.push(c, p4, a, 0).unwrap(); // 5
+        t.push(p1, opp, a, 0)?; // 2
+        t.push(opp, p2, b, 0)?; // 3
+        t.push(b, p3, c, 0)?; // 4
+        t.push(c, p4, a, 0)?; // 5
 
         // Expected to fail... they are not
         // neighbours yet
-        t.flip_diagonal(0, Edge::Ab).unwrap();
+        assert!(t.flip_diagonal(0, Edge::Ab).is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_flip_diagonal() {
+    fn test_flip_diagonal() -> Result<(), String> {
         let l = 5.;
 
         // This should work.
@@ -1802,22 +1819,22 @@ mod testing {
 
         let mut t = Triangulation3D::new();
 
-        t.push(a, b, c, 0).unwrap(); // 0
-        t.push(a, b, opp, 0).unwrap(); // 1
+        t.push(a, b, c, 0)?; // 0
+        t.push(a, b, opp, 0)?; // 1
 
-        t.push(p1, opp, a, 0).unwrap(); // 2
-        t.push(opp, p2, b, 0).unwrap(); // 3
-        t.push(b, p3, c, 0).unwrap(); // 4
-        t.push(c, p4, a, 0).unwrap(); // 5
+        t.push(p1, opp, a, 0)?; // 2
+        t.push(opp, p2, b, 0)?; // 3
+        t.push(b, p3, c, 0)?; // 4
+        t.push(c, p4, a, 0)?; // 5
 
-        t.mark_as_neighbours(0, Edge::Ab, 1).unwrap();
-        t.mark_as_neighbours(0, Edge::Bc, 4).unwrap();
-        t.mark_as_neighbours(0, Edge::Ca, 5).unwrap();
+        t.mark_as_neighbours(0, Edge::Ab, 1)?;
+        t.mark_as_neighbours(0, Edge::Bc, 4)?;
+        t.mark_as_neighbours(0, Edge::Ca, 5)?;
 
-        t.mark_as_neighbours(1, Edge::Bc, 3).unwrap();
-        t.mark_as_neighbours(1, Edge::Ca, 2).unwrap();
+        t.mark_as_neighbours(1, Edge::Bc, 3)?;
+        t.mark_as_neighbours(1, Edge::Ca, 2)?;
 
-        let original = get_triangulation_svg(&t, -l, l, -l, l);
+        let original = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         //there should still be 2 triangles.
         assert_eq!(t.n_triangles(), 6);
@@ -1825,9 +1842,9 @@ mod testing {
         assert_eq!(t.n_valid_triangles(), 6);
 
         // Should work now.
-        t.flip_diagonal(0, Edge::Ab).unwrap();
+        t.flip_diagonal(0, Edge::Ab)?;
 
-        let first_flip = get_triangulation_svg(&t, -l, l, -l, l);
+        let first_flip = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         //there should still be 2 triangles.
         assert_eq!(t.n_triangles(), 6);
@@ -1835,28 +1852,28 @@ mod testing {
         assert_eq!(t.n_valid_triangles(), 6);
 
         // Test triangles.
-        let a_opp_c = Triangle3D::new(a, opp, c).unwrap();
-        let c_opp_b = Triangle3D::new(c, opp, b).unwrap();
+        let a_opp_c = Triangle3D::new(a, opp, c)?;
+        let c_opp_b = Triangle3D::new(c, opp, b)?;
         assert!(t.triangles[0].triangle.compare(&a_opp_c));
         assert!(t.triangles[1].triangle.compare(&c_opp_b));
 
         // Test neighbours
-        assert_eq!(t.triangles[0].neighbour(Edge::Ab).unwrap(), 2);
-        assert_eq!(t.triangles[0].neighbour(Edge::Bc).unwrap(), 1);
-        assert_eq!(t.triangles[0].neighbour(Edge::Ca).unwrap(), 5);
+        assert_eq!(t.triangles[0].neighbour(Edge::Ab).ok_or("no Ab")?, 2);
+        assert_eq!(t.triangles[0].neighbour(Edge::Bc).ok_or("no Bc")?, 1);
+        assert_eq!(t.triangles[0].neighbour(Edge::Ca).ok_or("no Ca")?, 5);
 
-        assert_eq!(t.triangles[1].neighbour(Edge::Ab).unwrap(), 0);
-        assert_eq!(t.triangles[1].neighbour(Edge::Bc).unwrap(), 3);
-        assert_eq!(t.triangles[1].neighbour(Edge::Ca).unwrap(), 4);
+        assert_eq!(t.triangles[1].neighbour(Edge::Ab).ok_or("no Ab")?, 0);
+        assert_eq!(t.triangles[1].neighbour(Edge::Bc).ok_or("no Bc")?, 3);
+        assert_eq!(t.triangles[1].neighbour(Edge::Ca).ok_or("no Ca")?, 4);
 
         draw_triangulation(
             "flip_diagonal.html",
             vec![("original", original), ("after", first_flip)],
-        );
+        )
     }
 
     #[test]
-    fn test_get_flipped_aspect_ratio() {
+    fn test_get_flipped_aspect_ratio() -> Result<(), String> {
         // This should work.
         let a = Point3D::new(-1., -1., 0.);
         let b = Point3D::new(1., -1., 0.);
@@ -1866,23 +1883,23 @@ mod testing {
         let mut t = Triangulation3D::new();
 
         let mut last_added: usize = 0;
-        let tri0 = Triangle3D::new(a, b, c).unwrap();
-        last_added = t.push(a, b, c, last_added).unwrap();
-        t.push(c, a, d, last_added).unwrap();
-        let tri1 = Triangle3D::new(c, a, d).unwrap();
+        let tri0 = Triangle3D::new(a, b, c)?;
+        last_added = t.push(a, b, c, last_added)?;
+        t.push(c, a, d, last_added)?;
+        let tri1 = Triangle3D::new(c, a, d)?;
 
         // mark as neighbours
         assert!(t.mark_as_neighbours(0, Edge::Ca, 1).is_ok());
-        assert_eq!(t.triangles[0].neighbour(Edge::Ca).unwrap(), 1);
-        assert_eq!(t.triangles[1].neighbour(Edge::Ab).unwrap(), 0);
+        assert_eq!(t.triangles[0].neighbour(Edge::Ca).ok_or("no Ca")?, 1);
+        assert_eq!(t.triangles[1].neighbour(Edge::Ab).ok_or("no Ab")?, 0);
 
         // These should return -1... no neighbours there.
-        assert!(t.get_flipped_aspect_ratio(0, Edge::Ab).unwrap().is_none());
-        assert!(t.get_flipped_aspect_ratio(0, Edge::Bc).unwrap().is_none());
+        assert!(t.get_flipped_aspect_ratio(0, Edge::Ab)?.is_none());
+        assert!(t.get_flipped_aspect_ratio(0, Edge::Bc)?.is_none());
 
         // constrain side 0 of triangle 0
         t.triangles[0].constrain(Edge::Ab);
-        assert!(t.get_flipped_aspect_ratio(0, Edge::Ab).unwrap().is_none());
+        assert!(t.get_flipped_aspect_ratio(0, Edge::Ab)?.is_none());
 
         // This should work.
         let tri0_ar = tri0.aspect_ratio();
@@ -1890,16 +1907,17 @@ mod testing {
         assert_eq!(tri0_ar, tri1_ar);
         assert_eq!(
             tri0_ar,
-            t.get_flipped_aspect_ratio(0, Edge::Ca).unwrap().unwrap()
+            t.get_flipped_aspect_ratio(0, Edge::Ca)?.ok_or("no Ca")?
         );
         assert_eq!(
             tri1_ar,
-            t.get_flipped_aspect_ratio(1, Edge::Ab).unwrap().unwrap()
+            t.get_flipped_aspect_ratio(1, Edge::Ab)?.ok_or("No Ab")?
         );
+        Ok(())
     }
 
     #[test]
-    fn test_split_triangle() {
+    fn test_split_triangle() -> Result<(), String> {
         let l = 4.;
         // This should work.
         let a = Point3D::new(-l / 2., -l / 2., 0.);
@@ -1910,19 +1928,19 @@ mod testing {
         let f = Point3D::new(l, -l / 2., 0.);
 
         let mut t = Triangulation3D::new();
-        t.push(a, b, c, 0).unwrap(); // 0
-        t.push(a, c, d, 0).unwrap(); // 1
-        t.push(e, b, a, 0).unwrap(); // 2
-        t.push(b, f, c, 0).unwrap(); // 3
+        t.push(a, b, c, 0)?; // 0
+        t.push(a, c, d, 0)?; // 1
+        t.push(e, b, a, 0)?; // 2
+        t.push(b, f, c, 0)?; // 3
 
-        t.mark_as_neighbours(1, Edge::Ab, 0).unwrap();
-        t.mark_as_neighbours(0, Edge::Ab, 2).unwrap();
-        t.mark_as_neighbours(0, Edge::Bc, 3).unwrap();
+        t.mark_as_neighbours(1, Edge::Ab, 0)?;
+        t.mark_as_neighbours(0, Edge::Ab, 2)?;
+        t.mark_as_neighbours(0, Edge::Bc, 3)?;
 
         // constrain AB
         t.triangles[1].constrain(Edge::Ca);
 
-        let original = get_triangulation_svg(&t, -l, l, -l, l);
+        let original = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         // SPLIT!
         let p = Point3D::new(l / 6., -l / 6., 0.);
@@ -1930,7 +1948,7 @@ mod testing {
         // Should work.
         assert!(t.split_triangle(0, p).is_ok());
 
-        let after = get_triangulation_svg(&t, -l, l, -l, l);
+        let after = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         // There should be a total of 4 valid triangles now.
         // Also, 4 triangles in total (the invalid one should
@@ -1939,14 +1957,14 @@ mod testing {
         assert_eq!(t.n_triangles(), 6);
 
         // Check neighbours and constraints.
-        let abc = Triangle3D::new(a, b, c).unwrap();
+        let abc = Triangle3D::new(a, b, c)?;
 
-        let acd = Triangle3D::new(a, c, d).unwrap();
-        let cpa = Triangle3D::new(c, p, a).unwrap();
-        let bpa = Triangle3D::new(b, p, a).unwrap();
-        let cpb = Triangle3D::new(c, p, b).unwrap();
-        let abe = Triangle3D::new(a, b, e).unwrap();
-        let bfc = Triangle3D::new(b, f, c).unwrap();
+        let acd = Triangle3D::new(a, c, d)?;
+        let cpa = Triangle3D::new(c, p, a)?;
+        let bpa = Triangle3D::new(b, p, a)?;
+        let cpb = Triangle3D::new(c, p, b)?;
+        let abe = Triangle3D::new(a, b, e)?;
+        let bfc = Triangle3D::new(b, f, c)?;
 
         assert!(cpa.compare(&t.triangles[0].triangle));
         assert!(acd.compare(&t.triangles[1].triangle));
@@ -1957,7 +1975,7 @@ mod testing {
             let tri = &t.triangles[i];
 
             if tri.triangle.compare(&abc) {
-                panic!("Triangle ABC should not be in Triangulation")
+                return Err("Triangle ABC should not be in Triangulation".to_string());
             } else if tri.triangle.compare(&cpa) {
                 assert_eq!(tri.index, 0);
 
@@ -2021,8 +2039,8 @@ mod testing {
             }
         }
 
-        t.restore_delaunay(1.6).unwrap();
-        let after_delaunay = get_triangulation_svg(&t, -l, l, -l, l);
+        t.restore_delaunay(1.6)?;
+        let after_delaunay = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         draw_triangulation(
             "split_triangle.html",
@@ -2031,11 +2049,11 @@ mod testing {
                 ("after", after),
                 ("after restoring", after_delaunay),
             ],
-        );
+        )
     }
 
     #[test]
-    fn test_split_edge() {
+    fn test_split_edge() -> Result<(), String> {
         let l = 4.;
         // ONLY ONE HEMISPHERE
         // =====================
@@ -2048,8 +2066,8 @@ mod testing {
         let p = Point3D::new(0., 0., 0.);
 
         let mut t = Triangulation3D::new();
-        t.push(a, b, c, 0).unwrap(); //0
-        t.push(a, c, d, 0).unwrap(); //1
+        t.push(a, b, c, 0)?; //0
+        t.push(a, c, d, 0)?; //1
 
         assert!(t.mark_as_neighbours(0, Edge::Ca, 1).is_ok());
 
@@ -2060,20 +2078,20 @@ mod testing {
         assert_eq!(2, t.n_triangles());
         assert_eq!(2, t.n_valid_triangles());
 
-        let one_hemisphere_before = get_triangulation_svg(&t, -l, l, -l, l);
+        let one_hemisphere_before = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         // SPLIT
-        t.split_edge(0, Edge::Ab, p).unwrap();
+        t.split_edge(0, Edge::Ab, p)?;
 
-        let one_hemisphere_after = get_triangulation_svg(&t, -l, l, -l, l);
+        let one_hemisphere_after = get_triangulation_svg(&t, -l, l, -l, l)?;
         assert_eq!(3, t.n_triangles());
         assert_eq!(3, t.n_valid_triangles());
 
         // Check triangles.                          // INDEX:
-        let abc = Triangle3D::new(a, b, c).unwrap(); // Should not be there
-        let apc = Triangle3D::new(a, p, c).unwrap(); // 0
-        let acd = Triangle3D::new(a, c, d).unwrap(); // 1
-        let pbc = Triangle3D::new(p, b, c).unwrap(); // 2
+        let abc = Triangle3D::new(a, b, c)?; // Should not be there
+        let apc = Triangle3D::new(a, p, c)?; // 0
+        let acd = Triangle3D::new(a, c, d)?; // 1
+        let pbc = Triangle3D::new(p, b, c)?; // 2
 
         // Check indexes (assigned above)... makes it
         // easier to check the neighbourhood.
@@ -2086,7 +2104,7 @@ mod testing {
 
             if tri.triangle.compare(&abc) {
                 // This should no be aywhere.
-                panic!("Triangle ABC should not be in the Triangulation");
+                return Err("Triangle ABC should not be in the Triangulation".to_string());
             } else if tri.triangle.compare(&apc) {
                 assert_eq!(i, 0);
 
@@ -2133,10 +2151,10 @@ mod testing {
         let p = Point3D::new(0., 0., 0.);
 
         let mut t = Triangulation3D::new();
-        t.push(a, b, c, 0).unwrap(); //0
-        t.push(a, c, d, 0).unwrap(); //1
-        t.push(b, a, opp, 0).unwrap(); //2
-        t.push(a, e, opp, 0).unwrap(); //3
+        t.push(a, b, c, 0)?; //0
+        t.push(a, c, d, 0)?; //1
+        t.push(b, a, opp, 0)?; //2
+        t.push(a, e, opp, 0)?; //3
 
         assert!(t.mark_as_neighbours(0, Edge::Ca, 1).is_ok());
         assert!(t.mark_as_neighbours(0, Edge::Ab, 2).is_ok());
@@ -2149,36 +2167,36 @@ mod testing {
         assert_eq!(4, t.n_triangles());
         assert_eq!(4, t.n_valid_triangles());
 
-        let two_hemispheres_before = get_triangulation_svg(&t, -l, l, -l, l);
+        let two_hemispheres_before = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         // SPLIT
-        t.split_edge(0, Edge::Ab, p).unwrap();
+        t.split_edge(0, Edge::Ab, p)?;
 
         assert_eq!(6, t.n_triangles());
         assert_eq!(6, t.n_valid_triangles());
 
-        let two_hemispheres_after = get_triangulation_svg(&t, -l, l, -l, l);
+        let two_hemispheres_after = get_triangulation_svg(&t, -l, l, -l, l)?;
 
         // Check triangles.                          // INDEX:
-        let abc = Triangle3D::new(a, b, c).unwrap(); // Should not be there... replaced by APC
-        let bao = Triangle3D::new(a, b, opp).unwrap(); // Should not be there... replaced by BPO
+        let abc = Triangle3D::new(a, b, c)?; // Should not be there... replaced by APC
+        let bao = Triangle3D::new(a, b, opp)?; // Should not be there... replaced by BPO
 
-        let apc = Triangle3D::new(a, p, c).unwrap(); // 0
+        let apc = Triangle3D::new(a, p, c)?; // 0
         let apc_index = 0;
 
-        let acd = Triangle3D::new(a, c, d).unwrap(); // 1
+        let acd = Triangle3D::new(a, c, d)?; // 1
         let acd_index = 1;
 
-        let bpo = Triangle3D::new(p, b, opp).unwrap(); // 2
+        let bpo = Triangle3D::new(p, b, opp)?; // 2
         let bpo_index = 2;
 
-        let aeo = Triangle3D::new(a, opp, e).unwrap(); // 3
+        let aeo = Triangle3D::new(a, opp, e)?; // 3
         let aeo_index = 3;
 
-        let pbc = Triangle3D::new(p, b, c).unwrap(); // 4
+        let pbc = Triangle3D::new(p, b, c)?; // 4
         let pbc_index = 4;
 
-        let pao = Triangle3D::new(p, a, opp).unwrap(); // 2
+        let pao = Triangle3D::new(p, a, opp)?; // 2
         let pao_index = 5;
 
         // Check indexes (assigned above)... makes it
@@ -2195,10 +2213,10 @@ mod testing {
 
             if tri.triangle.compare(&abc) {
                 // This should no be aywhere.
-                panic!("Triangle ABC should not exist")
+                return Err("Triangle ABC should not exist".to_string());
             } else if tri.triangle.compare(&bao) {
                 // This should no be aywhere.
-                panic!("Triangle BAO should not exist")
+                return Err("Triangle BAO should not exist".to_string());
             } else if tri.triangle.compare(&apc) {
                 assert_eq!(i, tri.index);
 
@@ -2272,28 +2290,28 @@ mod testing {
                 ("Two hemispheres - original", two_hemispheres_before),
                 ("Two hemispheres - after", two_hemispheres_after),
             ],
-        );
+        )
     }
 
     #[test]
-    fn test_mesh_polygon() {
+    fn test_mesh_polygon() -> Result<(), String> {
         /* SIMPLE CASE ... three vertices */
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(4., 0., 0.);
         let c = Point3D::new(4., 4., 0.);
 
         let mut outer = Loop3D::new();
-        outer.push(a).unwrap();
-        outer.push(b).unwrap();
-        outer.push(c).unwrap();
-        outer.close().unwrap();
+        outer.push(a)?;
+        outer.push(b)?;
+        outer.push(c)?;
+        outer.close()?;
 
-        let poly = Polygon3D::new(outer).unwrap();
+        let poly = Polygon3D::new(outer)?;
         let max_area = 0.3;
         let max_aspect_ratio = 1.6;
-        let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio).unwrap();
-        let case0 = get_svg(&t, &poly);
-        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio).unwrap();
+        let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio)?;
+        let case0 = get_svg(&t, &poly)?;
+        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio)?;
 
         /* SOMEHOW MORE COMPLICATED CASE ... 6 vertices */
         // let min_x = 0.;
@@ -2307,22 +2325,22 @@ mod testing {
         let p4 = Point3D::new(3., 6., 0.);
         let p5 = Point3D::new(0., 5., 0.);
         let mut outer = Loop3D::new();
-        outer.push(p0).unwrap();
-        outer.push(p1).unwrap();
-        outer.push(p2).unwrap();
-        outer.push(p3).unwrap();
-        outer.push(p4).unwrap();
-        outer.push(p5).unwrap();
-        outer.close().unwrap();
+        outer.push(p0)?;
+        outer.push(p1)?;
+        outer.push(p2)?;
+        outer.push(p3)?;
+        outer.push(p4)?;
+        outer.push(p5)?;
+        outer.close()?;
         assert_eq!(6, outer.len());
 
-        let poly = Polygon3D::new(outer).unwrap();
+        let poly = Polygon3D::new(outer)?;
         let max_area = 0.1;
         let max_aspect_ratio = 1.6;
 
-        let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio).unwrap();
-        let case1 = get_svg(&t, &poly);
-        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio).unwrap();
+        let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio)?;
+        let case1 = get_svg(&t, &poly)?;
+        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio)?;
 
         /* SOMEHOW MORE COMPLICATED CASE ... 6 vertices + hole */
         // let min_x = 0.;
@@ -2336,69 +2354,69 @@ mod testing {
         let p4 = Point3D::new(3., 6., 0.);
         let p5 = Point3D::new(0., 5., 0.);
         let mut outer = Loop3D::new();
-        outer.push(p0).unwrap();
-        outer.push(p1).unwrap();
-        outer.push(p2).unwrap();
-        outer.push(p3).unwrap();
-        outer.push(p4).unwrap();
-        outer.push(p5).unwrap();
-        outer.close().unwrap();
-        let mut poly = Polygon3D::new(outer).unwrap();
+        outer.push(p0)?;
+        outer.push(p1)?;
+        outer.push(p2)?;
+        outer.push(p3)?;
+        outer.push(p4)?;
+        outer.push(p5)?;
+        outer.close()?;
+        let mut poly = Polygon3D::new(outer)?;
 
         let i0 = Point3D::new(0.2, 0.2, 0.);
         let i1 = Point3D::new(0.8, 0.2, 0.);
         let i2 = Point3D::new(0.8, 1.2, 0.);
         let i3 = Point3D::new(0.2, 1.2, 0.);
         let mut inner = Loop3D::new();
-        inner.push(i0).unwrap();
-        inner.push(i1).unwrap();
-        inner.push(i2).unwrap();
-        inner.push(i3).unwrap();
-        inner.close().unwrap();
-        poly.cut_hole(inner).unwrap();
+        inner.push(i0)?;
+        inner.push(i1)?;
+        inner.push(i2)?;
+        inner.push(i3)?;
+        inner.close()?;
+        poly.cut_hole(inner)?;
 
         let i0 = Point3D::new(1.2, 0.6, 0.);
         let i1 = Point3D::new(2., 0.6, 0.);
         let i2 = Point3D::new(2., 3.2, 0.);
         let i3 = Point3D::new(1.2, 3.2, 0.);
         let mut inner = Loop3D::new();
-        inner.push(i0).unwrap();
-        inner.push(i1).unwrap();
-        inner.push(i2).unwrap();
-        inner.push(i3).unwrap();
-        inner.close().unwrap();
-        poly.cut_hole(inner).unwrap();
+        inner.push(i0)?;
+        inner.push(i1)?;
+        inner.push(i2)?;
+        inner.push(i3)?;
+        inner.close()?;
+        poly.cut_hole(inner)?;
 
         let max_area = 0.4;
         let max_aspect_ratio = 1.6;
 
-        let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio).unwrap();
-        let case2 = get_svg(&t, &poly);
-        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio).unwrap();
+        let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio)?;
+        let case2 = get_svg(&t, &poly)?;
+        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio)?;
 
         draw_triangulation(
             "test_mesh_polygon.html",
             vec![("Case 0", case0), ("Case 1", case1), ("Case 2", case2)],
-        );
+        )
     }
 
     #[test]
-    fn test_from_polygon() {
+    fn test_from_polygon() -> Result<(), String> {
         /* SIMPLE CASE ... three vertices */
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(1., 1., 0.);
 
         let mut outer = Loop3D::new();
-        outer.push(a).unwrap();
-        outer.push(b).unwrap();
-        outer.push(c).unwrap();
-        outer.close().unwrap();
+        outer.push(a)?;
+        outer.push(b)?;
+        outer.push(c)?;
+        outer.close()?;
 
-        let poly = Polygon3D::new(outer).unwrap();
-        let t : Triangulation3D = poly.clone().try_into().unwrap();        
-        let case0 = get_svg(&t, &poly);
-        test_triangulation_results(&t, &poly, 1000., 1000.).unwrap();
+        let poly = Polygon3D::new(outer)?;
+        let t: Triangulation3D = poly.clone().try_into()?;
+        let case0 = get_svg(&t, &poly)?;
+        test_triangulation_results(&t, &poly, 1000., 1000.)?;
 
         /* SOMEHOW MORE COMPLICATED CASE ... 6 vertices */
         let p0 = Point3D::new(0., 0., 0.);
@@ -2409,19 +2427,19 @@ mod testing {
         let p5 = Point3D::new(0., 3., 0.); // Collinear, disappear
 
         let mut outer = Loop3D::new();
-        outer.push(p0).unwrap();
-        outer.push(p1).unwrap();
-        outer.push(p2).unwrap();
-        outer.push(p3).unwrap();
-        outer.push(p4).unwrap();
-        outer.push(p5).unwrap();
-        outer.close().unwrap();
+        outer.push(p0)?;
+        outer.push(p1)?;
+        outer.push(p2)?;
+        outer.push(p3)?;
+        outer.push(p4)?;
+        outer.push(p5)?;
+        outer.close()?;
 
-        let poly = Polygon3D::new(outer).unwrap();        
-        let t : Triangulation3D = (&poly).try_into().unwrap();        
+        let poly = Polygon3D::new(outer)?;
+        let t: Triangulation3D = (&poly).try_into()?;
 
-        let case1 = get_svg(&t, &poly);
-        test_triangulation_results(&t, &poly, 1000., 1000.).unwrap();
+        let case1 = get_svg(&t, &poly)?;
+        test_triangulation_results(&t, &poly, 1000., 1000.)?;
 
         /* MORE COMPLICATED CASE  */
         /*
@@ -2437,19 +2455,19 @@ mod testing {
         let p4 = Point3D::new(3., 6., 0.);
         let p5 = Point3D::new(0., 5., 0.);
         let mut outer = Loop3D::new();
-        outer.push(p0).unwrap();
-        outer.push(p1).unwrap();
-        outer.push(p2).unwrap();
-        outer.push(p3).unwrap();
-        outer.push(p4).unwrap();
-        outer.push(p5).unwrap();
-        outer.close().unwrap();
+        outer.push(p0)?;
+        outer.push(p1)?;
+        outer.push(p2)?;
+        outer.push(p3)?;
+        outer.push(p4)?;
+        outer.push(p5)?;
+        outer.close()?;
 
-        let poly = Polygon3D::new(outer).unwrap();
-        
-        let t : Triangulation3D = (&poly).try_into().unwrap();        
-        let case2 = get_svg(&t, &poly);
-        test_triangulation_results(&t, &poly, 9999999., 9999999.).unwrap();
+        let poly = Polygon3D::new(outer)?;
+
+        let t: Triangulation3D = (&poly).try_into()?;
+        let case2 = get_svg(&t, &poly)?;
+        test_triangulation_results(&t, &poly, 9999999., 9999999.)?;
 
         /* SOMEHOW MORE COMPLICATED CASE ... 6 vertices + hole */
         let p0 = Point3D::new(0., 0., 0.);
@@ -2459,47 +2477,47 @@ mod testing {
         let p4 = Point3D::new(3., 6., 0.);
         let p5 = Point3D::new(0., 5., 0.);
         let mut outer = Loop3D::new();
-        outer.push(p0).unwrap();
-        outer.push(p1).unwrap();
-        outer.push(p2).unwrap();
-        outer.push(p3).unwrap();
-        outer.push(p4).unwrap();
-        outer.push(p5).unwrap();
-        outer.close().unwrap();
-        let mut poly = Polygon3D::new(outer).unwrap();
+        outer.push(p0)?;
+        outer.push(p1)?;
+        outer.push(p2)?;
+        outer.push(p3)?;
+        outer.push(p4)?;
+        outer.push(p5)?;
+        outer.close()?;
+        let mut poly = Polygon3D::new(outer)?;
 
         let i0 = Point3D::new(0.2, 0.2, 0.);
         let i1 = Point3D::new(0.8, 0.2, 0.);
         let i2 = Point3D::new(0.8, 1.2, 0.);
         let i3 = Point3D::new(0.2, 1.2, 0.);
         let mut inner = Loop3D::new();
-        inner.push(i0).unwrap();
-        inner.push(i1).unwrap();
-        inner.push(i2).unwrap();
-        inner.push(i3).unwrap();
-        inner.close().unwrap();
-        poly.cut_hole(inner).unwrap();
+        inner.push(i0)?;
+        inner.push(i1)?;
+        inner.push(i2)?;
+        inner.push(i3)?;
+        inner.close()?;
+        poly.cut_hole(inner)?;
 
         let i0 = Point3D::new(1.2, 0.6, 0.);
         let i1 = Point3D::new(2., 0.6, 0.);
         let i2 = Point3D::new(2., 3.2, 0.);
         let i3 = Point3D::new(1.2, 3.2, 0.);
         let mut inner = Loop3D::new();
-        inner.push(i0).unwrap();
-        inner.push(i1).unwrap();
-        inner.push(i2).unwrap();
-        inner.push(i3).unwrap();
-        inner.close().unwrap();
-        poly.cut_hole(inner).unwrap();
+        inner.push(i0)?;
+        inner.push(i1)?;
+        inner.push(i2)?;
+        inner.push(i3)?;
+        inner.close()?;
+        poly.cut_hole(inner)?;
 
-        let t : Triangulation3D = (&poly).try_into().unwrap();        
-        test_triangulation_results(&t, &poly, 1000., 1000.).unwrap();
+        let t: Triangulation3D = (&poly).try_into()?;
+        test_triangulation_results(&t, &poly, 1000., 1000.)?;
 
         let mut closed = poly.get_closed_loop();
-        closed.close().unwrap();
-        let poly = Polygon3D::new(closed).unwrap();
+        closed.close()?;
+        let poly = Polygon3D::new(closed)?;
 
-        let case3 = get_svg(&t, &poly);
+        let case3 = get_svg(&t, &poly)?;
 
         draw_triangulation(
             "test_from_polygon.html",
@@ -2509,11 +2527,12 @@ mod testing {
                 ("Case 2", case2),
                 ("Case 3", case3),
             ],
-        )
+        )?;
+        Ok(())
     }
 
     #[test]
-    fn test_mark_neighbourhoods() {
+    fn test_mark_neighbourhoods() -> Result<(), String> {
         let p0 = Point3D::new(0., 0., 0.);
         let p1 = Point3D::new(3., 0., 0.);
         let p2 = Point3D::new(3., 3., 0.);
@@ -2522,12 +2541,12 @@ mod testing {
         let p5 = Point3D::new(0., 5., 0.);
 
         let mut t = Triangulation3D::new();
-        t.push(p0, p1, p2, 0).unwrap();
-        t.push(p2, p4, p3, 0).unwrap();
-        t.push(p2, p5, p4, 0).unwrap();
-        t.push(p0, p2, p5, 0).unwrap();
+        t.push(p0, p1, p2, 0)?;
+        t.push(p2, p4, p3, 0)?;
+        t.push(p2, p5, p4, 0)?;
+        t.push(p0, p2, p5, 0)?;
 
-        t.mark_neighbourhouds().unwrap();
+        t.mark_neighbourhouds()?;
 
         assert_eq!(t.triangles[0].neighbour(Edge::Ab), None);
         assert_eq!(t.triangles[0].neighbour(Edge::Bc), None);
@@ -2544,16 +2563,17 @@ mod testing {
         assert_eq!(t.triangles[3].neighbour(Edge::Ab), Some(0));
         assert_eq!(t.triangles[3].neighbour(Edge::Bc), Some(2));
         assert_eq!(t.triangles[3].neighbour(Edge::Ca), None);
+        Ok(())
     }
 
     #[test]
-    fn test_constraints() {
+    fn test_constraints() -> Result<(), String> {
         let l = 3.;
         let a = Point3D::new(-l, 0., 0.);
         let b = Point3D::new(l, 0., 0.);
         let c = Point3D::new(0., l, 0.);
 
-        let mut t = TriPiece::new(a, b, c, 0).unwrap();
+        let mut t = TriPiece::new(a, b, c, 0)?;
 
         assert!(!t.is_constrained(Edge::Ab));
         assert!(!t.is_constrained(Edge::Bc));
@@ -2564,25 +2584,27 @@ mod testing {
         assert!(t.is_constrained(Edge::Ab));
         assert!(!t.is_constrained(Edge::Bc));
         assert!(!t.is_constrained(Edge::Ca));
+        Ok(())
     }
 
     #[test]
-    fn test_set_neighbour() {
+    fn test_set_neighbour() -> Result<(), String> {
         // This should work.
         let l = 3.;
         let a = Point3D::new(-l, 0., 0.);
         let b = Point3D::new(l, 0., 0.);
         let c = Point3D::new(0., l, 0.);
 
-        let mut t1 = TriPiece::new(a, b, c, 0).unwrap();
+        let mut t1 = TriPiece::new(a, b, c, 0)?;
 
         t1.set_neighbour(Edge::Ab, 1);
         t1.set_neighbour(Edge::Bc, 11);
         t1.set_neighbour(Edge::Ca, 111);
 
-        assert_eq!(t1.n0.unwrap(), 1);
-        assert_eq!(t1.n1.unwrap(), 11);
-        assert_eq!(t1.n2.unwrap(), 111);
+        assert_eq!(t1.n0.ok_or("No n0")?, 1);
+        assert_eq!(t1.n1.ok_or("no n1")?, 11);
+        assert_eq!(t1.n2.ok_or("no n2")?, 111);
+        Ok(())
     }
 
     #[test]

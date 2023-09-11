@@ -1,13 +1,12 @@
 use crate::{Boundary, Float, SimulationState, SimulationStateHeader};
-use geometry::{Loop3D, Polygon3D, Vector3D, BBox3D};
+use geometry::{BBox3D, Loop3D, Polygon3D, Vector3D};
 use matrix::Matrix;
 
 /// A trait utilized to have shared behaviour between
 /// Fenestration and Surfaces
 pub trait SurfaceTrait: Clone + Send + Sync {
-
     /// Returns a reference to the name of the surface
-    fn name(&self)->&String;
+    fn name(&self) -> &String;
 
     /// Returns the area in m2, calculated
     /// based on the [`Polygon3D`] that represents it
@@ -19,7 +18,7 @@ pub trait SurfaceTrait: Clone + Send + Sync {
 
     /// Borrows the outer loop
     fn outer(&self) -> &Loop3D;
-        
+
     /// Borrows a mutable reference to the outer loop
     fn mut_outer(&mut self) -> &mut Loop3D;
 
@@ -109,7 +108,7 @@ pub trait SurfaceTrait: Clone + Send + Sync {
     fn last_node_temperature_index(&self) -> usize;
 
     /// Gets a Bounding Box surrounding the surface
-    fn bbox(&self)->Result<BBox3D, String>{
+    fn bbox(&self) -> Result<BBox3D, String> {
         self.outer().bbox()
     }
 

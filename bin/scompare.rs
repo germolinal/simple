@@ -46,7 +46,7 @@ struct Inputs {
     map: Option<ArgColourMap>,
 }
 
-fn main() {
+fn main() -> Result<(), String> {
     let inputs = Inputs::parse();
 
     let a = match ImageBuffer::from_file(std::path::Path::new(&inputs.input1)) {
@@ -89,8 +89,6 @@ fn main() {
                 diff.save_falsecolour(inputs.min, inputs.max, scale, out)
             }
         }
-        None => {
-            diff.save_hdre(out);
-        }
+        None => diff.save_hdre(out),
     }
 }

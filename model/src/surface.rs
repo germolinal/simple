@@ -181,8 +181,7 @@ pub struct Surface {
 }
 
 impl SurfaceTrait for Surface {
-    
-    fn name(&self)->&String{
+    fn name(&self) -> &String {
         &self.name
     }
 

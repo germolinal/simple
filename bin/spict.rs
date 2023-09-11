@@ -141,17 +141,17 @@ struct Inputs {
     pub field_of_view: Float,
 }
 
-fn main() {
+fn main() -> Result<(), String> {
     let inputs = Inputs::parse();
 
     let input_file = inputs.input;
     let mut scene = if input_file.ends_with(".rad") {
         Scene::from_radiance(input_file)
     } else if input_file.ends_with(".spl") {
-        let (model, _header) = model::Model::from_file(input_file).unwrap();
-        Scene::from_simple_model(&model, Wavelengths::Visible).unwrap()
+        let (model, _header) = model::Model::from_file(input_file)?;
+        Scene::from_simple_model(&model, Wavelengths::Visible)?
     } else {
-        panic!("Unkwown format in file {}", input_file);
+        return Err(format!("Unkwown format in file {}", input_file));
     };
 
     scene.build_accelerator();
@@ -187,5 +187,5 @@ fn main() {
 
     let buffer = integrator.render(&scene, &camera);
 
-    buffer.save_hdre(std::path::Path::new(&inputs.output));
+    buffer.save_hdre(std::path::Path::new(&inputs.output))
 }
