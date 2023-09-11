@@ -105,7 +105,7 @@ mod tests {
     use weather::WeatherTrait;
 
     #[test]
-    fn test_design_blast_flow_rate() {
+    fn test_design_blast_flow_rate() -> Result<(), String> {
         /* THIS COMES FROM ENERGY PLUS' INPUT OUTPUT REF */
         /*
             "These coefficients produce a value of 1.0 at 0◦C deltaT and
@@ -126,7 +126,7 @@ mod tests {
         weather.wind_speed = Box::new(ScheduleConstant::new(3.35));
 
         let space = Space::new("some space".to_string());
-        space.set_dry_bulb_temperature_index(0).unwrap();
+        space.set_dry_bulb_temperature_index(0)?;
         let space = Arc::new(space);
 
         let date = Date {
@@ -149,7 +149,7 @@ mod tests {
         weather.wind_speed = Box::new(ScheduleConstant::new(6.));
 
         let space = Space::new("some space".to_string());
-        space.set_dry_bulb_temperature_index(0).unwrap();
+        space.set_dry_bulb_temperature_index(0)?;
         let space = Arc::new(space);
 
         let date = Date {
@@ -162,10 +162,12 @@ mod tests {
         let current_weather = weather.get_weather_data(date);
         let flow = blast_design_flow_rate(&current_weather, &space, &state, design_rate);
         assert!((2.75 - flow).abs() < 0.02);
+
+        Ok(())
     }
 
     #[test]
-    fn test_design_doe2_flow_rate() {
+    fn test_design_doe2_flow_rate() -> Result<(), String> {
         /* THIS COMES FROM ENERGY PLUS' INPUT OUTPUT REF */
         /*
             "With these coefficients, the summer conditions above would
@@ -182,7 +184,7 @@ mod tests {
         weather.wind_speed = Box::new(ScheduleConstant::new(3.35));
 
         let space = Space::new("some space".to_string());
-        space.set_dry_bulb_temperature_index(0).unwrap();
+        space.set_dry_bulb_temperature_index(0)?;
         let space = Arc::new(space);
 
         let date = Date {
@@ -205,7 +207,7 @@ mod tests {
         weather.wind_speed = Box::new(ScheduleConstant::new(6.));
 
         let space = Space::new("some space".to_string());
-        space.set_dry_bulb_temperature_index(0).unwrap();
+        space.set_dry_bulb_temperature_index(0)?;
         let space = Arc::new(space);
 
         let date = Date {
@@ -228,7 +230,7 @@ mod tests {
         weather.wind_speed = Box::new(ScheduleConstant::new(4.47));
 
         let space = Space::new("some space".to_string());
-        space.set_dry_bulb_temperature_index(0).unwrap();
+        space.set_dry_bulb_temperature_index(0)?;
         let space = Arc::new(space);
 
         let date = Date {
@@ -241,5 +243,6 @@ mod tests {
         let current_weather = weather.get_weather_data(date);
         let flow = doe2_design_flow_rate(&current_weather, &space, &state, design_rate);
         assert!((1. - flow).abs() < 0.02);
+        Ok(())
     }
 }

@@ -90,7 +90,7 @@ impl Scene {
     /// Lighting or Solar Radiation, respectively.
     pub fn from_simple_model(model: &Model, wavelength: Wavelengths) -> Result<Self, String> {
         let mut reader = SimpleModelReader::default();
-        let(model, _) = reader.build_scene(model, &wavelength)?;
+        let (model, _) = reader.build_scene(model, &wavelength)?;
         Ok(model)
     }
 
@@ -185,12 +185,12 @@ impl Scene {
     }
 
     /// Builds an [`BoundingVolumeTree`] for this scene.
-    /// 
-    /// Because the process will reorder the triangles in the scene, 
-    /// this methor returns a `Vec<usize>` mapping original indices of 
-    /// the triangles into the new one. (e.g., if—after reorganizing—triangle 
+    ///
+    /// Because the process will reorder the triangles in the scene,
+    /// this methor returns a `Vec<usize>` mapping original indices of
+    /// the triangles into the new one. (e.g., if—after reorganizing—triangle
     /// 21 was moved to the first position, then the mapping will be `vec![21, ...]`)
-    pub fn build_accelerator(&mut self) ->Vec<usize> {
+    pub fn build_accelerator(&mut self) -> Vec<usize> {
         if self.accelerator.is_some() {
             panic!("Trying to re-build accelerator structure. If you really want this, use rebuild_accelerator")
         }
@@ -200,12 +200,12 @@ impl Scene {
     }
 
     /// Re-Builds the accelerator
-    /// 
-    /// Because the process will reorder the triangles in the scene, 
-    /// this methor returns a `Vec<usize>` mapping original indices of 
-    /// the triangles into the new one. (e.g., if—after reorganizing—triangle 
+    ///
+    /// Because the process will reorder the triangles in the scene,
+    /// this methor returns a `Vec<usize>` mapping original indices of
+    /// the triangles into the new one. (e.g., if—after reorganizing—triangle
     /// 21 was moved to the first position, then the mapping will be `vec![21, ...]`)
-    pub fn rebuild_accelerator(&mut self) -> Vec<usize>{
+    pub fn rebuild_accelerator(&mut self) -> Vec<usize> {
         let (bvh, mapping) = BoundingVolumeTree::new(self);
         self.accelerator = Some(bvh);
         mapping

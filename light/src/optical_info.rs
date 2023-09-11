@@ -163,7 +163,7 @@ mod testing {
     use crate::OpticalInfo;
 
     #[test]
-    fn test_new() {
+    fn test_new() -> Result<(), String> {
         // check that surfaces that do not receive sun are ignored
         let mut model = Model::default();
         let mut state = SimulationStateHeader::new();
@@ -194,7 +194,7 @@ mod testing {
             ]
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let s: Surface = json5::from_str(
@@ -209,7 +209,7 @@ mod testing {
             ]
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let fen: Fenestration = json5::from_str(
@@ -224,8 +224,8 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
-        model.add_fenestration(fen).unwrap();
+        .map_err(|e| e.to_string())?;
+        model.add_fenestration(fen)?;
 
         let fen: Fenestration = json5::from_str(
             "{
@@ -239,10 +239,10 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
-        model.add_fenestration(fen).unwrap();
+        .map_err(|e| e.to_string())?;
+        model.add_fenestration(fen)?;
 
-        let info = OpticalInfo::new(&options, &model, &mut state).unwrap();
+        let info = OpticalInfo::new(&options, &model, &mut state)?;
         assert_eq!(info.back_fenestrations_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
         assert_eq!(info.front_fenestrations_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
         assert_eq!(info.back_surfaces_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
@@ -251,10 +251,12 @@ mod testing {
         assert_eq!(info.back_surfaces_view_factors.len(), 2);
         assert_eq!(info.front_fenestrations_view_factors.len(), 2);
         assert_eq!(info.back_fenestrations_view_factors.len(), 2);
+
+        Ok(())
     }
 
     #[test]
-    fn test_ignore_no_sun() {
+    fn test_ignore_no_sun() -> Result<(), String> {
         // check that surfaces that do not receive sun are ignored
         let mut model = Model::default();
         let mut state = SimulationStateHeader::new();
@@ -289,7 +291,7 @@ mod testing {
             }
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let s: Surface = json5::from_str(
@@ -304,7 +306,7 @@ mod testing {
             ]
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let fen: Fenestration = json5::from_str(
@@ -319,8 +321,8 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
-        model.add_fenestration(fen).unwrap();
+        .map_err(|e| e.to_string())?;
+        model.add_fenestration(fen)?;
 
         let fen: Fenestration = json5::from_str(
             "{
@@ -338,10 +340,10 @@ mod testing {
             }
         }",
         )
-        .unwrap();
-        model.add_fenestration(fen).unwrap();
+        .map_err(|e| e.to_string())?;
+        model.add_fenestration(fen)?;
 
-        let info = OpticalInfo::new(&options, &model, &mut state).unwrap();
+        let info = OpticalInfo::new(&options, &model, &mut state)?;
         assert_eq!(info.back_fenestrations_dc.size(), (1, 146)); // 1 fenestration has no solar radiation at the back
         assert_eq!(info.front_fenestrations_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
         assert_eq!(info.back_surfaces_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
@@ -350,5 +352,6 @@ mod testing {
         assert_eq!(info.back_surfaces_view_factors.len(), 2);
         assert_eq!(info.front_fenestrations_view_factors.len(), 2);
         assert_eq!(info.back_fenestrations_view_factors.len(), 2);
+        Ok(())
     }
 }

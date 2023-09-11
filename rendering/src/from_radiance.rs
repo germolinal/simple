@@ -404,8 +404,8 @@ impl RadianceReader {
 
         the_loop.close().unwrap();
         let polygon = Polygon3D::new(the_loop).unwrap();
-        let t : Triangulation3D = polygon.try_into().unwrap();
-        let triangles = t.get_trilist();        
+        let t: Triangulation3D = polygon.try_into().unwrap();
+        let triangles = t.get_trilist();
 
         for tri in triangles {
             scene.push_object(mod_index, mod_index, Primitive::Triangle(tri));
