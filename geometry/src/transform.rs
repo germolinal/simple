@@ -660,7 +660,7 @@ mod testing {
     }
 
     #[test]
-    fn test_default_transform() {
+    fn test_default_transform() -> Result<(), String> {
         let t = Transform::default();
         for row in 0..4 {
             for col in 0..4 {
@@ -695,17 +695,18 @@ mod testing {
             Ok(())
         }
 
-        check(0., 0., 0.).unwrap();
-        check(0., 0., 1.).unwrap();
-        check(0., 1., 0.).unwrap();
-        check(1., 0., 0.).unwrap();
-        check(1., 1., 0.).unwrap();
-        check(1., 1., 1.).unwrap();
-        check(-1., -1., 1.).unwrap();
+        check(0., 0., 0.)?;
+        check(0., 0., 1.)?;
+        check(0., 1., 0.)?;
+        check(1., 0., 0.)?;
+        check(1., 1., 0.)?;
+        check(1., 1., 1.)?;
+        check(-1., -1., 1.)?;
+        Ok(())
     }
 
     #[test]
-    fn test_translate_transform() {
+    fn test_translate_transform() -> Result<(), String> {
         let (x, y, z) = (2.1, -4.2, 19.2);
         let t = Transform::translate(x, y, z);
         for row in 0..4 {
@@ -757,17 +758,18 @@ mod testing {
             Ok(())
         }
 
-        check(0., 0., 0.).unwrap();
-        check(0., 0., 1.).unwrap();
-        check(0., 1., 0.).unwrap();
-        check(1., 0., 0.).unwrap();
-        check(1., 1., 0.).unwrap();
-        check(1., 1., 1.).unwrap();
-        check(-1., -1., 1.).unwrap();
+        check(0., 0., 0.)?;
+        check(0., 0., 1.)?;
+        check(0., 1., 0.)?;
+        check(1., 0., 0.)?;
+        check(1., 1., 0.)?;
+        check(1., 1., 1.)?;
+        check(-1., -1., 1.)?;
+        Ok(())
     }
 
     #[test]
-    fn test_scale_transform() {
+    fn test_scale_transform() -> Result<(), String> {
         let (x, y, z) = (2.1, -4.2, 19.2);
         let t = Transform::scale(x, y, z);
         for row in 0..4 {
@@ -818,13 +820,14 @@ mod testing {
             Ok(())
         }
 
-        check(0., 0., 0.).unwrap();
-        check(0., 0., 1.).unwrap();
-        check(0., 1., 0.).unwrap();
-        check(1., 0., 0.).unwrap();
-        check(1., 1., 0.).unwrap();
-        check(1., 1., 1.).unwrap();
-        check(-1., -1., 1.).unwrap();
+        check(0., 0., 0.)?;
+        check(0., 0., 1.)?;
+        check(0., 1., 0.)?;
+        check(1., 0., 0.)?;
+        check(1., 1., 0.)?;
+        check(1., 1., 1.)?;
+        check(-1., -1., 1.)?;
+        Ok(())
     }
 
     fn compare_pts(pt1: Point3D, pt2: Point3D) -> Result<(), String> {
@@ -840,32 +843,32 @@ mod testing {
         Ok(())
     }
     #[test]
-    fn test_rotate_x_transform() {
+    fn test_rotate_x_transform() -> Result<(), String> {
         /* POINTS */
         let ex = Point3D::new(1., 0., 0.);
         let ey = Point3D::new(0., 1., 0.);
         let ez = Point3D::new(0., 0., 1.);
 
         let t = Transform::rotate_x(90.);
-        compare_pts(t.transform_pt(ex), ex).unwrap();
-        compare_pts(t.transform_pt(ey), ez).unwrap();
-        compare_pts(t.transform_pt(ez), ey * -1.).unwrap();
+        compare_pts(t.transform_pt(ex), ex)?;
+        compare_pts(t.transform_pt(ey), ez)?;
+        compare_pts(t.transform_pt(ez), ey * -1.)?;
 
         let t = Transform::rotate_x(-90.);
-        compare_pts(t.transform_pt(ex), ex).unwrap();
-        compare_pts(t.transform_pt(ey), ez * -1.).unwrap();
-        compare_pts(t.transform_pt(ez), ey).unwrap();
+        compare_pts(t.transform_pt(ex), ex)?;
+        compare_pts(t.transform_pt(ey), ez * -1.)?;
+        compare_pts(t.transform_pt(ez), ey)?;
 
         let t = Transform::rotate_x(180.);
-        compare_pts(t.transform_pt(ex), ex).unwrap();
-        compare_pts(t.transform_pt(ey), ey * -1.).unwrap();
-        compare_pts(t.transform_pt(ez), ez * -1.).unwrap();
+        compare_pts(t.transform_pt(ex), ex)?;
+        compare_pts(t.transform_pt(ey), ey * -1.)?;
+        compare_pts(t.transform_pt(ez), ez * -1.)?;
 
         let t = Transform::rotate_x(45.);
-        compare_pts(t.transform_pt(ex), ex).unwrap();
+        compare_pts(t.transform_pt(ex), ex)?;
         let sq2 = 1. / (2 as Float).sqrt();
-        compare_pts(t.transform_pt(ey), Point3D::new(0., sq2, sq2)).unwrap();
-        compare_pts(t.transform_pt(ez), Point3D::new(0., -sq2, sq2)).unwrap();
+        compare_pts(t.transform_pt(ey), Point3D::new(0., sq2, sq2))?;
+        compare_pts(t.transform_pt(ez), Point3D::new(0., -sq2, sq2))?;
 
         /* VECTORS */
         let ex = Vector3D::new(1., 0., 0.);
@@ -873,54 +876,55 @@ mod testing {
         let ez = Vector3D::new(0., 0., 1.);
 
         let t = Transform::rotate_x(90.);
-        compare_vecs(t.transform_vec(ex), ex).unwrap();
-        compare_vecs(t.transform_vec(ey), ez).unwrap();
-        compare_vecs(t.transform_vec(ez), ey * -1.).unwrap();
+        compare_vecs(t.transform_vec(ex), ex)?;
+        compare_vecs(t.transform_vec(ey), ez)?;
+        compare_vecs(t.transform_vec(ez), ey * -1.)?;
 
         let t = Transform::rotate_x(-90.);
-        compare_vecs(t.transform_vec(ex), ex).unwrap();
-        compare_vecs(t.transform_vec(ey), ez * -1.).unwrap();
-        compare_vecs(t.transform_vec(ez), ey).unwrap();
+        compare_vecs(t.transform_vec(ex), ex)?;
+        compare_vecs(t.transform_vec(ey), ez * -1.)?;
+        compare_vecs(t.transform_vec(ez), ey)?;
 
         let t = Transform::rotate_x(180.);
-        compare_vecs(t.transform_vec(ex), ex).unwrap();
-        compare_vecs(t.transform_vec(ey), ey * -1.).unwrap();
-        compare_vecs(t.transform_vec(ez), ez * -1.).unwrap();
+        compare_vecs(t.transform_vec(ex), ex)?;
+        compare_vecs(t.transform_vec(ey), ey * -1.)?;
+        compare_vecs(t.transform_vec(ez), ez * -1.)?;
 
         let t = Transform::rotate_x(45.);
-        compare_vecs(t.transform_vec(ex), ex).unwrap();
+        compare_vecs(t.transform_vec(ex), ex)?;
         let sq2 = 1. / (2 as Float).sqrt();
-        compare_vecs(t.transform_vec(ey), Vector3D::new(0., sq2, sq2)).unwrap();
-        compare_vecs(t.transform_vec(ez), Vector3D::new(0., -sq2, sq2)).unwrap();
+        compare_vecs(t.transform_vec(ey), Vector3D::new(0., sq2, sq2))?;
+        compare_vecs(t.transform_vec(ez), Vector3D::new(0., -sq2, sq2))?;
+        Ok(())
     }
 
     #[test]
-    fn test_rotate_y_transform() {
+    fn test_rotate_y_transform() -> Result<(), String> {
         /* POINTS */
         let ex = Point3D::new(1., 0., 0.);
         let ey = Point3D::new(0., 1., 0.);
         let ez = Point3D::new(0., 0., 1.);
 
         let t = Transform::rotate_y(90.);
-        compare_pts(t.transform_pt(ex), ez * -1.).unwrap();
-        compare_pts(t.transform_pt(ey), ey).unwrap();
-        compare_pts(t.transform_pt(ez), ex).unwrap();
+        compare_pts(t.transform_pt(ex), ez * -1.)?;
+        compare_pts(t.transform_pt(ey), ey)?;
+        compare_pts(t.transform_pt(ez), ex)?;
 
         let t = Transform::rotate_y(-90.);
-        compare_pts(t.transform_pt(ex), ez).unwrap();
-        compare_pts(t.transform_pt(ey), ey).unwrap();
-        compare_pts(t.transform_pt(ez), ex * -1.).unwrap();
+        compare_pts(t.transform_pt(ex), ez)?;
+        compare_pts(t.transform_pt(ey), ey)?;
+        compare_pts(t.transform_pt(ez), ex * -1.)?;
 
         let t = Transform::rotate_y(180.);
-        compare_pts(t.transform_pt(ex), ex * -1.).unwrap();
-        compare_pts(t.transform_pt(ey), ey).unwrap();
-        compare_pts(t.transform_pt(ez), ez * -1.).unwrap();
+        compare_pts(t.transform_pt(ex), ex * -1.)?;
+        compare_pts(t.transform_pt(ey), ey)?;
+        compare_pts(t.transform_pt(ez), ez * -1.)?;
 
         let t = Transform::rotate_y(45.);
         let sq2 = 1. / (2 as Float).sqrt();
-        compare_pts(t.transform_pt(ex), Point3D::new(sq2, 0., -sq2)).unwrap();
-        compare_pts(t.transform_pt(ey), ey).unwrap();
-        compare_pts(t.transform_pt(ez), Point3D::new(sq2, 0., sq2)).unwrap();
+        compare_pts(t.transform_pt(ex), Point3D::new(sq2, 0., -sq2))?;
+        compare_pts(t.transform_pt(ey), ey)?;
+        compare_pts(t.transform_pt(ez), Point3D::new(sq2, 0., sq2))?;
 
         /* VECTORS */
 
@@ -929,54 +933,56 @@ mod testing {
         let ez = Vector3D::new(0., 0., 1.);
 
         let t = Transform::rotate_y(90.);
-        compare_vecs(t.transform_vec(ex), ez * -1.).unwrap();
-        compare_vecs(t.transform_vec(ey), ey).unwrap();
-        compare_vecs(t.transform_vec(ez), ex).unwrap();
+        compare_vecs(t.transform_vec(ex), ez * -1.)?;
+        compare_vecs(t.transform_vec(ey), ey)?;
+        compare_vecs(t.transform_vec(ez), ex)?;
 
         let t = Transform::rotate_y(-90.);
-        compare_vecs(t.transform_vec(ex), ez).unwrap();
-        compare_vecs(t.transform_vec(ey), ey).unwrap();
-        compare_vecs(t.transform_vec(ez), ex * -1.).unwrap();
+        compare_vecs(t.transform_vec(ex), ez)?;
+        compare_vecs(t.transform_vec(ey), ey)?;
+        compare_vecs(t.transform_vec(ez), ex * -1.)?;
 
         let t = Transform::rotate_y(180.);
-        compare_vecs(t.transform_vec(ex), ex * -1.).unwrap();
-        compare_vecs(t.transform_vec(ey), ey).unwrap();
-        compare_vecs(t.transform_vec(ez), ez * -1.).unwrap();
+        compare_vecs(t.transform_vec(ex), ex * -1.)?;
+        compare_vecs(t.transform_vec(ey), ey)?;
+        compare_vecs(t.transform_vec(ez), ez * -1.)?;
 
         let t = Transform::rotate_y(45.);
         let sq2 = 1. / (2 as Float).sqrt();
-        compare_vecs(t.transform_vec(ex), Vector3D::new(sq2, 0., -sq2)).unwrap();
-        compare_vecs(t.transform_vec(ey), ey).unwrap();
-        compare_vecs(t.transform_vec(ez), Vector3D::new(sq2, 0., sq2)).unwrap();
+        compare_vecs(t.transform_vec(ex), Vector3D::new(sq2, 0., -sq2))?;
+        compare_vecs(t.transform_vec(ey), ey)?;
+        compare_vecs(t.transform_vec(ez), Vector3D::new(sq2, 0., sq2))?;
+
+        Ok(())
     }
 
     #[test]
-    fn test_rotate_z_transform() {
+    fn test_rotate_z_transform() -> Result<(), String> {
         /* POINTS */
         let ex = Point3D::new(1., 0., 0.);
         let ey = Point3D::new(0., 1., 0.);
         let ez = Point3D::new(0., 0., 1.);
 
         let t = Transform::rotate_z(90.);
-        compare_pts(t.transform_pt(ex), ey).unwrap();
-        compare_pts(t.transform_pt(ey), ex * -1.).unwrap();
-        compare_pts(t.transform_pt(ez), ez).unwrap();
+        compare_pts(t.transform_pt(ex), ey)?;
+        compare_pts(t.transform_pt(ey), ex * -1.)?;
+        compare_pts(t.transform_pt(ez), ez)?;
 
         let t = Transform::rotate_z(-90.);
-        compare_pts(t.transform_pt(ex), ey * -1.).unwrap();
-        compare_pts(t.transform_pt(ey), ex).unwrap();
-        compare_pts(t.transform_pt(ez), ez).unwrap();
+        compare_pts(t.transform_pt(ex), ey * -1.)?;
+        compare_pts(t.transform_pt(ey), ex)?;
+        compare_pts(t.transform_pt(ez), ez)?;
 
         let t = Transform::rotate_z(180.);
-        compare_pts(t.transform_pt(ex), ex * -1.).unwrap();
-        compare_pts(t.transform_pt(ey), ey * -1.).unwrap();
-        compare_pts(t.transform_pt(ez), ez).unwrap();
+        compare_pts(t.transform_pt(ex), ex * -1.)?;
+        compare_pts(t.transform_pt(ey), ey * -1.)?;
+        compare_pts(t.transform_pt(ez), ez)?;
 
         let t = Transform::rotate_z(45.);
         let sq2 = 1. / (2 as Float).sqrt();
-        compare_pts(t.transform_pt(ex), Point3D::new(sq2, sq2, 0.)).unwrap();
-        compare_pts(t.transform_pt(ey), Point3D::new(-sq2, sq2, 0.)).unwrap();
-        compare_pts(t.transform_pt(ez), ez).unwrap();
+        compare_pts(t.transform_pt(ex), Point3D::new(sq2, sq2, 0.))?;
+        compare_pts(t.transform_pt(ey), Point3D::new(-sq2, sq2, 0.))?;
+        compare_pts(t.transform_pt(ez), ez)?;
 
         /* VECTORS */
         let ex = Vector3D::new(1., 0., 0.);
@@ -984,25 +990,26 @@ mod testing {
         let ez = Vector3D::new(0., 0., 1.);
 
         let t = Transform::rotate_z(90.);
-        compare_vecs(t.transform_vec(ex), ey).unwrap();
-        compare_vecs(t.transform_vec(ey), ex * -1.).unwrap();
-        compare_vecs(t.transform_vec(ez), ez).unwrap();
+        compare_vecs(t.transform_vec(ex), ey)?;
+        compare_vecs(t.transform_vec(ey), ex * -1.)?;
+        compare_vecs(t.transform_vec(ez), ez)?;
 
         let t = Transform::rotate_z(-90.);
-        compare_vecs(t.transform_vec(ex), ey * -1.).unwrap();
-        compare_vecs(t.transform_vec(ey), ex).unwrap();
-        compare_vecs(t.transform_vec(ez), ez).unwrap();
+        compare_vecs(t.transform_vec(ex), ey * -1.)?;
+        compare_vecs(t.transform_vec(ey), ex)?;
+        compare_vecs(t.transform_vec(ez), ez)?;
 
         let t = Transform::rotate_z(180.);
-        compare_vecs(t.transform_vec(ex), ex * -1.).unwrap();
-        compare_vecs(t.transform_vec(ey), ey * -1.).unwrap();
-        compare_vecs(t.transform_vec(ez), ez).unwrap();
+        compare_vecs(t.transform_vec(ex), ex * -1.)?;
+        compare_vecs(t.transform_vec(ey), ey * -1.)?;
+        compare_vecs(t.transform_vec(ez), ez)?;
 
         let t = Transform::rotate_z(45.);
         let sq2 = 1. / (2 as Float).sqrt();
-        compare_vecs(t.transform_vec(ex), Vector3D::new(sq2, sq2, 0.)).unwrap();
-        compare_vecs(t.transform_vec(ey), Vector3D::new(-sq2, sq2, 0.)).unwrap();
-        compare_vecs(t.transform_vec(ez), ez).unwrap();
+        compare_vecs(t.transform_vec(ex), Vector3D::new(sq2, sq2, 0.))?;
+        compare_vecs(t.transform_vec(ey), Vector3D::new(-sq2, sq2, 0.))?;
+        compare_vecs(t.transform_vec(ez), ez)?;
+        Ok(())
     }
 
     #[test]

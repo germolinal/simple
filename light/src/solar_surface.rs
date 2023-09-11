@@ -76,7 +76,7 @@ impl SolarSurface {
         let normal = polygon.normal();
 
         // Triangulate the polygon
-        let t : Triangulation3D = polygon.try_into()?;        
+        let t: Triangulation3D = polygon.try_into()?;
         let triangles = t.get_trilist();
         let triangles_areas: Vec<Float> = triangles.iter().map(|t| t.area()).collect();
 
@@ -340,76 +340,80 @@ mod testing {
     use validate::assert_close;
 
     #[test]
-    fn test_view_factors_empty_scene_vertical() {
+    fn test_view_factors_empty_scene_vertical() -> Result<(), String> {
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(1., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(1., 0., 1.)).unwrap();
-        the_loop.push(Point3D::new(0., 0., 1.)).unwrap();
-        the_loop.close().unwrap();
+        the_loop.push(Point3D::new(0., 0., 0.))?;
+        the_loop.push(Point3D::new(1., 0., 0.))?;
+        the_loop.push(Point3D::new(1., 0., 1.))?;
+        the_loop.push(Point3D::new(0., 0., 1.))?;
+        the_loop.close()?;
 
         let mut scene = Scene::new();
         scene.build_accelerator();
-        let p = Polygon3D::new(the_loop).unwrap();
-        let s = SolarSurface::new(10, &p, true, true).unwrap();
+        let p = Polygon3D::new(the_loop)?;
+        let s = SolarSurface::new(10, &p, true, true)?;
 
         let beta = (0.5 as Float).sqrt();
 
         // Front side
-        let views = s.calc_view_factors(&scene, true).unwrap();
+        let views = s.calc_view_factors(&scene, true)?;
 
         assert_close!(views.ground, 0.5, 1e-2);
         assert_close!(views.sky, 0.5 * beta, 1e-2);
         assert_close!(views.air, 0.5 * (1. - beta), 1e-2);
 
         // back side
-        let views = s.calc_view_factors(&scene, false).unwrap();
+        let views = s.calc_view_factors(&scene, false)?;
 
         assert_close!(views.ground, 0.5, 1e-2);
         assert_close!(views.sky, 0.5 * beta, 1e-2);
         assert_close!(views.air, 0.5 * (1. - beta), 1e-2);
+
+        Ok(())
     }
 
     #[test]
-    fn test_view_factors_empty_scene_horizontal() {
+    fn test_view_factors_empty_scene_horizontal() -> Result<(), String> {
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(1., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(1., 1., 0.)).unwrap();
-        the_loop.push(Point3D::new(0., 1., 0.)).unwrap();
-        the_loop.close().unwrap();
+        the_loop.push(Point3D::new(0., 0., 0.))?;
+        the_loop.push(Point3D::new(1., 0., 0.))?;
+        the_loop.push(Point3D::new(1., 1., 0.))?;
+        the_loop.push(Point3D::new(0., 1., 0.))?;
+        the_loop.close()?;
 
         let mut scene = Scene::new();
         scene.build_accelerator();
-        let p = Polygon3D::new(the_loop).unwrap();
-        let s = SolarSurface::new(10, &p, true, true).unwrap();
+        let p = Polygon3D::new(the_loop)?;
+        let s = SolarSurface::new(10, &p, true, true)?;
 
         // Front side
-        let views = s.calc_view_factors(&scene, true).unwrap();
+        let views = s.calc_view_factors(&scene, true)?;
 
         assert_close!(views.ground, 0.0, 1e-4);
         assert_close!(views.sky, 1.0, 1e-4);
         assert_close!(views.air, 0.0, 1e-4);
 
         // back side
-        let views = s.calc_view_factors(&scene, false).unwrap();
+        let views = s.calc_view_factors(&scene, false)?;
 
         assert_close!(views.ground, 1.0, 1e-4);
         assert_close!(views.sky, 0.0, 1e-4);
         assert_close!(views.air, 0.0, 1e-4);
+
+        Ok(())
     }
 
     #[test]
-    fn test_new_boundary_fenestrations() {
+    fn test_new_boundary_fenestrations() -> Result<(), String> {
         // Check that the receives_sun is properly assigned
 
         // create geometry... they will all have this same one.
         let mut outer = Loop3D::new();
-        outer.push(Point3D::new(0., 0., 0.)).unwrap();
-        outer.push(Point3D::new(0., 1., 0.)).unwrap();
-        outer.push(Point3D::new(0., 0., 1.)).unwrap();
-        outer.close().unwrap();
-        let poly = Polygon3D::new(outer).unwrap();
+        outer.push(Point3D::new(0., 0., 0.))?;
+        outer.push(Point3D::new(0., 1., 0.))?;
+        outer.push(Point3D::new(0., 0., 1.))?;
+        outer.close()?;
+        let poly = Polygon3D::new(outer)?;
 
         // state header
         let mut state = SimulationStateHeader::new();
@@ -491,7 +495,7 @@ mod testing {
         list.push(Arc::new(fen));
 
         // Calc
-        let fens = SolarSurface::make_fenestrations(&list, &mut state, 1).unwrap();
+        let fens = SolarSurface::make_fenestrations(&list, &mut state, 1)?;
 
         // check.
         assert!(fens[0].receives_sun_back);
@@ -511,19 +515,21 @@ mod testing {
 
         assert!(!fens[5].receives_sun_back);
         assert!(!fens[5].receives_sun_front);
+
+        Ok(())
     }
 
     #[test]
-    fn test_new_boundary_surfaces() {
+    fn test_new_boundary_surfaces() -> Result<(), String> {
         // Check that the receives_sun is properly assigned
 
         // create geometry... they will all have this same one.
         let mut outer = Loop3D::new();
-        outer.push(Point3D::new(0., 0., 0.)).unwrap();
-        outer.push(Point3D::new(0., 1., 0.)).unwrap();
-        outer.push(Point3D::new(0., 0., 1.)).unwrap();
-        outer.close().unwrap();
-        let poly = Polygon3D::new(outer).unwrap();
+        outer.push(Point3D::new(0., 0., 0.))?;
+        outer.push(Point3D::new(0., 1., 0.))?;
+        outer.push(Point3D::new(0., 0., 1.))?;
+        outer.close()?;
+        let poly = Polygon3D::new(outer)?;
 
         // state header
         let mut state = SimulationStateHeader::new();
@@ -601,7 +607,7 @@ mod testing {
         list.push(Arc::new(fen));
 
         // Calc
-        let fens = SolarSurface::make_surfaces(&list, &mut state, 1).unwrap();
+        let fens = SolarSurface::make_surfaces(&list, &mut state, 1)?;
 
         // check.
         assert!(fens[0].receives_sun_back);
@@ -621,6 +627,8 @@ mod testing {
 
         assert!(!fens[5].receives_sun_back);
         assert!(!fens[5].receives_sun_front);
+
+        Ok(())
     }
 
     #[test]

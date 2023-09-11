@@ -8,7 +8,7 @@ use rendering::{RayTracer, Scene, Spectrum};
 
 #[test]
 #[ignore]
-fn laptop() {
+fn laptop() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test test_scenes -- laptop --exact --nocapture --ignored
     let mut scene = Scene::new();
 
@@ -49,15 +49,13 @@ fn laptop() {
         Point3D::new(-GROUND_SIZE, -GROUND_SIZE, 0.0),
         Point3D::new(GROUND_SIZE, -GROUND_SIZE, 0.0),
         Point3D::new(GROUND_SIZE, GROUND_SIZE, 0.0),
-    )
-    .unwrap();
+    )?;
     scene.push_object(ground, ground, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(-GROUND_SIZE, -GROUND_SIZE, 0.0),
         Point3D::new(GROUND_SIZE, GROUND_SIZE, 0.0),
         Point3D::new(-GROUND_SIZE, GROUND_SIZE, 0.0),
-    )
-    .unwrap();
+    )?;
     scene.push_object(ground, ground, Primitive::Triangle(tri));
 
     /* BASE */
@@ -67,15 +65,13 @@ fn laptop() {
         Point3D::new(0., 0., z),
         Point3D::new(WIDTH, 0.0, z),
         Point3D::new(0.0, DEPTH, z),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(WIDTH, 0.0, z),
         Point3D::new(WIDTH, DEPTH, z),
         Point3D::new(0.0, DEPTH, z),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // Front
@@ -83,15 +79,13 @@ fn laptop() {
         Point3D::new(WIDTH, DEPTH, OFFSET + BASE_THICKNESS),
         Point3D::new(0.0, DEPTH, OFFSET),
         Point3D::new(0.0, DEPTH, OFFSET + BASE_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(WIDTH, DEPTH, OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, DEPTH, OFFSET),
         Point3D::new(0.0, DEPTH, OFFSET),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // BACK
@@ -99,15 +93,13 @@ fn laptop() {
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS),
         Point3D::new(0.0, 0.0, OFFSET),
         Point3D::new(0.0, 0.0, OFFSET + BASE_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, 0.0, OFFSET),
         Point3D::new(0.0, 0.0, OFFSET),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // LEFT
@@ -115,15 +107,13 @@ fn laptop() {
         Point3D::new(WIDTH, 0.0, OFFSET),
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, DEPTH, OFFSET + BASE_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(WIDTH, 0.0, OFFSET),
         Point3D::new(WIDTH, DEPTH, OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, DEPTH, OFFSET),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // RIGHT
@@ -131,15 +121,13 @@ fn laptop() {
         Point3D::new(0.0, 0.0, OFFSET),
         Point3D::new(0.0, 0.0, OFFSET + BASE_THICKNESS),
         Point3D::new(0.0, DEPTH, OFFSET + BASE_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(0.0, 0.0, OFFSET),
         Point3D::new(0.0, 0.0, OFFSET + BASE_THICKNESS),
         Point3D::new(0.0, DEPTH, OFFSET),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     /* SCREEN */
@@ -151,15 +139,13 @@ fn laptop() {
         Point3D::new(0., 0., BASE_THICKNESS + SCREEN_THICKNESS + OFFSET),
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
         Point3D::new(WIDTH, y, z + OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(0., 0., OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
         Point3D::new(WIDTH, y, z + OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
         Point3D::new(0.0, y, z + OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // Left of screen
@@ -167,15 +153,13 @@ fn laptop() {
         Point3D::new(WIDTH, 0., OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, y, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS + z),
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(WIDTH, 0., OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, y, OFFSET + BASE_THICKNESS + z),
         Point3D::new(WIDTH, y, z + OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // right of screen
@@ -183,15 +167,13 @@ fn laptop() {
         Point3D::new(0., 0., OFFSET + BASE_THICKNESS),
         Point3D::new(0., y, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS + z),
         Point3D::new(0., 0.0, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(0., 0., OFFSET + BASE_THICKNESS),
         Point3D::new(0., y, OFFSET + BASE_THICKNESS + z),
         Point3D::new(0., y, z + OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // back of screen
@@ -199,15 +181,13 @@ fn laptop() {
         Point3D::new(0.0, 0.0, BASE_THICKNESS + OFFSET),
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
         Point3D::new(0.0, 0.0, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(0.0, 0.0, BASE_THICKNESS + OFFSET),
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // Front of screen
@@ -215,15 +195,13 @@ fn laptop() {
         Point3D::new(0.0, y, BASE_THICKNESS + OFFSET + z),
         Point3D::new(WIDTH, y, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS + z),
         Point3D::new(0.0, y, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS + z),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(0.0, y, 0.0 + BASE_THICKNESS + OFFSET + z),
         Point3D::new(WIDTH, y, OFFSET + BASE_THICKNESS + z),
         Point3D::new(WIDTH, y, OFFSET + BASE_THICKNESS + SCREEN_THICKNESS + z),
-    )
-    .unwrap();
+    )?;
     scene.push_object(plastic, plastic, Primitive::Triangle(tri));
 
     // Bottom of screen (a.k.a. Screen)
@@ -231,15 +209,13 @@ fn laptop() {
         Point3D::new(0., 0., OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, y, z + OFFSET + BASE_THICKNESS),
         Point3D::new(0.0, y, z + OFFSET + BASE_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(screen, screen, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(0., 0., OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, 0.0, OFFSET + BASE_THICKNESS),
         Point3D::new(WIDTH, y, z + OFFSET + BASE_THICKNESS),
-    )
-    .unwrap();
+    )?;
     scene.push_object(screen, screen, Primitive::Triangle(tri));
 
     scene.build_accelerator();
@@ -277,12 +253,12 @@ fn laptop() {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/laptop.hdr"));
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/laptop.hdr"))
 }
 
 #[test]
 #[ignore]
-fn sponza() {
+fn sponza() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test test_scenes -- sponza --ignored --exact --nocapture
 
     let mut scene = Scene::default();
@@ -335,12 +311,12 @@ fn sponza() {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/sponza.hdr"));
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/sponza.hdr"))
 }
 
 #[test]
 #[ignore]
-fn cornell() {
+fn cornell() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
     // RUSTFLAGS="-C target-cpu=native -C target-feature=+neon" cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
 
@@ -376,12 +352,12 @@ fn cornell() {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes//images/cornell.hdr"));
+    buffer.save_hdre(std::path::Path::new("./tests/scenes//images/cornell.hdr"))
 }
 
 #[test]
 #[ignore]
-fn room() {
+fn room() -> Result<(), String> {
     // 60 seconds
     // cargo test --features parallel --release --package rendering --test test_scenes -- room --exact --nocapture --ignored
     // oconv ../room.rad ../white_sky.rad > room.oct ;time rpict -x 512 -y 512 -vv 60 -vh 60 -ab 3 -ad 220 -aa 0 -vp 2 1 1 -vd 0 1 0 ./room.oct > rad_room.hdr
@@ -424,12 +400,12 @@ fn room() {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/room.hdr"));
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/room.hdr"))
 }
 
 #[test]
 #[ignore]
-fn dining() {
+fn dining() -> Result<(), String> {
     // cargo test --features parallel  --release --package rendering --test test_scenes -- dining --exact --nocapture --ignored
 
     let mut scene = Scene::default();
@@ -484,5 +460,5 @@ fn dining() {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes//images/dining.hdr"));
+    buffer.save_hdre(std::path::Path::new("./tests/scenes//images/dining.hdr"))
 }

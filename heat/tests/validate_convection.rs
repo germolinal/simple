@@ -182,11 +182,11 @@ fn horizontal(validations: &mut Validator) {
 }
 
 #[test]
-fn validate() {
+fn validate() -> Result<(), String> {
     // cargo test --package heat --test validate_convection -- validate --exact --nocapture
     let p = "../docs/validation";
     if !std::path::Path::new(&p).exists() {
-        std::fs::create_dir(p).unwrap();
+        std::fs::create_dir(p).map_err(|e| e.to_string())?;
     }
 
     let target_file = format!("{}/convection_coefficients.html", p);
@@ -199,5 +199,7 @@ fn validate() {
     tilted(&mut validations);
     horizontal(&mut validations);
 
-    validations.validate().unwrap();
+    validations.validate()?;
+
+    Ok(())
 }

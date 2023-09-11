@@ -450,12 +450,12 @@ mod testing {
     use weather::SyntheticWeather;
 
     #[test]
-    fn test_model_mf() {
+    fn test_model_mf() -> Result<(), String> {
         // cleanup
         let optical_data_path = "./tests/wall/optical_data.json";
         let path = Path::new(optical_data_path);
         if path.exists() {
-            std::fs::remove_file(path).unwrap();
+            std::fs::remove_file(path).map_err(|e| e.to_string())?;
         }
 
         // Step 1: create the model, write the optical info data.
@@ -465,12 +465,12 @@ mod testing {
             standard_meridian: 70.,
             elevation: 0.0,
         };
-        let (model, mut state_header) = Model::from_file("./tests/wall/wall.spl").unwrap();
-        let mut solar_options = model.solar_options.clone().unwrap();
+        let (model, mut state_header) = Model::from_file("./tests/wall/wall.spl")?;
+        let mut solar_options = model.solar_options.clone().ok_or("no solar options")?;
         solar_options.set_optical_data_path(optical_data_path.to_string());
 
         let light_model =
-            SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4).unwrap();
+            SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4)?;
         assert_eq!(light_model.solar_sky_discretization, 1); //this comes in the model
 
         // Step 2: Run it again, with a different option
@@ -480,22 +480,24 @@ mod testing {
             standard_meridian: 70.,
             elevation: 0.0,
         };
-        let mut solar_options = model.solar_options.clone().unwrap();
+        let mut solar_options = model.solar_options.clone().ok_or("No solar options 2")?;
         solar_options.set_solar_sky_discretization(2);
         solar_options.set_optical_data_path(optical_data_path.to_string());
         let light_model =
-            SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4).unwrap();
+            SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4)?;
         assert_eq!(light_model.solar_sky_discretization, 1); //this comes from the optical data.
 
         // cleanup
         let path = Path::new(optical_data_path);
         if path.exists() {
-            std::fs::remove_file(path).unwrap();
+            std::fs::remove_file(path).map_err(|e| e.to_string())?;
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_skip_ambient_boundary() {
+    fn test_skip_ambient_boundary() -> Result<(), String> {
         // check that surfaces that do not receive sun are ignored
         let mut model = Model::default();
 
@@ -525,7 +527,7 @@ mod testing {
             }
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let s: Surface = json5::from_str(
@@ -540,7 +542,7 @@ mod testing {
             ]
          }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         model.add_surface(s);
 
         let fen: Fenestration = json5::from_str(
@@ -555,8 +557,8 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
-        model.add_fenestration(fen).unwrap();
+        .map_err(|e| e.to_string())?;
+        model.add_fenestration(fen)?;
 
         let fen: Fenestration = json5::from_str(
             "{
@@ -574,9 +576,9 @@ mod testing {
             }
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
 
-        model.add_fenestration(fen).unwrap();
+        model.add_fenestration(fen)?;
 
         let meta_options = MetaOptions {
             latitude: (-41.3 as Float).to_radians(),
@@ -593,8 +595,7 @@ mod testing {
 
         let n: usize = 1;
 
-        let solar_model =
-            SolarModel::new(&meta_options, options, &model, &mut state_header, n).unwrap();
+        let solar_model = SolarModel::new(&meta_options, options, &model, &mut state_header, n)?;
 
         let mut weather = SyntheticWeather::default();
         weather.dew_point_temperature = Box::new(ScheduleConstant::new(11.));
@@ -603,66 +604,66 @@ mod testing {
         weather.direct_normal_radiation = Box::new(ScheduleConstant::new(400.));
         weather.diffuse_horizontal_radiation = Box::new(ScheduleConstant::new(200.));
 
-        let mut state = state_header.take_values().unwrap();
-        solar_model
-            .march(
-                Date {
-                    month: 1,
-                    day: 1,
-                    hour: 12.,
-                },
-                &weather,
-                &model,
-                &mut state,
-                &mut (),
-            )
-            .unwrap();
+        let mut state = state_header.take_values().ok_or("Could not take values")?;
+        solar_model.march(
+            Date {
+                month: 1,
+                day: 1,
+                hour: 12.,
+            },
+            &weather,
+            &model,
+            &mut state,
+            &mut (),
+        )?;
 
         // This surface should receive NO sun at the front but yes at the back
         let v = model.surfaces[0]
             .front_incident_solar_irradiance(&state)
-            .unwrap()
+            .ok_or("No front solar irradiance")?
             .abs();
         assert!(v < 1e-9, "v = {}", v);
 
         let v = model.surfaces[0]
             .back_incident_solar_irradiance(&state)
-            .unwrap();
+            .ok_or("No back solar irradiance")?;
         assert!(v > 20., "v={}", v);
 
         // This surface should receive sun on both sides
         let v = model.surfaces[1]
             .front_incident_solar_irradiance(&state)
-            .unwrap()
+            .ok_or("No front solar irradiance")?
             .abs();
         assert!(v > 20., "v={}", v);
 
         let v = model.surfaces[1]
             .back_incident_solar_irradiance(&state)
-            .unwrap();
+            .ok_or("No back solar irradiance")?;
         assert!(v > 20., "v={}", v);
 
         // This surface should receive sun on both sides
         let v = model.fenestrations[0]
             .front_incident_solar_irradiance(&state)
-            .unwrap();
+            .ok_or("No front solar irradiance")?;
         assert!(v > 20., "v = {}", v);
 
         let v = model.fenestrations[0]
             .back_incident_solar_irradiance(&state)
-            .unwrap();
+            .ok_or("No back solar irradiance")?;
         assert!(v > 20., "v = {}", v);
 
         // This surface should receive NO sun at the back but yes at the front
         let v = model.fenestrations[1]
             .front_incident_solar_irradiance(&state)
-            .unwrap();
+            .ok_or("No front solar irradiance")?;
         assert!(v > 20., "v = {}", v);
 
         let v = model.fenestrations[1]
             .back_incident_solar_irradiance(&state)
-            .unwrap()
+            .ok_or("No back solar irradiance")?
             .abs();
         assert!(v < 1e-9, "v = {}", v);
+
+        Ok(())
     }
 }

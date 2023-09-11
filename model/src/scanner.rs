@@ -90,61 +90,61 @@ impl<'a> SimpleScanner<'a> {
 
     /// Skips the white spaces and the comments and all
     /// those things.
-    fn skip_white_space(&mut self) {
+    fn skip_white_space(&mut self) -> Result<(), String> {
         // println!("---> '{}'", self.peek());
         // Prevent segfault
         if self.finished {
-            return;
+            return Ok(());
         }
 
         loop {
             match self.peek() {
                 ' ' => {
-                    self.advance().unwrap();
+                    self.advance().ok_or("Unexpected EOF when scanning")?;
                 }
                 '\r' => {
-                    self.advance().unwrap();
+                    self.advance().ok_or("Unexpected EOF when scanning")?;
                 }
                 '\t' => {
-                    self.advance().unwrap();
+                    self.advance().ok_or("Unexpected EOF when scanning")?;
                 }
                 '\n' => {
                     self.line += 1;
-                    self.advance().unwrap();
+                    self.advance().ok_or("Unexpected EOF when scanning")?;
                 }
                 '/' => {
                     if self.peek_next() == '/' {
                         // Single line comment
                         while self.peek() != '\n' && !self.finished {
-                            self.advance().unwrap();
+                            self.advance().ok_or("Unexpected EOF when scanning")?;
                         }
                     } else if self.peek_next() == '*' {
                         // Consume slash and star
-                        self.advance().unwrap();
-                        self.advance().unwrap();
+                        self.advance().ok_or("Unexpected EOF when scanning")?;
+                        self.advance().ok_or("Unexpected EOF when scanning")?;
                         // Block comment
                         loop {
                             // Check if it is end
                             if self.finished {
-                                return;
+                                return Ok(());
                             }
 
                             // Check if end of block comment
                             if self.peek() == '*' && self.peek_next() == '/' {
                                 // Consume slash and star
-                                self.advance().unwrap();
-                                self.advance().unwrap();
+                                self.advance().ok_or("Unexpected EOF when scanning")?;
+                                self.advance().ok_or("Unexpected EOF when scanning")?;
                                 break; // get out of the block comment loop
                             }
-                            if let '\n' = self.advance().unwrap() {
+                            if let '\n' = self.advance().ok_or("Unexpected EOF when scanning")? {
                                 self.line += 1;
                             }
                         }
                     } else {
-                        return;
+                        return Ok(());
                     }
                 }
-                _ => return,
+                _ => return Ok(()),
             };
         }
     }
@@ -218,7 +218,7 @@ impl<'a> SimpleScanner<'a> {
         let mut model = Model::default();
 
         loop {
-            self.skip_white_space();
+            self.skip_white_space()?;
             self.update_start_index();
 
             if self.finished {
@@ -230,7 +230,7 @@ impl<'a> SimpleScanner<'a> {
             let ident = &self.source[ini..fin];
 
             // Skip whitespaces
-            self.skip_white_space();
+            self.skip_white_space()?;
             self.update_start_index();
 
             // Scan Object
@@ -379,7 +379,7 @@ impl<'a> SimpleScanner<'a> {
             }
         }
 
-        let state = model.take_state().unwrap();
+        let state = model.take_state().ok_or("Could not take state")?;
         Ok((model, state))
     }
 }
@@ -396,7 +396,7 @@ mod testing {
     }
 
     #[test]
-    fn scan() {
+    fn scan() -> Result<(), String> {
         let source = b"SomeObject { data data }";
         let mut scan = SimpleScanner::new(source, 1);
 
@@ -404,18 +404,19 @@ mod testing {
         assert_eq!(scan.source[scan.start_index], source[scan.start_index]);
         assert_eq!(scan.source[scan.current_index], source[scan.current_index]);
 
-        scan.skip_white_space();
-        let (ini, fin) = scan.identifier().unwrap();
+        scan.skip_white_space()?;
+        let (ini, fin) = scan.identifier()?;
         let ident = &source[ini..fin];
         assert_eq!(ident, b"SomeObject");
 
-        scan.skip_white_space();
+        scan.skip_white_space()?;
         scan.update_start_index();
 
-        let (ini, fin) = scan.object().unwrap();
+        let (ini, fin) = scan.object()?;
         let object = &source[ini..fin];
-        let obj_str = std::str::from_utf8(&object).unwrap();
+        let obj_str = std::str::from_utf8(&object).map_err(|e| e.to_string())?;
         println!("'{}'", obj_str);
         assert_eq!(object, b"{ data data }");
+        Ok(())
     }
 }

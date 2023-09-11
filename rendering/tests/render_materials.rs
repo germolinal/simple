@@ -7,7 +7,7 @@ use rendering::primitive::Primitive;
 use rendering::Float;
 use rendering::{RayTracer, Scene, Spectrum};
 
-fn render_ball(mat: Material, filename: &str) {
+fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
     let mut scene = Scene::new();
 
     // Add room
@@ -39,15 +39,13 @@ fn render_ball(mat: Material, filename: &str) {
         Point3D::new(-HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
-    )
-    .unwrap();
+    )?;
     scene.push_object(gray, gray, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(-HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
-    )
-    .unwrap();
+    )?;
     scene.push_object(gray, gray, Primitive::Triangle(tri));
 
     // ceiling
@@ -55,15 +53,13 @@ fn render_ball(mat: Material, filename: &str) {
         Point3D::new(-HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
         Point3D::new(HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(gray, gray, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(-HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(gray, gray, Primitive::Triangle(tri));
 
     // Back
@@ -71,15 +67,13 @@ fn render_ball(mat: Material, filename: &str) {
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(gray, gray, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(gray, gray, Primitive::Triangle(tri));
 
     // Left
@@ -87,15 +81,13 @@ fn render_ball(mat: Material, filename: &str) {
         Point3D::new(-HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 0.0),
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(red, red, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(-HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 0.0),
         Point3D::new(-HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
         Point3D::new(-HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(red, red, Primitive::Triangle(tri));
 
     // Right
@@ -103,15 +95,13 @@ fn render_ball(mat: Material, filename: &str) {
         Point3D::new(HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(blue, blue, Primitive::Triangle(tri));
     let tri = Triangle3D::new(
         Point3D::new(HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 0.0),
         Point3D::new(HALF_ROOM_SIZE, HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
         Point3D::new(HALF_ROOM_SIZE, -HALF_ROOM_SIZE, 2. * HALF_ROOM_SIZE),
-    )
-    .unwrap();
+    )?;
     scene.push_object(blue, blue, Primitive::Triangle(tri));
 
     // Add ball
@@ -156,12 +146,12 @@ fn render_ball(mat: Material, filename: &str) {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new(filename));
+    buffer.save_hdre(std::path::Path::new(filename))
 }
 
 #[test]
 #[ignore]
-fn test_render_specular_plastic() {
+fn test_render_specular_plastic() -> Result<(), String> {
     // cargo test --package rendering --test render_materials -- test_render_specular_plastic --exact --nocapture --ignored
 
     let plastic = Material::Plastic(Plastic {
@@ -175,7 +165,7 @@ fn test_render_specular_plastic() {
 
 #[test]
 #[ignore]
-fn test_render_specular_metal() {
+fn test_render_specular_metal() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test render_materials -- test_render_specular_metal --ignored --exact --nocapture
 
     let metal = Material::Metal(Metal {
@@ -189,7 +179,7 @@ fn test_render_specular_metal() {
 
 #[test]
 #[ignore]
-fn test_render_glass() {
+fn test_render_glass() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test render_materials -- test_render_glass --ignored --exact --nocapture
     let metal = Material::Glass(Glass {
         colour: Spectrum([0.9, 0.9, 0.9]),
@@ -201,7 +191,7 @@ fn test_render_glass() {
 
 #[test]
 #[ignore]
-fn test_render_mirror() {
+fn test_render_mirror() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test render_materials -- test_render_mirror --ignored --exact --nocapture
 
     let plastic = Material::Mirror(Mirror(Spectrum::gray(0.5)));
@@ -211,7 +201,7 @@ fn test_render_mirror() {
 
 #[test]
 #[ignore]
-fn test_render_dielectric() {
+fn test_render_dielectric() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test render_materials -- test_render_dielectric --exact --nocapture --ignored
 
     let dielectric = Material::Dielectric(Dielectric {

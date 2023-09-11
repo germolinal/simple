@@ -62,15 +62,6 @@ pub use occupant_behaviour::OccupantBehaviour;
 pub mod run_simulation;
 
 // Re-exports
-pub use rendering::{
-    SimpleModelReader, 
-    Scene, 
-    Wavelengths,
-    Ray,
-    SceneElement,
-    samplers,
-    rand::RandGen, rand::get_rng, rand::Rng,
-};
 pub use calendar::{Date, Period};
 pub use communication::{MetaOptions, SimulationModel};
 pub use geometry;
@@ -78,6 +69,10 @@ pub use light::OpticalInfo;
 pub use model;
 pub use model::{Model, SimulationState, SimulationStateElement, SimulationStateHeader, *};
 pub use polynomial::*;
+pub use rendering::{
+    rand::get_rng, rand::RandGen, rand::Rng, samplers, Ray, Scene, SceneElement, SimpleModelReader,
+    Wavelengths,
+};
 pub use schedule::*;
 pub use weather::{
     CurrentWeather, EPWWeather, EPWWeatherLine, Location, Solar, SyntheticWeather, Time, Weather,

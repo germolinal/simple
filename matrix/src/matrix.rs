@@ -115,13 +115,13 @@ impl Matrix {
         } // end of going down.
 
         // Now, run substitution upwards (We don't need to iterate the first row)
-        for c in (1..self.ncols).into_iter().rev() {
+        for c in (1..self.ncols).rev() {
             let pivot = self.data[self.index(c, c)];
             debug_assert!((1. - pivot).abs() < 1e-15, "pivot is {}", pivot);
 
             let ini = if c < one_sided_n { 0 } else { c - one_sided_n };
 
-            for r in (ini..c).into_iter().rev() {
+            for r in (ini..c).rev() {
                 if let Ok(other) = self.get(r, c) {
                     // if it is Zero already, just skip
                     if other.abs() > TINY {

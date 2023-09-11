@@ -104,7 +104,7 @@ pub fn sample_cosine_weighted_horizontal_hemisphere(rng: &mut RandGen) -> Vector
 }
 
 /// Samples a hemisphere pointing UP, uniformly and randomly.
-pub fn uniform_upper_hemisphere(rng: &mut RandGen)->(f32, f32,f32){
+pub fn uniform_upper_hemisphere(rng: &mut RandGen) -> (f32, f32, f32) {
     let (rand1, rand2): (f32, f32) = rng.gen();
     // let rand2: f32 = rng.gen();
     let sq = (1.0 - rand1 * rand1).sqrt();
@@ -114,9 +114,8 @@ pub fn uniform_upper_hemisphere(rng: &mut RandGen)->(f32, f32,f32){
     let y = pie2_sin * sq;
     let z = rand1;
 
-    (x,y,z)
+    (x, y, z)
 }
-
 
 /// Samples a hemisphere pointing in N direction
 pub fn uniform_sample_hemisphere(
@@ -191,7 +190,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_uniform_sample_disc() {
+    fn test_uniform_sample_disc() -> Result<(), String> {
         fn check(radius: Float, centre: Point3D, normal: Vector3D) -> Result<(), String> {
             let mut rng = get_rng();
             let normal = normal.get_normalized();
@@ -215,19 +214,21 @@ mod tests {
         }
 
         for _ in 0..100 {
-            check(1.2, Point3D::new(0., 0., 0.), Vector3D::new(0., 0., 1.)).unwrap();
-            check(4.2, Point3D::new(3., 0., 0.), Vector3D::new(0., 1., 1.)).unwrap();
-            check(0.12, Point3D::new(0., 1., 0.), Vector3D::new(0., 1., 0.)).unwrap();
-            check(23., Point3D::new(0., -10., -20.), Vector3D::new(1., 1., 0.)).unwrap();
-            check(23., Point3D::new(0., -10., -20.), Vector3D::new(1., 0., 0.)).unwrap();
+            check(1.2, Point3D::new(0., 0., 0.), Vector3D::new(0., 0., 1.))?;
+            check(4.2, Point3D::new(3., 0., 0.), Vector3D::new(0., 1., 1.))?;
+            check(0.12, Point3D::new(0., 1., 0.), Vector3D::new(0., 1., 0.))?;
+            check(23., Point3D::new(0., -10., -20.), Vector3D::new(1., 1., 0.))?;
+            check(23., Point3D::new(0., -10., -20.), Vector3D::new(1., 0., 0.))?;
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_uniform_sample_hemisphere() {
+    fn test_uniform_sample_hemisphere() -> Result<(), String> {
         fn check(normal: Vector3D) -> Result<(), String> {
             let normal = normal.get_normalized();
-            let e2 = normal.get_perpendicular().unwrap();
+            let e2 = normal.get_perpendicular()?;
             let e1 = e2.cross(normal);
 
             let mut rng = get_rng();
@@ -244,12 +245,14 @@ mod tests {
         }
 
         for _ in 0..9999999 {
-            check(Vector3D::new(1., 2., -1.)).unwrap();
-            check(Vector3D::new(-1., 0., 0.)).unwrap();
-            check(Vector3D::new(0., 0., 1.)).unwrap();
-            check(Vector3D::new(0., 1., 0.)).unwrap();
-            check(Vector3D::new(-1000., -1., 2.)).unwrap();
+            check(Vector3D::new(1., 2., -1.))?;
+            check(Vector3D::new(-1., 0., 0.))?;
+            check(Vector3D::new(0., 0., 1.))?;
+            check(Vector3D::new(0., 1., 0.))?;
+            check(Vector3D::new(-1000., -1., 2.))?;
         }
+
+        Ok(())
     }
 
     #[test]

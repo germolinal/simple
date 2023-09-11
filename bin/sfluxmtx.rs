@@ -64,17 +64,17 @@ struct Inputs {
     pub n_sensors: usize,
 }
 
-fn main() {
+fn main() -> Result<(), String> {
     let inputs = Inputs::parse();
 
     let input_file = inputs.input;
     let mut scene = if input_file.ends_with(".rad") {
         Scene::from_radiance(input_file)
     } else if input_file.ends_with(".spl") {
-        let (model, _header) = model::Model::from_file(input_file).unwrap();
-        Scene::from_simple_model(&model, Wavelengths::Visible).unwrap()
+        let (model, _header) = model::Model::from_file(input_file)?;
+        Scene::from_simple_model(&model, Wavelengths::Visible)?
     } else {
-        panic!("Unkwown format in file {}", input_file);
+        return Err(format!("Unkwown format in file {}", input_file));
     };
 
     scene.build_accelerator();
@@ -176,7 +176,9 @@ fn main() {
     };
 
     let dc_matrix = factory.calc_dc(&rays, &scene);
-    save_colour_matrix(&dc_matrix, std::path::Path::new(&inputs.output)).unwrap()
+    save_colour_matrix(&dc_matrix, std::path::Path::new(&inputs.output))?;
     // let dc_matrix = rendering::colour_matrix::colour_matrix_to_luminance(&dc_matrix);
-    // rendering::colour_matrix::save_matrix(&dc_matrix, &std::path::Path::new(&inputs.output)).unwrap()
+    // rendering::colour_matrix::save_matrix(&dc_matrix, &std::path::Path::new(&inputs.output))?;
+
+    Ok(())
 }

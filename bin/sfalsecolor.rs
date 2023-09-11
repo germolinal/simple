@@ -40,7 +40,7 @@ struct Inputs {
     map: ArgColourMap,
 }
 
-fn main() {
+fn main() -> Result<(), String> {
     let inputs = Inputs::parse();
 
     let input = inputs.input;

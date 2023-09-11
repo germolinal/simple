@@ -87,7 +87,7 @@ impl Segment3D {
     /// Checks if a [`Segment3D`] contains another [`Point3D`].
     pub fn contains_point(&self, point: Point3D) -> Result<bool, String> {
         // This was a very old implementation.
-        if !point.is_collinear(self.start, self.end).unwrap() {
+        if !point.is_collinear(self.start, self.end)? {
             return Ok(false);
         }
         //else {
@@ -446,46 +446,40 @@ mod testing {
     }
 
     #[test]
-    fn test_contains() {
+    fn test_contains() -> Result<(), String> {
         // RANDOM AXIS
         let a = Point3D::new(5.0, -1.0, 32.0);
         let b = Point3D::new(1.2, 6.4, -2.);
 
         let main_s = Segment3D::new(a, b);
 
-        let check = |alpha: Float, beta: Float| -> bool {
+        let check = |alpha: Float, beta: Float| -> Result<bool, String> {
             let a2 = a + (b - a) * alpha;
             let b2 = a + (b - a) * beta;
             let s = Segment3D::new(a2, b2);
 
-            return main_s.contains(&s).unwrap();
+            main_s.contains(&s)
         };
 
-        assert!(check(0.5, 0.55));
-        // let alpha = 0.5;
-        // let beta = 0.55;
-        // let a2 = a + (b - a) * alpha;
-        // let b2 = a + (b - a) * beta;
-        // let s = Segment3D::new(a2, b2);
-        // let a = main_s.contains(&s).unwrap();
-        assert!(check(0.9, 0.55));
-        assert!(check(0.0, 0.35));
-        assert!(check(1.0, 0.15));
+        assert!(check(0.5, 0.55)?);
+        assert!(check(0.9, 0.55)?);
+        assert!(check(0.0, 0.35)?);
+        assert!(check(1.0, 0.15)?);
 
-        assert!(!check(-0.2, 0.55));
-        assert!(!check(1.6, 1.55));
+        assert!(!check(-0.2, 0.55)?);
+        assert!(!check(1.6, 1.55)?);
 
         // Z Axis
         let a = Point3D::new(0., 0., 32.0);
         let b = Point3D::new(0., 0., -2.);
         let main_s = Segment3D::new(a, b);
 
-        let check = |alpha: Float, beta: Float| -> bool {
+        let check = |alpha: Float, beta: Float| -> Result<bool, String> {
             let a2 = a + (b - a) * alpha;
             let b2 = a + (b - a) * beta;
             let s = Segment3D::new(a2, b2);
 
-            return main_s.contains(&s).unwrap();
+            main_s.contains(&s)
         };
 
         // assert!(check(0.5, 0.55));
@@ -495,13 +489,13 @@ mod testing {
         let b2 = a + (b - a) * beta;
         let s = Segment3D::new(a2, b2);
 
-        main_s.contains(&s).unwrap();
-        assert!(check(0.9, 0.55));
-        assert!(check(0.0, 0.35));
-        assert!(check(1.0, 0.15));
+        main_s.contains(&s)?;
+        assert!(check(0.9, 0.55)?);
+        assert!(check(0.0, 0.35)?);
+        assert!(check(1.0, 0.15)?);
 
-        assert!(!check(-0.2, 0.55));
-        assert!(!check(1.6, 1.55));
+        assert!(!check(-0.2, 0.55)?);
+        assert!(!check(1.6, 1.55)?);
 
         // X Axis
         let a = Point3D::new(5.0, 0., 0.);
@@ -509,21 +503,21 @@ mod testing {
 
         let main_s = Segment3D::new(a, b);
 
-        let check = |alpha: Float, beta: Float| -> bool {
+        let check = |alpha: Float, beta: Float| -> Result<bool, String> {
             let a2 = a + (b - a) * alpha;
             let b2 = a + (b - a) * beta;
             let s = Segment3D::new(a2, b2);
 
-            return main_s.contains(&s).unwrap();
+            main_s.contains(&s)
         };
 
-        assert!(check(0.5, 0.55));
-        assert!(check(0.9, 0.55));
-        assert!(check(0.0, 0.35));
-        assert!(check(1.0, 0.15));
+        assert!(check(0.5, 0.55)?);
+        assert!(check(0.9, 0.55)?);
+        assert!(check(0.0, 0.35)?);
+        assert!(check(1.0, 0.15)?);
 
-        assert!(!check(-0.2, 0.55));
-        assert!(!check(1.6, 1.55));
+        assert!(!check(-0.2, 0.55)?);
+        assert!(!check(1.6, 1.55)?);
 
         // Y AXIS
 
@@ -532,20 +526,22 @@ mod testing {
 
         let main_s = Segment3D::new(a, b);
 
-        let check = |alpha: Float, beta: Float| -> bool {
+        let check = |alpha: Float, beta: Float| -> Result<bool, String> {
             let a2 = a + (b - a) * alpha;
             let b2 = a + (b - a) * beta;
             let s = Segment3D::new(a2, b2);
 
-            return main_s.contains(&s).unwrap();
+            main_s.contains(&s)
         };
 
-        assert!(check(0.5, 0.55));
-        assert!(check(0.9, 0.55));
-        assert!(check(0.0, 0.35));
-        assert!(check(1.0, 0.15));
+        assert!(check(0.5, 0.55)?);
+        assert!(check(0.9, 0.55)?);
+        assert!(check(0.0, 0.35)?);
+        assert!(check(1.0, 0.15)?);
 
-        assert!(!check(-0.2, 0.55));
-        assert!(!check(1.6, 1.55));
+        assert!(!check(-0.2, 0.55)?);
+        assert!(!check(1.6, 1.55)?);
+
+        Ok(())
     }
 }

@@ -338,7 +338,7 @@ mod testing {
     use super::*;
 
     #[test]
-    fn test_get_perpendicular() {
+    fn test_get_perpendicular() -> Result<(), String> {
         fn check(v: Vector3D) -> Result<(), String> {
             let perp = v.get_perpendicular()?;
             if (v * perp).abs() > 100. * Float::EPSILON {
@@ -359,21 +359,22 @@ mod testing {
             Ok(())
         }
 
-        check(Vector3D::new(0., 0., 1.)).unwrap();
-        check(Vector3D::new(0., 1., 1.)).unwrap();
-        check(Vector3D::new(0., 1., 0.)).unwrap();
-        check(Vector3D::new(1., 1., 0.)).unwrap();
-        check(Vector3D::new(1., 0., 0.)).unwrap();
+        check(Vector3D::new(0., 0., 1.))?;
+        check(Vector3D::new(0., 1., 1.))?;
+        check(Vector3D::new(0., 1., 0.))?;
+        check(Vector3D::new(1., 1., 0.))?;
+        check(Vector3D::new(1., 0., 0.))?;
 
-        check(Vector3D::new(3., 0., 0.)).unwrap();
-        check(Vector3D::new(3., 123.1, 0.)).unwrap();
-        check(Vector3D::new(-3., -123.1, 0.)).unwrap();
-        check(Vector3D::new(-3., -123.1, 10.)).unwrap();
-        check(Vector3D::new(-3., 0., 10.)).unwrap();
-        check(Vector3D::new(0., -123.1, 10.)).unwrap();
-        check(Vector3D::new(0., 0., 50.)).unwrap();
+        check(Vector3D::new(3., 0., 0.))?;
+        check(Vector3D::new(3., 123.1, 0.))?;
+        check(Vector3D::new(-3., -123.1, 0.))?;
+        check(Vector3D::new(-3., -123.1, 10.))?;
+        check(Vector3D::new(-3., 0., 10.))?;
+        check(Vector3D::new(0., -123.1, 10.))?;
+        check(Vector3D::new(0., 0., 50.))?;
 
         assert!(check(Vector3D::new(0., 0., 0.)).is_err());
+        Ok(())
     }
 
     #[test]
