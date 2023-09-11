@@ -437,7 +437,7 @@ pub fn mesh_sphere(s: &Sphere3D) -> (Vec<Triangle>, Vec<(Vector3D, Vector3D, Vec
     // Points
     let top = Point3D::new(0., 0., r) + c;
     let bottom = Point3D::new(0., 0., -r) + c;
-    let midtop: Vec<Point3D> = vec![36., 3. * 36., 5. * 36., 7. * 36., 9. * 36.]
+    let midtop: Vec<Point3D> = [36., 3. * 36., 5. * 36., 7. * 36., 9. * 36.]
         .iter()
         .map(|angle: &Float| {
             Point3D::new(
@@ -447,7 +447,7 @@ pub fn mesh_sphere(s: &Sphere3D) -> (Vec<Triangle>, Vec<(Vector3D, Vector3D, Vec
             ) + c
         })
         .collect();
-    let midbottom: Vec<Point3D> = vec![0., 72., 2. * 72., 3. * 72., 4. * 72.]
+    let midbottom: Vec<Point3D> = [0., 72., 2. * 72., 3. * 72., 4. * 72.]
         .iter()
         .map(|angle: &Float| {
             Point3D::new(

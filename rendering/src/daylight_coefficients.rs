@@ -85,7 +85,6 @@ impl DCFactory {
                 let mut rng = get_rng();
                 #[allow(clippy::needless_collect)]
                 let aux_iter: Vec<Vector3D> = (0..self.n_ambient_samples)
-                    .into_iter()
                     .map(|_| sample_cosine_weighted_horizontal_hemisphere(&mut rng))
                     .collect();
 
