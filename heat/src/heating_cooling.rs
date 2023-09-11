@@ -90,10 +90,12 @@ impl ThermalHVAC {
                 if let Ok(_space) = parent.target_space() {
                     let consumption_power = match parent.heating_cooling_consumption(state) {
                         Some(v) => v,
-                        None => return Err(format!(
+                        None => {
+                            return Err(format!(
                             "Could not get Heating consumption if IdealHeaterCooler called '{}'",
                             parent.name()
-                        )),
+                        ))
+                        }
                     };
                     ret.push((*target_space_index, consumption_power))
                 }

@@ -71,7 +71,7 @@ impl Glazing {
         let mut ret = Vec::with_capacity(cap);
         loop {
             // Get layer
-            let mat_name = i.next().unwrap();
+            let mat_name = i.next().ok_or("could not get next layer name")?;
             let sub = model.get_material_substance(&mat_name)?;
             match sub {
                 Substance::Gas(_) => {
@@ -289,7 +289,7 @@ mod testing {
     use model::Material;
 
     #[test]
-    fn test_get_glazing_two_layers() {
+    fn test_get_glazing_two_layers() -> Result<(), String> {
         let mut model = Model::default();
 
         // Layer 0
@@ -331,7 +331,7 @@ mod testing {
         let construction = model.add_construction(construction);
 
         // Test
-        let glazings = Glazing::get_front_glazing_system(&construction, &model).unwrap();
+        let glazings = Glazing::get_front_glazing_system(&construction, &model)?;
         assert_eq!(glazings.len(), 2);
         let props: Vec<(Float, Float, Float)> = glazings
             .iter()
@@ -345,7 +345,7 @@ mod testing {
             ]
         );
 
-        let glazings = Glazing::get_back_glazing_system(&construction, &model).unwrap();
+        let glazings = Glazing::get_back_glazing_system(&construction, &model)?;
         assert_eq!(glazings.len(), 2);
         let props: Vec<(Float, Float, Float)> = glazings
             .iter()
@@ -358,10 +358,11 @@ mod testing {
                 (0.2, 1.0 - 0.2 - 0.3, 1.0 - 0.2 - 0.4),
             ]
         );
+        Ok(())
     }
 
     #[test]
-    fn test_get_glazing_two_layers_2() {
+    fn test_get_glazing_two_layers_2() -> Result<(), String> {
         let mut model = Model::default();
 
         // Layer 0
@@ -402,7 +403,7 @@ mod testing {
         let construction = model.add_construction(construction);
 
         // Test
-        let glazings = Glazing::get_front_glazing_system(&construction, &model).unwrap();
+        let glazings = Glazing::get_front_glazing_system(&construction, &model)?;
         assert_eq!(glazings.len(), 1);
         let props: Vec<(Float, Float, Float)> = glazings
             .iter()
@@ -415,7 +416,7 @@ mod testing {
             validate::assert_close!(*exp, *found);
         }
 
-        let glazings = Glazing::get_back_glazing_system(&construction, &model).unwrap();
+        let glazings = Glazing::get_back_glazing_system(&construction, &model)?;
         assert_eq!(glazings.len(), 2);
         let props: Vec<(Float, Float, Float)> = glazings
             .iter()
@@ -423,6 +424,7 @@ mod testing {
             .collect();
         let exp = vec![(0.1, 1.0 - 0.1 - 0.2, 1.0 - 0.1 - 0.3), (0.0, 0.9, 0.8)];
         assert_eq!(props, exp);
+        Ok(())
     }
 
     #[test]

@@ -18,29 +18,25 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use std::borrow::Borrow;
-
 use clap::Parser;
 use simple::control_trait::SimpleControl;
 use simple::run_simulation::*;
 use simple::void_control::VoidControl;
 use simple::OccupantBehaviour;
-use simple::SimulationState;
 use simple::{Model, SimulationStateHeader};
 
-fn run_sim<C, M, S>(
+fn run_sim<C>(
     model: &Model,
     state_header: &mut SimulationStateHeader,
     options: &SimOptions,
     controller: C,
 ) -> Result<(), String>
 where
-    C: SimpleControl,
-    M: Borrow<Model>,
+    C: SimpleControl
 {
     match &options.output {
         Some(v) => {
-            let out = std::fs::File::create(v).unwrap();
+            let out = std::fs::File::create(v).map_err(|e| format!("{}", e))?;
             run(model, state_header, options, out, controller)
         }
         None => run(
@@ -61,7 +57,7 @@ fn choose_controller(
     match &options.control_file {
         None => {
             let controller = VoidControl {};
-            run_sim::<VoidControl, &Model, SimulationState>(
+            run_sim::<VoidControl>(
                 &model,
                 state_header,
                 options,
@@ -71,7 +67,7 @@ fn choose_controller(
         Some(v) => match v.as_str() {
             "people" => {
                 let controller = OccupantBehaviour::new(&model)?;
-                run_sim::<OccupantBehaviour, &Model, SimulationState>(
+                run_sim::<OccupantBehaviour>(
                     &model,
                     state_header,
                     options,
@@ -82,7 +78,7 @@ fn choose_controller(
                 if let Some(control_file) = &options.control_file {
                     match &options.output {
                         Some(v) => {
-                            let out = std::fs::File::create(v).unwrap();
+                            let out = std::fs::File::create(v).map_err(|e| format!("{}", e))?;
                             run_rhai(model, state_header, options, control_file, out)
                         }
                         None => run_rhai(

@@ -143,7 +143,7 @@ impl Node {
 
         // Get a BBOX containing EVERYTHING within scope
         let mut bounds = primitives_info[start].bounds;
-        
+
         for info in primitives_info.iter().take(end).skip(start + 1) {
             bounds = BBox3D::from_union(&bounds, &info.bounds);
         }
@@ -337,8 +337,8 @@ impl Node {
             start,
             mid,
             total_nodes,
-            ordered_triangles, 
-            ordered_mapping,           
+            ordered_triangles,
+            ordered_mapping,
             ordered_front_materials,
             ordered_back_materials,
             ordered_normals,
@@ -394,7 +394,6 @@ pub struct BoundingVolumeTree {
 }
 
 impl BoundingVolumeTree {
-    
     pub fn new(scene: &mut Scene) -> (Self, Vec<usize>) {
         let n_objects = scene.triangles.len();
         if n_objects == 0 {
@@ -430,7 +429,7 @@ impl BoundingVolumeTree {
             n_objects,
             &mut total_nodes,
             &mut ordered_triangles,
-            &mut ordered_mapping, 
+            &mut ordered_mapping,
             &mut ordered_front_materials,
             &mut ordered_back_materials,
             &mut ordered_normals,
@@ -440,7 +439,7 @@ impl BoundingVolumeTree {
         scene.front_material_indexes = ordered_front_materials;
         scene.back_material_indexes = ordered_back_materials;
         scene.normals = ordered_normals;
-        
+
         /*
         STEP 3: Finally, this tree is converted to a more compact
         (and thus more efficient) pointerless representation for
@@ -822,14 +821,11 @@ mod tests {
 
     #[test]
     fn test_build_horizontal_bvh() {
-        let original_scene = get_horizontal_scene();        
-        let mut scene = get_horizontal_scene();        
+        let original_scene = get_horizontal_scene();
+        let mut scene = get_horizontal_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
-        for (i,original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(
-                &scene.triangles[i],
-                &original_scene.triangles[original_i]
-            );
+        for (i, original_i) in mapping.into_iter().enumerate() {
+            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
 
         let node = &bvh.nodes[0];
@@ -848,14 +844,11 @@ mod tests {
 
     #[test]
     fn test_build_vertical_bvh() {
-        let original_scene = get_vertical_scene();        
+        let original_scene = get_vertical_scene();
         let mut scene = get_vertical_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
-        for (i,original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(
-                &scene.triangles[i],
-                &original_scene.triangles[original_i]
-            );
+        for (i, original_i) in mapping.into_iter().enumerate() {
+            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
         // assert_eq!(bvh.nodes.len(), 3);
 
@@ -878,11 +871,8 @@ mod tests {
         let original_scene = get_horizontal_scene();
         let mut scene = get_horizontal_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
-        for (i,original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(
-                &scene.triangles[i],
-                &original_scene.triangles[original_i]
-            );
+        for (i, original_i) in mapping.into_iter().enumerate() {
+            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
 
         let mut ray = Ray {

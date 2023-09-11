@@ -313,7 +313,7 @@ impl Loop3D {
     pub fn sanitize(self) -> Result<Self, String> {
         let mut new = Self::with_capacity(self.len());
         for v in self.vertices.iter() {
-            new.push(*v).unwrap();
+            new.push(*v)?;
         }
         if self.closed && new.vertices.len() >= 3 {
             new.close()?
@@ -770,7 +770,7 @@ impl Loop3D {
             return Err("when projecting Loop3D: other is not closed".to_string());
         }
 
-        let anchor = other.vertices.get(0).unwrap();
+        let anchor = other.vertices.get(0).ok_or("no vertices")?;
         let normal = other.normal();
 
         for p in self.vertices.iter_mut() {
@@ -812,8 +812,8 @@ impl Loop3D {
                     .to_string(),
             );
         }
-        let anchor = other.vertices.get(0).unwrap();
-        let p = self.vertices.get(0).unwrap();
+        let anchor = other.vertices.get(0).ok_or("no vertices in other")?;
+        let p = self.vertices.get(0).ok_or("no vertices in self")?;
         let d = p.distance_to_plane(*anchor, normal);
 
         Ok(d)
@@ -1068,14 +1068,14 @@ mod testing {
     use super::*;
 
     #[test]
-    fn serde_ok() {
+    fn serde_ok() -> Result<(), String> {
         let a = "[
             0.0,0,0,  
             1.0,1,1,  
             2,3,-1
         ]";
 
-        let p: Loop3D = serde_json::from_str(a).unwrap();
+        let p: Loop3D = serde_json::from_str(a).map_err(|e| e.to_string())?;
         assert!(p.closed);
         assert_eq!(p.vertices.len(), 3);
 
@@ -1091,7 +1091,8 @@ mod testing {
         assert_eq!(p.vertices[2].y, 3.);
         assert_eq!(p.vertices[2].z, -1.);
 
-        println!("{}", serde_json::to_string(&p).unwrap());
+        println!("{}", serde_json::to_string(&p).map_err(|e| e.to_string())?);
+        Ok(())
     }
 
     #[test]
@@ -1110,11 +1111,11 @@ mod testing {
     }
 
     #[test]
-    fn test_push() {
+    fn test_push() -> Result<(), String> {
         let mut l = Loop3D::new();
         assert_eq!(l.vertices.len(), 0);
 
-        l.push(Point3D::new(1., 2., 3.)).unwrap();
+        l.push(Point3D::new(1., 2., 3.))?;
 
         assert_eq!(l.vertices.len(), 1);
         assert_eq!(l[0], Point3D::new(1., 2., 3.));
@@ -1122,24 +1123,24 @@ mod testing {
         // n_vertices
         assert_eq!(l.len(), 1);
 
-        l.push(Point3D::new(4., 5., 6.)).unwrap();
+        l.push(Point3D::new(4., 5., 6.))?;
         assert_eq!(l.len(), 2);
         assert_eq!(l[1], Point3D::new(4., 5., 6.));
 
         // Collinear point in the middle
         let mut l = Loop3D::new();
         assert_eq!(0, l.vertices.len());
-        l.push(Point3D::new(-2., -2., 0.)).unwrap(); // 0
+        l.push(Point3D::new(-2., -2., 0.))?; // 0
         assert_eq!(1, l.vertices.len());
-        l.push(Point3D::new(0., -2., 0.)).unwrap(); // 1 -- collinear point
+        l.push(Point3D::new(0., -2., 0.))?; // 1 -- collinear point
         assert_eq!(2, l.vertices.len());
-        l.push(Point3D::new(2., -2., 0.)).unwrap(); // 2
+        l.push(Point3D::new(2., -2., 0.))?; // 2
         assert_eq!(2, l.vertices.len());
-        l.push(Point3D::new(2., 2., 0.)).unwrap(); // 3
+        l.push(Point3D::new(2., 2., 0.))?; // 3
         assert_eq!(l.len(), 3);
-        l.push(Point3D::new(-2., 2., 0.)).unwrap(); // 4
+        l.push(Point3D::new(-2., 2., 0.))?; // 4
         assert_eq!(l.len(), 4);
-        l.close().unwrap();
+        l.close()?;
         assert_eq!(l.len(), 4);
         assert!((l.area - 16.).abs() < 1e-4);
 
@@ -1151,17 +1152,17 @@ mod testing {
         // Collinear point in the end
         let mut l = Loop3D::new();
         assert_eq!(0, l.vertices.len());
-        l.push(Point3D::new(-2., -2., 0.)).unwrap(); // 0
+        l.push(Point3D::new(-2., -2., 0.))?; // 0
         assert_eq!(1, l.vertices.len());
-        l.push(Point3D::new(2., -2., 0.)).unwrap(); // 1
+        l.push(Point3D::new(2., -2., 0.))?; // 1
         assert_eq!(2, l.vertices.len());
-        l.push(Point3D::new(2., 2., 0.)).unwrap(); // 2
+        l.push(Point3D::new(2., 2., 0.))?; // 2
         assert_eq!(l.len(), 3);
-        l.push(Point3D::new(-2., 2., 0.)).unwrap(); // 3
+        l.push(Point3D::new(-2., 2., 0.))?; // 3
         assert_eq!(l.len(), 4);
-        l.push(Point3D::new(-2., 0., 0.)).unwrap(); // 4 -- collinear point... will be removed when closing
+        l.push(Point3D::new(-2., 0., 0.))?; // 4 -- collinear point... will be removed when closing
         assert_eq!(5, l.vertices.len());
-        l.close().unwrap();
+        l.close()?;
         assert_eq!(l.len(), 4);
         assert!((l.area - 16.).abs() < 1e-4);
         assert_eq!(l[0], Point3D::new(-2., -2., 0.));
@@ -1172,17 +1173,17 @@ mod testing {
         // Collinear point in the beginning
         let mut l = Loop3D::new();
         assert_eq!(0, l.vertices.len());
-        l.push(Point3D::new(0., -2., 0.)).unwrap(); // 0  -- collinear point... will be removed when closing
+        l.push(Point3D::new(0., -2., 0.))?; // 0  -- collinear point... will be removed when closing
         assert_eq!(1, l.vertices.len());
-        l.push(Point3D::new(2., -2., 0.)).unwrap(); // 1
+        l.push(Point3D::new(2., -2., 0.))?; // 1
         assert_eq!(2, l.vertices.len());
-        l.push(Point3D::new(2., 2., 0.)).unwrap(); // 2
+        l.push(Point3D::new(2., 2., 0.))?; // 2
         assert_eq!(l.len(), 3);
-        l.push(Point3D::new(-2., 2., 0.)).unwrap(); // 3
+        l.push(Point3D::new(-2., 2., 0.))?; // 3
         assert_eq!(l.len(), 4);
-        l.push(Point3D::new(-2., -2., 0.)).unwrap(); // 4
+        l.push(Point3D::new(-2., -2., 0.))?; // 4
         assert_eq!(5, l.vertices.len());
-        l.close().unwrap();
+        l.close()?;
         assert_eq!(l.len(), 4);
         assert!((l.area - 16.).abs() < 1e-4);
         assert_eq!(l[0], Point3D::new(2., -2., 0.));
@@ -1199,16 +1200,17 @@ mod testing {
 
         // This should fail.
         assert!(l.push(Point3D::new(2., -2., 0.)).is_err()); // 3
+        Ok(())
     } // end of test_push
 
     #[test]
-    fn test_is_coplanar() {
+    fn test_is_coplanar() -> Result<(), String> {
         let mut l = Loop3D::new();
-        l.push(Point3D::new(-2., -2., 0.)).unwrap(); // 0
-        l.push(Point3D::new(2., -2., 0.)).unwrap(); // 1
-        l.push(Point3D::new(2., 2., 0.)).unwrap(); // 2
-        l.push(Point3D::new(-2., 2., 0.)).unwrap(); // 3
-        l.close().unwrap();
+        l.push(Point3D::new(-2., -2., 0.))?; // 0
+        l.push(Point3D::new(2., -2., 0.))?; // 1
+        l.push(Point3D::new(2., 2., 0.))?; // 2
+        l.push(Point3D::new(-2., 2., 0.))?; // 3
+        l.close()?;
 
         let r = l.is_coplanar(Point3D::new(0., 0., 0.));
         match r {
@@ -1221,267 +1223,268 @@ mod testing {
         let r = l.is_coplanar(Point3D::new(0., 0., 10.1));
         match r {
             Ok(b) => {
-                assert!(!b)
+                assert!(!b);
             }
-            Err(e) => panic!("{}", e),
+            Err(e) => return Err(format!("{}", e)),
         }
+        Ok(())
     }
 
     #[test]
-    fn test_point_weird() {
+    fn test_point_weird() -> Result<(), String> {
         let mut the_loop = Loop3D::new();
-        the_loop
-            .push(Point3D::new(10., -1.2246467991473533E-15, 0.))
-            .unwrap();
-        the_loop
-            .push(Point3D::new(-10., 1.2246467991473533E-15, 0.))
-            .unwrap();
-        the_loop
-            .push(Point3D::new(-10., 1.2246467991473533E-15, 3.))
-            .unwrap();
-        the_loop
-            .push(Point3D::new(10., -1.2246467991473533E-15, 3.))
-            .unwrap();
-        the_loop.close().unwrap();
+        the_loop.push(Point3D::new(10., -1.2246467991473533E-15, 0.))?;
+
+        the_loop.push(Point3D::new(-10., 1.2246467991473533E-15, 0.))?;
+
+        the_loop.push(Point3D::new(-10., 1.2246467991473533E-15, 3.))?;
+
+        the_loop.push(Point3D::new(10., -1.2246467991473533E-15, 3.))?;
+
+        the_loop.close()?;
 
         let a = Point3D::new(-10., 1.2246467991473533E-15, 0.);
         let b = Point3D::new(10., -1.2246467991473533E-15, 3.);
         let mid = (a + b) / 2.;
-        let r = the_loop.test_point(mid).unwrap();
+        let r = the_loop.test_point(mid)?;
         assert!(r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_convex_loop_interior() {
+    fn test_point_convex_loop_interior() -> Result<(), String> {
         //let normal = Vector3D::new(0., 0., 1.);
         let mut the_loop = Loop3D::new();
         let l = 0.5;
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.close().unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.close()?;
 
-        let r = the_loop.test_point(Point3D::new(0., 0., 0.)).unwrap();
+        let r = the_loop.test_point(Point3D::new(0., 0., 0.))?;
         assert!(r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_convex_loop_exterior() {
+    fn test_point_convex_loop_exterior() -> Result<(), String> {
         //Vector3D normal = Vector3D(0, 0, 1);
         let mut the_loop = Loop3D::new();
         let l = 1. / (2 as Float).sqrt();
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.close().unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.close()?;
 
-        let r = the_loop.test_point(Point3D::new(-10., 0., 0.)).unwrap();
+        let r = the_loop.test_point(Point3D::new(-10., 0., 0.))?;
         assert!(!r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_concave_loop_exterior1() {
+    fn test_point_concave_loop_exterior1() -> Result<(), String> {
         //Vector3D normal = Vector3D(0, 0, 1);
         let mut the_loop = Loop3D::new();
 
         let l = 1.0 / (2 as Float).sqrt();
         let bigl = 2. / (2 as Float).sqrt();
 
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(0.0, -bigl, 0.)).unwrap(); // collinear point, moving in X
-        the_loop.push(Point3D::new(bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(bigl, 0., 0.)).unwrap(); // collinear point, moving in Y
-        the_loop.push(Point3D::new(bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(0.0, -bigl, 0.))?; // collinear point, moving in X
+        the_loop.push(Point3D::new(bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(bigl, 0., 0.))?; // collinear point, moving in Y
+        the_loop.push(Point3D::new(bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
 
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
 
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let r = the_loop.test_point(Point3D::new(0., 0., 0.)).unwrap();
+        let r = the_loop.test_point(Point3D::new(0., 0., 0.))?;
         assert!(!r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_concave_loop_exterior2() {
+    fn test_point_concave_loop_exterior2() -> Result<(), String> {
         //Vector3D normal = Vector3D(0, 0, 1);
         let mut the_loop = Loop3D::new();
 
         let l = 1. / (2 as Float).sqrt();
         let bigl = 2. / (2 as Float).sqrt();
 
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(0.0, -bigl, 0.)).unwrap(); // collinear point, moving in X
-        the_loop.push(Point3D::new(bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(bigl, 0., 0.)).unwrap(); // collinear point, moving in Y
-        the_loop.push(Point3D::new(bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(0.0, -bigl, 0.))?; // collinear point, moving in X
+        the_loop.push(Point3D::new(bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(bigl, 0., 0.))?; // collinear point, moving in Y
+        the_loop.push(Point3D::new(bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
 
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
 
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let r = the_loop.test_point(Point3D::new(-10., 0., 0.)).unwrap();
+        let r = the_loop.test_point(Point3D::new(-10., 0., 0.))?;
         assert!(!r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_concave_loop_interior() {
+    fn test_point_concave_loop_interior() -> Result<(), String> {
         //Vector3D normal = Vector3D(0, 0, 1);
         let mut the_loop = Loop3D::new();
         let l = 0.5;
         let bigl = 1.;
 
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(0., -bigl, 0.)).unwrap(); // collinear point, moving in X
-        the_loop.push(Point3D::new(bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(bigl, 0., 0.)).unwrap(); // collinear point, moving in Y
-        the_loop.push(Point3D::new(bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(0., -bigl, 0.))?; // collinear point, moving in X
+        the_loop.push(Point3D::new(bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(bigl, 0., 0.))?; // collinear point, moving in Y
+        the_loop.push(Point3D::new(bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
 
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
 
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let r = the_loop
-            .test_point(Point3D::new(-(bigl + l) / 2., -(bigl + l) / 2., 0.))
-            .unwrap();
+        let r = the_loop.test_point(Point3D::new(-(bigl + l) / 2., -(bigl + l) / 2., 0.))?;
         assert!(r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_through_vertex() {
+    fn test_point_through_vertex() -> Result<(), String> {
         //Vector3D normal = Vector3D(0, 0, 1);
         let mut the_loop = Loop3D::new();
         let l = 1.;
         let bigl = 3.;
 
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(bigl, 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(0., bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
+        the_loop.push(Point3D::new(0., 0., 0.))?;
+        the_loop.push(Point3D::new(bigl, 0., 0.))?;
+        the_loop.push(Point3D::new(bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(0., bigl, 0.))?;
+        the_loop.push(Point3D::new(0., 0., 0.))?;
 
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, 2. * l, 0.)).unwrap();
-        the_loop.push(Point3D::new(2. * l, 2. * l, 0.)).unwrap();
-        the_loop.push(Point3D::new(2. * l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(l, 2. * l, 0.))?;
+        the_loop.push(Point3D::new(2. * l, 2. * l, 0.))?;
+        the_loop.push(Point3D::new(2. * l, l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
 
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let r = the_loop.test_point(Point3D::new(l / 2., l, 0.)).unwrap();
+        let r = the_loop.test_point(Point3D::new(l / 2., l, 0.))?;
         assert!(r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_concave_loop_interior_with_clean() {
+    fn test_point_concave_loop_interior_with_clean() -> Result<(), String> {
         //Vector3D normal = Vector3D(0, 0, 1);
 
         let mut the_loop = Loop3D::new();
         let l = 1. / (2 as Float).sqrt();
         let bigl = 2. / (2 as Float).sqrt();
 
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(0., -bigl, 0.)).unwrap(); // collinear point, moving in X
-        the_loop.push(Point3D::new(bigl, -bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(bigl, 0., 0.)).unwrap(); // collinear point, moving in Y
-        the_loop.push(Point3D::new(bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, bigl, 0.)).unwrap();
-        the_loop.push(Point3D::new(-bigl, -bigl, 0.)).unwrap();
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(0., -bigl, 0.))?; // collinear point, moving in X
+        the_loop.push(Point3D::new(bigl, -bigl, 0.))?;
+        the_loop.push(Point3D::new(bigl, 0., 0.))?; // collinear point, moving in Y
+        the_loop.push(Point3D::new(bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, bigl, 0.))?;
+        the_loop.push(Point3D::new(-bigl, -bigl, 0.))?;
 
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
 
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let r = the_loop
-            .test_point(Point3D::new(
-                -1.5 / (2 as Float).sqrt(),
-                -1.5 / (2 as Float).sqrt(),
-                0.,
-            ))
-            .unwrap();
+        let r = the_loop.test_point(Point3D::new(
+            -1.5 / (2 as Float).sqrt(),
+            -1.5 / (2 as Float).sqrt(),
+            0.,
+        ))?;
         assert!(r);
+        Ok(())
     }
 
     #[test]
-    fn test_point_non_coplanar() {
+    fn test_point_non_coplanar() -> Result<(), String> {
         let mut the_loop = Loop3D::new();
         let l = 1. / (2 as Float).sqrt();
 
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        the_loop.close().unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
+        the_loop.close()?;
 
-        let r = the_loop
-            .test_point(Point3D::new(
-                -1.5 / (2 as Float).sqrt(),
-                -1.5 / (2 as Float).sqrt(),
-                1.,
-            ))
-            .unwrap();
+        let r = the_loop.test_point(Point3D::new(
+            -1.5 / (2 as Float).sqrt(),
+            -1.5 / (2 as Float).sqrt(),
+            1.,
+        ))?;
         assert!(!r);
+        Ok(())
     }
 
     #[test]
-    fn test_area_1() {
+    fn test_area_1() -> Result<(), String> {
         //Vector3D normal = Vector3D(0, 0, 1);
         let mut the_loop = Loop3D::new();
         let l = 0.5;
 
-        the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
+        the_loop.push(Point3D::new(-l, -l, 0.))?;
+        the_loop.push(Point3D::new(-l, l, 0.))?;
+        the_loop.push(Point3D::new(l, l, 0.))?;
+        the_loop.push(Point3D::new(l, -l, 0.))?;
 
         assert!(the_loop.area().is_err());
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let a = the_loop.area().unwrap();
+        let a = the_loop.area()?;
         assert!((4. * l * l - a).abs() < 0.0001);
+        Ok(())
     }
 
     #[test]
-    fn test_area_2() {
+    fn test_area_2() -> Result<(), String> {
         let l = 1.;
 
         // Counterclock wise
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(l, 0., 0.)).unwrap(); //1
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap(); //2
-        the_loop.push(Point3D::new(2.0 * l, l, 0.)).unwrap(); //3
-        the_loop.push(Point3D::new(2.0 * l, 2.0 * l, 0.)).unwrap(); //4
-        the_loop.push(Point3D::new(0.0, 2.0 * l, 0.)).unwrap(); //5
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap(); //0
+        the_loop.push(Point3D::new(l, 0., 0.))?; //1
+        the_loop.push(Point3D::new(l, l, 0.))?; //2
+        the_loop.push(Point3D::new(2.0 * l, l, 0.))?; //3
+        the_loop.push(Point3D::new(2.0 * l, 2.0 * l, 0.))?; //4
+        the_loop.push(Point3D::new(0.0, 2.0 * l, 0.))?; //5
+        the_loop.push(Point3D::new(0., 0., 0.))?; //0
 
         assert!(the_loop.area().is_err());
 
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let a = the_loop.area().unwrap();
+        let a = the_loop.area()?;
         assert!((3.0 - a).abs() < 1e-4);
         assert!(
             the_loop.normal().compare(Vector3D::new(0., 0., 1.)),
@@ -1494,102 +1497,100 @@ mod testing {
 
         // Counterclock wise
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(l, 0., 0.)).unwrap(); //1
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap(); //0
-        the_loop.push(Point3D::new(0.0, 2.0 * l, 0.)).unwrap(); //5
-        the_loop.push(Point3D::new(2.0 * l, 2.0 * l, 0.)).unwrap(); //4
-        the_loop.push(Point3D::new(2.0 * l, l, 0.)).unwrap(); //3
-        the_loop.push(Point3D::new(l, l, 0.)).unwrap(); //2
+        the_loop.push(Point3D::new(l, 0., 0.))?; //1
+        the_loop.push(Point3D::new(0., 0., 0.))?; //0
+        the_loop.push(Point3D::new(0.0, 2.0 * l, 0.))?; //5
+        the_loop.push(Point3D::new(2.0 * l, 2.0 * l, 0.))?; //4
+        the_loop.push(Point3D::new(2.0 * l, l, 0.))?; //3
+        the_loop.push(Point3D::new(l, l, 0.))?; //2
 
-        the_loop.close().unwrap();
+        the_loop.close()?;
 
-        let a = the_loop.area().unwrap();
+        let a = the_loop.area()?;
         assert!((3.0 - a).abs() < 1e-4);
         assert!(
             the_loop.normal().compare(Vector3D::new(0., 0., -1.)),
             "normal = {}",
             the_loop.normal()
         );
+        Ok(())
     }
 
     #[test]
-    fn test_close() {
+    fn test_close() -> Result<(), String> {
         let l = 1.;
 
         // Two elements... cannot close
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(l, 0., 0.)).unwrap();
+        the_loop.push(Point3D::new(0., 0., 0.))?;
+        the_loop.push(Point3D::new(l, 0., 0.))?;
         assert!(the_loop.close().is_err());
 
         // Three elements... can close
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(l, 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(0., l, 0.)).unwrap();
+        the_loop.push(Point3D::new(0., 0., 0.))?;
+        the_loop.push(Point3D::new(l, 0., 0.))?;
+        the_loop.push(Point3D::new(0., l, 0.))?;
         assert!(the_loop.close().is_ok());
 
         // Three elements, but in the same line... cannot close
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(l, 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(2.0 * l, 0., 0.)).unwrap();
+        the_loop.push(Point3D::new(0., 0., 0.))?;
+        the_loop.push(Point3D::new(l, 0., 0.))?;
+        the_loop.push(Point3D::new(2.0 * l, 0., 0.))?;
         assert!(!the_loop.close().is_ok());
 
         // four elements, two in the same line... can close
         let mut the_loop = Loop3D::new();
-        the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(l, 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(2.0 * l, 0., 0.)).unwrap();
-        the_loop.push(Point3D::new(0., l, 0.)).unwrap();
+        the_loop.push(Point3D::new(0., 0., 0.))?;
+        the_loop.push(Point3D::new(l, 0., 0.))?;
+        the_loop.push(Point3D::new(2.0 * l, 0., 0.))?;
+        the_loop.push(Point3D::new(0., l, 0.))?;
         assert!(the_loop.close().is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_is_diagonal() {
+    fn test_is_diagonal() -> Result<(), String> {
         let mut l = Loop3D::new();
-        l.push(Point3D::new(-2., -2., 0.)).unwrap(); // 0
-        l.push(Point3D::new(2., -2., 0.)).unwrap(); // 1
-        l.push(Point3D::new(2., 2., 0.)).unwrap(); // 2
-        l.push(Point3D::new(-2., 2., 0.)).unwrap(); // 3
-        l.close().unwrap();
+        l.push(Point3D::new(-2., -2., 0.))?; // 0
+        l.push(Point3D::new(2., -2., 0.))?; // 1
+        l.push(Point3D::new(2., 2., 0.))?; // 2
+        l.push(Point3D::new(-2., 2., 0.))?; // 3
+        l.close()?;
 
         // Intersects a segment
-        assert!(!l
-            .is_diagonal(Segment3D::new(
-                Point3D::new(-4., 0., 0.),
-                Point3D::new(4., 0., 0.),
-            ))
-            .unwrap());
+        assert!(!l.is_diagonal(Segment3D::new(
+            Point3D::new(-4., 0., 0.),
+            Point3D::new(4., 0., 0.),
+        ))?);
 
         // Doesn't intersect, but is outside
-        assert!(!l
-            .is_diagonal(Segment3D::new(
-                Point3D::new(4., 0., 0.),
-                Point3D::new(5., 0., 0.),
-            ))
-            .unwrap());
+        assert!(!l.is_diagonal(Segment3D::new(
+            Point3D::new(4., 0., 0.),
+            Point3D::new(5., 0., 0.),
+        ))?);
 
         // Doesn't intersect, is inside == is_diagonal
-        assert!(l
-            .is_diagonal(Segment3D::new(
-                Point3D::new(-2., -2., 0.),
-                Point3D::new(2., 2., 0.),
-            ))
-            .unwrap());
+        assert!(l.is_diagonal(Segment3D::new(
+            Point3D::new(-2., -2., 0.),
+            Point3D::new(2., 2., 0.),
+        ))?);
+
+        Ok(())
     }
 
     #[test]
-    fn test_contains_segment() {
+    fn test_contains_segment() -> Result<(), String> {
         let mut l = Loop3D::new();
         let p0 = Point3D::new(-2., -2., 0.);
         let p1 = Point3D::new(2., -2., 0.);
         let p2 = Point3D::new(2., 2., 0.);
         let p3 = Point3D::new(-2., 2., 0.);
-        l.push(p0).unwrap(); // 0
-        l.push(p1).unwrap(); // 1
-        l.push(p2).unwrap(); // 2
-        l.push(p3).unwrap(); // 3
+        l.push(p0)?; // 0
+        l.push(p1)?; // 1
+        l.push(p2)?; // 2
+        l.push(p3)?; // 3
 
         // Existing segments, in both directions
         assert!(l.contains_segment(&Segment3D::new(p0, p1)));
@@ -1624,59 +1625,64 @@ mod testing {
             Point3D::new(-1., -2., 0.),
             Point3D::new(1., -2., 0.),
         )));
+        Ok(())
     }
 
     #[test]
-    fn test_valid_to_add() {
+    fn test_valid_to_add() -> Result<(), String> {
         let mut outer = Loop3D::new();
 
         let p0 = Point3D::new(0., 0., 0.);
         assert!(outer.valid_to_add(p0).is_ok());
-        outer.push(p0).unwrap();
+        outer.push(p0)?;
 
         let p1 = Point3D::new(0., 3., 0.);
         assert!(outer.valid_to_add(p1).is_ok());
-        outer.push(p1).unwrap();
+        outer.push(p1)?;
 
         let p2 = Point3D::new(3., 3., 0.);
         assert!(outer.valid_to_add(p2).is_ok());
-        outer.push(p2).unwrap();
+        outer.push(p2)?;
 
         let p3 = Point3D::new(5., 5., 0.);
         assert!(outer.valid_to_add(p3).is_ok());
-        outer.push(p3).unwrap();
+        outer.push(p3)?;
 
         let p4 = Point3D::new(3., 6., 0.);
         assert!(outer.valid_to_add(p4).is_ok());
-        outer.push(p4).unwrap();
+        outer.push(p4)?;
 
         let p5 = Point3D::new(0., 5., 0.);
         assert!(outer.valid_to_add(p5).is_ok());
+
+        Ok(())
     }
 
     #[test]
-    fn test_perimeter_centroid() {
+    fn test_perimeter_centroid() -> Result<(), String> {
         // A square with the center at the origin.
         /*****/
         let mut outer_loop = Loop3D::new();
         let l = 2. as Float;
-        outer_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-        outer_loop.push(Point3D::new(l, -l, 0.)).unwrap();
-        outer_loop.push(Point3D::new(l, l, 0.)).unwrap();
-        outer_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-        outer_loop.close().unwrap();
+        outer_loop.push(Point3D::new(-l, -l, 0.))?;
+        outer_loop.push(Point3D::new(l, -l, 0.))?;
+        outer_loop.push(Point3D::new(l, l, 0.))?;
+        outer_loop.push(Point3D::new(-l, l, 0.))?;
+        outer_loop.close()?;
 
         assert_eq!(outer_loop.perimeter, 8. * l);
-        assert_eq!(outer_loop.perimeter().unwrap(), 8. * l);
+        assert_eq!(outer_loop.perimeter()?, 8. * l);
 
-        let c = outer_loop.centroid().unwrap();
+        let c = outer_loop.centroid()?;
         assert!(c.x.abs() < 1e-8);
         assert!(c.y.abs() < 1e-8);
         assert!(c.z.abs() < 1e-8);
+
+        Ok(())
     }
 
     #[test]
-    fn test_sanitize() {
+    fn test_sanitize() -> Result<(), String> {
         let mut l = Loop3D::with_capacity(4);
         // Add a triangle
         l.vertices.push(Point3D::new(0., 0., 0.));
@@ -1691,218 +1697,184 @@ mod testing {
 
         // Sanitizing removes the collinear point,
         // withouth closing.
-        l = l.sanitize().unwrap();
+        l = l.sanitize()?;
         assert_eq!(l.len(), 4);
         assert!(!l.closed());
 
         // We close it, (last point we
         // added is collinear, so it will be removed).
-        l.close().unwrap();
+        l.close()?;
         assert_eq!(l.len(), 3);
 
         // Sanitizing now should return a closed polygon.
-        l = l.sanitize().unwrap();
+        l = l.sanitize()?;
         assert!(l.closed());
+
+        Ok(())
     }
 
     #[test]
-    fn test_weird_loop() {
+    fn test_weird_loop() -> Result<(), String> {
         let mut l = Loop3D::new();
         l.push(Point3D {
             x: 0.,
             y: 1.3500000000000001,
             z: 0.0,
-        })
-        .unwrap();
+        })?;
         l.push(Point3D {
             x: 0.,
             y: 2.0899999999999999,
             z: 0.82999999999999996,
-        })
-        .unwrap();
+        })?;
         l.push(Point3D {
             x: 0.,
             y: 2.9900000000000002,
             z: 0.82999999999999996,
-        })
-        .unwrap();
+        })?;
         l.push(Point3D {
             x: 0.,
             y: 2.9900000000000002,
             z: 2.29,
-        })
-        .unwrap();
+        })?;
         l.push(Point3D {
             x: 0.,
             y: 2.0899999999999999,
             z: 2.29,
-        })
-        .unwrap();
+        })?;
         l.push(Point3D {
             x: 0.,
             y: 1.3500000000000001,
             z: 2.7000000000000002,
-        })
-        .unwrap();
+        })?;
         l.push(Point3D {
             x: 0.,
             y: 3.7400000000000002,
             z: 2.7000000000000002,
-        })
-        .unwrap();
+        })?;
         l.push(Point3D {
             x: 0.,
             y: 3.7400000000000002,
             z: 0.0,
-        })
-        .unwrap();
+        })?;
 
-        l.close().unwrap();
+        l.close()?;
 
-        let poly = Polygon3D::new(l).unwrap();
-        let _: Triangulation3D = poly.try_into().unwrap();
+        let poly = Polygon3D::new(l)?;
+        let _: Triangulation3D = poly.try_into()?;
+        Ok(())
     }
 
     #[test]
-    fn test_weird_loop_2() {
+    fn test_weird_loop_2() -> Result<(), String> {
         let mut outer = Loop3D::new();
-        outer
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 3.7400000000000002,
-                z: 0.0,
-            })
-            .unwrap(); // 0
-        outer
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 3.7400000000000002,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 1
-        outer
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 0.0,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 1
-        outer
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 0.0,
-                z: 0.0,
-            })
-            .unwrap(); // 1
-        outer.close().unwrap();
+        outer.push(Point3D {
+            x: 8.7699999999999996,
+            y: 3.7400000000000002,
+            z: 0.0,
+        })?; // 0
+        outer.push(Point3D {
+            x: 8.7699999999999996,
+            y: 3.7400000000000002,
+            z: 2.7000000000000002,
+        })?; // 1
+        outer.push(Point3D {
+            x: 8.7699999999999996,
+            y: 0.0,
+            z: 2.7000000000000002,
+        })?; // 1
+        outer.push(Point3D {
+            x: 8.7699999999999996,
+            y: 0.0,
+            z: 0.0,
+        })?; // 1
+        outer.close()?;
 
         let mut inner = Loop3D::new();
 
-        inner
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 1.2649999999999999,
-                z: 0.69999999999999996,
-            })
-            .unwrap(); // 2
-        inner
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 1.2649999999999999,
-                z: 2.29,
-            })
-            .unwrap(); // 3
-        inner
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 2.4750000000000001,
-                z: 2.29,
-            })
-            .unwrap(); // 4
-        inner
-            .push(Point3D {
-                x: 8.7699999999999996,
-                y: 2.4740000000000002,
-                z: 0.69999999999999996,
-            })
-            .unwrap(); // 5
+        inner.push(Point3D {
+            x: 8.7699999999999996,
+            y: 1.2649999999999999,
+            z: 0.69999999999999996,
+        })?; // 2
+        inner.push(Point3D {
+            x: 8.7699999999999996,
+            y: 1.2649999999999999,
+            z: 2.29,
+        })?; // 3
+        inner.push(Point3D {
+            x: 8.7699999999999996,
+            y: 2.4750000000000001,
+            z: 2.29,
+        })?; // 4
+        inner.push(Point3D {
+            x: 8.7699999999999996,
+            y: 2.4740000000000002,
+            z: 0.69999999999999996,
+        })?; // 5
 
-        inner.close().unwrap();
+        inner.close()?;
 
-        let mut poly = Polygon3D::new(outer).unwrap();
-        poly.cut_hole(inner).unwrap();
-        let _: Triangulation3D = poly.try_into().unwrap();
+        let mut poly = Polygon3D::new(outer)?;
+        poly.cut_hole(inner)?;
+        let _: Triangulation3D = poly.try_into()?;
+
+        Ok(())
     }
 
     #[test]
-    fn test_weird_loop_3() {
+    fn test_weird_loop_3() -> Result<(), String> {
         let mut outer = Loop3D::new();
-        outer
-            .push(Point3D {
-                x: 2.98,
-                y: 1.3500000000000001,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 0
-        outer
-            .push(Point3D {
-                x: 4.0199999999999996,
-                y: 1.3500000000000001,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 1
-        outer
-            .push(Point3D {
-                x: 4.0199999999999996,
-                y: 6.0300000000000002,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 1
-        outer
-            .push(Point3D {
-                x: 2.98,
-                y: 6.0300000000000002,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 1
+        outer.push(Point3D {
+            x: 2.98,
+            y: 1.3500000000000001,
+            z: 2.7000000000000002,
+        })?; // 0
+        outer.push(Point3D {
+            x: 4.0199999999999996,
+            y: 1.3500000000000001,
+            z: 2.7000000000000002,
+        })?; // 1
+        outer.push(Point3D {
+            x: 4.0199999999999996,
+            y: 6.0300000000000002,
+            z: 2.7000000000000002,
+        })?; // 1
+        outer.push(Point3D {
+            x: 2.98,
+            y: 6.0300000000000002,
+            z: 2.7000000000000002,
+        })?; // 1
 
-        outer
-            .push(Point3D {
-                x: 2.98,
-                y: 5.7599999999999998,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 2
-        outer
-            .push(Point3D {
-                x: 1.9199999999999999,
-                y: 5.7599999999999998,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 3
-        outer
-            .push(Point3D {
-                x: 1.9199999999999999,
-                y: 4.7999999999999998,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 4
-        outer
-            .push(Point3D {
-                x: 2.98,
-                y: 4.7999999999999998,
-                z: 2.7000000000000002,
-            })
-            .unwrap(); // 5
+        outer.push(Point3D {
+            x: 2.98,
+            y: 5.7599999999999998,
+            z: 2.7000000000000002,
+        })?; // 2
+        outer.push(Point3D {
+            x: 1.9199999999999999,
+            y: 5.7599999999999998,
+            z: 2.7000000000000002,
+        })?; // 3
+        outer.push(Point3D {
+            x: 1.9199999999999999,
+            y: 4.7999999999999998,
+            z: 2.7000000000000002,
+        })?; // 4
+        outer.push(Point3D {
+            x: 2.98,
+            y: 4.7999999999999998,
+            z: 2.7000000000000002,
+        })?; // 5
 
-        outer.close().unwrap();
+        outer.close()?;
 
-        let poly = Polygon3D::new(outer).unwrap();
-        let _: Triangulation3D = poly.try_into().unwrap();
+        let poly = Polygon3D::new(outer)?;
+        let _: Triangulation3D = poly.try_into()?;
+        Ok(())
     }
 
     #[test]
-    fn test_project_into_plane_self() {
+    fn test_project_into_plane_self() -> Result<(), String> {
         // Project into self.
         let lstr = "[
             0, 0, 0,  
@@ -1911,27 +1883,28 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(lstr).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(lstr).map_err(|e| e.to_string())?;
 
         let mut this_loop_projected = this_loop.clone();
 
         let other_loop = this_loop.clone();
-        this_loop_projected.project_into_plane(&other_loop).unwrap();
+        this_loop_projected.project_into_plane(&other_loop)?;
 
         assert_eq!(this_loop.len(), this_loop_projected.len());
         for (i, this_p) in this_loop.vertices.iter().enumerate() {
             assert!(this_p.compare(this_loop_projected.vertices[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_project_into_plane_fails() {
+    fn test_project_into_plane_fails() -> Result<(), String> {
         let mut this_loop = Loop3D::new();
 
-        this_loop.push(Point3D::new(0.0, 0.0, 0.0)).unwrap();
-        this_loop.push(Point3D::new(1.0, 0.0, 0.0)).unwrap();
-        this_loop.push(Point3D::new(1.0, 1.0, 0.0)).unwrap();
-        this_loop.push(Point3D::new(0.0, 1.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(0.0, 0.0, 0.0))?;
+        this_loop.push(Point3D::new(1.0, 0.0, 0.0))?;
+        this_loop.push(Point3D::new(1.0, 1.0, 0.0))?;
+        this_loop.push(Point3D::new(0.0, 1.0, 0.0))?;
 
         let mut other_loop: Loop3D = this_loop.clone();
 
@@ -1940,22 +1913,23 @@ mod testing {
 
         // Other is not closed... should fail
         let mut this_closed = this_loop.clone();
-        this_closed.close().unwrap();
+        this_closed.close()?;
         assert!(this_closed.project_into_plane(&other_loop).is_err());
 
         // This is not closed... shold fail
-        other_loop.close().unwrap();
+        other_loop.close()?;
         assert!(this_loop.project_into_plane(&other_loop).is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_normal_distance_fails() {
+    fn test_normal_distance_fails() -> Result<(), String> {
         let mut this_loop = Loop3D::new();
 
-        this_loop.push(Point3D::new(0.0, 0.0, 0.0)).unwrap();
-        this_loop.push(Point3D::new(1.0, 0.0, 0.0)).unwrap();
-        this_loop.push(Point3D::new(1.0, 1.0, 0.0)).unwrap();
-        this_loop.push(Point3D::new(0.0, 1.0, 0.0)).unwrap();
+        this_loop.push(Point3D::new(0.0, 0.0, 0.0))?;
+        this_loop.push(Point3D::new(1.0, 0.0, 0.0))?;
+        this_loop.push(Point3D::new(1.0, 1.0, 0.0))?;
+        this_loop.push(Point3D::new(0.0, 1.0, 0.0))?;
 
         let mut other_loop: Loop3D = this_loop.clone();
 
@@ -1964,16 +1938,17 @@ mod testing {
 
         // Other is not closed... should fail
         let mut this_closed = this_loop.clone();
-        this_closed.close().unwrap();
+        this_closed.close()?;
         assert!(this_closed.normal_distance(&other_loop).is_err());
 
         // This is not closed... shold fail
-        other_loop.close().unwrap();
+        other_loop.close()?;
         assert!(this_loop.normal_distance(&other_loop).is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_project_into_plane_z() {
+    fn test_project_into_plane_z() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
             0, 0, 0,  
@@ -1989,20 +1964,21 @@ mod testing {
             0, 1, 2.0
         ]";
 
-        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
-        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
         // Both closed... is should work now
-        this_loop.project_into_plane(&other_loop).unwrap();
+        this_loop.project_into_plane(&other_loop)?;
 
         assert_eq!(this_loop.len(), other_loop.len());
         for (i, this_p) in this_loop.vertices.iter().enumerate() {
             assert!(this_p.compare(other_loop.vertices[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_project_into_plane_neg_z() {
+    fn test_project_into_plane_neg_z() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
             0, 0, 0,  
@@ -2018,20 +1994,21 @@ mod testing {
             0, 1, -2.0
         ]";
 
-        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
-        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
         // Both closed... is should work now
-        this_loop.project_into_plane(&other_loop).unwrap();
+        this_loop.project_into_plane(&other_loop)?;
 
         assert_eq!(this_loop.len(), other_loop.len());
         for (i, this_p) in this_loop.vertices.iter().enumerate() {
             assert!(this_p.compare(other_loop.vertices[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_normal_distance() {
+    fn test_normal_distance() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
             0, 0, 0,  
@@ -2047,16 +2024,17 @@ mod testing {
             0, 1, 2.0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
-        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
         // Both closed... is should work now
-        let d = this_loop.normal_distance(&other_loop).unwrap().abs();
+        let d = this_loop.normal_distance(&other_loop)?.abs();
         assert!((d - 2.0).abs() < 1e-4);
+        Ok(())
     }
 
     #[test]
-    fn test_normal_fail_not_normal() {
+    fn test_normal_fail_not_normal() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
             0, 0, 0,  
@@ -2070,15 +2048,16 @@ mod testing {
             1, 1, 2.0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
-        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
         // Both closed... is should work now
         assert!(this_loop.normal_distance(&other_loop).is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_snap_too_far() {
+    fn test_snap_too_far() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
             0, 0, 0,  
@@ -2092,15 +2071,16 @@ mod testing {
             1, 1, 2.0
         ]";
 
-        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
-        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
         let res = this_loop.snap(&other_loop.vertices(), 0.1);
         assert!(res.is_none());
+        Ok(())
     }
 
     #[test]
-    fn test_snap() {
+    fn test_snap() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
             0, 0, 0,  
@@ -2114,8 +2094,8 @@ mod testing {
             1, 1, 0.001 
         ]";
 
-        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
-        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
         let res = this_loop.snap(&other_loop.vertices(), 0.1);
         assert_eq!(res, Some(3));
@@ -2124,10 +2104,11 @@ mod testing {
         for (i, this_p) in this_loop.vertices.iter().enumerate() {
             assert!(this_p.compare(other_loop.vertices[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_snap_2() {
+    fn test_snap_2() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
             0, 0, 0,  
@@ -2141,15 +2122,16 @@ mod testing {
             1, 1, 1.01 
         ]";
 
-        let mut this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
-        let other_loop: Loop3D = serde_json::from_str(other_str).unwrap();
+        let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
         let res = this_loop.snap(&other_loop.vertices(), 0.1);
         assert_eq!(res, Some(2));
+        Ok(())
     }
 
     #[test]
-    fn test_intersect() {
+    fn test_intersect() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,  
             1, 0, 0,  
@@ -2157,7 +2139,7 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let seg = Segment3D::new(Point3D::new(0.5, -1., 0.), Point3D::new(0.5, 2., 0.));
         let intersections = this_loop.intersect(&seg);
@@ -2179,10 +2161,11 @@ mod testing {
         let intersections = this_loop.intersect(&seg);
         assert_eq!(intersections.len(), 1);
         assert!(intersections[0].1.compare(Point3D::new(0.5, 0., 0.)));
+        Ok(())
     }
 
     #[test]
-    fn test_clip() {
+    fn test_clip() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2190,7 +2173,7 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let other_str = "[
             -0.5, -1, 0,
@@ -2198,9 +2181,9 @@ mod testing {
             0.5, 2, 0,
             -0.5, 2, 0
         ]";
-        let other: Loop3D = serde_json::from_str(other_str).unwrap();
+        let other: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
-        let v = this_loop.clip(&other).unwrap();
+        let v = this_loop.clip(&other)?;
         // assert_eq!(v.len(), 2);
 
         let exp_pts = vec![
@@ -2212,10 +2195,11 @@ mod testing {
         for (i, p) in v.vertices.iter().enumerate() {
             assert!(p.compare(exp_pts[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_split_vertical() {
+    fn test_split_vertical() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2223,11 +2207,11 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let seg = Segment3D::new(Point3D::new(0.5, -1.0, 0.0), Point3D::new(0.5, 2.0, 0.0));
 
-        let v = this_loop.split(&seg).unwrap();
+        let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 2);
 
         let left = &v[0];
@@ -2255,10 +2239,11 @@ mod testing {
             println!("    {}", p);
             assert!(p.compare(right_exp_pts[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_split_horizontal() {
+    fn test_split_horizontal() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2266,11 +2251,11 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let seg = Segment3D::new(Point3D::new(-0.5, 0.5, 0.0), Point3D::new(1.5, 0.5, 0.0));
 
-        let v = this_loop.split(&seg).unwrap();
+        let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 2);
 
         let left = &v[0];
@@ -2298,10 +2283,11 @@ mod testing {
             println!("    {}", p);
             assert!(p.compare(right_exp_pts[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_split_edge() {
+    fn test_split_edge() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2309,11 +2295,11 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let seg = Segment3D::new(Point3D::new(0., 0., 0.0), Point3D::new(1., 0., 0.0));
 
-        let v = this_loop.split(&seg).unwrap();
+        let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 1);
 
         let left = &v[0];
@@ -2327,10 +2313,11 @@ mod testing {
             println!("    {}", p);
             assert!(p.compare(left_exp_pts[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_split_longer_edge() {
+    fn test_split_longer_edge() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2338,11 +2325,11 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let seg = Segment3D::new(Point3D::new(-10., 0., 0.0), Point3D::new(10., 0., 0.0));
 
-        let v = this_loop.split(&seg).unwrap();
+        let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 1);
 
         let left = &v[0];
@@ -2356,10 +2343,11 @@ mod testing {
             println!("    {}", p);
             assert!(p.compare(left_exp_pts[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_split_corner() {
+    fn test_split_corner() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2367,11 +2355,11 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let seg = Segment3D::new(Point3D::new(-10., 10., 0.0), Point3D::new(10., -10., 0.0));
 
-        let v = this_loop.split(&seg).unwrap();
+        let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 1);
 
         let left = &v[0];
@@ -2385,10 +2373,11 @@ mod testing {
             println!("    {}", p);
             assert!(p.compare(left_exp_pts[i]))
         }
+        Ok(())
     }
 
     #[test]
-    fn test_split_from_slice() {
+    fn test_split_from_slice() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2396,14 +2385,12 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
-        let v = this_loop
-            .split_from_slice(&vec![
-                Segment3D::new(Point3D::new(0.5, -1.0, 0.0), Point3D::new(0.5, 2.0, 0.0)),
-                Segment3D::new(Point3D::new(-0.5, 0.5, 0.0), Point3D::new(1.5, 0.5, 0.0)),
-            ])
-            .unwrap();
+        let v = this_loop.split_from_slice(&vec![
+            Segment3D::new(Point3D::new(0.5, -1.0, 0.0), Point3D::new(0.5, 2.0, 0.0)),
+            Segment3D::new(Point3D::new(-0.5, 0.5, 0.0), Point3D::new(1.5, 0.5, 0.0)),
+        ])?;
         assert_eq!(v.len(), 4);
 
         let exp = vec![
@@ -2441,10 +2428,11 @@ mod testing {
                 assert!(p.compare(exp[i][j]))
             }
         }
+        Ok(())
     }
 
     #[test]
-    fn test_segments() {
+    fn test_segments() -> Result<(), String> {
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
@@ -2452,7 +2440,7 @@ mod testing {
             0, 1, 0
         ]";
 
-        let this_loop: Loop3D = serde_json::from_str(this_str).unwrap();
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
         let segments = this_loop.segments();
 
@@ -2468,19 +2456,20 @@ mod testing {
         for i in 0..4 {
             assert!(expected[i].compare(&segments[i]));
         }
+        Ok(())
     }
 
     #[test]
-    fn test_reverse() {
+    fn test_reverse() -> Result<(), String> {
         let mut l = Loop3D::with_capacity(4);
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 1., 0.);
         let c = Point3D::new(0., 1., 0.);
 
-        l.push(a).unwrap();
-        l.push(b).unwrap();
-        l.push(c).unwrap();
-        l.close().unwrap();
+        l.push(a)?;
+        l.push(b)?;
+        l.push(c)?;
+        l.close()?;
 
         let normal = l.normal();
 
@@ -2492,19 +2481,20 @@ mod testing {
         assert!(a.compare(v[2]));
         assert!(b.compare(v[1]));
         assert!(c.compare(v[0]));
+        Ok(())
     }
 
     #[test]
-    fn test_get_reversed() {
+    fn test_get_reversed() -> Result<(), String> {
         let mut l = Loop3D::with_capacity(4);
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 1., 0.);
         let c = Point3D::new(0., 1., 0.);
 
-        l.push(a).unwrap();
-        l.push(b).unwrap();
-        l.push(c).unwrap();
-        l.close().unwrap();
+        l.push(a)?;
+        l.push(b)?;
+        l.push(c)?;
+        l.close()?;
 
         // reverse
         let rev_l = l.get_reversed();
@@ -2520,28 +2510,31 @@ mod testing {
             let rev_p = rev_v[n - 1 - i];
             assert!(p.compare(rev_p));
         }
+        Ok(())
     }
 
     #[test]
-    fn test_bbox() {
+    fn test_bbox() -> Result<(), String> {
         let mut l = Loop3D::with_capacity(4);
         let a = Point3D::new(0., 0., 0.);
         let b = Point3D::new(1., 1., 0.);
         let c = Point3D::new(0., 1., 0.);
 
-        l.push(a).unwrap();
-        let bbox = l.bbox().unwrap();
+        l.push(a)?;
+        let bbox = l.bbox()?;
         assert!(bbox.min.compare(a));
         assert!(bbox.max.compare(a));
 
-        l.push(b).unwrap();
-        let bbox = l.bbox().unwrap();
+        l.push(b)?;
+        let bbox = l.bbox()?;
         assert!(bbox.min.compare(a));
         assert!(bbox.max.compare(b));
 
-        l.push(c).unwrap();
-        let bbox = l.bbox().unwrap();
+        l.push(c)?;
+        let bbox = l.bbox()?;
         assert!(bbox.min.compare(a));
         assert!(bbox.max.compare(b));
+
+        Ok(())
     }
 }

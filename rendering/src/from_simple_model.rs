@@ -19,7 +19,7 @@ SOFTWARE.
 */
 
 use geometry::Triangulation3D;
-use model::{Model, Substance, FenestrationType};
+use model::{FenestrationType, Model, Substance};
 
 use crate::colour::Spectrum;
 use crate::material::{Glass, Material, Plastic};
@@ -63,7 +63,7 @@ impl SimpleModelReader {
         let mut triangle_map = Vec::with_capacity(model.surfaces.len() * 3);
 
         // Add surfaces
-        for (surface_i, s) in model.surfaces.iter().enumerate() {            
+        for (surface_i, s) in model.surfaces.iter().enumerate() {
             let polygon = &s.vertices;
             let c_name = &s.construction;
             let construction = model.get_construction(c_name)?;
@@ -86,7 +86,10 @@ impl SimpleModelReader {
                 )
                 });
 
-            let last_mat_name = construction.materials.last().unwrap();
+            let last_mat_name = construction
+                .materials
+                .last()
+                .ok_or("Could not get last material")?;
             let back_substance = model.get_material_substance(last_mat_name)?;
             let back_mat_index = self
                 .push_substance(&mut scene, &back_substance, wavelength)
@@ -109,12 +112,10 @@ impl SimpleModelReader {
 
         // Add fenestrations
         for (fen_i, s) in model.fenestrations.iter().enumerate() {
-            
             // Openings are not material surfaces.
-            if let FenestrationType::Opening = s.category{
+            if let FenestrationType::Opening = s.category {
                 continue;
             }
-            
 
             let polygon = &s.vertices;
             let con_name = &s.construction;
@@ -136,7 +137,10 @@ impl SimpleModelReader {
                     construction.name()
                 )
                 });
-            let back_material_name = construction.materials.last().unwrap();
+            let back_material_name = construction
+                .materials
+                .last()
+                .ok_or("Could not get last material")?;
             let back_substance = model.get_material_substance(back_material_name)?;
             let back_mat_index = self
                 .push_substance(&mut scene, &back_substance, wavelength)
@@ -148,7 +152,9 @@ impl SimpleModelReader {
                 });
 
             // Add all the triangles necessary
-            let t: Triangulation3D = polygon.try_into().unwrap();
+            let t: Triangulation3D = polygon
+                .try_into()
+                .map_err(|e| format!("Could not transform polyton into triantilagion: {}", e))?;
 
             let triangles = t.get_trilist();
             for tri in triangles {
@@ -271,12 +277,11 @@ mod tests {
 
     #[test]
     #[ignore]
-    fn test_scene_from_model() {
+    fn test_scene_from_model() -> Result<(), String> {
         // BUILD SCENE
-        let (model, _state_header) =
-            Model::from_file("./tests/scenes/room.spl".to_string()).unwrap();
+        let (model, _state_header) = Model::from_file("./tests/scenes/room.spl".to_string())?;
         let mut reader = SimpleModelReader::default();
-        let (mut scene, map) = reader.build_scene(&model, &Wavelengths::Solar).unwrap();
+        let (mut scene, map) = reader.build_scene(&model, &Wavelengths::Solar)?;
 
         assert_eq!(map.len(), scene.triangles.len());
 
@@ -320,11 +325,11 @@ mod tests {
         println!("Room took {} seconds to render", now.elapsed().as_secs());
         buffer.save_hdre(std::path::Path::new(
             "./tests/scenes/images/simple_room.hdr",
-        ));
+        ))
     }
 
     #[test]
-    fn test_map() {
+    fn test_map() -> Result<(), String> {
         let mut model = Model::default();
         let construction_name = "the construction";
         let sub = model::substance::Normal::new("the sub").wrap();
@@ -338,12 +343,12 @@ mod tests {
 
         /* SINGLE SURFACE -  A TRIANGLE */
         let mut the_l = Loop3D::with_capacity(3);
-        the_l.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_l.push(Point3D::new(1., 0., 0.)).unwrap();
-        the_l.push(Point3D::new(0., 1., 0.)).unwrap();
-        the_l.close().unwrap();
+        the_l.push(Point3D::new(0., 0., 0.))?;
+        the_l.push(Point3D::new(1., 0., 0.))?;
+        the_l.push(Point3D::new(0., 1., 0.))?;
+        the_l.close()?;
 
-        let poly = Polygon3D::new(the_l).unwrap();
+        let poly = Polygon3D::new(the_l)?;
 
         let s = Surface::new(
             "some surf",
@@ -355,7 +360,7 @@ mod tests {
         model.add_surface(s);
 
         let mut r = SimpleModelReader::default();
-        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar).unwrap();
+        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
         assert_eq!(scene.triangles.len(), map.len());
 
         assert_eq!(map.len(), 1);
@@ -365,13 +370,13 @@ mod tests {
 
         /* A TRIANGLE AND A SQUARE */
         let mut the_l = Loop3D::with_capacity(3);
-        the_l.push(Point3D::new(0., 0., 0.)).unwrap();
-        the_l.push(Point3D::new(1., 0., 0.)).unwrap();
-        the_l.push(Point3D::new(1., 1., 0.)).unwrap();
-        the_l.push(Point3D::new(0., 1., 0.)).unwrap();
-        the_l.close().unwrap();
+        the_l.push(Point3D::new(0., 0., 0.))?;
+        the_l.push(Point3D::new(1., 0., 0.))?;
+        the_l.push(Point3D::new(1., 1., 0.))?;
+        the_l.push(Point3D::new(0., 1., 0.))?;
+        the_l.close()?;
 
-        let poly = Polygon3D::new(the_l).unwrap();
+        let poly = Polygon3D::new(the_l)?;
 
         let s = Surface::new(
             "another surf",
@@ -383,7 +388,7 @@ mod tests {
         model.add_surface(s);
 
         let mut r = SimpleModelReader::default();
-        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar).unwrap();
+        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
         assert_eq!(scene.triangles.len(), map.len());
 
         assert_eq!(map.len(), 3);
@@ -400,13 +405,13 @@ mod tests {
 
         /* A TRIANGLE AND A SQUARE AND A FENESTRATION */
         let mut the_l = Loop3D::with_capacity(3);
-        the_l.push(Point3D::new(0., 0., 1.)).unwrap();
-        the_l.push(Point3D::new(1., 0., 1.)).unwrap();
-        the_l.push(Point3D::new(1., 1., 1.)).unwrap();
-        the_l.push(Point3D::new(0., 1., 1.)).unwrap();
-        the_l.close().unwrap();
+        the_l.push(Point3D::new(0., 0., 1.))?;
+        the_l.push(Point3D::new(1., 0., 1.))?;
+        the_l.push(Point3D::new(1., 1., 1.))?;
+        the_l.push(Point3D::new(0., 1., 1.))?;
+        the_l.close()?;
 
-        let poly = Polygon3D::new(the_l).unwrap();
+        let poly = Polygon3D::new(the_l)?;
 
         let s = Fenestration::new(
             "some fen",
@@ -416,10 +421,10 @@ mod tests {
             model::Boundary::default(),
             model::Boundary::default(),
         );
-        model.add_fenestration(s).unwrap();
+        model.add_fenestration(s)?;
 
         let mut r = SimpleModelReader::default();
-        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar).unwrap();
+        let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
         assert_eq!(scene.triangles.len(), map.len());
 
         assert_eq!(map.len(), 5);
@@ -439,5 +444,7 @@ mod tests {
         let (element_type, index) = map[4];
         assert_eq!(element_type, SceneElement::Fenestration);
         assert_eq!(0, index);
+
+        Ok(())
     }
 }

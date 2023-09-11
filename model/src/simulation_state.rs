@@ -265,16 +265,14 @@ mod testing {
     }
 
     #[test]
-    fn test_push() {
+    fn test_push() -> Result<(), String> {
         let mut state = SimulationStateHeader::new();
         assert_eq!(0, state.len());
 
         // Add one operational
         assert_eq!(
             0,
-            state
-                .push(SimulationStateElement::LuminairePowerConsumption(0), 1.0)
-                .unwrap()
+            state.push(SimulationStateElement::LuminairePowerConsumption(0), 1.0)?
         );
         assert_eq!(1, state.len());
         assert_eq!(1, state.n_operational());
@@ -288,9 +286,7 @@ mod testing {
 
         assert_eq!(
             1,
-            state
-                .push(SimulationStateElement::LuminairePowerConsumption(0), 12.0)
-                .unwrap()
+            state.push(SimulationStateElement::LuminairePowerConsumption(0), 12.0)?
         );
         assert_eq!(2, state.len());
         assert_eq!(2, state.n_operational());
@@ -304,9 +300,7 @@ mod testing {
         // push a physical one
         assert_eq!(
             2,
-            state
-                .push(SimulationStateElement::SpaceDryBulbTemperature(2), 2.)
-                .unwrap()
+            state.push(SimulationStateElement::SpaceDryBulbTemperature(2), 2.)?
         );
         assert_eq!(3, state.len());
         assert_eq!(2, state.n_operational());
@@ -316,6 +310,7 @@ mod testing {
         } else {
             assert!(false)
         }
+        Ok(())
     }
 
     #[test]
@@ -339,31 +334,23 @@ mod testing {
     }
 
     #[test]
-    fn test_copy_operational_state() {
+    fn test_copy_operational_state() -> Result<(), String> {
         /* CREATE STATE 1 */
         let mut headers = SimulationStateHeader::new();
 
         // Add individual ones
-        headers.push(SimulationStateElement::Clothing, 0.0).unwrap();
-        headers.push(SimulationStateElement::Clothing, 1.0).unwrap();
+        headers.push(SimulationStateElement::Clothing, 0.0)?;
+        headers.push(SimulationStateElement::Clothing, 1.0)?;
 
         // Add operational ones
-        headers
-            .push(SimulationStateElement::LuminairePowerConsumption(1), 2.0)
-            .unwrap();
-        headers
-            .push(SimulationStateElement::LuminairePowerConsumption(1), 3.0)
-            .unwrap();
+        headers.push(SimulationStateElement::LuminairePowerConsumption(1), 2.0)?;
+        headers.push(SimulationStateElement::LuminairePowerConsumption(1), 3.0)?;
 
         // push physical ones
-        headers
-            .push(SimulationStateElement::SpaceDryBulbTemperature(1), 4.)
-            .unwrap();
-        headers
-            .push(SimulationStateElement::SpaceDryBulbTemperature(1), 5.)
-            .unwrap();
+        headers.push(SimulationStateElement::SpaceDryBulbTemperature(1), 4.)?;
+        headers.push(SimulationStateElement::SpaceDryBulbTemperature(1), 5.)?;
 
-        let state1: SimulationState = headers.take_values().unwrap();
+        let state1: SimulationState = headers.take_values().ok_or("Could not take values")?;
         let mut state2: SimulationState = vec![-1.; state1.len()];
 
         headers.copy_operational_state(&state1, &mut state2);
@@ -381,34 +368,28 @@ mod testing {
         // Check that the physical states were untouched
         assert_eq!(state2[4], -1.);
         assert_eq!(state2[5], -1.);
+
+        Ok(())
     }
 
     #[test]
-    fn test_copy_individual_state() {
+    fn test_copy_individual_state() -> Result<(), String> {
         /* CREATE STATE 1 */
         let mut headers = SimulationStateHeader::new();
 
         // Add individual ones
-        headers.push(SimulationStateElement::Clothing, 0.0).unwrap();
-        headers.push(SimulationStateElement::Clothing, 1.0).unwrap();
+        headers.push(SimulationStateElement::Clothing, 0.0)?;
+        headers.push(SimulationStateElement::Clothing, 1.0)?;
 
         // Add operational ones
-        headers
-            .push(SimulationStateElement::LuminairePowerConsumption(1), 2.0)
-            .unwrap();
-        headers
-            .push(SimulationStateElement::LuminairePowerConsumption(1), 3.0)
-            .unwrap();
+        headers.push(SimulationStateElement::LuminairePowerConsumption(1), 2.0)?;
+        headers.push(SimulationStateElement::LuminairePowerConsumption(1), 3.0)?;
 
         // push physical ones
-        headers
-            .push(SimulationStateElement::SpaceDryBulbTemperature(1), 4.)
-            .unwrap();
-        headers
-            .push(SimulationStateElement::SpaceDryBulbTemperature(1), 5.)
-            .unwrap();
+        headers.push(SimulationStateElement::SpaceDryBulbTemperature(1), 4.)?;
+        headers.push(SimulationStateElement::SpaceDryBulbTemperature(1), 5.)?;
 
-        let state1: SimulationState = headers.take_values().unwrap();
+        let state1: SimulationState = headers.take_values().ok_or("Could not take values")?;
         let mut state2: SimulationState = vec![-1.; state1.len()];
 
         headers.copy_individual_state(&state1, &mut state2);
@@ -426,34 +407,27 @@ mod testing {
         // Check that the physical states were untouched
         assert_eq!(state2[4], -1.);
         assert_eq!(state2[5], -1.);
+        Ok(())
     }
 
     #[test]
-    fn test_copy_physical_state() {
+    fn test_copy_physical_state() -> Result<(), String> {
         /* CREATE STATE 1 */
         let mut headers = SimulationStateHeader::new();
 
         // Add individual ones
-        headers.push(SimulationStateElement::Clothing, 0.0).unwrap();
-        headers.push(SimulationStateElement::Clothing, 1.0).unwrap();
+        headers.push(SimulationStateElement::Clothing, 0.0)?;
+        headers.push(SimulationStateElement::Clothing, 1.0)?;
 
         // Add operational ones
-        headers
-            .push(SimulationStateElement::LuminairePowerConsumption(1), 2.0)
-            .unwrap();
-        headers
-            .push(SimulationStateElement::LuminairePowerConsumption(1), 3.0)
-            .unwrap();
+        headers.push(SimulationStateElement::LuminairePowerConsumption(1), 2.0)?;
+        headers.push(SimulationStateElement::LuminairePowerConsumption(1), 3.0)?;
 
         // push physical ones
-        headers
-            .push(SimulationStateElement::SpaceDryBulbTemperature(1), 4.)
-            .unwrap();
-        headers
-            .push(SimulationStateElement::SpaceDryBulbTemperature(1), 5.)
-            .unwrap();
+        headers.push(SimulationStateElement::SpaceDryBulbTemperature(1), 4.)?;
+        headers.push(SimulationStateElement::SpaceDryBulbTemperature(1), 5.)?;
 
-        let state1: SimulationState = headers.take_values().unwrap();
+        let state1: SimulationState = headers.take_values().ok_or("Could not take values")?;
         let mut state2: SimulationState = vec![-1.; state1.len()];
 
         headers.copy_physical_state(&state1, &mut state2);
@@ -471,5 +445,6 @@ mod testing {
         // Check that the physical states were copied
         assert_eq!(state2[4], 4.);
         assert_eq!(state2[5], 5.);
+        Ok(())
     }
 }
