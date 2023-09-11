@@ -29,6 +29,7 @@ use std::sync::Arc;
 /// Represents a thermal connection in the thermal network.
 /// It can be a Cavity, a Solid, or other.
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub enum UValue {
     /// A normal (i.e., $`\lambda/\Delta x`$) U-value
     Solid(Float),
@@ -40,6 +41,7 @@ pub enum UValue {
     Back,
 
     /// Undefined yet
+    #[default]
     None,
 }
 
@@ -55,11 +57,7 @@ impl UValue {
     }
 }
 
-impl std::default::Default for UValue {
-    fn default() -> Self {
-        UValue::None
-    }
-}
+
 
 /// Represents the discretization of a [`Construction`] for heat transfer
 /// calculation purposes.
