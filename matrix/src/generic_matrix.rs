@@ -518,15 +518,17 @@ mod tests {
     use crate::{Float, GenericMatrix, Matrix};
 
     #[test]
-    fn test_serde() {
+    fn test_serde() -> Result<(), String> {
         // use serde::{Deserialize, Serialize};
 
         let m = Matrix::from_data(2, 2, vec![1., 2., 3., 4.]);
-        let json = serde_json::to_string(&m).unwrap();
+        let json = serde_json::to_string(&m).map_err(|e| e.to_string())?;
         println!("{}", json);
 
-        let m2: Matrix = serde_json::from_str(&json).unwrap();
+        let m2: Matrix = serde_json::from_str(&json).map_err(|e| e.to_string())?;
         println!("{}", &m2);
+
+        Ok(())
     }
 
     #[test]
@@ -606,7 +608,7 @@ mod tests {
     }
 
     #[test]
-    fn test_diag() {
+    fn test_diag() -> Result<(), String> {
         let v = vec![1., 2., 3., 4.];
         let m = Matrix::diag(v.clone());
         assert_eq!(m.nrows, v.len());
@@ -617,16 +619,18 @@ mod tests {
         for c in 0..n {
             for r in 0..n {
                 if r == c {
-                    assert_eq!(m.get(c, r).unwrap(), v[c])
+                    assert_eq!(m.get(c, r)?, v[c])
                 } else {
-                    assert_eq!(m.get(c, r).unwrap(), 0.0)
+                    assert_eq!(m.get(c, r)?, 0.0)
                 }
             }
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_eye() {
+    fn test_eye() -> Result<(), String> {
         let n = 3;
         let t = Matrix::eye(n);
         assert_eq!(t.nrows, n);
@@ -637,12 +641,14 @@ mod tests {
         for row in 0..n {
             for col in 0..n {
                 if row == col {
-                    assert_eq!(t.get(row, col).unwrap(), 1.);
+                    assert_eq!(t.get(row, col)?, 1.);
                 } else {
-                    assert_eq!(t.get(row, col).unwrap(), 0.);
+                    assert_eq!(t.get(row, col)?, 0.);
                 }
             }
         }
+
+        Ok(())
     }
     #[test]
     fn test_empty() {
@@ -693,47 +699,48 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_get_fail_1() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.get(nrows + 1, ncols + 1).unwrap();
+        let res = a.get(nrows + 1, ncols + 1);
+        assert!(res.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_get_fail_2() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.get(nrows, ncols).unwrap();
+        let res = a.get(nrows, ncols);
+        assert!(res.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_get_fail_3() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.get(nrows - 1, ncols).unwrap();
+        let res = a.get(nrows - 1, ncols);
+        assert!(res.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_get_fail_4() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.get(nrows, ncols - 1).unwrap();
+        let res = a.get(nrows, ncols - 1);
+
+        assert!(res.is_err());
     }
 
     #[test]
@@ -746,14 +753,7 @@ mod tests {
         for r in 0..nrows {
             for c in 0..ncols {
                 let result = a.set(r, c, count);
-                match result {
-                    Err(_e) => {
-                        assert!(false)
-                    }
-                    Ok(_v) => {
-                        assert!(true)
-                    }
-                }
+                assert!(result.is_ok());
                 count += 1.0;
             }
         }
@@ -765,65 +765,68 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_set_fail_1() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let mut a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.set(nrows + 1, ncols + 1, 12.3).unwrap();
+        let res = a.set(nrows + 1, ncols + 1, 12.3);
+        assert!(res.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_set_fail_2() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let mut a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.set(nrows, ncols, 12.3).unwrap();
+        let res = a.set(nrows, ncols, 12.3);
+        assert!(res.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_set_fail_3() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let mut a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.set(nrows - 1, ncols, 12.3).unwrap();
+        let res = a.set(nrows - 1, ncols, 12.3);
+        assert!(res.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_set_fail_4() {
         let nrows: usize = 3;
         let ncols: usize = 4;
         let mut a = Matrix::new(0.0, nrows, ncols);
 
         // Should fail
-        let _ = a.set(nrows + 1, ncols - 1, 12.3).unwrap();
+        let res = a.set(nrows + 1, ncols - 1, 12.3);
+        assert!(res.is_err());
     }
 
     #[test]
-    fn test_add_to_element() {
+    fn test_add_to_element() -> Result<(), String> {
         let mut a = Matrix::new(0.0, 5, 5);
-        a.add_to_element(0, 0, 2.).unwrap();
-        assert!((a.get(0, 0).unwrap() - 2.).abs() < 1e-29);
+        a.add_to_element(0, 0, 2.)?;
+        assert!((a.get(0, 0)? - 2.).abs() < 1e-29);
+        Ok(())
     }
 
     #[test]
-    fn test_scale_element() {
+    fn test_scale_element() -> Result<(), String> {
         let mut a = Matrix::new(3.0, 5, 5);
-        a.scale_element(0, 0, 2.).unwrap();
-        assert!((a.get(0, 0).unwrap() - 6.).abs() < 1e-29);
+        a.scale_element(0, 0, 2.)?;
+        assert!((a.get(0, 0)? - 6.).abs() < 1e-29);
+
+        Ok(())
     }
 
     #[test]
-    fn test_add_correct() {
+    fn test_add_correct() -> Result<(), String> {
         let nrows: usize = 2;
         let ncols: usize = 2;
         let a_val: Float = 2.0;
@@ -846,14 +849,14 @@ mod tests {
 
         // Try ugly add
         let mut result = Matrix::new(0.0, nrows, ncols);
-        a.add_into(&b, &mut result).unwrap();
+        a.add_into(&b, &mut result)?;
         for i in 0..result.data.len() {
             assert_eq!(result.data[i], a_val + b_val);
         }
 
         // Try add_into
         let mut result = Matrix::new(0.0, nrows, ncols);
-        a.add_into(&b, &mut result).unwrap();
+        a.add_into(&b, &mut result)?;
         for i in 0..result.data.len() {
             assert_eq!(result.data[i], a_val + b_val);
         }
@@ -863,6 +866,8 @@ mod tests {
         for i in 0..a.data.len() {
             assert_eq!(a.data[i], a_val + b_val);
         }
+
+        Ok(())
     }
 
     #[test]
@@ -880,7 +885,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_add_fail_2() {
         let nrows: usize = 2;
         let ncols: usize = 2;
@@ -890,7 +894,9 @@ mod tests {
         let b_val: Float = 12.0;
         let b = Matrix::new(b_val, nrows, 2 * ncols);
         let mut c = Matrix::new(0.0, nrows, ncols);
-        let _ = a.add_into(&b, &mut c).unwrap();
+        let res = a.add_into(&b, &mut c);
+
+        assert!(res.is_err());
     }
 
     #[test]
@@ -907,7 +913,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sub_correct() {
+    fn test_sub_correct() -> Result<(), String> {
         // Ok addition.
         let nrows: usize = 2;
         let ncols: usize = 2;
@@ -931,14 +937,14 @@ mod tests {
 
         // Try the ugly sub
         let mut result = Matrix::new(0.0, nrows, ncols);
-        a.sub_into(&b, &mut result).unwrap();
+        a.sub_into(&b, &mut result)?;
         for i in 0..result.data.len() {
             assert_eq!(result.data[i], a_val - b_val);
         }
 
         // Try sub_into
         let mut result = Matrix::new(0.0, nrows, ncols);
-        a.sub_into(&b, &mut result).unwrap();
+        a.sub_into(&b, &mut result)?;
         for i in 0..result.data.len() {
             assert_eq!(result.data[i], a_val - b_val);
         }
@@ -949,6 +955,8 @@ mod tests {
         for i in 0..a.data.len() {
             assert_eq!(a.data[i], a_val - b_val);
         }
+
+        Ok(())
     }
 
     #[test]
@@ -966,7 +974,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_sub_fail_2() {
         let nrows: usize = 2;
         let ncols: usize = 2;
@@ -976,7 +983,8 @@ mod tests {
         let b_val: Float = 12.0;
         let b = Matrix::new(b_val, nrows, 2 * ncols);
         let mut c = Matrix::new(0.0, nrows, ncols);
-        let _ = a.sub_into(&b, &mut c).unwrap();
+        let res = a.sub_into(&b, &mut c);
+        assert!(res.is_err());
     }
 
     #[test]
@@ -996,7 +1004,7 @@ mod tests {
     /* SCALE */
     /*******/
     #[test]
-    fn test_scale() {
+    fn test_scale() -> Result<(), String> {
         let a_val: Float = 2.0;
         let s: Float = 32.2;
         let a = Matrix::new(a_val, 23, 56);
@@ -1016,7 +1024,7 @@ mod tests {
 
         // scale_into
         let mut aprime = a.clone();
-        a.scale_into(s, &mut aprime).unwrap();
+        a.scale_into(s, &mut aprime)?;
         for i in 0..aprime.data.len() {
             assert_eq!(aprime.data[i], a_val * s);
         }
@@ -1036,10 +1044,12 @@ mod tests {
 
         // div_into
         let mut aprime = a.clone();
-        a.scale_into(1. / s, &mut aprime).unwrap();
+        a.scale_into(1. / s, &mut aprime)?;
         for i in 0..aprime.data.len() {
             assert_eq!(aprime.data[i], a_val / s);
         }
+
+        Ok(())
     }
 
     #[test]
@@ -1085,7 +1095,7 @@ mod tests {
     /* MULT */
     /********/
     #[test]
-    fn test_prod_into() {
+    fn test_prod_into() -> Result<(), String> {
         let a_rows: usize = 16;
         let a_cols: usize = a_rows;
         let a_val: Float = 12.0;
@@ -1098,7 +1108,7 @@ mod tests {
 
         // Ugly old way
         let mut value = Matrix::new(123., a_rows, b_cols);
-        a.prod_into(&b, &mut value).unwrap();
+        a.prod_into(&b, &mut value)?;
         println!("{}", value);
         assert_eq!(value.ncols, b_cols);
         assert_eq!(value.nrows, a_rows);
@@ -1115,6 +1125,8 @@ mod tests {
                 }
             }
         }
+
+        Ok(())
     }
 
     #[test]
@@ -1187,7 +1199,7 @@ mod tests {
     }
 
     #[test]
-    fn test_prod_n_diag() {
+    fn test_prod_n_diag() -> Result<(), String> {
         // Check that we are adding the correct amount of rows/cols
         let n = 3;
         let n_rows: usize = 23;
@@ -1197,26 +1209,28 @@ mod tests {
         for r in 0..n_rows {
             for c in 0..n_rows {
                 if r == c || r + 1 == c || r == c + 1 {
-                    a.set(r, c, a_val).unwrap();
+                    a.set(r, c, a_val)?;
                 }
             }
         }
 
         let b = Matrix::new(1.0, n_rows, 1);
 
-        let c = a.from_prod_n_diag(&b, n).unwrap();
+        let c = a.from_prod_n_diag(&b, n)?;
 
         for i in 0..n_rows {
             if i == 0 || i == n_rows - 1 {
-                assert_eq!(2.0 * a_val, c.get(i, 0).unwrap());
+                assert_eq!(2.0 * a_val, c.get(i, 0)?);
             } else {
-                assert_eq!(3.0 * a_val, c.get(i, 0).unwrap());
+                assert_eq!(3.0 * a_val, c.get(i, 0)?);
             }
         }
 
         let other_c = &a * &b;
 
         assert!(c.compare(&other_c));
+
+        Ok(())
     }
 
     /********/
@@ -1235,52 +1249,54 @@ mod tests {
     }
 
     #[test]
-    fn test_concat() {
+    fn test_concat() -> Result<(), String> {
         let mut a = Matrix::new(1.0, 10, 10);
         let b = Matrix::new(5.0, 2, 10);
 
-        a.concat_rows(&b).unwrap();
+        a.concat_rows(&b)?;
         assert_eq!(a.size(), (12, 10));
         for row in 0..12 {
             for col in 0..10 {
                 if row < 10 {
-                    assert_eq!(1.0, a.get(row, col).unwrap());
+                    assert_eq!(1.0, a.get(row, col)?);
                 } else {
-                    assert_eq!(5.0, a.get(row, col).unwrap());
+                    assert_eq!(5.0, a.get(row, col)?);
                 }
             }
         }
+
+        Ok(())
     }
 
     #[test]
-    #[should_panic]
     fn test_gauss_seidel_exp_fail_non_squared() {
         let a = Matrix::from_data(2, 1, vec![16., 3.]);
         let b = Matrix::from_data(2, 1, vec![11., 13.]);
         let mut x = b.clone();
-        a.gauss_seidel(&b, &mut x, 1, 1.).unwrap();
+        let ret = a.gauss_seidel(&b, &mut x, 1, 1.);
+        assert!(ret.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_gauss_seidel_exp_fail_wrong_ncols() {
         let a = Matrix::from_data(2, 2, vec![16., 3., 2.1, 50.]);
         let b = Matrix::from_data(3, 1, vec![11., 13., 0.2]);
         let mut x = b.clone();
-        a.gauss_seidel(&b, &mut x, 1, 1.).unwrap();
+        let res = a.gauss_seidel(&b, &mut x, 1, 1.);
+        assert!(res.is_err());
     }
 
     #[test]
-    #[should_panic]
     fn test_gauss_seidel_exp_fail_wrong_ncols_2() {
         let a = Matrix::from_data(2, 2, vec![16., 3., 2.1, 50.]);
         let b = Matrix::from_data(2, 1, vec![11., 13.]);
         let mut x = Matrix::from_data(3, 1, vec![11., 13., 0.2]);
-        a.gauss_seidel(&b, &mut x, 1, 1.).unwrap();
+        let res = a.gauss_seidel(&b, &mut x, 1, 1.);
+        assert!(res.is_err());
     }
 
     #[test]
-    fn test_gauss_seidel() {
+    fn test_gauss_seidel() -> Result<(), String> {
         // Example 1
         let a = Matrix::from_data(2, 2, vec![16., 3., 7., -11.]);
         let b = Matrix::from_data(2, 1, vec![11., 13.]);
@@ -1288,7 +1304,7 @@ mod tests {
         let mut x = Matrix::new(1.0, 2, 1);
         let exp_x = Matrix::from_data(2, 1, vec![0.8122, -0.6650]);
 
-        a.gauss_seidel(&b, &mut x, 20, 0.001).unwrap();
+        a.gauss_seidel(&b, &mut x, 20, 0.001)?;
         println!("{}", &x - &exp_x);
 
         // Example 2
@@ -1306,12 +1322,13 @@ mod tests {
         let mut x = Matrix::from_data(4, 1, vec![0.; 4]);
         let exp_x = Matrix::from_data(4, 1, vec![1., 2., -1., 1.]);
 
-        a.gauss_seidel(&b, &mut x, 20, 0.0001).unwrap();
+        a.gauss_seidel(&b, &mut x, 20, 0.0001)?;
         println!("{}", &x - &exp_x);
+
+        Ok(())
     }
 
     #[test]
-    #[should_panic]
     fn test_gauss_seidel_non_converge() {
         // Example 1
 
@@ -1321,12 +1338,13 @@ mod tests {
         let mut x = Matrix::new(1.0, 2, 1);
         let exp_x = Matrix::from_data(2, 1, vec![0.8122, -0.6650]);
 
-        a.gauss_seidel(&b, &mut x, 20, 0.001).unwrap();
+        let res = a.gauss_seidel(&b, &mut x, 20, 0.001);
+        assert!(res.is_err());
         println!("{}", &x - &exp_x);
     }
 
     #[test]
-    fn test_n_diag_gaussian_elimination() {
+    fn test_n_diag_gaussian_elimination() -> Result<(), String> {
         #[cfg(not(feature = "float"))]
         const TINY: Float = 1e-8;
         #[cfg(feature = "float")]
@@ -1338,13 +1356,13 @@ mod tests {
         let exp_x = Matrix::from_data(2, 1, vec![-38., 29.]);
         let b = &a * &exp_x;
 
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3).unwrap();
+        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
 
-        let other_x = a.n_diag_gaussian(&b, 3).unwrap();
+        let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
 
         // Example 2
@@ -1352,12 +1370,12 @@ mod tests {
         let a = Matrix::from_data(2, 2, vec![16., 3., 7., -11.]);
         let exp_x = Matrix::from_data(2, 1, vec![0.8122, -0.6650]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 4).unwrap();
+        let x = a.clone().mut_n_diag_gaussian(b.clone(), 4)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
-        let other_x = a.n_diag_gaussian(&b, 3).unwrap();
+        let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
 
         // Example 3
@@ -1372,12 +1390,12 @@ mod tests {
 
         let exp_x = Matrix::from_data(4, 1, vec![1., 2., 3., 4.]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3).unwrap();
+        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
-        let other_x = a.n_diag_gaussian(&b, 3).unwrap();
+        let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
 
         // Example 4
@@ -1392,12 +1410,12 @@ mod tests {
         );
         let exp_x = Matrix::from_data(5, 1, vec![1., 2., 3., 4., 5.]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 5).unwrap();
+        let x = a.clone().mut_n_diag_gaussian(b.clone(), 5)?;
         println!("delta = {}", &x - &exp_x);
         println!("x = {}", &x);
         println!("b = {}", &b);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
-        let other_x = a.n_diag_gaussian(&b, 5).unwrap();
+        let other_x = a.n_diag_gaussian(&b, 5)?;
         println!("other_x -- {}", &other_x);
         println!("other -- {}", &other_x - &exp_x);
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
@@ -1407,13 +1425,15 @@ mod tests {
         let a = Matrix::from_data(3, 3, vec![-8.4, 8.4, 0., 8.4, -16.8, 8.4, 0., 8.4, -18.6]);
         let exp_x = Matrix::from_data(3, 1, vec![120., 0., 120.]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3).unwrap();
+        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
         println!("x - exp_x = {}", &x - &exp_x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
-        let other_x = a.n_diag_gaussian(&b, 3).unwrap();
+        let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
+
+        Ok(())
     }
 }

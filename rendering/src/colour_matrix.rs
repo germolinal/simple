@@ -65,20 +65,20 @@ pub fn save_colour_matrix(cm: &ColourMatrix, filename: &Path) -> Result<(), Stri
 
     // Header
     let (nrows, ncols) = cm.size();
-    writeln!(&mut file, "#?SIMPLE").unwrap();
-    writeln!(&mut file, "NROWS={}", nrows).unwrap();
-    writeln!(&mut file, "NCOLS={}", ncols).unwrap();
-    writeln!(&mut file, "NCOMP=3").unwrap();
-    writeln!(&mut file, "FORMAT=ascii").unwrap();
-    writeln!(&mut file).unwrap();
+    writeln!(&mut file, "#?SIMPLE").map_err(|e| e.to_string())?;
+    writeln!(&mut file, "NROWS={}", nrows).map_err(|e| e.to_string())?;
+    writeln!(&mut file, "NCOLS={}", ncols).map_err(|e| e.to_string())?;
+    writeln!(&mut file, "NCOMP=3").map_err(|e| e.to_string())?;
+    writeln!(&mut file, "FORMAT=ascii").map_err(|e| e.to_string())?;
+    writeln!(&mut file).map_err(|e| e.to_string())?;
 
     // Body
     for r in 0..nrows {
         for c in 0..ncols {
-            let v = cm.get(r, c).unwrap();
-            write!(&mut file, "{}\t", v).unwrap();
+            let v = cm.get(r, c)?;
+            write!(&mut file, "{}\t", v).map_err(|e| e.to_string())?;
         }
-        writeln!(&mut file).unwrap();
+        writeln!(&mut file).map_err(|e| e.to_string())?;
     }
     // return
     Ok(())
@@ -92,20 +92,20 @@ pub fn save_matrix(cm: &Matrix, filename: &Path) -> Result<(), String> {
 
     // Header
     let (nrows, ncols) = cm.size();
-    writeln!(&mut file, "#?SIMPLE").unwrap();
-    writeln!(&mut file, "NROWS={}", nrows).unwrap();
-    writeln!(&mut file, "NCOLS={}", ncols).unwrap();
-    writeln!(&mut file, "NCOMP=1").unwrap();
-    writeln!(&mut file, "FORMAT=ascii").unwrap();
-    writeln!(&mut file).unwrap();
+    writeln!(&mut file, "#?SIMPLE").map_err(|e| e.to_string())?;
+    writeln!(&mut file, "NROWS={}", nrows).map_err(|e| e.to_string())?;
+    writeln!(&mut file, "NCOLS={}", ncols).map_err(|e| e.to_string())?;
+    writeln!(&mut file, "NCOMP=1").map_err(|e| e.to_string())?;
+    writeln!(&mut file, "FORMAT=ascii").map_err(|e| e.to_string())?;
+    writeln!(&mut file).map_err(|e| e.to_string())?;
 
     // Body
     for r in 0..nrows {
         for c in 0..ncols {
-            let v = cm.get(r, c).unwrap();
-            write!(&mut file, "{}\t", v).unwrap();
+            let v = cm.get(r, c)?;
+            write!(&mut file, "{}\t", v).map_err(|e| e.to_string())?;
         }
-        writeln!(&mut file).unwrap();
+        writeln!(&mut file).map_err(|e| e.to_string())?;
     }
     // return
     Ok(())
@@ -117,11 +117,15 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
         Err(_) => {
             return Err(format!(
                 "Could not read Matrix file '{}'",
-                filename.to_str().unwrap()
+                filename
+                    .to_str()
+                    .ok_or("Could not transform filename into str")?
             ))
         }
     };
-    let filename = filename.to_str().unwrap();
+    let filename = filename
+        .to_str()
+        .ok_or("Could not transform filename into str")?;
 
     // Read header
     let mut nrows: Option<usize> = None;
@@ -203,8 +207,8 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
             filename
         ));
     }
-    let nrows = nrows.unwrap();
-    let ncols = ncols.unwrap();
+    let nrows = nrows.ok_or("Number of rows was not found")?;
+    let ncols = ncols.ok_or("Number of columns was not found")?;
     let mut matrix = ColourMatrix::new(Spectrum::BLACK, nrows, ncols);
 
     // Read content.
@@ -249,9 +253,7 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
                 }
             };
 
-            matrix
-                .set(nrow, ncol, Spectrum([red, green, blue]))
-                .unwrap();
+            matrix.set(nrow, ncol, Spectrum([red, green, blue]))?;
 
             ncol += 1;
         }
@@ -267,15 +269,24 @@ pub fn read_matrix(filename: &Path) -> Result<Matrix, String> {
         Err(_) => {
             return Err(format!(
                 "Could not read Matrix file '{}'",
-                filename.to_str().unwrap()
+                filename
+                    .to_str()
+                    .ok_or("Could not transform filename into str")?
             ))
         }
     };
     if content.is_empty() {
-        return Err(format!("file '{}' is empty", filename.to_str().unwrap()));
+        return Err(format!(
+            "file '{}' is empty",
+            filename
+                .to_str()
+                .ok_or("Could not transform filename into str")?
+        ));
     }
     // Read header
-    let filename = filename.to_str().unwrap();
+    let filename = filename
+        .to_str()
+        .ok_or("Could not transform filename into str")?;
     let mut nrows: Option<usize> = None;
     let mut ncols: Option<usize> = None;
     let mut header_lines = 0;
@@ -355,8 +366,8 @@ pub fn read_matrix(filename: &Path) -> Result<Matrix, String> {
             filename
         ));
     }
-    let nrows = nrows.unwrap();
-    let ncols = ncols.unwrap();
+    let nrows = nrows.ok_or("Number of rows was not found")?;
+    let ncols = ncols.ok_or("Number of columns was not found")?;
     let mut matrix = Matrix::new(0.0, nrows, ncols);
 
     // Read content.
@@ -382,7 +393,7 @@ pub fn read_matrix(filename: &Path) -> Result<Matrix, String> {
                     ));
                 }
             };
-            matrix.set(nrow, ncol, v).unwrap();
+            matrix.set(nrow, ncol, v)?;
 
             ncol += 1;
         }

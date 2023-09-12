@@ -16,7 +16,7 @@ impl StructObject {
     pub fn new(ident: syn::Ident, stru: syn::DataStruct, docs: String) -> Self {
         let fields: Vec<Field> = Self::get_object_fields(&stru)
             .into_iter()
-            .map(Field::new)
+            .filter_map(|x| Field::new(x).ok())
             .collect();
 
         StructObject {
@@ -40,35 +40,35 @@ impl StructObject {
         false
     }
 
-    pub fn gen_docs(&self) -> String {
+    pub fn gen_docs(&self) -> Result<String, String> {
         let mut ret = String::new();
 
         // Title
-        writeln!(ret, "# {}\n", self.ident).unwrap();
+        writeln!(ret, "# {}\n", self.ident).map_err(|e| e.to_string())?;
 
         // Written doc
         let docs = &self.docs;
-        writeln!(ret, "{}\n\n ## Full Specification\n", docs).unwrap();
+        writeln!(ret, "{}\n\n ## Full Specification\n", docs).map_err(|e| e.to_string())?;
 
         // A codeblock with the all the fields
         ret += "```json\n"; // Open template
-        writeln!(ret, "{} {{", self.ident).unwrap();
+        writeln!(ret, "{} {{", self.ident).map_err(|e| e.to_string())?;
 
         for field in self.fields.iter() {
-            let f_ident = field.data().ident.clone().unwrap();
+            let f_ident = field.data().ident.clone().ok_or("No identity")?;
             if f_ident == "index" {
                 continue;
             }
             if let Field::State(_) = field {
                 continue;
             }
-            writeln!(ret, "   {},", field.get_documentation()).unwrap();
+            writeln!(ret, "   {},", field.get_documentation()?).map_err(|e| e.to_string())?;
         }
         ret += "}\n```\n\n";
 
         // Documentations for fields
         for field in self.fields.iter() {
-            let f_ident = field.data().ident.clone().unwrap();
+            let f_ident = field.data().ident.clone().ok_or("No identity")?;
             if f_ident == "index" {
                 continue;
             }
@@ -76,14 +76,14 @@ impl StructObject {
                 continue;
             }
 
-            write!(ret, "\n\n#### {}", f_ident).unwrap();
+            write!(ret, "\n\n#### {}", f_ident).map_err(|e| e.to_string())?;
             if let Field::Option(_) = field {
                 ret += " (*optional*)";
             }
             ret += "\n\n";
 
             let errmsg = format!("Field '{}' has no docs", f_ident);
-            writeln!(ret, "{}\n", field.data().docs.expect(&errmsg)).unwrap();
+            writeln!(ret, "{}\n", field.data().docs.expect(&errmsg)).map_err(|e| e.to_string())?;
         }
         ret += "\n\n";
 
@@ -91,13 +91,13 @@ impl StructObject {
         let object_name_str = format!("{}", self.ident);
         if crate::object_has_api(object_name_str.clone()) {
             let name_str_lower = object_name_str.to_lowercase();
-            write!(ret, "\n\n## API Access\n\n```rs\n// by name\nlet my_{} = {}(string);\n// by index\nlet my_{} = {}(int);\n```", name_str_lower, name_str_lower, name_str_lower, name_str_lower).unwrap();
+            write!(ret, "\n\n## API Access\n\n```rs\n// by name\nlet my_{} = {}(string);\n// by index\nlet my_{} = {}(int);\n```", name_str_lower, name_str_lower, name_str_lower, name_str_lower).map_err(|e| e.to_string())?;
         }
 
-        ret
+        Ok(ret)
     }
 
-    pub fn gen_new(&self) -> TokenStream2 {
+    pub fn gen_new(&self) -> Result<TokenStream2, String> {
         let req_field_names = self.collect_required_fields();
         let new_docstring = format!(" Creates a new [`{}`]", self.ident);
         let mut content = quote!();
@@ -106,7 +106,7 @@ impl StructObject {
 
         let mut any_strings = false;
         for f in self.fields.iter() {
-            let fname = f.data().ident.clone().unwrap();
+            let fname = f.data().ident.clone().ok_or("No identity")?;
 
             match f {
                 Field::State(_d) => {
@@ -148,7 +148,7 @@ impl StructObject {
         }
 
         if any_strings {
-            quote!(
+            Ok(quote!(
                 #[doc = #new_docstring]
                 ///
                 /// All the required fields are asked by the constructor. The Optional
@@ -158,9 +158,9 @@ impl StructObject {
                         #content
                     }
                 }
-            )
+            ))
         } else {
-            quote!(
+            Ok(quote!(
                 #[doc = #new_docstring]
                 ///
                 /// All the required fields are asked by the constructor. The Optional
@@ -170,7 +170,7 @@ impl StructObject {
                         #content
                     }
                 }
-            )
+            ))
         }
     }
 
@@ -218,13 +218,13 @@ impl StructObject {
         }
     }
 
-    pub fn gen_state_getters_setters(&self) -> TokenStream2 {
+    pub fn gen_state_getters_setters(&self) -> Result<TokenStream2, String> {
         let mut gets: TokenStream2 = quote!();
         let mut sets: TokenStream2 = quote!();
 
         for f in self.fields.iter() {
             // name of the field
-            let f_ident = f.data().ident.clone().unwrap();
+            let f_ident = f.data().ident.clone().ok_or("No identity")?;
             match f {
                 Field::State(_d) => {
                     /* SET THE INDEX OF THE OBJECT */
@@ -463,14 +463,14 @@ impl StructObject {
             } // End of match
         } // end of fields.iter()
 
-        quote!(
+        Ok(quote!(
             #gets
 
             #sets
-        )
+        ))
     }
 
-    fn get_api_getters_setters_docs(&self) -> (TokenStream2, TokenStream2, String) {
+    fn get_api_getters_setters_docs(&self) -> Result<(TokenStream2, TokenStream2, String), String> {
         let object_name = self.ident.clone();
         let mut field_getters = quote!();
         let mut field_setters = quote!();
@@ -494,7 +494,7 @@ impl StructObject {
                     continue;
                 }
                 // Docs
-                let api_fieldname = field.api_name();
+                let api_fieldname = field.api_name()?;
 
                 let mut row = format!("| `{}` | Yes  ", api_fieldname);
                 if att_names.contains(&"physical".to_string()) {
@@ -505,13 +505,13 @@ impl StructObject {
                 docs = format!("{}\n{}", docs, row);
 
                 // Extend getters and setters
-                let get = field.api_getter(&object_name);
+                let get = field.api_getter(&object_name)?;
                 field_getters = quote!(
                     #field_getters
                     #get
 
                 );
-                let set = field.api_setter(&object_name);
+                let set = field.api_setter(&object_name)?;
                 field_setters = quote!(
                     #field_setters
                     #set
@@ -520,10 +520,10 @@ impl StructObject {
         }
 
         // return
-        (field_getters, field_setters, docs)
+        Ok((field_getters, field_setters, docs))
     }
 
-    fn get_api(&self, access_from_model: TokenStream2) -> TokenStream2 {
+    fn get_api(&self, access_from_model: TokenStream2) -> Result<TokenStream2, String> {
         let object_name = self.ident.clone();
         let name_str = format!("{}", &object_name);
 
@@ -532,12 +532,12 @@ impl StructObject {
             engine.register_type_with_name::<std::sync::Arc<Self>>(#name_str);
         );
 
-        let (field_getters, field_setters, docs) = self.get_api_getters_setters_docs();
+        let (field_getters, field_setters, docs) = self.get_api_getters_setters_docs()?;
 
         // Return
         let register_api_docs = format!(" Registers the Rhai API for the `{}`", object_name);
         let print_api_docs = format!(" Prints the Rhai API for the `{}`", object_name);
-        quote!(
+        let r = quote!(
             impl #object_name {
 
                 #[doc = #register_api_docs]
@@ -569,15 +569,16 @@ impl StructObject {
                 }
 
             }
-        )
+        );
+        Ok(r)
     }
 
-    pub fn gen_group_member_api(&self) -> TokenStream2 {
+    pub fn gen_group_member_api(&self) -> Result<TokenStream2, String> {
         let access_from_model = quote!();
         self.get_api(access_from_model)
     }
 
-    pub fn gen_object_api(&self) -> TokenStream2 {
+    pub fn gen_object_api(&self) -> Result<TokenStream2, String> {
         let object_name = self.ident.clone();
         let name_str = format!("{}", &object_name);
         let name_str_lower = name_str.to_lowercase();

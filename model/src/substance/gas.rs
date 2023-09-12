@@ -96,22 +96,31 @@ mod testing {
     use json5;
 
     #[test]
-    fn serde_gas_spec() {
+    fn serde_gas_spec() -> Result<(), String> {
         use json5;
         use std::fs;
 
         // Hardcode a reference
         let air = GasSpecification::Air;
-        assert_eq!("{\"type\":\"Air\"}", json5::to_string(&air).unwrap());
+        assert_eq!(
+            "{\"type\":\"Air\"}",
+            json5::to_string(&air).map_err(|e| e.to_string())?
+        );
         let argon = GasSpecification::Argon;
-        assert_eq!("{\"type\":\"Argon\"}", json5::to_string(&argon).unwrap());
+        assert_eq!(
+            "{\"type\":\"Argon\"}",
+            json5::to_string(&argon).map_err(|e| e.to_string())?
+        );
         let krypton = GasSpecification::Krypton;
         assert_eq!(
             "{\"type\":\"Krypton\"}",
-            json5::to_string(&krypton).unwrap()
+            json5::to_string(&krypton).map_err(|e| e.to_string())?
         );
         let xenon = GasSpecification::Xenon;
-        assert_eq!("{\"type\":\"Xenon\"}", json5::to_string(&xenon).unwrap());
+        assert_eq!(
+            "{\"type\":\"Xenon\"}",
+            json5::to_string(&xenon).map_err(|e| e.to_string())?
+        );
 
         // Deserialize from hardcoded string and check they are the same
         let json5_heater: GasSpecification = json5::from_str(
@@ -119,25 +128,29 @@ mod testing {
             type: 'Air',            
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", json5_heater));
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/gas_specification";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json: GasSpecification = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json: GasSpecification =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", from_json));
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&air).unwrap();
+        let rust_json = serde_json::to_string(&air).map_err(|e| e.to_string())?;
         println!("{}", &rust_json);
-        let rust_again: GasSpecification = serde_json::from_str(&rust_json).unwrap();
+        let rust_again: GasSpecification =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", rust_again));
+
+        Ok(())
     }
 
     #[test]
-    fn serde_gas() {
+    fn serde_gas() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -157,24 +170,24 @@ mod testing {
             }            
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", json5_heater));
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/gas_xenon";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json: Gas = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json: Gas = serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", from_json));
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&air).unwrap();
+        let rust_json = serde_json::to_string(&air).map_err(|e| e.to_string())?;
         println!("{}", &rust_json);
-        let rust_again: Gas = serde_json::from_str(&rust_json).unwrap();
+        let rust_again: Gas = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", rust_again));
 
         // test simple
-        let (model, ..) = Model::from_file("./tests/scanner/substance_gas.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/substance_gas.spl")?;
         assert_eq!(1, model.substances.len());
 
         if let Substance::Gas(g) = &model.substances[0] {
@@ -187,5 +200,7 @@ mod testing {
         } else {
             assert!(false, "Wrong substance")
         }
+
+        Ok(())
     }
 }

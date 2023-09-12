@@ -125,7 +125,7 @@ mod testing {
     use super::*;
 
     #[test]
-    fn serde_shelter_class() {
+    fn serde_shelter_class() -> Result<(), String> {
         use crate::Model;
         use json5;
         use std::fs;
@@ -138,7 +138,7 @@ mod testing {
             type: 'Urban',
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
@@ -147,23 +147,26 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/shelter_class";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: ShelterClass = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: ShelterClass =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: ShelterClass = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: ShelterClass =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
 
         // Check simple
-        let (model, ..) = Model::from_file("./tests/scanner/building.spl").unwrap();
+        let (model, ..) =
+            Model::from_file("./tests/scanner/building.spl").map_err(|e| e.to_string())?;
         assert_eq!(model.buildings.len(), 1);
 
         assert_eq!(model.buildings[0].name, "Main Building");
@@ -172,10 +175,12 @@ mod testing {
         } else {
             assert!(false, "Wrong shelter class")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn serde_building() {
+    fn serde_building() -> Result<(), String> {
         use crate::Model;
         use json5;
         use std::fs;
@@ -192,7 +197,8 @@ mod testing {
             }
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
+
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_harcoded_json)
@@ -201,23 +207,26 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/building";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: Building = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: Building =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: Building = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: Building =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
 
         // Check simple
-        let (model, ..) = Model::from_file("./tests/scanner/building.spl").unwrap();
+        let (model, ..) =
+            Model::from_file("./tests/scanner/building.spl").map_err(|e| e.to_string())?;
         assert_eq!(model.buildings.len(), 1);
 
         assert_eq!(model.buildings[0].name, "Main Building");
@@ -226,5 +235,7 @@ mod testing {
         } else {
             assert!(false, "Wrong shelter class")
         }
+
+        Ok(())
     }
 }

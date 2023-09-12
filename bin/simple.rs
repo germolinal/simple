@@ -32,7 +32,7 @@ fn run_sim<C>(
     controller: C,
 ) -> Result<(), String>
 where
-    C: SimpleControl
+    C: SimpleControl,
 {
     match &options.output {
         Some(v) => {
@@ -57,22 +57,12 @@ fn choose_controller(
     match &options.control_file {
         None => {
             let controller = VoidControl {};
-            run_sim::<VoidControl>(
-                &model,
-                state_header,
-                options,
-                controller,
-            )
+            run_sim::<VoidControl>(&model, state_header, options, controller)
         }
         Some(v) => match v.as_str() {
             "people" => {
                 let controller = OccupantBehaviour::new(&model)?;
-                run_sim::<OccupantBehaviour>(
-                    &model,
-                    state_header,
-                    options,
-                    controller,
-                )
+                run_sim::<OccupantBehaviour>(&model, state_header, options, controller)
             }
             _ => {
                 if let Some(control_file) = &options.control_file {

@@ -79,7 +79,7 @@ mod testing {
     use super::{gas::GasSpecification, *};
 
     #[test]
-    fn serde_gas() {
+    fn serde_gas() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -98,24 +98,24 @@ mod testing {
             }
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_xenon), format!("{:?}", json5_heater));
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/substance_gas";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json: Substance = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json: Substance = serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_xenon), format!("{:?}", from_json));
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&rust_xenon).unwrap();
+        let rust_json = serde_json::to_string(&rust_xenon).map_err(|e| e.to_string())?;
         println!("{}", &rust_json);
-        let rust_again: Substance = serde_json::from_str(&rust_json).unwrap();
+        let rust_again: Substance = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_xenon), format!("{:?}", rust_again));
 
         // test simple
-        let (model, ..) = Model::from_file("./tests/scanner/substance_gas.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/substance_gas.spl")?;
         assert_eq!(1, model.substances.len());
 
         if let Substance::Gas(g) = &model.substances[0] {
@@ -128,10 +128,12 @@ mod testing {
         } else {
             assert!(false, "Wrong substance")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn serde_normal() {
+    fn serde_normal() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -148,37 +150,39 @@ mod testing {
             thermal_conductivity: 12,
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_normal), format!("{:?}", json5_heater));
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/substance_normal";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json: Substance = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json: Substance = serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_normal), format!("{:?}", from_json));
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&rust_normal).unwrap();
+        let rust_json = serde_json::to_string(&rust_normal).map_err(|e| e.to_string())?;
         println!("{}", &rust_json);
-        let rust_again: Substance = serde_json::from_str(&rust_json).unwrap();
+        let rust_again: Substance = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_normal), format!("{:?}", rust_again));
 
         // Check spl
-        let (model, ..) = Model::from_file("./tests/scanner/substance_normal.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/substance_normal.spl")?;
         assert_eq!(1, model.substances.len());
 
         if let Substance::Normal(g) = &model.substances[0] {
             assert_eq!("the substance", g.name());
-            assert!((12. - g.thermal_conductivity().unwrap()).abs() < 1e-9);
+            assert!((12. - g.thermal_conductivity()?).abs() < 1e-9);
         } else {
             assert!(false, "Wrong substance")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn substance_from_file() {
-        let (model, ..) = Model::from_file("./tests/box.spl").unwrap();
+    fn substance_from_file() -> Result<(), String> {
+        let (model, ..) = Model::from_file("./tests/box.spl")?;
         assert_eq!(model.substances.len(), 2);
 
         let in_any = |name: &String| -> bool {
@@ -189,5 +193,7 @@ mod testing {
 
         assert!(in_any(&"the substance".to_string()));
         assert!(in_any(&"the gas substance".to_string()));
+
+        Ok(())
     }
 }

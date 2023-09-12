@@ -65,7 +65,7 @@ mod testing {
     use super::*;
 
     #[test]
-    fn serde_ideal_heater_cooler() {
+    fn serde_ideal_heater_cooler() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -82,7 +82,7 @@ mod testing {
             target_space: 'Bedroom',    
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
             format!("{:?}", json5_heater)
@@ -91,36 +91,38 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/hvac_ideal_heater_cooler";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let json_heater: HVAC = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let json_heater: HVAC = serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
             format!("{:?}", json_heater)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&rust_reference).unwrap();
+        let rust_json = serde_json::to_string(&rust_reference).map_err(|e| e.to_string())?;
         println!("{}", &rust_json);
-        let rust_heter_2: HVAC = serde_json::from_str(&rust_json).unwrap();
+        let rust_heter_2: HVAC = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
             format!("{:?}", rust_heter_2)
         );
 
         // Check simple
-        let (model, ..) = Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl")?;
         assert_eq!(model.hvacs.len(), 1);
 
         if let HVAC::IdealHeaterCooler(hvac) = &model.hvacs[0] {
             assert_eq!("Bedrooms heater", hvac.name());
-            assert_eq!("Bedroom", hvac.target_space().unwrap());
+            assert_eq!("Bedroom", hvac.target_space()?);
         } else {
             assert!(false, "Wrong space!")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn serde_electric_heater() {
+    fn serde_electric_heater() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -137,7 +139,7 @@ mod testing {
             target_space: 'Bedroom',    
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
             format!("{:?}", json5_heater)
@@ -146,31 +148,33 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/hvac_electric_heater";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let json_heater: HVAC = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let json_heater: HVAC = serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
             format!("{:?}", json_heater)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&rust_reference).unwrap();
+        let rust_json = serde_json::to_string(&rust_reference).map_err(|e| e.to_string())?;
         println!("{}", &rust_json);
-        let rust_heter_2: HVAC = serde_json::from_str(&rust_json).unwrap();
+        let rust_heter_2: HVAC = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
             format!("{:?}", rust_heter_2)
         );
 
         // Check simple
-        let (model, ..) = Model::from_file("./tests/scanner/hvac_electric_heater.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/hvac_electric_heater.spl")?;
         assert_eq!(model.hvacs.len(), 1);
 
         if let HVAC::ElectricHeater(hvac) = &model.hvacs[0] {
             assert_eq!("Bedrooms heater", hvac.name());
-            assert_eq!("Bedroom", hvac.target_space().unwrap());
+            assert_eq!("Bedroom", hvac.target_space()?);
         } else {
             assert!(false, "Wrong space!")
         }
+
+        Ok(())
     }
 }

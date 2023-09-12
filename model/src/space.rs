@@ -100,7 +100,7 @@ mod testing {
     use crate::Model;
 
     #[test]
-    fn serde() {
+    fn serde() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -117,7 +117,7 @@ mod testing {
             building: 'Wonderful Zoo'
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
@@ -126,29 +126,31 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/space";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: Space = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: Space = serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: Space = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: Space = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
 
         // check simple
-        let (model, ..) = Model::from_file("./tests/scanner/space.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/space.spl")?;
         assert_eq!(model.spaces.len(), 1);
         assert!("Walrus Enclosure" == model.spaces[0].name());
+
+        Ok(())
     }
 
     #[test]
-    fn test_new() {
+    fn test_new() -> Result<(), String> {
         let space_name = "the_space".to_string();
 
         let mut space = Space::new(space_name.clone());
@@ -160,24 +162,49 @@ mod testing {
         assert_eq!(*space.volume().unwrap(), vol);
 
         let i = 91;
-        assert!(space.dry_bulb_temperature.lock().unwrap().is_none());
+        assert!(space
+            .dry_bulb_temperature
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_none());
         assert!(space.dry_bulb_temperature_index().is_none());
-        space.set_dry_bulb_temperature_index(i).unwrap();
-        assert!(space.dry_bulb_temperature.lock().unwrap().is_some());
-        assert_eq!(space.dry_bulb_temperature_index().unwrap(), i);
+        space
+            .set_dry_bulb_temperature_index(i)
+            .map_err(|e| e.to_string())?;
+        assert!(space
+            .dry_bulb_temperature
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_some());
+        assert_eq!(
+            space
+                .dry_bulb_temperature_index()
+                .ok_or("no dry bulb temperature")?,
+            i
+        );
 
         let i = 191;
-        assert!(space.brightness.lock().unwrap().is_none());
+        assert!(space
+            .brightness
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_none());
         assert!(space.brightness_index().is_none());
-        space.set_brightness_index(i).unwrap();
-        assert!(space.brightness.lock().unwrap().is_some());
-        assert_eq!(space.brightness_index().unwrap(), i);
+        space.set_brightness_index(i).map_err(|e| e.to_string())?;
+        assert!(space
+            .brightness
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_some());
+        assert_eq!(space.brightness_index().ok_or("no brightness")?, i);
 
         let i = 111;
-        assert!(space.loudness.lock().unwrap().is_none());
+        assert!(space.loudness.lock().map_err(|e| e.to_string())?.is_none());
         assert!(space.loudness_index().is_none());
-        space.set_loudness_index(i).unwrap();
-        assert!(space.loudness.lock().unwrap().is_some());
-        assert_eq!(space.loudness_index().unwrap(), i);
+        space.set_loudness_index(i).map_err(|e| e.to_string())?;
+        assert!(space.loudness.lock().map_err(|e| e.to_string())?.is_some());
+        assert_eq!(space.loudness_index().ok_or("no loudness")?, i);
+
+        Ok(())
     }
 }

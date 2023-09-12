@@ -320,7 +320,7 @@ fn cornell() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
     // RUSTFLAGS="-C target-cpu=native -C target-feature=+neon" cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
 
-    let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string());
+    let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string())?;
 
     scene.build_accelerator();
 
@@ -362,7 +362,7 @@ fn room() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test test_scenes -- room --exact --nocapture --ignored
     // oconv ../room.rad ../white_sky.rad > room.oct ;time rpict -x 512 -y 512 -vv 60 -vh 60 -ab 3 -ad 220 -aa 0 -vp 2 1 1 -vd 0 1 0 ./room.oct > rad_room.hdr
 
-    let mut scene = Scene::from_radiance("./tests/scenes/room.rad".to_string());
+    let mut scene = Scene::from_radiance("./tests/scenes/room.rad".to_string())?;
     // scene.add_perez_sky(
     //     calendar::Date {
     //         month: 6,

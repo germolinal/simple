@@ -54,7 +54,8 @@ fn load_rays(filename: &str) -> Vec<Ray> {
 }
 
 fn get_simple_results(dir: &str, max_depth: usize) -> (Vec<Float>, Vec<Float>) {
-    let mut scene = Scene::from_radiance(format!("./tests/ray_tracer/{dir}/box.rad"));
+    let mut scene =
+        Scene::from_radiance(format!("./tests/ray_tracer/{dir}/box.rad")).expect("Could not read");
     scene.build_accelerator();
 
     let integrator = RayTracer {

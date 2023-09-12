@@ -3,7 +3,7 @@ use validate::*;
 use weather::{EPWWeather, Float, Weather};
 
 #[test]
-fn test_go_through() {
+fn test_go_through() -> Result<(), String> {
     // cargo test --release --package weather --test go_through -- test_go_through --exact --nocapture
 
     /// Checks whether `SIMPLE`'s EPW module is interpolating properly
@@ -62,7 +62,7 @@ fn test_go_through() {
 
     let p = "../docs/validation";
     if !std::path::Path::new(&p).exists() {
-        std::fs::create_dir(p).unwrap();
+        std::fs::create_dir(p).map_err(|e| e.to_string())?;
     }
 
     let target_file = format!("{}/weather.html", p);
@@ -70,5 +70,7 @@ fn test_go_through() {
 
     validations.push(drybulb());
 
-    validations.validate().unwrap();
+    validations.validate()?;
+
+    Ok(())
 }

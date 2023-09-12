@@ -399,7 +399,7 @@ mod tests {
     }
 
     #[test]
-    fn test_row_altitude() {
+    fn test_row_altitude() -> Result<(), String> {
         fn check(mf: usize) -> Result<(), String> {
             let r = ReinhartSky::new(mf);
             let height = PI / 2. / ((7 * mf) as Float + 0.5);
@@ -449,9 +449,10 @@ mod tests {
             Ok(())
         }
 
-        check(1).unwrap();
-        check(2).unwrap();
-        check(9).unwrap();
+        check(1)?;
+        check(2)?;
+        check(9)?;
+        Ok(())
     }
 
     #[test]

@@ -186,7 +186,7 @@ pub fn derive_output(
         }
 
         // Extract the docs
-        let v_doc_str = crate::docs::get_docs(&v.attrs);
+        let v_doc_str = crate::docs::get_docs(&v.attrs).expect("Could not generate docs");
         let v_doc = sanitize_docs(&v_doc_str);
 
         // Add to enum

@@ -1025,7 +1025,7 @@ mod tests {
     use validate::{valid, ScatterValidator, Validate, Validator};
 
     #[test]
-    fn test_cloud_cover_to_global_rad_generic() {
+    fn test_cloud_cover_to_global_rad_generic() -> Result<(),String> {
         fn global(filename: &str) -> Box<dyn Validate> {
             let mut epw: Weather = EPWWeather::from_file(filename).unwrap().into();
 
@@ -1156,7 +1156,7 @@ mod tests {
         validator.push(wellington_direct());
         validator.push(barcelona_direct());
 
-        validator.validate().unwrap();
+        validator.validate()
     }
 
     #[test]

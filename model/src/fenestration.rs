@@ -518,7 +518,7 @@ mod testing {
     use super::*;
 
     #[test]
-    fn serde_fenestration_positions() {
+    fn serde_fenestration_positions() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -536,7 +536,7 @@ mod testing {
             min : 0.0
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
@@ -545,16 +545,18 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/fenestration_position";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: FenestrationPosition = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: FenestrationPosition =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: FenestrationPosition = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: FenestrationPosition =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
@@ -562,10 +564,12 @@ mod testing {
 
         // check simple
         // ... no need, it can't be defined in SIMPLE standalone
+
+        Ok(())
     }
 
     #[test]
-    fn serde_fenestration_type() {
+    fn serde_fenestration_type() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -578,7 +582,7 @@ mod testing {
             type : 'Window',             
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
@@ -587,16 +591,18 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/fenestration_type";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: FenestrationType = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: FenestrationType =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: FenestrationType = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: FenestrationType =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
@@ -604,10 +610,12 @@ mod testing {
 
         // check simple
         // ... no need, it can't be defined in SIMPLE standalone
+
+        Ok(())
     }
 
     #[test]
-    fn serde_fenestration() {
+    fn serde_fenestration() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -638,7 +646,7 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(&hardcoded_ref.name, "Window 1");
         assert_eq!(&hardcoded_ref.construction, "Double Clear Glass");
         assert!(matches!(&hardcoded_ref.front_boundary, Boundary::Outdoor));
@@ -661,24 +669,29 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/fenestration";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: Fenestration = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: Fenestration =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: Fenestration = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: Fenestration =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
 
         // check simple
-        let (model, ..) = Model::from_file("./tests/box_with_window.spl").unwrap();
+        let (model, ..) =
+            Model::from_file("./tests/box_with_window.spl").map_err(|e| e.to_string())?;
         assert_eq!(model.fenestrations.len(), 1);
         assert_eq!("Zn001:Wall001:Win001", model.fenestrations[0].name());
+
+        Ok(())
     }
 }
