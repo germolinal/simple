@@ -35,7 +35,7 @@ SOFTWARE.
 //! use serde_json; // import "serde_json" and enable feature "serde"
 //!
 //! let v = r#"{"month": 9,"day": 4, "hour": 21}"#;
-//! let d : Date = serde_json::from_str(&v).unwrap();
+//! let d : Date = serde_json::from_str(&v).expect("Something bad happened!");
 //! assert_eq!(d.month, 9);
 //! assert_eq!(d.day, 4);
 //! assert!((d.hour - 21.).abs() < 1e-5);
