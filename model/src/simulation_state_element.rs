@@ -289,8 +289,8 @@ mod testing {
     }
 
     #[test]
-    fn output_from_file() {
-        let (model, ..) = Model::from_file("./tests/box.spl").unwrap();
+    fn output_from_file() -> Result<(), String> {
+        let (model, ..) = Model::from_file("./tests/box.spl")?;
         assert_eq!(model.outputs.len(), 1);
         assert_eq!(model.spaces.len(), 1);
         let space_name = model.spaces[0].name();
@@ -300,6 +300,8 @@ mod testing {
         let str2 = "{\"SpaceDryBulbTemperature\":\"Bedroom\"}";
         assert_eq!(str1, str2);
         assert!(str1.contains(space_name));
+
+        Ok(())
     }
 
     #[test]
@@ -319,18 +321,20 @@ mod testing {
 
     use crate::scanner::SimpleScanner;
     #[test]
-    fn test_output() {
+    fn test_output() -> Result<(), String> {
         let src = b"
             Output { SpaceDryBulbTemperature : \"The Space\" }
             Output { SpaceDryBulbTemperature : \"The Other Space\" }
             Output { SpaceDryBulbTemperature : \"Yet another Space\" }
         ";
         let mut scanner = SimpleScanner::new(src, 0);
-        let (model, header) = scanner.parse_model().unwrap();
+        let (model, header) = scanner.parse_model()?;
         assert_eq!(model.outputs.len(), 3);
         assert_eq!(header.len(), 0);
         dbg!(&model.outputs);
 
-        dbg!(serde_json::to_string(&model.outputs[0]).unwrap());
+        dbg!(serde_json::to_string(&model.outputs[0]).map_err(|e| e.to_string())?);
+
+        Ok(())
     }
 }

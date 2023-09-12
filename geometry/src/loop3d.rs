@@ -38,15 +38,15 @@ use crate::{Point3D, Segment3D, Vector3D};
 /// assert!(the_loop.is_empty());
 /// let l = 0.5;
 ///
-/// the_loop.push(Point3D::new(-l, -l, 0.)).unwrap();
-/// the_loop.push(Point3D::new(-l, l, 0.)).unwrap();
-/// the_loop.push(Point3D::new(l, l, 0.)).unwrap();
-/// the_loop.push(Point3D::new(l, -l, 0.)).unwrap();
+/// assert!(the_loop.push(Point3D::new(-l, -l, 0.)).is_ok());
+/// assert!(the_loop.push(Point3D::new(-l, l, 0.)).is_ok());
+/// assert!(the_loop.push(Point3D::new(l, l, 0.)).is_ok());
+/// assert!(the_loop.push(Point3D::new(l, -l, 0.)).is_ok());
 ///
 /// assert!(the_loop.area().is_err());
-/// the_loop.close().unwrap();
+/// assert!(the_loop.close().is_ok());
 ///
-/// let a = the_loop.area().unwrap();
+/// let a = the_loop.area().expect("no area?");
 /// assert!((4. * l * l - a).abs() < 0.0001);
 /// ```
 /// # Note:
@@ -59,13 +59,13 @@ use crate::{Point3D, Segment3D, Vector3D};
 /// use geometry::{Loop3D, Point3D};
 /// let mut the_loop = Loop3D::new();
 ///
-/// the_loop.push(Point3D::new(0., 0., 0.)).unwrap();
-/// the_loop.push(Point3D::new(1., 1., 0.)).unwrap();
+/// assert!(the_loop.push(Point3D::new(0., 0., 0.)).is_ok());
+/// assert!(the_loop.push(Point3D::new(1., 1., 0.)).is_ok());
 /// assert_eq!(2, the_loop.len());
 ///
 /// // Adding a collinear point will not extend.
 /// let collinear = Point3D::new(2., 2., 0.);
-/// the_loop.push(collinear).unwrap();
+/// assert!(the_loop.push(collinear).is_ok());
 /// assert_eq!(2, the_loop.len());
 /// assert_eq!(the_loop[1], collinear);
 /// ```
@@ -195,9 +195,9 @@ impl Loop3D {
     /// let b = Point3D::new(1., 1., 0.);
     /// let c = Point3D::new(0., 1., 0.);
     ///
-    /// l.push(a).unwrap();
-    /// l.push(b).unwrap();
-    /// l.push(c).unwrap();
+    /// assert!(l.push(a).is_ok());
+    /// assert!(l.push(b).is_ok());
+    /// assert!(l.push(c).is_ok());
     ///
     /// let normal = l.normal();
     ///
@@ -229,9 +229,9 @@ impl Loop3D {
     /// let b = Point3D::new(1., 1., 0.);
     /// let c = Point3D::new(0., 1., 0.);
     ///
-    /// l.push(a).unwrap();
-    /// l.push(b).unwrap();
-    /// l.push(c).unwrap();
+    /// assert!(l.push(a).is_ok());
+    /// assert!(l.push(b).is_ok());
+    /// assert!(l.push(c).is_ok());
     ///    
     /// // reverse
     /// let rev_l = l.get_reversed();
@@ -303,12 +303,14 @@ impl Loop3D {
     ///
     /// let mut l = Loop3D::with_capacity(4);
     /// // Add a triangle
-    /// l.push(Point3D::new(0., 0., 0.)).unwrap();
-    /// l.push(Point3D::new(1., 1., 0.)).unwrap();
-    /// l.push(Point3D::new(0., 1., 0.)).unwrap();
-    /// l.push(Point3D::new(0., 0.5, 0.)).unwrap();
+    /// assert!(l.push(Point3D::new(0., 0., 0.)).is_ok());
+    /// assert!(l.push(Point3D::new(1., 1., 0.)).is_ok());
+    /// assert!(l.push(Point3D::new(0., 1., 0.)).is_ok());
+    /// assert!(l.push(Point3D::new(0., 0.5, 0.)).is_ok());
     ///
-    /// l = l.sanitize().unwrap();    
+    /// let res = l.sanitize();
+    /// assert!(res.is_ok());
+    ///     
     /// ```
     pub fn sanitize(self) -> Result<Self, String> {
         let mut new = Self::with_capacity(self.len());
@@ -466,7 +468,7 @@ impl Loop3D {
             }
         }
         // And the midpoint must be in the loop.
-        if !self.test_point(s.midpoint()).unwrap() {
+        if !self.test_point(s.midpoint())? {
             return Ok(false);
         }
 

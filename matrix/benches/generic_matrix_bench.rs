@@ -80,7 +80,11 @@ pub fn from_prod_n_diag(c: &mut Criterion) {
     let mut into = black_box(Matrix::new(1.23123, nrows, ncols));
 
     c.bench_function("from_prod_n_diag", |b| {
-        b.iter(|| into = this.from_prod_n_diag(&other, 3).unwrap())
+        b.iter(|| {
+            into = this
+                .from_prod_n_diag(&other, 3)
+                .expect("could not multiply")
+        })
     });
 }
 

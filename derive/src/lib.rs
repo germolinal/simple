@@ -108,7 +108,7 @@ pub fn derive_simulation_state_behaviour(input: TokenStream) -> TokenStream {
 pub fn derive_input_output(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
 
-    let docs = get_docs(&ast.attrs);
+    let docs = get_docs(&ast.attrs).expect("Could not generate docs");
     let obj = Object::new(ast.clone(), docs);
     let object_name = &ast.ident;
     let name_str = format!("{}", object_name);
@@ -117,13 +117,15 @@ pub fn derive_input_output(input: TokenStream) -> TokenStream {
     // let from_bytes = obj.gen_from_bytes();
 
     // New
-    let new = obj.gen_new();
+    let new = obj.gen_new().expect("Could not generate New");
 
     // name
     let name = obj.gen_name();
 
     // State getters and setters
-    let state_getters_setters = obj.gen_state_getters_setters();
+    let state_getters_setters = obj
+        .gen_state_getters_setters()
+        .expect("Could not generate setters getters");
 
     // docs
     let docs = obj.gen_docs();
@@ -159,7 +161,7 @@ pub fn derive_input_output(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(GroupIO)]
 pub fn derive_group_input_output(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    let docs = get_docs(&ast.attrs);
+    let docs = get_docs(&ast.attrs).expect("Could not generate docs");
     let obj = Object::new(ast, docs);
 
     let q = obj.gen_group_behaviour();
@@ -169,7 +171,7 @@ pub fn derive_group_input_output(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(ObjectAPI, attributes(operational, physical))]
 pub fn derive_object_api(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    let docs = get_docs(&ast.attrs);
+    let docs = get_docs(&ast.attrs).expect("Could not generate docs");
     let obj = Object::new(ast, docs);
     TokenStream::from(obj.gen_object_api())
 }
@@ -177,7 +179,7 @@ pub fn derive_object_api(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(GroupAPI)]
 pub fn derive_group_api(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    let docs = get_docs(&ast.attrs);
+    let docs = get_docs(&ast.attrs).expect("Could not generate API docs");
     let obj = Object::new(ast, docs);
     TokenStream::from(obj.gen_group_api())
 }
@@ -185,7 +187,7 @@ pub fn derive_group_api(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(GroupMemberAPI, attributes(operational, physical))]
 pub fn derive_group_member_api(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    let docs = get_docs(&ast.attrs);
+    let docs = get_docs(&ast.attrs).expect("Could not generate API docs");
     let obj = Object::new(ast, docs);
     TokenStream::from(obj.gen_group_member_api())
 }

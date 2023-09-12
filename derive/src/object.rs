@@ -46,24 +46,30 @@ impl Object {
         }
     }
 
-    pub fn gen_new(&self) -> TokenStream2 {
+    pub fn gen_new(&self) -> Result<TokenStream2, String> {
         match self {
             Self::StructObject(s) => s.gen_new(),
-            Self::Enum(_s) => quote!(), // don't have these
+            Self::Enum(_s) => Ok(quote!()), // don't have these
         }
     }
 
-    pub fn gen_state_getters_setters(&self) -> TokenStream2 {
+    pub fn gen_state_getters_setters(&self) -> Result<TokenStream2, String> {
         match self {
             Self::StructObject(s) => s.gen_state_getters_setters(),
-            Self::Enum(_s) => quote!(), // don't have these
+            Self::Enum(_s) => Ok(quote!()), // don't have these
         }
     }
 
     pub fn gen_docs(&self) -> TokenStream2 {
         let (ident, docs) = match self {
-            Self::StructObject(s) => (s.ident.clone(), s.gen_docs()),
-            Self::Enum(s) => (s.ident.clone(), s.gen_docs()),
+            Self::StructObject(s) => (
+                s.ident.clone(),
+                s.gen_docs().expect("could not generate docs"),
+            ),
+            Self::Enum(s) => (
+                s.ident.clone(),
+                s.gen_docs().expect("Could not generate docs"),
+            ),
         };
         let name_str = format!("{}", ident);
         quote!(
@@ -75,7 +81,6 @@ impl Object {
                 let full_filename = format!("{}/{}", dir, filename);
                 #[allow(clippy::format_push_string)] // this is really not relevant... it happens only during testing, not at runtime.
                 summary.push_str(&format!("- [{}](./{})\n",#name_str, filename));
-                // write!(summary, ("- [{}](./{})\n",#name_str, filename)).unwrap();
 
                 std::fs::write(&full_filename, doc)?;
                 Ok(())
@@ -102,7 +107,9 @@ impl Object {
             Self::Enum(_s) => {
                 panic!("Enums are not yet supported as members of a group")
             }
-            Self::StructObject(s) => s.gen_group_member_api(),
+            Self::StructObject(s) => s
+                .gen_group_member_api()
+                .expect("Could not generate API for group member"),
         }
     }
 
@@ -111,7 +118,9 @@ impl Object {
             Self::Enum(_s) => {
                 panic!("API does not yet support Enums")
             }
-            Self::StructObject(s) => s.gen_object_api(),
+            Self::StructObject(s) => s
+                .gen_object_api()
+                .expect("Could not generate API for object"),
         }
     }
 }

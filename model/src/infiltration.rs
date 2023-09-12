@@ -181,7 +181,7 @@ mod testing {
     use crate::Model;
 
     #[test]
-    fn serde_constant() {
+    fn serde_constant() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -195,7 +195,7 @@ mod testing {
             flow: 1.2,
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
@@ -204,33 +204,37 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/infiltration_constant";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: Infiltration = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: Infiltration =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: Infiltration = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: Infiltration =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
 
         // check simple
-        let (model, ..) = Model::from_file("./tests/box.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/box.spl").map_err(|e| e.to_string())?;
         assert_eq!(model.spaces.len(), 1);
         if let Ok(Infiltration::Doe2 { flow }) = model.spaces[0].infiltration() {
             assert!((flow - 0.24).abs() < 1e-9);
         } else {
             assert!(false, "Incorrect infiltration!")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn serde_design_flow_rate() {
+    fn serde_design_flow_rate() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -254,7 +258,7 @@ mod testing {
             phi: 1.2
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
@@ -263,16 +267,18 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/infiltration_design_flow_rate";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: Infiltration = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: Infiltration =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: Infiltration = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: Infiltration =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
@@ -280,7 +286,8 @@ mod testing {
 
         // check simple
         // check simple
-        let (model, ..) = Model::from_file("./tests/box_with_window.spl").unwrap();
+        let (model, ..) =
+            Model::from_file("./tests/box_with_window.spl").map_err(|e| e.to_string())?;
         assert_eq!(model.spaces.len(), 1);
         if let Ok(Infiltration::DesignFlowRate { a, b, c, d, phi }) = model.spaces[0].infiltration()
         {
@@ -290,13 +297,15 @@ mod testing {
             assert!((c - 0.0).abs() < 1e-9);
             assert!((d - 1.2).abs() < 1e-9);
         } else {
-            assert!(false, "Incorrect infiltration!")
+            panic!("Incorrect infiltration!")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn infiltration_from_file() {
-        let (model, ..) = Model::from_file("./tests/box.spl").unwrap();
+    fn infiltration_from_file() -> Result<(), String> {
+        let (model, ..) = Model::from_file("./tests/box.spl")?;
         assert_eq!(model.spaces.len(), 1);
         assert!(&"Bedroom".to_string() == model.spaces[0].name());
 
@@ -305,5 +314,7 @@ mod testing {
         } else {
             assert!(false)
         }
+
+        Ok(())
     }
 }

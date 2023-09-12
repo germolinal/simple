@@ -468,7 +468,7 @@ mod testing {
     use std::fs;
 
     #[test]
-    fn serde_surface_type() {
+    fn serde_surface_type() -> Result<(), String> {
         // Hardcode a reference... too verbose
         // Deserialize from hardcoded string and check they are the same
         let hardcoded_ref: SurfaceType = json5::from_str(
@@ -476,14 +476,15 @@ mod testing {
             type: 'ExteriorWall',            
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(SurfaceType::ExteriorWall, hardcoded_ref);
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/surface_type";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: SurfaceType = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: SurfaceType =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
@@ -492,8 +493,9 @@ mod testing {
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/surface_type_2";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: SurfaceType = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: SurfaceType =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         if let SurfaceType::Custom { name } = from_json_file {
             assert_eq!(name, "My Custom Category");
         } else {
@@ -501,16 +503,19 @@ mod testing {
         }
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: SurfaceType = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: SurfaceType =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
+
+        Ok(())
     }
 
     #[test]
-    fn serde_surface() {
+    fn serde_surface() -> Result<(), String> {
         // Hardcode a reference... too verbose
         // Deserialize from hardcoded string and check they are the same
         let hardcoded_ref: Surface = json5::from_str(
@@ -525,56 +530,62 @@ mod testing {
             ]
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(&hardcoded_ref.name, "the surface");
         assert_eq!(&hardcoded_ref.construction, "the construction");
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/surface";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json_file: Surface = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json_file: Surface =
+            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
         );
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&hardcoded_ref).unwrap();
-        let from_serialized: Surface = serde_json::from_str(&rust_json).unwrap();
+        let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
+        let from_serialized: Surface =
+            serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)
         );
 
         // Check spl
-        let (model, ..) = Model::from_file("./tests/scanner/surface.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/surface.spl")?;
         assert_eq!(1, model.surfaces.len());
         let s = &model.surfaces[0];
         assert_eq!(s.name(), "the surface");
         assert_eq!(s.construction, "the construction");
         assert_eq!(4, s.vertices.outer().len());
+
+        Ok(())
     }
 
     #[test]
-    fn surface_from_file() {
-        let (model, ..) = Model::from_file("./tests/box.spl").unwrap();
+    fn surface_from_file() -> Result<(), String> {
+        let (model, ..) = Model::from_file("./tests/box.spl")?;
         assert_eq!(model.surfaces.len(), 1);
         assert!(&"the surface".to_string() == model.surfaces[0].name());
         assert_eq!(4, model.surfaces[0].vertices.outer().len());
+
+        Ok(())
     }
 
     #[test]
-    fn test_surface_basic() {
+    fn test_surface_basic() -> Result<(), String> {
         let construction = "the construction".to_string();
         let mut outer = Loop3D::new();
-        outer.push(Point3D::new(0., 0., 0.)).unwrap();
-        outer.push(Point3D::new(2., 0., 0.)).unwrap();
-        outer.push(Point3D::new(2., 2., 0.)).unwrap();
-        outer.push(Point3D::new(0., 2., 0.)).unwrap();
-        outer.close().unwrap();
+        outer.push(Point3D::new(0., 0., 0.))?;
+        outer.push(Point3D::new(2., 0., 0.))?;
+        outer.push(Point3D::new(2., 2., 0.))?;
+        outer.push(Point3D::new(0., 2., 0.))?;
+        outer.close()?;
 
-        let polygon = Polygon3D::new(outer).unwrap();
+        let polygon = Polygon3D::new(outer)?;
 
         let surf_name = "Some surface".to_string();
         let mut surf = Surface::new(
@@ -587,20 +598,38 @@ mod testing {
 
         assert!(matches!(surf.front_boundary, Boundary::Outdoor));
         assert!(matches!(surf.back_boundary, Boundary::Outdoor));
-        assert!(surf.first_node_temperature.lock().unwrap().is_none());
+        assert!(surf
+            .first_node_temperature
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_none());
         assert!(surf.first_node_temperature_index().is_none());
-        assert!(surf.last_node_temperature.lock().unwrap().is_none());
+        assert!(surf
+            .last_node_temperature
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_none());
         assert!(surf.last_node_temperature_index().is_none());
 
         surf.front_boundary = Boundary::Ground;
-        surf.set_first_node_temperature_index(31).unwrap();
-        surf.set_last_node_temperature_index(39).unwrap();
+        surf.set_first_node_temperature_index(31)?;
+        surf.set_last_node_temperature_index(39)?;
 
-        assert!(surf.first_node_temperature.lock().unwrap().is_some());
+        assert!(surf
+            .first_node_temperature
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_some());
         assert_eq!(surf.first_node_temperature_index(), Some(31));
-        assert!(surf.last_node_temperature.lock().unwrap().is_some());
+        assert!(surf
+            .last_node_temperature
+            .lock()
+            .map_err(|e| e.to_string())?
+            .is_some());
         assert_eq!(surf.last_node_temperature_index(), Some(39));
 
         assert!((surf.area() - 4.).abs() < 1e-5);
+
+        Ok(())
     }
 }

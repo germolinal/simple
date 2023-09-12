@@ -52,9 +52,9 @@ fn load_expected_results(filename: String) -> Vec<Float> {
 
 fn get_simple_results(dir: &str, max_depth: usize, with_glass: bool) -> (Vec<Float>, Vec<Float>) {
     let mut scene = if with_glass {
-        Scene::from_radiance(format!("./tests/dc/{dir}/scene.rad"))
+        Scene::from_radiance(format!("./tests/dc/{dir}/scene.rad")).expect("Could not read file")
     } else {
-        Scene::from_radiance(format!("./tests/dc/{dir}/room.rad"))
+        Scene::from_radiance(format!("./tests/dc/{dir}/room.rad")).expect("Could not read file")
     };
     scene.build_accelerator();
 

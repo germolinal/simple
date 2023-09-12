@@ -1,6 +1,6 @@
 use std::fmt::Write as _; // import without risk of name clashing
 
-pub fn get_docs(attrs: &[syn::Attribute]) -> String {
+pub fn get_docs(attrs: &[syn::Attribute]) -> Result<String, String> {
     let mut ret = String::new();
 
     for at in attrs {
@@ -17,10 +17,10 @@ pub fn get_docs(attrs: &[syn::Attribute]) -> String {
                 let doc = doc.replace("\\\"", "\"");
 
                 // ret.push_str(&format!("{}\n", doc));
-                writeln!(ret, "{}", doc).unwrap();
+                writeln!(ret, "{}", doc).map_err(|e| e.to_string())?;
             }
         }
     }
 
-    ret
+    Ok(ret)
 }
