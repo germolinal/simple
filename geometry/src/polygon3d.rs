@@ -258,7 +258,6 @@ impl Polygon3D {
     /// It is also not 100% guaranteed to work all the time, but
     /// it has proven to be pretty robust for relatively normal
     /// geometries.
-
     pub fn get_closed_loop(&self) -> Loop3D {
         //get the number of interior loops
         let n_inner_loops = self.inner.len();
@@ -363,7 +362,6 @@ impl Polygon3D {
             // flag ret_loop as processed (instead of deleting it)
             processed_inner_loops.push(inner_loop_id);
         } // end iterating inner loops
-          // ret_loop.close().unwrap();
         ret_loop
     } // end of get_closed_polygon
 

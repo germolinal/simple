@@ -17,7 +17,7 @@
  use serde_json; // import "serde_json" and enable feature "serde"
  
  let v = r#"{"month": 9,"day": 4, "hour": 21}"#;
- let d : Date = serde_json::from_str(&v).unwrap();
+ let d : Date = serde_json::from_str(&v).expect("Oh No!");
  assert_eq!(d.month, 9);
  assert_eq!(d.day, 4);
  assert!((d.hour - 21.).abs() < 1e-5);
@@ -32,7 +32,7 @@
  use calendar::Date;
         
  let v = "2014-11-28T21:00:09+09:00";
- let chrono_datetime  = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").unwrap();
+ let chrono_datetime  = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").expect("Wrong?");
  
  let d : Date = chrono_datetime.into();
  assert_eq!(d.month, 11);
