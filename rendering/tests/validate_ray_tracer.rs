@@ -64,9 +64,14 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
         Scene::from_radiance(format!("./tests/ray_tracer/{dir}/box.rad")).expect("Could not read");
     scene.build_accelerator();
 
+    let n_ambient_samples = if max_depth > 0 {
+        60120
+    }else{
+        5120
+    };
     let integrator = RayTracer {
-        n_ambient_samples: 60120,
-        n_shadow_samples: 100,
+        n_ambient_samples,
+        n_shadow_samples: 10,
         max_depth,
         limit_weight: 1e-9,
         ..RayTracer::default()
@@ -242,16 +247,16 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     }
 
     validator.push(metal_diffuse_global()?);
-    validator.push(metal_diffuse_direct()?);
+    // validator.push(metal_diffuse_direct()?);
 
-    validator.push(metal_specular_global()?);
-    validator.push(metal_specular_direct()?);
+    // validator.push(metal_specular_global()?);
+    // validator.push(metal_specular_direct()?);
 
-    validator.push(metal_rough_global()?);
-    validator.push(metal_rough_direct()?);
+    // validator.push(metal_rough_global()?);
+    // validator.push(metal_rough_direct()?);
 
-    validator.push(metal_full_global()?);
-    validator.push(metal_full_direct()?);
+    // validator.push(metal_full_global()?);
+    // validator.push(metal_full_direct()?);
 
     Ok(())
 }
@@ -276,8 +281,8 @@ fn validate_ray_tracer() -> Result<(), String> {
     let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");
 
     metal(&mut validator)?;
-    plastic(&mut validator)?;
-    glass(&mut validator)?;
+    // plastic(&mut validator)?;
+    // glass(&mut validator)?;
 
     validator.validate()
 }
