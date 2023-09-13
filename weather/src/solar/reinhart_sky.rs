@@ -75,6 +75,7 @@ fn row_height(mf: usize) -> Float {
 }
 
 /// A structure that helps creating discretized Skies, using Reinhart's discretization
+#[derive(Debug)]
 pub struct ReinhartSky {
     /// Subdivition scheme
     pub mf: usize,
