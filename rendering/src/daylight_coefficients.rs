@@ -76,7 +76,6 @@ impl DCFactory {
         // Iterate the rays
         let dcs: Vec<ColourMatrix> = aux_iter
             .map(|primary_ray| -> ColourMatrix {
-                let start = std::time::Instant::now();
 
                 let normal = primary_ray.direction;
                 let origin = primary_ray.origin;
@@ -157,7 +156,6 @@ impl DCFactory {
                     ret += v;
                 });
 
-                dbg!(start.elapsed().as_millis());
                 ret
                 // ray_contributions.iter().sum();
             })
@@ -239,6 +237,7 @@ impl DCFactory {
                 self.limit_weight,
                 rng,
             );
+            
 
             // Spawn more rays
             let depth = ray.depth;
