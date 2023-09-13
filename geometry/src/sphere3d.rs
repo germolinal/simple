@@ -561,7 +561,7 @@ mod testing {
             let t = (info.p - ray.origin).length();
             let exp_t = r;
             floats_are_close(t, exp_t)?;
-            points_are_close(exp, info.p).unwrap();
+            points_are_close(exp, info.p)?;
             vectors_are_close(info.normal, Vector3D::new(0., 1., 0.))?;
             assert!(matches![info.side, SurfaceSide::Back]);
         } else {

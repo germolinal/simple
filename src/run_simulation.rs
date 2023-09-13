@@ -130,7 +130,7 @@ fn pre_process(
         .filter_map(|item| {
             full_header
                 .iter()
-                .position(|x| x == &serde_json::to_string(item).unwrap())
+                .position(|x| x == &serde_json::to_string(item).expect("There was an error interpreting the inputs"))
         })
         .collect();
 

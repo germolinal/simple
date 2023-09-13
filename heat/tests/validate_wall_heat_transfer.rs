@@ -114,7 +114,7 @@ fn march_with_window() -> Result<(Vec<Float>, Vec<Float>), String> {
             emissivity: 0.0,
             ..Default::default()
         },
-    );
+    )?;
 
     // Finished model the Model
     let n: usize = 6;
@@ -204,7 +204,7 @@ fn very_simple_march() -> Result<(Vec<Float>, Vec<Float>), String> {
             emissivity: 0.0,
             ..Default::default()
         },
-    );
+    )?;
 
     let n: usize = 60;
     let main_dt = 60. * 60. / n as Float;
@@ -292,7 +292,7 @@ fn march_with_window_and_luminaire() -> Result<(Vec<Float>, Vec<Float>), String>
             emissivity: 0.0,
             ..Default::default()
         },
-    );
+    )?;
 
     // Finished model the Model
 
@@ -394,7 +394,7 @@ fn march_with_window_and_heater() -> Result<(Vec<Float>, Vec<Float>), String> {
             emissivity: 0.0,
             ..Default::default()
         },
-    );
+    )?;
 
     // Finished model the Model
 
@@ -499,7 +499,7 @@ fn march_with_window_heater_and_infiltration() -> Result<(Vec<Float>, Vec<Float>
             construction: vec![TestMat::Polyurethane(0.02)],
             ..Default::default()
         },
-    );
+    )?;
 
     // Finished model the Model
 
@@ -714,7 +714,7 @@ fn march_test_model(
             solar_absorbtance: solar_abs,
             ..Default::default()
         },
-    );
+    )?;
 
     march_model(dir, simple_model, state_header, emissivity, surface_area)
 }

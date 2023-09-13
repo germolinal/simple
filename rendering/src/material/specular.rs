@@ -195,7 +195,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_mirror_direction() {
+    fn test_mirror_direction() -> Result<(), String> {
         fn check(v: Vector3D, normal: Vector3D, mirror: Vector3D) -> Result<(), String> {
             let v = v.get_normalized();
             let normal = normal.get_normalized();
@@ -215,20 +215,19 @@ mod tests {
             Vector3D::new(0., 0., 1.),
             Vector3D::new(0., 0., 1.),
             Vector3D::new(0., 0., -1.),
-        )
-        .unwrap();
+        )?;
         check(
             Vector3D::new(0., 0., -1.),
             Vector3D::new(0., 0., -1.),
             Vector3D::new(0., 0., 1.),
-        )
-        .unwrap();
+        )?;
         check(
             Vector3D::new(1., 0., -1.).get_normalized(),
             Vector3D::new(0., 0., 1.),
             Vector3D::new(1., 0., 1.),
-        )
-        .unwrap();
+        )?;
+
+        Ok(())
     }
 
     #[test]
