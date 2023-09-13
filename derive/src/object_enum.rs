@@ -51,7 +51,7 @@ impl Variant {
                 data.fields = fields
                     .unnamed
                     .iter()
-                    .map(|x| Field::new(x.clone()).unwrap())
+                    .map(|x| Field::new(x.clone()).expect("Could not create field"))
                     .collect();
                 Self::Unnamed(data)
             }
@@ -62,7 +62,7 @@ impl Variant {
                     .into_iter()
                     .filter_map(|f| {
                         // Skip State fields
-                        let a = Field::new(f).unwrap();
+                        let a = Field::new(f).expect("Could not create field");
                         match a {
                             Field::State(_) => None,
                             _ => Some(a),

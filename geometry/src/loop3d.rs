@@ -125,24 +125,24 @@ impl<'de> Deserialize<'de> for Loop3D {
 
             while let Some(x) = it.next() {
                 let x = match x {
-                    Value::Number(x) => x.as_f64().unwrap() as Float,
+                    Value::Number(x) => x.as_f64().ok_or("Could not get X... it does not seem to be a number").map_err(serde::de::Error::custom)? as Float,
                     _ => panic!("Expecting Polygon3D to be an array of numbers"),
                 };
                 let y = it.next();
                 let y = match y {
-                    Some(Value::Number(y)) => y.as_f64().unwrap() as Float,
+                    Some(Value::Number(y)) => y.as_f64().ok_or("Could not get Y... it does not seem to be a number").map_err(serde::de::Error::custom)? as Float,
                     _ => panic!("Expecting Polygon3D to be an array of numbers"),
                 };
                 let z = it.next();
                 let z = match z {
-                    Some(Value::Number(z)) => z.as_f64().unwrap() as Float,
+                    Some(Value::Number(z)) => z.as_f64().ok_or("Could not get Z... it does not seem to be a number").map_err(serde::de::Error::custom)? as Float,
                     _ => panic!("Expecting Polygon3D to be an array of numbers"),
                 };
-                ret.push(Point3D { x, y, z }).unwrap();
+                ret.push(Point3D { x, y, z }).map_err(serde::de::Error::custom)?;
             }
         }
 
-        ret.close().unwrap();
+        ret.close().map_err(serde::de::Error::custom)?;
 
         Ok(ret)
     }

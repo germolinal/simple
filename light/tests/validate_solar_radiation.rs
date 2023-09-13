@@ -4,7 +4,7 @@ use light::{Float, SolarModel};
 use model::SolarOptions;
 use schedule::ScheduleConstant;
 use test_models::*;
-use validate::{valid, SeriesValidator, Validate, Validator};
+use validate::{valid, SeriesValidator, ValidFunc, Validator};
 use weather::SyntheticWeather;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
@@ -40,7 +40,7 @@ fn get_simple_results(
     diffuse_horizontal_rad: Vec<Float>,
     direct_normal_rad: Vec<Float>,
     orientation: Float,
-) -> Vec<Float> {
+) -> Result<Vec<Float>, String> {
     let (lat, lon, std_mer): (Float, Float, Float) = match city.as_bytes() {
         b"wellington" => (-41.3, 174.78, 180.),
         b"barcelona" => (41.28, 2.07, 15.), // ??? GMT + 1
@@ -73,9 +73,8 @@ fn get_simple_results(
         .set_solar_sky_discretization(1);
 
     let n: usize = 20;
-    let solar_model =
-        SolarModel::new(&meta_options, options, &model, &mut state_header, n).unwrap();
-    let mut state = state_header.take_values().unwrap();
+    let solar_model = SolarModel::new(&meta_options, options, &model, &mut state_header, n)?;
+    let mut state = state_header.take_values().ok_or("Could not take state")?;
     let mut date = Date {
         month: 1,
         day: 1,
@@ -97,103 +96,107 @@ fn get_simple_results(
         let surface = &model.surfaces[0];
 
         // March
-        solar_model
-            .march(date, &weather, &model, &mut state, &mut ())
-            .unwrap();
+        solar_model.march(date, &weather, &model, &mut state, &mut ())?;
 
-        let front_radiation = surface.front_incident_solar_irradiance(&state).unwrap();
+        let front_radiation = surface
+            .front_incident_solar_irradiance(&state)
+            .ok_or("No incident solar irradiance?")?;
         ret.push(front_radiation);
 
         // Advance
         date.add_hours(1. / n as Float);
     }
-    ret
+    Ok(ret)
 }
 
-fn barcelona(validator: &mut Validator) {
+fn barcelona(validator: &mut Validator) -> Result<(), String> {
     const CITY: &'static str = "barcelona";
 
-    #[valid(Exterior Incident Solar Radiation - Barcelona, South)]
-    fn validate_barcelona_south() -> Box<dyn Validate> {
+    #[valid("Exterior Incident Solar Radiation - Barcelona, South")]
+    fn validate_barcelona_south() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "south");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 0.0);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 0.0)?;
+        Ok(get_validator(expected, found))
     }
 
     #[valid(Exterior Incident Solar Radiation - Barcelona, North)]
-    fn validate_barcelona_north() -> Box<dyn Validate> {
+    fn validate_barcelona_north() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "north");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 180.0);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 180.0)?;
+        Ok(get_validator(expected, found))
     }
 
     #[valid(Exterior Incident Solar Radiation - Barcelona, West)]
-    fn validate_barcelona_west() -> Box<dyn Validate> {
+    fn validate_barcelona_west() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "west");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 90.0);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 90.0)?;
+        Ok(get_validator(expected, found))
     }
 
     #[valid(Exterior Incident Solar Radiation - Barcelona, East)]
-    fn validate_barcelona_east() -> Box<dyn Validate> {
+    fn validate_barcelona_east() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "east");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, -90.);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, -90.)?;
+        Ok(get_validator(expected, found))
     }
 
-    validator.push(validate_barcelona_south());
-    validator.push(validate_barcelona_north());
-    validator.push(validate_barcelona_west());
-    validator.push(validate_barcelona_east());
+    validator.push(validate_barcelona_south()?);
+    validator.push(validate_barcelona_north()?);
+    validator.push(validate_barcelona_west()?);
+    validator.push(validate_barcelona_east()?);
+
+    Ok(())
 }
 
-fn wellington(validator: &mut Validator) {
+fn wellington(validator: &mut Validator) -> Result<(), String> {
     const CITY: &'static str = "wellington";
 
     #[valid(Exterior Incident Solar Radiation - Wellington, South)]
-    fn validate_wellington_south() -> Box<dyn Validate> {
+    fn validate_wellington_south() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "south");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 0.0);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 0.0)?;
+        Ok(get_validator(expected, found))
     }
 
     #[valid(Exterior Incident Solar Radiation - Wellington, North)]
-    fn validate_wellington_north() -> Box<dyn Validate> {
+    fn validate_wellington_north() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "north");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 180.0);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 180.0)?;
+        Ok(get_validator(expected, found))
     }
 
     #[valid(Exterior Incident Solar Radiation - Wellington, West)]
-    fn validate_wellington_west() -> Box<dyn Validate> {
+    fn validate_wellington_west() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "west");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 90.0);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, 90.0)?;
+        Ok(get_validator(expected, found))
     }
 
     #[valid(Exterior Incident Solar Radiation - Wellington, East)]
-    fn validate_wellington_east() -> Box<dyn Validate> {
+    fn validate_wellington_east() -> Result<ValidFunc, String> {
         let (expected, diffuse_horizontal_rad, direct_normal_rad) = get_expected(CITY, "east");
-        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, -90.);
-        get_validator(expected, found)
+        let found = get_simple_results(CITY, diffuse_horizontal_rad, direct_normal_rad, -90.)?;
+        Ok(get_validator(expected, found))
     }
 
-    validator.push(validate_wellington_south());
-    validator.push(validate_wellington_north());
-    validator.push(validate_wellington_west());
-    validator.push(validate_wellington_east());
+    validator.push(validate_wellington_south()?);
+    validator.push(validate_wellington_north()?);
+    validator.push(validate_wellington_west()?);
+    validator.push(validate_wellington_east()?);
+
+    Ok(())
 }
 
 #[test]
-fn validate_solar_radiation() {
+fn validate_solar_radiation() -> Result<(), String> {
     // cargo test --release --package light --test validate_solar_radiation -- validate_solar_radiation --exact --nocapture
     let mut validator = Validator::new(
         "Validate Solar Radiation",
         "../docs/validation/incident_solar_radiation.html",
     );
 
-    barcelona(&mut validator);
-    wellington(&mut validator);
+    barcelona(&mut validator)?;
+    wellington(&mut validator)?;
 
-    validator.validate().unwrap();
+    validator.validate()
 }

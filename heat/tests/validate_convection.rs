@@ -2,9 +2,9 @@ use geometry::Vector3D;
 use heat::convection::ConvectionParams;
 use heat::surface::is_windward;
 use heat::Float;
-use validate::*;
+use validate::{valid, ValidFunc, Validator, SeriesValidator};
 
-fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<dyn Validate> {
+fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> ValidFunc {
     Box::new(SeriesValidator {
         x_label: Some("time step"),
         y_label: Some("Convection Coefficient"),
@@ -96,8 +96,8 @@ const AREA: Float = 20. * 3.;
 const PERIMETER: Float = (20. + 3.) * 2.; //30.9838667697;
 fn vertical(validations: &mut Validator) {
     /// Heat Transfer Coefficients calculated in SIMPLE, compared to those calculated by the TARP model in EnergyPlus
-    #[valid(Vertical Wall - Natural (i.e., Interior) Convection Coefficient )]
-    fn natural() -> Box<dyn Validate> {
+    #[valid("Vertical Wall - Natural (i.e., Interior) Convection Coefficient")]
+    fn natural() -> ValidFunc {
         let (expected_in, found_in, ..) = calc_convection(
             "massive_full",
             AREA,
@@ -108,8 +108,8 @@ fn vertical(validations: &mut Validator) {
     }
 
     /// Heat Transfer Coefficients calculated in SIMPLE, compared to those calculated by the TARP model in EnergyPlus
-    #[valid(Vertical Wall - Forced (i.e., Exterior) Convection Coefficient )]
-    fn forced() -> Box<dyn Validate> {
+    #[valid("Vertical Wall - Forced (i.e., Exterior) Convection Coefficient")]
+    fn forced() -> ValidFunc {
         let (.., expected_out, found_out) = calc_convection(
             "massive_full",
             AREA,
@@ -125,8 +125,8 @@ fn vertical(validations: &mut Validator) {
 
 fn tilted(validations: &mut Validator) {
     /// Heat Transfer Coefficients calculated in SIMPLE, compared to those calculated by the TARP model in EnergyPlus
-    #[valid(Tilted Wall - Natural (i.e., Interior) Convection Coefficient )]
-    fn natural() -> Box<dyn Validate> {
+    #[valid("Tilted Wall - Natural (i.e., Interior) Convection Coefficient")]
+    fn natural() -> ValidFunc {
         let (expected_in, found_in, ..) = calc_convection(
             "tilted",
             AREA,
@@ -137,8 +137,8 @@ fn tilted(validations: &mut Validator) {
     }
 
     /// Heat Transfer Coefficients calculated in SIMPLE, compared to those calculated by the TARP model in EnergyPlus
-    #[valid(Tilted Wall - Forced (i.e., Exterior) Convection Coefficient )]
-    fn forced() -> Box<dyn Validate> {
+    #[valid("Tilted Wall - Forced (i.e., Exterior) Convection Coefficient")]
+    fn forced() -> ValidFunc {
         let (.., expected_out, found_out) = calc_convection(
             "tilted",
             AREA,
@@ -154,8 +154,8 @@ fn tilted(validations: &mut Validator) {
 
 fn horizontal(validations: &mut Validator) {
     /// Heat Transfer Coefficients calculated in SIMPLE, compared to those calculated by the TARP model in EnergyPlus
-    #[valid(Horizontal Wall - Natural (i.e., Interior) Convection Coefficient )]
-    fn natural() -> Box<dyn Validate> {
+    #[valid("Horizontal Wall - Natural (i.e., Interior) Convection Coefficient")]
+    fn natural() -> ValidFunc {
         let (expected_in, found_in, ..) = calc_convection(
             "horizontal",
             AREA,
@@ -166,8 +166,8 @@ fn horizontal(validations: &mut Validator) {
     }
 
     /// Heat Transfer Coefficients calculated in SIMPLE, compared to those calculated by the TARP model in EnergyPlus
-    #[valid(Horizontal Wall - Forced (i.e., Exterior) Convection Coefficient )]
-    fn forced() -> Box<dyn Validate> {
+    #[valid("Horizontal Wall - Forced (i.e., Exterior) Convection Coefficient")]
+    fn forced() -> ValidFunc {
         let (.., expected_out, found_out) = calc_convection(
             "horizontal",
             AREA,
@@ -199,7 +199,5 @@ fn validate() -> Result<(), String> {
     tilted(&mut validations);
     horizontal(&mut validations);
 
-    validations.validate()?;
-
-    Ok(())
+    validations.validate()
 }

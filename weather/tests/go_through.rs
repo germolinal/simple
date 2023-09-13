@@ -8,7 +8,7 @@ fn test_go_through() -> Result<(), String> {
 
     /// Checks whether `SIMPLE`'s EPW module is interpolating properly
     #[valid("Simple's EPW module vs EnergyPlus - accessing data")]
-    fn drybulb() -> Box<dyn Validate> {
+    fn drybulb() -> Result<ValidFunc, String> {
         let n = 199999000;
 
         let cols = validate::from_csv::<Float>("./tests/eplusout.csv", &[1]);
@@ -29,9 +29,7 @@ fn test_go_through() -> Result<(), String> {
         let dt = 60. * 60. / 20.;
         let sim_period = Period::new(start, end, dt);
 
-        let weather: Weather = EPWWeather::from_file("./tests/wellington.epw")
-            .unwrap()
-            .into();
+        let weather: Weather = EPWWeather::from_file("./tests/wellington.epw")?.into();
 
         let mut expected = Vec::with_capacity(n);
         let mut found = Vec::with_capacity(n);
@@ -45,7 +43,7 @@ fn test_go_through() -> Result<(), String> {
             // println!("{},{}", date, found_temp);
         }
 
-        Box::new(ScatterValidator {
+        Ok(Box::new(ScatterValidator {
             // label: Some("time step"),
             units: Some("C"),
 
@@ -57,7 +55,7 @@ fn test_go_through() -> Result<(), String> {
             expected,
             found,
             ..validate::ScatterValidator::default()
-        })
+        }))
     }
 
     let p = "../docs/validation";
@@ -68,9 +66,7 @@ fn test_go_through() -> Result<(), String> {
     let target_file = format!("{}/weather.html", p);
     let mut validations = Validator::new("SIMPLE EPW File Parser", &target_file);
 
-    validations.push(drybulb());
+    validations.push(drybulb()?);
 
-    validations.validate()?;
-
-    Ok(())
+    validations.validate()
 }
