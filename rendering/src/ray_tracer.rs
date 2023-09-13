@@ -47,11 +47,11 @@ impl std::default::Default for RayTracerHelper {
     }
 }
 
-impl RayTracerHelper    {
-    pub fn with_capacity(n: usize)->Self{
-        Self { 
-            rays: vec![Ray::default(); n], 
-            nodes: Vec::with_capacity(64)
+impl RayTracerHelper {
+    pub fn with_capacity(n: usize) -> Self {
+        Self {
+            rays: vec![Ray::default(); n],
+            nodes: Vec::with_capacity(64),
         }
     }
 }
@@ -167,7 +167,6 @@ impl RayTracer {
             };
 
             /* DIRECT LIGHT */
-            // let local = Spectrum::BLACK;
             let local = self.get_local_illumination(
                 scene,
                 material,
@@ -341,16 +340,17 @@ impl RayTracer {
             ray.value *= bsdf_rad * cos_theta / ray_pdf;
 
             let (li, light_pdf) = self.trace_ray(rng, scene, ray, aux);
-
+            
             if light_pdf > 0. {
                 // ray hit a light... reset and try again
                 *ray = aux.rays[depth];
                 continue;
             }
             count += 1;
-
-            let fx = li * bsdf_value * cos_theta;
-
+            
+            // let fx = li * bsdf_value * cos_theta / 1.2;
+            let fx = li * cos_theta / 7.04;
+ 
             global += fx / ray_pdf;
 
             // restore ray, because it was modified by trace_ray executions
