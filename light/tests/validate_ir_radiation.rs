@@ -69,7 +69,7 @@ fn get_simple_results(
         construction: vec![TestMat::Concrete(0.2)],
         orientation,
         ..Default::default()
-    });
+    })?;
 
     // Finished model the Model
     let mut options = SolarOptions::new();

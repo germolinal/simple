@@ -738,7 +738,7 @@ mod testing {
                 emissivity: 0.0,
                 ..Default::default()
             },
-        );
+        )?;
 
         let n: usize = 1;
         let thermal_model =

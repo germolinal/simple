@@ -68,7 +68,7 @@ impl<'a> Path<'a> {
         for _ in 0..integrator.min_path_length {
             if ret.extend(scene, &ray, integrator.n_shadow_samples, rng) {
                 // Create new ray.
-                let node = ret.nodes.last().unwrap();
+                let node = ret.nodes.last().ok_or("No last node?")?;
                 let material = node.material;
                 let normal = node.normal;
                 let e1 = node.e1;
@@ -396,7 +396,7 @@ mod tests {
     }
 
     #[test]
-    fn test_path_build_and_eval_1node() {
+    fn test_path_build_and_eval_1node() -> Result<(),String> {
         // setup params
         let start = Point3D::new(2., 0., 0.);
         let exp_pt0 = Point3D::new(1., 0., 1.);
@@ -428,8 +428,7 @@ mod tests {
                     Point3D::new(-0.5, -0.5, 0.),
                     Point3D::new(0.5, -0.5, 0.),
                     Point3D::new(0.5, 0.5, 0.),
-                )
-                .unwrap(),
+                )?,
             ),
         );
         scene.push_object(
@@ -440,8 +439,7 @@ mod tests {
                     Point3D::new(0.5, 0.5, 0.),
                     Point3D::new(-0.5, 0.5, 0.),
                     Point3D::new(-0.5, -0.5, 0.),
-                )
-                .unwrap(),
+                )?,
             ),
         );
 
@@ -463,8 +461,7 @@ mod tests {
                     Point3D::new(0.5, -0.5, 1.),
                     Point3D::new(1.5, -0.5, 1.),
                     Point3D::new(1.5, 0.5, 1.),
-                )
-                .unwrap(),
+                )?,
             ),
         );
         scene.push_object(
@@ -475,8 +472,7 @@ mod tests {
                     Point3D::new(1.5, 0.5, 1.),
                     Point3D::new(0.5, 0.5, 1.),
                     Point3D::new(0.5, -0.5, 1.),
-                )
-                .unwrap(),
+                )?,
             ),
         );
 
