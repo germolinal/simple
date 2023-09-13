@@ -50,7 +50,7 @@ SOFTWARE.
 //! use calendar::Date;
 //!        
 //! let v = "2014-11-28T21:00:09+09:00";
-//! let chrono_datetime  = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").unwrap();
+//! let chrono_datetime  = NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").expect("This should not fail");
 //!
 //! let d : Date = chrono_datetime.into();
 //! assert_eq!(d.month, 11);

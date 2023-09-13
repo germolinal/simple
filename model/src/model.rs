@@ -199,7 +199,7 @@ impl<'de> Visitor<'de> for SimpleModelVisitor {
                     }
                 }
                 _ => {
-                    let k = std::str::from_utf8(key).unwrap();
+                    let k = std::str::from_utf8(key).map_err(serde::de::Error::custom)?;                    
                     Err(format!("Field '{}' in model is not serialized", k))
                         .map_err(serde::de::Error::custom)?;
                 }
@@ -209,6 +209,8 @@ impl<'de> Visitor<'de> for SimpleModelVisitor {
         Ok(model)
     }
 }
+
+
 
 impl<'de> Deserialize<'de> for Model {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

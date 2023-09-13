@@ -206,10 +206,10 @@ pub fn derive_output(
                     .map(|(i, x)| {
                         let mut x = x.trim();
                         if x.starts_with('\"') {
-                            x = x.strip_prefix('\"').unwrap();
+                            x = x.strip_prefix('\"').expect("Unreachable?");
                         }
                         if x.ends_with('\"') {
-                            x = x.strip_suffix('\"').unwrap();
+                            x = x.strip_suffix('\"').expect("Unreachable?");
                         }
                         let varname = syn::Ident::new(&format!("in{}", i), Span::call_site());
                         let x = x.to_string();

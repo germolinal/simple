@@ -7,7 +7,7 @@ use calendar::Date;
 use model::{Model, SimulationStateElement, SimulationStateHeader, HVAC};
 use schedule::ScheduleConstant;
 use test_models::{get_single_zone_test_building, SingleZoneTestBuildingOptions, TestMat};
-use validate::*;
+use validate::{valid, SeriesValidator, ValidFunc, Validator};
 use weather::SyntheticWeather;
 
 fn get_validator(
@@ -95,7 +95,7 @@ const META_OPTIONS: MetaOptions = MetaOptions {
     elevation: 0.0,
 };
 
-fn march_with_window() -> (Vec<Float>, Vec<Float>) {
+fn march_with_window() -> Result<(Vec<Float>, Vec<Float>), String> {
     let surface_height = 2.;
     let surface_width = 2.;
     let window_height = 1.;
@@ -120,13 +120,10 @@ fn march_with_window() -> (Vec<Float>, Vec<Float>) {
     let n: usize = 6;
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
-        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n).unwrap();
-    let mut memory = thermal_model.allocate_memory().unwrap();
+        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
+    let mut memory = thermal_model.allocate_memory()?;
 
-    let mut state = state_header.take_values().unwrap();
-
-    // MAP THE STATE
-    // model.map_simulation_state(&mut state).unwrap();
+    let mut state = state_header.take_values().ok_or("Could not take state")?;
 
     // START TESTING.
     let hs_front = 10.;
@@ -142,7 +139,7 @@ fn march_with_window() -> (Vec<Float>, Vec<Float>) {
     let t_start = thermal_model.zones[0]
         .reference_space
         .dry_bulb_temperature(&state)
-        .unwrap();
+        .ok_or("No dry bulb temperature found")?;
 
     let t_out: Float = 30.0; // T of surroundings
 
@@ -181,21 +178,19 @@ fn march_with_window() -> (Vec<Float>, Vec<Float>) {
         let found_v = thermal_model.zones[0]
             .reference_space
             .dry_bulb_temperature(&state)
-            .unwrap();
+            .ok_or("No dry bulb temperature found")?;
 
-        thermal_model
-            .march(date, &weather, &simple_model, &mut state, &mut memory)
-            .unwrap();
+        thermal_model.march(date, &weather, &simple_model, &mut state, &mut memory)?;
 
         // Get exact solution.
         let exp_v = exp_fn(time);
         exp.push(exp_v);
         found.push(found_v);
     }
-    (exp, found)
+    Ok((exp, found))
 }
 
-fn very_simple_march() -> (Vec<Float>, Vec<Float>) {
+fn very_simple_march() -> Result<(Vec<Float>, Vec<Float>), String> {
     let zone_volume = 40.;
     let surface_width = 2.;
     let surface_height = 2.;
@@ -214,10 +209,10 @@ fn very_simple_march() -> (Vec<Float>, Vec<Float>) {
     let n: usize = 60;
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
-        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n).unwrap();
-    let mut memory = thermal_model.allocate_memory().unwrap();
+        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
+    let mut memory = thermal_model.allocate_memory()?;
 
-    let mut state = state_header.take_values().unwrap();
+    let mut state = state_header.take_values().ok_or("Could not take state")?;
 
     let hs_front = 10.;
     let hs_back = 10.;
@@ -230,7 +225,7 @@ fn very_simple_march() -> (Vec<Float>, Vec<Float>) {
     let t_start = thermal_model.zones[0]
         .reference_space
         .dry_bulb_temperature(&state)
-        .unwrap();
+        .ok_or("No Dry Bulb temp. found")?;
 
     let t_out: Float = 30.0; // T of surroundings
 
@@ -266,11 +261,9 @@ fn very_simple_march() -> (Vec<Float>, Vec<Float>) {
         let found_v = thermal_model.zones[0]
             .reference_space
             .dry_bulb_temperature(&state)
-            .unwrap();
+            .ok_or("No Dry Bulb temp. found")?;
 
-        thermal_model
-            .march(date, &weather, &simple_model, &mut state, &mut memory)
-            .unwrap();
+        thermal_model.march(date, &weather, &simple_model, &mut state, &mut memory)?;
 
         // Get exact solution.
         let exp_v = exp_fn(time);
@@ -279,10 +272,10 @@ fn very_simple_march() -> (Vec<Float>, Vec<Float>) {
         found.push(found_v);
     }
 
-    return (exp, found);
+    Ok((exp, found))
 }
 
-fn march_with_window_and_luminaire() -> (Vec<Float>, Vec<Float>) {
+fn march_with_window_and_luminaire() -> Result<(Vec<Float>, Vec<Float>), String> {
     let surface_width = 2.;
     let surface_height = 2.;
     let zone_volume = 40.;
@@ -306,15 +299,15 @@ fn march_with_window_and_luminaire() -> (Vec<Float>, Vec<Float>) {
     let n: usize = 20;
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
-        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n).unwrap();
-    let mut memory = thermal_model.allocate_memory().unwrap();
+        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
+    let mut memory = thermal_model.allocate_memory()?;
 
-    let mut state = state_header.take_values().unwrap();
+    let mut state = state_header.take_values().ok_or("Could not take state")?;
 
     // turn the lights on
     let lum_state_i = simple_model.luminaires[0]
         .power_consumption_index()
-        .unwrap();
+        .ok_or("Could not get power_consumption_index")?;
     state[lum_state_i] = lighting_power;
 
     // START TESTING.
@@ -330,8 +323,7 @@ fn march_with_window_and_luminaire() -> (Vec<Float>, Vec<Float>) {
 
     thermal_model.zones[0]
         .reference_space
-        .set_dry_bulb_temperature(&mut state, t_start)
-        .unwrap();
+        .set_dry_bulb_temperature(&mut state, t_start)?;
 
     let t_out: Float = 30.0; // T of surroundings
 
@@ -371,11 +363,9 @@ fn march_with_window_and_luminaire() -> (Vec<Float>, Vec<Float>) {
         let found_v = thermal_model.zones[0]
             .reference_space
             .dry_bulb_temperature(&state)
-            .unwrap();
+            .ok_or("Could not get dry bulb temperature")?;
 
-        thermal_model
-            .march(date, &weather, &simple_model, &mut state, &mut memory)
-            .unwrap();
+        thermal_model.march(date, &weather, &simple_model, &mut state, &mut memory)?;
 
         // Get exact solution.
         let exp_v = exp_fn(time);
@@ -384,10 +374,10 @@ fn march_with_window_and_luminaire() -> (Vec<Float>, Vec<Float>) {
         found.push(found_v);
     }
 
-    (exp, found)
+    Ok((exp, found))
 }
 
-fn march_with_window_and_heater() -> (Vec<Float>, Vec<Float>) {
+fn march_with_window_and_heater() -> Result<(Vec<Float>, Vec<Float>), String> {
     let surface_height = 2.;
     let surface_width = 2.;
     let zone_volume = 40.;
@@ -411,15 +401,15 @@ fn march_with_window_and_heater() -> (Vec<Float>, Vec<Float>) {
     let n: usize = 20;
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
-        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n).unwrap();
-    let mut memory = thermal_model.allocate_memory().unwrap();
-    let mut state = state_header.take_values().unwrap();
-    // MAP THE STATE
-    // model.map_simulation_state(&mut state).unwrap();
+        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
+    let mut memory = thermal_model.allocate_memory()?;
+    let mut state = state_header.take_values().ok_or("Could not take state")?;
 
     // turn the heater on
     if let HVAC::ElectricHeater(heater) = &simple_model.hvacs[0] {
-        let hvac_state_i = heater.heating_cooling_consumption_index().unwrap();
+        let hvac_state_i = heater
+            .heating_cooling_consumption_index()
+            .ok_or("No heating consumption index found")?;
         state[hvac_state_i] = heating_power;
     }
 
@@ -437,7 +427,7 @@ fn march_with_window_and_heater() -> (Vec<Float>, Vec<Float>) {
     let t_start = thermal_model.zones[0]
         .reference_space
         .dry_bulb_temperature(&state)
-        .unwrap();
+        .ok_or("No Dry Bulb temp. found")?;
     let t_out: Float = 30.0; // T of surroundings
 
     // test model
@@ -476,11 +466,9 @@ fn march_with_window_and_heater() -> (Vec<Float>, Vec<Float>) {
         let found_v = thermal_model.zones[0]
             .reference_space
             .dry_bulb_temperature(&state)
-            .unwrap();
+            .ok_or("No Dry Bulb temp. found")?;
 
-        thermal_model
-            .march(date, &weather, &simple_model, &mut state, &mut memory)
-            .unwrap();
+        thermal_model.march(date, &weather, &simple_model, &mut state, &mut memory)?;
 
         // Get exact solution.
         let exp_v = exp_fn(time);
@@ -488,10 +476,10 @@ fn march_with_window_and_heater() -> (Vec<Float>, Vec<Float>) {
         exp.push(exp_v);
         found.push(found_v);
     }
-    (exp, found)
+    Ok((exp, found))
 }
 
-fn march_with_window_heater_and_infiltration() -> (Vec<Float>, Vec<Float>) {
+fn march_with_window_heater_and_infiltration() -> Result<(Vec<Float>, Vec<Float>), String> {
     let surface_width = 2.;
     let surface_height = 2.;
     let zone_volume = 40.;
@@ -518,35 +506,29 @@ fn march_with_window_heater_and_infiltration() -> (Vec<Float>, Vec<Float>) {
     let n: usize = 20;
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
-        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n).unwrap();
-    let mut memory = thermal_model.allocate_memory().unwrap();
+        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
+    let mut memory = thermal_model.allocate_memory()?;
     // Set infiltration
-    let inf_vol_index = state_header
-        .push(
-            SimulationStateElement::SpaceInfiltrationVolume(0),
-            infiltration_rate,
-        )
-        .unwrap();
-    simple_model.spaces[0]
-        .set_infiltration_volume_index(inf_vol_index)
-        .unwrap();
-    let inf_temp_index = state_header
-        .push(
-            SimulationStateElement::SpaceInfiltrationTemperature(0),
-            t_out,
-        )
-        .unwrap();
-    simple_model.spaces[0]
-        .set_infiltration_temperature_index(inf_temp_index)
-        .unwrap();
+    let inf_vol_index = state_header.push(
+        SimulationStateElement::SpaceInfiltrationVolume(0),
+        infiltration_rate,
+    )?;
+    simple_model.spaces[0].set_infiltration_volume_index(inf_vol_index)?;
+    let inf_temp_index = state_header.push(
+        SimulationStateElement::SpaceInfiltrationTemperature(0),
+        t_out,
+    )?;
+    simple_model.spaces[0].set_infiltration_temperature_index(inf_temp_index)?;
 
     // MAP THE STATE
 
-    let mut state = state_header.take_values().unwrap();
+    let mut state = state_header.take_values().ok_or("Could not take state")?;
 
     // turn the heater on
     if let HVAC::ElectricHeater(heater) = &simple_model.hvacs[0] {
-        let hvac_state_i = heater.heating_cooling_consumption_index().unwrap();
+        let hvac_state_i = heater
+            .heating_cooling_consumption_index()
+            .ok_or("No heating/cooling consumption index found")?;
         state[hvac_state_i] = heating_power;
     }
 
@@ -563,7 +545,7 @@ fn march_with_window_heater_and_infiltration() -> (Vec<Float>, Vec<Float>) {
     let t_start = thermal_model.zones[0]
         .reference_space
         .dry_bulb_temperature(&state)
-        .unwrap();
+        .ok_or("No Dry Bulb temp. found")?;
 
     // test model
     let tester = SingleZoneTestModel {
@@ -602,11 +584,9 @@ fn march_with_window_heater_and_infiltration() -> (Vec<Float>, Vec<Float>) {
         let found_v = thermal_model.zones[0]
             .reference_space
             .dry_bulb_temperature(&state)
-            .unwrap();
+            .ok_or("No Dry Bulb temp. found")?;
 
-        thermal_model
-            .march(date, &weather, &simple_model, &mut state, &mut memory)
-            .unwrap();
+        thermal_model.march(date, &weather, &simple_model, &mut state, &mut memory)?;
 
         // Get exact solution.
         let exp_v = exp_fn(time);
@@ -614,7 +594,7 @@ fn march_with_window_heater_and_infiltration() -> (Vec<Float>, Vec<Float>) {
         exp.push(exp_v);
         found.push(found_v);
     }
-    (exp, found)
+    Ok((exp, found))
 }
 
 fn march_model(
@@ -623,18 +603,18 @@ fn march_model(
     mut state_header: SimulationStateHeader,
     emissivity: Float,
     surface_area: Float,
-) -> (Vec<Float>, Vec<Float>) {
+) -> Result<(Vec<Float>, Vec<Float>), String> {
     // Finished model the Model
 
     let n: usize = 20;
     // let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
-        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n).unwrap();
-    let mut memory = thermal_model.allocate_memory().unwrap();
+        ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
+    let mut memory = thermal_model.allocate_memory()?;
     // in model like these—i.e., a single surface—EnergyPlus assumes Zero IR radation
     thermal_model.surfaces[0].back_emissivity = 0.0;
 
-    let mut state = state_header.take_values().unwrap();
+    let mut state = state_header.take_values().ok_or("Could not find state")?;
 
     let path_string = format!("./tests/{}/eplusout.csv", dir);
     let path = path_string.as_str();
@@ -655,9 +635,7 @@ fn march_model(
     let exp_zone_air_temp = &cols[11]; // 12	INTERIOR SPACE:Zone Mean Air Temperature [C](TimeStep)
 
     // Set initial temperature
-    simple_model.spaces[0]
-        .set_dry_bulb_temperature(&mut state, exp_zone_air_temp[0])
-        .unwrap();
+    simple_model.spaces[0].set_dry_bulb_temperature(&mut state, exp_zone_air_temp[0])?;
 
     let mut date = Date {
         month: 1,
@@ -669,7 +647,9 @@ fn march_model(
     let mut found = Vec::with_capacity(n);
     for i in 0..n {
         // Get zone's temp
-        let found_temp = simple_model.spaces[0].dry_bulb_temperature(&state).unwrap();
+        let found_temp = simple_model.spaces[0]
+            .dry_bulb_temperature(&state)
+            .ok_or("No Dry Bulb temp. found")?;
         let exp_temp = exp_zone_air_temp[i];
         if i > 5000 {
             // skip warmup
@@ -686,33 +666,30 @@ fn march_model(
         let surface = &simple_model.surfaces[0];
 
         // Set Solar Radiation
-        surface
-            .set_front_incident_solar_irradiance(&mut state, incident_solar_radiation[i])
-            .unwrap();
+        surface.set_front_incident_solar_irradiance(&mut state, incident_solar_radiation[i])?;
 
         // Set Long Wave radiation
         if emissivity > 1e-3 {
-            // let ts = surface.last_node_temperature(&state).unwrap();
             // let v = indoor_thermal_heat_gain[i] / surface_area / emissivity
             // + heat::SIGMA * (ts + 273.15).powi(4);
             // surface.set_back_ir_irradiance(&mut state, v);
 
-            let ts = surface.first_node_temperature(&state).unwrap();
+            let ts = surface
+                .first_node_temperature(&state)
+                .ok_or("No first-node temperature")?;
             let v = outdoor_thermal_heat_gain[i] / surface_area / emissivity
                 + heat::SIGMA * (ts + 273.15).powi(4);
-            surface.set_front_ir_irradiance(&mut state, v).unwrap();
+            surface.set_front_ir_irradiance(&mut state, v)?;
         }
 
         // March
 
-        thermal_model
-            .march(date, &weather, &simple_model, &mut state, &mut memory)
-            .unwrap();
+        thermal_model.march(date, &weather, &simple_model, &mut state, &mut memory)?;
 
         // Advance
         date.add_hours(1. / n as Float);
     }
-    (exp, found)
+    Ok((exp, found))
 }
 
 fn march_test_model(
@@ -720,7 +697,7 @@ fn march_test_model(
     emissivity: Float,
     solar_abs: Float,
     construction: Vec<TestMat>,
-) -> (Vec<Float>, Vec<Float>) {
+) -> Result<(Vec<Float>, Vec<Float>), String> {
     let surface_height = 3.;
     let surface_width = 20.;
     let zone_volume = 600.;
@@ -747,135 +724,156 @@ fn march_simple_model(
     filename: &'static str,
     emissivity: Float,
     surface_area: Float,
-) -> (Vec<Float>, Vec<Float>) {
+) -> Result<(Vec<Float>, Vec<Float>), String> {
     let filename = format!("./tests/{dir}/{filename}.spl");
-    let (simple_model, state_header) = Model::from_file(filename).unwrap();
+    let (simple_model, state_header) = Model::from_file(filename)?;
 
     march_model(dir, simple_model, state_header, emissivity, surface_area)
 }
 
-fn theoretical(validations: &mut Validator) {
+fn theoretical(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "Theoretical Solution";
 
-    #[valid(Nomass Wall - Walls only)]
-    fn nomass_wallonly() -> Box<dyn Validate> {
-        let (expected, found) = very_simple_march();
-        get_validator(expected, found, EXPECTED_LEGEND)
+    #[valid("Nomass Wall - Walls only")]
+    fn nomass_wallonly() -> Result<ValidFunc, String> {
+        let (expected, found) = very_simple_march()?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+
+        Ok(v)
     }
 
-    #[valid(Nomass Wall - Walls and Fenestration)]
-    fn nomass_wall_and_window() -> Box<dyn Validate> {
-        let (expected, found) = march_with_window();
-        get_validator(expected, found, EXPECTED_LEGEND)
+    #[valid("Nomass Wall - Walls and Fenestration")]
+    fn nomass_wall_and_window() -> Result<ValidFunc, String> {
+        let (expected, found) = march_with_window()?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(Nomass Wall - Walls and Fenestration, with Luminaire on)]
-    fn window_and_luminaire() -> Box<dyn Validate> {
-        let (expected, found) = march_with_window_and_luminaire();
-        get_validator(expected, found, EXPECTED_LEGEND)
+    #[valid("Nomass Wall - Walls and Fenestration, with Luminaire on")]
+    fn window_and_luminaire() -> Result<ValidFunc, String> {
+        let (expected, found) = march_with_window_and_luminaire()?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(Nomass Wall - Walls and Window and heater)]
-    fn nomass_wall_and_window_and_heater() -> Box<dyn Validate> {
-        let (expected, found) = march_with_window_and_heater();
-        get_validator(expected, found, EXPECTED_LEGEND)
+    #[valid("Nomass Wall - Walls and Window and heater")]
+    fn nomass_wall_and_window_and_heater() -> Result<ValidFunc, String> {
+        let (expected, found) = march_with_window_and_heater()?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(Nomass Wall - Walls and Fenestration, with heater on and infiltration)]
-    fn window_heater_and_infiltration() -> Box<dyn Validate> {
-        let (expected, found) = march_with_window_heater_and_infiltration();
-        get_validator(expected, found, EXPECTED_LEGEND)
+    #[valid("Nomass Wall - Walls and Fenestration, with heater on and infiltration")]
+    fn window_heater_and_infiltration() -> Result<ValidFunc, String> {
+        let (expected, found) = march_with_window_heater_and_infiltration()?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    validations.push(nomass_wallonly());
-    validations.push(nomass_wall_and_window());
-    validations.push(window_and_luminaire());
-    validations.push(nomass_wall_and_window_and_heater());
-    validations.push(window_heater_and_infiltration());
+    validations.push(nomass_wallonly()?);
+    validations.push(nomass_wall_and_window()?);
+    validations.push(window_and_luminaire()?);
+    validations.push(nomass_wall_and_window_and_heater()?);
+    validations.push(window_heater_and_infiltration()?);
+
+    Ok(())
 }
 
-fn tilted(validations: &mut Validator) {
+fn tilted(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "EnergyPlus";
 
     /// This test intends to test non-vertical convection coefficients and their correct placement
-    #[valid(Massive and Tilted Wall, with the Space at its front)]
-    fn wall1() -> Box<dyn Validate> {
-        let (expected, found) = march_simple_model("tilted", "back", 0.9, 60.);
-        get_validator(expected, found, EXPECTED_LEGEND)
+    #[valid("Massive and Tilted Wall, with the Space at its front")]
+    fn wall1() -> Result<ValidFunc, String> {
+        let (expected, found) = march_simple_model("tilted", "back", 0.9, 60.)?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    validations.push(wall1());
+    validations.push(wall1()?);
+
+    Ok(())
 }
 
-fn horizontal(validations: &mut Validator) {
+fn horizontal(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "EnergyPlus";
 
     /// This test intends to test non-vertical convection coefficients and their correct placement
-    #[valid(Massive Horizontal Wall, with Solar and Long Wave Radiation)]
-    fn wall1() -> Box<dyn Validate> {
-        let (expected, found) = march_simple_model("horizontal", "back", 0.9, 60.);
-        get_validator(expected, found, EXPECTED_LEGEND)
+    #[valid("Massive Horizontal Wall, with Solar and Long Wave Radiation")]
+    fn wall1() -> Result<ValidFunc, String> {
+        let (expected, found) = march_simple_model("horizontal", "back", 0.9, 60.)?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
-    validations.push(wall1());
+    validations.push(wall1()?);
+
+    Ok(())
 }
 
-fn massive(validations: &mut Validator) {
+fn massive(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "EnergyPlus";
 
-    #[valid(Massive Wall, with Solar and Long Wave Radiation)]
-    fn wall1() -> Box<dyn Validate> {
+    #[valid("Massive Wall, with Solar and Long Wave Radiation")]
+    fn wall1() -> Result<ValidFunc, String> {
         let (expected, found) =
-            march_test_model("massive_full", 0.9, 0.7, vec![TestMat::Concrete(0.2)]);
-        get_validator(expected, found, EXPECTED_LEGEND)
+            march_test_model("massive_full", 0.9, 0.7, vec![TestMat::Concrete(0.2)])?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+
+        Ok(v)
     }
 
-    #[valid(Massive Wall, with no Solar or Long Wave Radiation)]
-    fn wall2() -> Box<dyn Validate> {
+    #[valid("Massive Wall, with no Solar or Long Wave Radiation")]
+    fn wall2() -> Result<ValidFunc, String> {
         // Massive, NO solar and NO Long Wave
         let (expected, found) = march_test_model(
             "massive_no_ir_no_solar",
             0.0,
             0.0,
             vec![TestMat::Concrete(0.2)],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(Massive Wall, with Solar Radiation but not Long Wave Radiation)]
-    fn wall3() -> Box<dyn Validate> {
+    #[valid("Massive Wall, with Solar Radiation but not Long Wave Radiation")]
+    fn wall3() -> Result<ValidFunc, String> {
         // Massive, WITH  solar and NO Long Wave
         let (expected, found) = march_test_model(
             "massive_no_ir_yes_solar",
             0.0,
             0.7,
             vec![TestMat::Concrete(0.2)],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(Massive Wall, with Long Wave Radiation but not Solar Radiation)]
-    fn wall4() -> Box<dyn Validate> {
+    #[valid("Massive Wall, with Long Wave Radiation but not Solar Radiation")]
+    fn wall4() -> Result<ValidFunc, String> {
         // Massive, No  solar and WITH Long Wave
         let (expected, found) = march_test_model(
             "massive_yes_ir_no_solar",
             0.9,
             0.0,
             vec![TestMat::Concrete(0.2)],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    validations.push(wall1());
-    validations.push(wall2());
-    validations.push(wall3());
-    validations.push(wall4());
+    validations.push(wall1()?);
+    validations.push(wall2()?);
+    validations.push(wall3()?);
+    validations.push(wall4()?);
+
+    Ok(())
 }
 
-fn mixed(validations: &mut Validator) {
+fn mixed(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "EnergyPlus";
 
-    #[valid(Mixed Mass Wall, with Solar Radiation and Long Wave Radiation)]
-    fn wall1() -> Box<dyn Validate> {
+    #[valid("Mixed Mass Wall, with Solar Radiation and Long Wave Radiation")]
+    fn wall1() -> Result<ValidFunc, String> {
         // Mixed Mass, With solar Radiation and Long Wave
         let (expected, found) = march_test_model(
             "mixed_full",
@@ -886,12 +884,13 @@ fn mixed(validations: &mut Validator) {
                 TestMat::Concrete(0.2),
                 TestMat::Polyurethane(0.02),
             ],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(Mixed Mass Wall, without Solar or Long Wave Radiation)]
-    fn wall2() -> Box<dyn Validate> {
+    #[valid("Mixed Mass Wall, without Solar or Long Wave Radiation")]
+    fn wall2() -> Result<ValidFunc, String> {
         // Mixed Mass, NO solar and NO Long Wave
         let (expected, found) = march_test_model(
             "mixed_no_ir_no_solar",
@@ -902,12 +901,14 @@ fn mixed(validations: &mut Validator) {
                 TestMat::Concrete(0.2),
                 TestMat::Polyurethane(0.02),
             ],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+
+        Ok(v)
     }
 
-    #[valid(Mixed Mass Wall, with Solar Radiation but no Long Wave Radiation)]
-    fn wall3() -> Box<dyn Validate> {
+    #[valid("Mixed Mass Wall, with Solar Radiation but no Long Wave Radiation")]
+    fn wall3() -> Result<ValidFunc, String> {
         // Mixed Mass, WITH  solar and NO Long Wave
         let (expected, found) = march_test_model(
             "mixed_no_ir_yes_solar",
@@ -918,12 +919,13 @@ fn mixed(validations: &mut Validator) {
                 TestMat::Concrete(0.2),
                 TestMat::Polyurethane(0.02),
             ],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(Mixed Mass Wall, with Long Wave Radiation but no Solar Radiation)]
-    fn wall4() -> Box<dyn Validate> {
+    #[valid("Mixed Mass Wall, with Long Wave Radiation but no Solar Radiation")]
+    fn wall4() -> Result<ValidFunc, String> {
         // Mixed Mass, No  solar and WITH Long Wave
         let (expected, found) = march_test_model(
             "mixed_yes_ir_no_solar",
@@ -934,68 +936,78 @@ fn mixed(validations: &mut Validator) {
                 TestMat::Concrete(0.2),
                 TestMat::Polyurethane(0.02),
             ],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+
+        Ok(v)
     }
 
-    validations.push(wall1());
-    validations.push(wall2());
-    validations.push(wall3());
-    validations.push(wall4());
+    validations.push(wall1()?);
+    validations.push(wall2()?);
+    validations.push(wall3()?);
+    validations.push(wall4()?);
+    Ok(())
 }
 
-fn nomass(validations: &mut Validator) {
+fn nomass(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "EnergyPlus";
 
-    #[valid(No Mass Wall, with Solar Radiation and Long Wave Radiation)]
-    fn wall1() -> Box<dyn Validate> {
+    #[valid("No Mass Wall, with Solar Radiation and Long Wave Radiation")]
+    fn wall1() -> Result<ValidFunc, String> {
         // No Mass, With solar Radiation and Long Wave
         let (expected, found) =
-            march_test_model("nomass_full", 0.9, 0.7, vec![TestMat::Polyurethane(0.02)]);
-        get_validator(expected, found, EXPECTED_LEGEND)
+            march_test_model("nomass_full", 0.9, 0.7, vec![TestMat::Polyurethane(0.02)])?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(No Mass Wall, without Solar or Long Wave Radiation)]
-    fn wall2() -> Box<dyn Validate> {
+    #[valid("No Mass Wall, without Solar or Long Wave Radiation")]
+    fn wall2() -> Result<ValidFunc, String> {
         // No Mass, NO solar and NO Long Wave
         let (expected, found) = march_test_model(
             "nomass_no_ir_no_solar",
             0.0,
             0.0,
             vec![TestMat::Polyurethane(0.02)],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+
+        Ok(v)
     }
 
-    #[valid(No Mass Wall, with Solar Radiation but no Long Wave Radiation)]
-    fn wall3() -> Box<dyn Validate> {
+    #[valid("No Mass Wall, with Solar Radiation but no Long Wave Radiation")]
+    fn wall3() -> Result<ValidFunc, String> {
         // No Mass, WITH  solar and NO Long Wave
         let (expected, found) = march_test_model(
             "nomass_no_ir_yes_solar",
             0.0,
             0.7,
             vec![TestMat::Polyurethane(0.02)],
-        );
-        get_validator(expected, found, EXPECTED_LEGEND)
+        )?;
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+        Ok(v)
     }
 
-    #[valid(No Mass Wall, with Long Wave Radiation but no Solar Radiation)]
-    fn wall4() -> Box<dyn Validate> {
+    #[valid("No Mass Wall, with Long Wave Radiation but no Solar Radiation")]
+    fn wall4() -> Result<ValidFunc, String> {
         // No Mass, No  solar and WITH Long Wave
         let (expected, found) = march_test_model(
             "nomass_yes_ir_no_solar",
             0.9,
             0.0,
             vec![TestMat::Polyurethane(0.02)],
-        );
+        )?;
 
-        get_validator(expected, found, EXPECTED_LEGEND)
+        let v = get_validator(expected, found, EXPECTED_LEGEND);
+
+        Ok(v)
     }
 
-    validations.push(wall1());
-    validations.push(wall2());
-    validations.push(wall3());
-    validations.push(wall4());
+    validations.push(wall1()?);
+    validations.push(wall2()?);
+    validations.push(wall3()?);
+    validations.push(wall4()?);
+    Ok(())
 }
 
 // fn march_trombe_wall(
@@ -1003,7 +1015,7 @@ fn nomass(validations: &mut Validator) {
 //     emissivity: Float,
 //     solar_abs: Float,
 //     construction: Vec<TestMat>,
-// ) -> (Vec<Float>, Vec<Float>) {
+// ) -> Result<(Vec<Float>, Vec<Float>),String> {
 //     let surface_area = 20. * 3.;
 //     let zone_volume = 600.;
 
@@ -1023,9 +1035,9 @@ fn nomass(validations: &mut Validator) {
 
 //     let n: usize = 20;
 //     // let main_dt = 60. * 60. / n as Float;
-//     let thermal_model = ThermalModel::new(&simple_model, &mut state_header, n).unwrap();
+//     let thermal_model = ThermalModel::new(&simple_model, &mut state_header, n)?;
 
-//     let mut state = state_header.take_values().unwrap();
+//     let mut state = state_header.take_values().ok_or("Could not take state")?;
 
 //     let path_string = format!("./tests/{}/eplusout.csv", dir);
 //     let path = path_string.as_str();
@@ -1049,7 +1061,7 @@ fn nomass(validations: &mut Validator) {
 //     let mut found = Vec::with_capacity(n);
 //     for i in 0..n {
 //         // Get zone's temp
-//         let found_temp = simple_model.spaces[0].dry_bulb_temperature(&state).unwrap();
+//         let found_temp = simple_model.spaces[0].dry_bulb_temperature(&state).ok_or("No Dry Bulb temp. found")?;
 //         let exp_temp = exp_zone_air_temp[i];
 //         if i > 000 {
 //             // skip warmup
@@ -1069,12 +1081,12 @@ fn nomass(validations: &mut Validator) {
 
 //         // Set Long Wave radiation
 //         if emissivity > 1e-3 {
-//             let ts = surface.last_node_temperature(&state).unwrap();
+//             let ts = surface.last_node_temperature(&state)?;
 //             let v = outdoor_thermal_heat_gain[i] / surface_area / emissivity
 //                 + heat::SIGMA * (ts + 273.15).powi(4);
 //             surface.set_back_ir_irradiance(&mut state, v);
 
-//             let ts = surface.first_node_temperature(&state).unwrap();
+//             let ts = surface.first_node_temperature(&state)?;
 //             let v = indoor_thermal_heat_gain[i] / surface_area / emissivity
 //                 + heat::SIGMA * (ts + 273.15).powi(4);
 //             surface.set_front_ir_irradiance(&mut state, v);
@@ -1082,8 +1094,7 @@ fn nomass(validations: &mut Validator) {
 
 //         // March
 //         thermal_model
-//             .march(date, &weather, &simple_model, &mut state)
-//             .unwrap();
+//             .march(date, &weather, &simple_model, &mut state)?;
 
 //         // Advance
 //         date.add_hours(1. / n as Float);
@@ -1120,11 +1131,11 @@ fn nomass(validations: &mut Validator) {
 // }
 
 #[test]
-fn validate() {
+fn validate() -> Result<(), String> {
     // cargo test --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture
     let p = "../docs/validation";
     if !std::path::Path::new(&p).exists() {
-        std::fs::create_dir(p).unwrap();
+        std::fs::create_dir(p).map_err(|e| e.to_string())?;
     }
 
     let target_file = format!("{}/walls.html", p);
@@ -1133,14 +1144,14 @@ fn validate() {
         &target_file,
     );
 
-    theoretical(&mut validations);
-    massive(&mut validations);
-    mixed(&mut validations);
-    nomass(&mut validations);
-    tilted(&mut validations);
-    horizontal(&mut validations);
+    theoretical(&mut validations)?;
+    massive(&mut validations)?;
+    mixed(&mut validations)?;
+    nomass(&mut validations)?;
+    tilted(&mut validations)?;
+    horizontal(&mut validations)?;
 
     // trombe_wall(&mut validations);
-    validations.validate().unwrap();
+    validations.validate()
 }
 //
