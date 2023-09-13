@@ -47,6 +47,15 @@ impl std::default::Default for RayTracerHelper {
     }
 }
 
+impl RayTracerHelper    {
+    pub fn with_capacity(n: usize)->Self{
+        Self { 
+            rays: vec![Ray::default(); n], 
+            nodes: Vec::with_capacity(64)
+        }
+    }
+}
+
 pub struct RayTracer {
     pub max_depth: usize,
     pub n_shadow_samples: usize,
@@ -374,7 +383,7 @@ impl RayTracer {
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
-            let mut aux = RayTracerHelper::default();
+            let mut aux = RayTracerHelper::with_capacity(self.max_depth + 1);
             let mut rng = get_rng();
 
             for pixel in chunk {

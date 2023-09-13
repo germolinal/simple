@@ -250,7 +250,7 @@ fn baricentric_coorinates(
     let a = dot(edge1, &h);
 
     if a.abs() < TINY {
-        return None;
+        return None; // ray is parallel
     }
     let f = 1. / a;
     let s = [ray.origin.x - ax, ray.origin.y - ay, ray.origin.z - az];
@@ -262,13 +262,14 @@ fn baricentric_coorinates(
     let q = cross(&s, edge1);
     let v = f * dot(&ray_direction, &q);
     if u + v > 1.0 + Float::EPSILON || v < -Float::EPSILON {
-        return None;
+        return None; // intersection is outside
     }
     let t = f * dot(edge2, &q);
     if t > TINY {
-        return Some((ray.project(t), u, v));
+        Some((ray.project(t), u, v))
+    } else {
+        None
     }
-    None
 }
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the [`IntersectionInfo`]

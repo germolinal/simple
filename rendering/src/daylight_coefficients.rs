@@ -36,6 +36,7 @@ use rayon::prelude::*;
 
 /// A structure meant to calculate DC matrices
 /// for Climate Daylight Simulations.
+#[derive(Debug)]
 pub struct DCFactory {
     pub reinhart: ReinhartSky,
     pub max_depth: usize,
@@ -64,7 +65,7 @@ impl DCFactory {
         // Initialize matrix
         let n_bins = self.reinhart.n_bins;
 
-        let counter = std::sync::Arc::new(std::sync::Mutex::new(0));
+        // let counter = std::sync::Arc::new(std::sync::Mutex::new(0));
         // let last_progress = std::sync::Arc::new(std::sync::Mutex::new(0.0));
 
         // Process... This can be in parallel, or not.
@@ -75,6 +76,8 @@ impl DCFactory {
         // Iterate the rays
         let dcs: Vec<ColourMatrix> = aux_iter
             .map(|primary_ray| -> ColourMatrix {
+                let start = std::time::Instant::now();
+
                 let normal = primary_ray.direction;
                 let origin = primary_ray.origin;
                 let e2 = normal.get_perpendicular().unwrap();
@@ -97,6 +100,9 @@ impl DCFactory {
                 // Iterate primary rays
                 let ray_contributions: Vec<ColourMatrix> = aux_iter
                     .map(|local_ray_dir: Vector3D| -> ColourMatrix {
+
+                        
+
                         let (x, y, z) = crate::samplers::local_to_world(
                             e1,
                             e2,
@@ -115,8 +121,9 @@ impl DCFactory {
                             "length is {}",
                             new_ray_dir.length()
                         );
+                        
 
-                        let mut aux = RayTracerHelper::default();
+                        let mut aux = RayTracerHelper::with_capacity(self.max_depth + 1);
                         let mut new_ray = Ray {
                             // time: 0.,
                             geometry: Ray3D {
@@ -131,8 +138,8 @@ impl DCFactory {
                         // let current_weight = cos_theta;
                         self.trace_ray(scene, &mut new_ray, &mut this_ret, &mut rng, &mut aux);
 
-                        let mut c = counter.lock().unwrap();
-                        *c += 1;
+                        // let mut c = counter.lock().unwrap();
+                        // *c += 1;
                         // let nrays = rays.len() * self.n_ambient_samples;
                         // let mut lp = last_progress.lock().unwrap();
                         // let progress = (100. * *c as Float / nrays as Float).round() as Float;
@@ -140,7 +147,7 @@ impl DCFactory {
                         //     *lp = progress;
                         //     println!("... Done {:.0}%", progress);
                         // }
-
+                        
                         this_ret
                     })
                     .collect(); // End of iterating primary rays
@@ -149,6 +156,8 @@ impl DCFactory {
                 ray_contributions.iter().for_each(|v| {
                     ret += v;
                 });
+
+                dbg!(start.elapsed().as_millis());
                 ret
                 // ray_contributions.iter().sum();
             })
