@@ -65,8 +65,16 @@ fn get_simple_results(
     };
     scene.build_accelerator();
 
+    let n_ambient_samples = if max_depth > 0 {
+        9020
+    } else {
+        100020
+    };
+
+    
+
     let integrator = DCFactory {
-        n_ambient_samples: 51020,
+        n_ambient_samples,
         max_depth,
         limit_weight: 1e-9,
         ..DCFactory::default()
@@ -111,14 +119,14 @@ fn get_simple_results(
 /// Calculate the Daylight Coefficients in a room with a glass window, considering ambient bounces
 #[valid(Room With Glass - With Bounces)]
 fn room_global_with_glass() -> Result<ValidFunc, String> {
-    let (expected, found) = get_simple_results("room", 12, true)?;
+    let (expected, found) = get_simple_results("room", 4, true)?;
     Ok(get_validator(expected, found))
 }
 
 /// Calculate the Daylight Coefficients in a room with a window with no glass, considering ambient bounces
 #[valid(Room With No Glass - With Bounces)]
 fn room_global_with_no_glass() -> Result<ValidFunc, String> {
-    let (expected, found) = get_simple_results("room", 12, false)?;
+    let (expected, found) = get_simple_results("room", 4, false)?;
     Ok(get_validator(expected, found))
 }
 
@@ -139,15 +147,15 @@ fn room_direct_with_no_glass() -> Result<ValidFunc, String> {
 fn room(validator: &mut Validator) -> Result<(), String> {
     validator.push(room_direct_with_no_glass()?);
     validator.push(room_direct_with_glass()?);
-    // validator.push(room_global_with_no_glass()?);
-    // validator.push(room_global_with_glass()?);
+    validator.push(room_global_with_no_glass()?);
+    validator.push(room_global_with_glass()?);
 
     Ok(())
 }
 
 #[test]
 fn validate_dc() -> Result<(), String> {
-    // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture --ignored
+    // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture     
     let mut validator = Validator::new(
         "Validate Daylight Coefficients",
         "../docs/validation/daylight_coefficient.html",
