@@ -90,24 +90,7 @@ impl Segment3D {
         if !point.is_collinear(self.start, self.end)? {
             return Ok(false);
         }
-        //else {
-        //     let ab = self.end - self.start;
-        //     let ap = point - self.start;
-        //     let ret: Float;
-        //     if ab.x.abs() > Float::EPSILON {
-        //         ret = ap.x / ab.x;
-        //     } else if ab.y.abs() > Float::EPSILON {
-        //         ret = ap.y / ab.y;
-        //     } else if ab.z.abs() > Float::EPSILON {
-        //         ret = ap.z / ab.z;
-        //     } else {
-        //         // return Err("Checking if Segment3D of length 0 contains a Point3D".to_string());
-        //         panic!("asas")
-        //     }
-        //     // Ok((0. ..=1.).contains(&ret))
-        //     (0. ..=1.).contains(&ret)
-        // }
-
+        
         let v0 = self.end.x - self.start.x;
         let v1 = self.end.y - self.start.y;
         let v2 = self.end.z - self.start.z;
@@ -122,48 +105,7 @@ impl Segment3D {
     ///
     /// It does this by checking that both [`Point3D`] in `input` are
     /// contained within `self`
-    pub fn contains(&self, input: &Segment3D) -> Result<bool, String> {
-        // const TINY: Float = 1e-6;
-        // if self.length() < TINY {
-        //     return Err(
-        //         "Trying to check whether a segment is contained in a zero-length segment".into(),
-        //     );
-        // }
-
-        // let a1 = self.start();
-        // let b1 = self.end();
-        // let a2 = input.start();
-        // let b2 = input.end();
-
-        // // If the four points are not collinear, then no
-        // if !a1.is_collinear(b1, a2)? || !a1.is_collinear(b1, b2)? {
-        //     return Ok(false);
-        // }
-
-        // // they are in the same line, so now just
-        // // calculate the interpolation
-        // let a1b1 = b1 - a1;
-
-        // let alpha: Float;
-        // let beta: Float;
-        // if a1b1.x.abs() > TINY {
-        //     alpha = (a2.x - a1.x) / a1b1.x;
-        //     beta = (b2.x - a1.x) / a1b1.x;
-        // } else if a1b1.y.abs() > TINY {
-        //     alpha = (a2.y - a1.y) / a1b1.y;
-        //     beta = (b2.y - a1.y) / a1b1.y;
-        // } else if a1b1.z.abs() > TINY {
-        //     alpha = (a2.z - a1.z) / a1b1.z;
-        //     beta = (b2.z - a1.z) / a1b1.z;
-        // } else {
-        //     // We should never get here.
-        //     return Err(
-        //         "Trying to check whether a segment is contained in a zero-length segment".into(),
-        //     );
-        // }
-        // const INTERSECT_RANGE: core::ops::RangeInclusive<Float> = 0. ..=1.; // TINY..(1.-TINY);
-        // Ok(INTERSECT_RANGE.contains(&alpha) && INTERSECT_RANGE.contains(&beta))
-
+    pub fn contains(&self, input: &Segment3D) -> Result<bool, String> {        
         Ok(self.contains_point(input.start)? && self.contains_point(input.end)?)
     }
 
