@@ -281,8 +281,8 @@ fn validate_ray_tracer() -> Result<(), String> {
     let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");
 
     metal(&mut validator)?;
-    // plastic(&mut validator)?;
-    // glass(&mut validator)?;
+    plastic(&mut validator)?;
+    glass(&mut validator)?;
 
     validator.validate()
 }
