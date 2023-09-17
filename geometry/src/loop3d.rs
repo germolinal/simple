@@ -386,17 +386,9 @@ impl Loop3D {
         Ok(())
     }
 
-    /// Pushes a new [`Point3D`] into the [`Loop3D`].
-    ///
-    /// If the [`Point3D`] being
-    /// pushed is collinear with the previous two, then instead of pushing a new
-    /// [`Point3D`] it will update the last one (i.e., because the shape and area)
-    /// of the [`Loop3D`] will still be the same.
-    ///
-    /// Returns an error if the point being added would make the [`Loop3D`]
-    /// intersect itself, or if the new [`Point3D`] is not coplanar with the
-    /// [`Loop3D`], or if the [`Loop3D`] is closed.
-    pub fn push(&mut self, point: Point3D) -> Result<(), String> {
+    /// It is like `push`, but the `avoid_dollinear` parameters let us choose whether we want to 
+    /// allow multiple collinear points being put together.
+    pub fn push_collinear(&mut self, point: Point3D, avoid_collinear: bool) -> Result<(),String>{
         // Check the point
         self.valid_to_add(point)?;
 
@@ -413,7 +405,7 @@ impl Loop3D {
             let a = self.vertices[n - 2];
             let b = self.vertices[n - 1];
 
-            if a.is_collinear(b, point)? {
+            if avoid_collinear && a.is_collinear(b, point)? {
                 // if it is collinear, update last point instead of
                 // adding a new one
                 self.vertices[n - 1] = point;
@@ -429,6 +421,21 @@ impl Loop3D {
             self.set_normal()?;
         }
         Ok(())
+
+    }
+
+    /// Pushes a new [`Point3D`] into the [`Loop3D`].
+    ///
+    /// If the [`Point3D`] being
+    /// pushed is collinear with the previous two, then instead of pushing a new
+    /// [`Point3D`] it will update the last one (i.e., because the shape and area)
+    /// of the [`Loop3D`] will still be the same.
+    ///
+    /// Returns an error if the point being added would make the [`Loop3D`]
+    /// intersect itself, or if the new [`Point3D`] is not coplanar with the
+    /// [`Loop3D`], or if the [`Loop3D`] is closed.
+    pub fn push(&mut self, point: Point3D) -> Result<(), String> {
+        self.push_collinear(point, true)
     }
 
     /// Counts the vertices in the [`Loop3D`]    
