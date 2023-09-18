@@ -1,4 +1,4 @@
-use crate::Float;
+use crate::{Float, Scene};
 use geometry::{
     intersection::{IntersectionInfo, SurfaceSide},
     BBox3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
@@ -274,21 +274,26 @@ fn baricentric_coorinates(
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the [`IntersectionInfo`]
 /// (or `None` if they don't intersect)
-pub fn triangle_intersect(t: &Triangle, ray: &geometry::Ray3D) -> Option<IntersectionInfo> {
+pub fn triangle_intersect(scene: &Scene, ray: &geometry::Ray3D, ini: usize, fin: usize) -> Option<IntersectionInfo> {
     
-    let ax = t[0];
-    let ay = t[1];
-    let az = t[2];
+    
 
-    let bx = t[3];
-    let by = t[4];
-    let bz = t[5];
+    for i in ini..fin {
 
-    let cx = t[6];
-    let cy = t[7];
-    let cz = t[8];
+        let ax = scene.ax[i];
+        let ay = scene.ay[i];
+        let az = scene.az[i];
+        let bx = scene.bx[i];
+        let by = scene.by[i];
+        let bz = scene.bz[i];
+        let cx = scene.cx[i];
+        let cy = scene.cy[i];
+        let cz = scene.cz[i];
 
-    let (p, u, v) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)?;
+        let (p, u, v) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)?;
+    }
+    
+
     Some(new_info(t, p, u, v, ray.direction))
 }
 
