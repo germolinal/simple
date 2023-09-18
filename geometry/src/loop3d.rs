@@ -576,7 +576,7 @@ impl Loop3D {
         let first_point = self.vertices[0];
         let d = first_point - p;
 
-        let aux = (self.normal * d).abs();
+        let aux = (self.normal * d).abs();                
         Ok(aux < 1e-7)
     }
 
@@ -867,7 +867,17 @@ impl Loop3D {
             let current_segment = Segment3D::new(self.vertices[i], self.vertices[(i + 1) % n]);
 
             if current_segment.intersect(s, &mut inter) {
-                ret.push((i, inter))
+                // add only if this intersection has not been added already
+                let mut already_in = false;
+                for (_, p) in ret.iter() {
+                    if inter.compare(*p){
+                        already_in = true;
+                        break;
+                    }
+                }
+                if!already_in{
+                    ret.push((i, inter))
+                }
             }
         }
 
