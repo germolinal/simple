@@ -239,6 +239,6 @@ f 1 2 3
         // let mut scene = Scene::from_obj("./tests/scenes/sponza.obj".to_string());
         scene.add_from_obj_source(src, gray, gray);
 
-        assert_eq!(3, scene.triangles.len());
+        assert_eq!(3, scene.ax.len());
     }
 }

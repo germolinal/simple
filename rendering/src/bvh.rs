@@ -586,7 +586,7 @@ impl BoundingVolumeTree {
 
                     /* NON_SIMD */
 
-                    if let Some(intersect_info) = triangle_intersect(scene, &ray.geometry, ini, fin)
+                    if let Some((i,intersect_info)) = triangle_intersect(scene, &ray.geometry, ini, fin)
                     {
                         // If hit, check the distance.
                         let this_t_squared =
@@ -723,23 +723,22 @@ impl BoundingVolumeTree {
                     // Check all the objects in this Node
                     let ini = offset as usize;
                     let fin = ini + node.n_prims as usize;
-                    let this_prims: &[Triangle] = &primitives[ini..fin];
 
                     /* NON_SIMD */
-                    for tri in this_prims.iter() {
-                        if let Some(p) = simple_triangle_intersect(tri, ray) {
-                            // If hit, check the distance.
-                            let this_t_squared = (p - ray.origin).length_squared();
+                    
+                    if let Some((i,p)) = simple_triangle_intersect(scene, ray, ini, fin) {
+                        // If hit, check the distance.
+                        let this_t_squared = (p - ray.origin).length_squared();
 
-                            if this_t_squared > MIN_T
-                                && this_t_squared + MIN_T < distance_squared
-                                && (distance_squared - this_t_squared).abs() > 0.0001
-                            {
-                                return false;
-                            }
+                        if this_t_squared > MIN_T
+                            && this_t_squared + MIN_T < distance_squared
+                            && (distance_squared - this_t_squared).abs() > 0.0001
+                        {
+                            return false;
                         }
-                        // i += 1;
                     }
+                    // i += 1;
+                
 
                     /* SIMD */
                     // const PACK_SIZE: usize = 4;
@@ -880,7 +879,17 @@ mod tests {
         let mut scene = get_horizontal_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
         for (i, original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
+            assert_eq!(&scene.ax[i], &original_scene.ax[original_i]);
+            assert_eq!(&scene.ay[i], &original_scene.ay[original_i]);
+            assert_eq!(&scene.az[i], &original_scene.az[original_i]);
+
+            assert_eq!(&scene.bx[i], &original_scene.bx[original_i]);
+            assert_eq!(&scene.by[i], &original_scene.by[original_i]);
+            assert_eq!(&scene.bz[i], &original_scene.bz[original_i]);
+
+            assert_eq!(&scene.cx[i], &original_scene.cx[original_i]);
+            assert_eq!(&scene.cy[i], &original_scene.cy[original_i]);
+            assert_eq!(&scene.cz[i], &original_scene.cz[original_i]);
         }
 
         let node = &bvh.nodes[0];
@@ -903,7 +912,18 @@ mod tests {
         let mut scene = get_vertical_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
         for (i, original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
+            
+            assert_eq!(&scene.ax[i], &original_scene.ax[original_i]);
+            assert_eq!(&scene.ay[i], &original_scene.ay[original_i]);
+            assert_eq!(&scene.az[i], &original_scene.az[original_i]);
+
+            assert_eq!(&scene.bx[i], &original_scene.bx[original_i]);
+            assert_eq!(&scene.by[i], &original_scene.by[original_i]);
+            assert_eq!(&scene.bz[i], &original_scene.bz[original_i]);
+
+            assert_eq!(&scene.cx[i], &original_scene.cx[original_i]);
+            assert_eq!(&scene.cy[i], &original_scene.cy[original_i]);
+            assert_eq!(&scene.cz[i], &original_scene.cz[original_i]);
         }
         // assert_eq!(bvh.nodes.len(), 3);
 
@@ -927,7 +947,17 @@ mod tests {
         let mut scene = get_horizontal_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
         for (i, original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
+            assert_eq!(&scene.ax[i], &original_scene.ax[original_i]);
+            assert_eq!(&scene.ay[i], &original_scene.ay[original_i]);
+            assert_eq!(&scene.az[i], &original_scene.az[original_i]);
+
+            assert_eq!(&scene.bx[i], &original_scene.bx[original_i]);
+            assert_eq!(&scene.by[i], &original_scene.by[original_i]);
+            assert_eq!(&scene.bz[i], &original_scene.bz[original_i]);
+
+            assert_eq!(&scene.cx[i], &original_scene.cx[original_i]);
+            assert_eq!(&scene.cy[i], &original_scene.cy[original_i]);
+            assert_eq!(&scene.cz[i], &original_scene.cz[original_i]);
         }
 
         let mut ray = Ray {
