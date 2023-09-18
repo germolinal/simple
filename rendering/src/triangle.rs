@@ -38,7 +38,15 @@ pub fn triangle_area(triangle: &Triangle) -> Float {
 }
 
 pub fn triangle_solid_angle_pdf(
-    triangle: &Triangle,
+    ax: Float,
+    ay: Float,
+    az: Float,
+    bx: Float,
+    by: Float,
+    bz: Float,
+    cx: Float,
+    cy: Float,
+    cz: Float,
     point: Point3D,
     normal: Vector3D,
     ray: &Ray3D,
@@ -49,7 +57,7 @@ pub fn triangle_solid_angle_pdf(
     if cos_theta < 1e-7 {
         return 0.0;
     }
-    let area = triangle_area(triangle);
+    let area = triangle_area(&[ax, ay, az, bx, by, bz, cx, cy, cz]);
     // return
     d2 / cos_theta.abs() / area
 }
@@ -274,12 +282,17 @@ fn baricentric_coorinates(
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the [`IntersectionInfo`]
 /// (or `None` if they don't intersect)
-pub fn triangle_intersect(scene: &Scene, ray: &geometry::Ray3D, ini: usize, fin: usize) -> Option<IntersectionInfo> {
-    
-    
+pub fn triangle_intersect(
+    scene: &Scene,
+    ray: &geometry::Ray3D,
+    ini: usize,
+    fin: usize,
+) -> Option<(usize, IntersectionInfo)> {
+    const MIN_T: Float = 0.0000001;
+    let mut t_squared = Float::MAX;
+    let mut ret = None;
 
     for i in ini..fin {
-
         let ax = scene.ax[i];
         let ay = scene.ay[i];
         let az = scene.az[i];
@@ -290,29 +303,74 @@ pub fn triangle_intersect(scene: &Scene, ray: &geometry::Ray3D, ini: usize, fin:
         let cy = scene.cy[i];
         let cz = scene.cz[i];
 
-        let (p, u, v) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)?;
+        if let Some((point, u, v)) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)
+        {
+            // If hit, check the distance.
+            let this_t_squared = (point - ray.origin).length_squared();
+            // if the distance is less than the prevous one, update the info
+            if this_t_squared > MIN_T && this_t_squared < t_squared {
+                // If the distance is less than what we had, update return data
+                t_squared = this_t_squared;
+                let info = new_info(
+                    ax,
+                    ay,
+                    az,
+                    bx,
+                    by,
+                    bz,
+                    cx,
+                    cy,
+                    cz,
+                    point,
+                    u,
+                    v,
+                    ray.direction,
+                );
+                ret = Some((i, info));
+            }
+        }
     }
-    
 
-    Some(new_info(t, p, u, v, ray.direction))
+    ret
 }
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the `Point3D` of
 /// intersection
-pub fn simple_triangle_intersect(t: &Triangle, ray: &geometry::Ray3D) -> Option<geometry::Point3D> {
-    let ax = t[0];
-    let ay = t[1];
-    let az = t[2];
+pub fn simple_triangle_intersect(
+    scene: &Scene,
+    ray: &geometry::Ray3D,
+    ini: usize,
+    fin: usize,
+) -> Option<(usize,geometry::Point3D)> {
+    const MIN_T: Float = 0.0000001;
+    let mut t_squared = Float::MAX;
+    let mut ret = None;
 
-    let bx = t[3];
-    let by = t[4];
-    let bz = t[5];
+    for i in ini..fin {
+        let ax = scene.ax[i];
+        let ay = scene.ay[i];
+        let az = scene.az[i];
+        let bx = scene.bx[i];
+        let by = scene.by[i];
+        let bz = scene.bz[i];
+        let cx = scene.cx[i];
+        let cy = scene.cy[i];
+        let cz = scene.cz[i];
 
-    let cx = t[6];
-    let cy = t[7];
-    let cz = t[8];
-    let (pt, ..) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)?;
-    Some(pt)
+        if let Some((point, u, v)) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)
+        {
+            // If hit, check the distance.
+            let this_t_squared = (point - ray.origin).length_squared();
+            // if the distance is less than the prevous one, update the info
+            if this_t_squared > MIN_T && this_t_squared < t_squared {
+                // If the distance is less than what we had, update return data
+                t_squared = this_t_squared;                
+                ret = Some((i, point));
+            }
+        }
+    }
+
+    ret
 }
 
 // /// Intersects a `Ray3D` and a pack (i.e., `&[]`) of [`Triangle`], returning the
@@ -350,24 +408,20 @@ pub struct Intersection {
 }
 
 pub fn new_info(
-    triangle: &Triangle,
+    ax: Float,
+    ay: Float,
+    az: Float,
+    bx: Float,
+    by: Float,
+    bz: Float,
+    cx: Float,
+    cy: Float,
+    cz: Float,
     point: Point3D,
     _u: Float,
     _v: Float,
     ray_dir: Vector3D,
 ) -> IntersectionInfo {
-    let ax = triangle[0];
-    let ay = triangle[1];
-    let az = triangle[2];
-
-    let bx = triangle[3];
-    let by = triangle[4];
-    let bz = triangle[5];
-
-    let cx = triangle[6];
-    let cy = triangle[7];
-    let cz = triangle[8];
-
     let dpdu = Vector3D::new(bx - ax, by - ay, bz - az);
     let dpdv = Vector3D::new(cx - ax, cy - ay, cz - az);
     // eprintln!("dpdu = {} | dpdv = {}", dpdu, dpdv);
@@ -546,6 +600,8 @@ pub fn mesh_sphere(s: &Sphere3D) -> (Vec<Triangle>, Vec<(Vector3D, Vector3D, Vec
 
 #[cfg(test)]
 mod testing {
+    use crate::{material::Metal, Spectrum};
+
     use super::*;
     use validate::assert_close;
 
@@ -658,6 +714,20 @@ mod testing {
 
         let triangle: Triangle = [a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z];
 
+        let mut scene = Scene::new();
+        scene.push_material(crate::material::Material::Metal(Metal {
+            colour: Spectrum([0.2, 0.2, 0.2]),
+            specularity: 0.0,
+            roughness: 0.0,
+        }));
+        scene.push_object(
+            0,
+            0,
+            crate::primitive::Primitive::Triangle(Triangle3D::new(a, b, c)?),
+        );
+
+        scene.build_accelerator();
+
         let test_hit = |pt: Point3D,
                         dir: Vector3D,
                         expect_pt: Option<Point3D>,
@@ -668,7 +738,7 @@ mod testing {
                 direction: dir,
             };
 
-            if let Some(info) = triangle_intersect(&triangle, &ray) {
+            if let Some((i, info)) = triangle_intersect(&scene, &ray, 0, 1) {
                 let phit = info.p;
 
                 if let Some(exp_p) = expect_pt {
