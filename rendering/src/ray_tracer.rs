@@ -347,9 +347,8 @@ impl RayTracer {
                 continue;
             }
             count += 1;
-            
-            // let fx = li * bsdf_value * cos_theta / 1.2;
-            let fx = li * cos_theta / 7.04;
+                        
+            let fx = li * cos_theta;
  
             global += fx / ray_pdf;
 

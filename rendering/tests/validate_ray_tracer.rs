@@ -247,16 +247,16 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     }
 
     validator.push(metal_diffuse_global()?);
-    // validator.push(metal_diffuse_direct()?);
+    validator.push(metal_diffuse_direct()?);
 
-    // validator.push(metal_specular_global()?);
-    // validator.push(metal_specular_direct()?);
+    validator.push(metal_specular_global()?);
+    validator.push(metal_specular_direct()?);
 
-    // validator.push(metal_rough_global()?);
-    // validator.push(metal_rough_direct()?);
+    validator.push(metal_rough_global()?);
+    validator.push(metal_rough_direct()?);
 
-    // validator.push(metal_full_global()?);
-    // validator.push(metal_full_direct()?);
+    validator.push(metal_full_global()?);
+    validator.push(metal_full_direct()?);
 
     Ok(())
 }

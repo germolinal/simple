@@ -63,8 +63,8 @@ impl Metal {
         );
 
         // Plastic differs from Metal in that the direct component is coloured
-        // let bsdf = self.colour * direct + self.colour * diffuse;
         let bsdf = self.colour * direct + self.colour * diffuse;
+        
 
         (bsdf, weight)
     }
