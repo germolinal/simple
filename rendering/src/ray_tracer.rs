@@ -171,7 +171,6 @@ impl RayTracer {
                 self.n_shadow_samples
             } else {
                 1
-                // self.n_shadow_samples
             };
 
             /* DIRECT LIGHT */
@@ -188,7 +187,7 @@ impl RayTracer {
             let global =
                 self.get_global_illumination(scene, n_ambient_samples, material, ray, rng, aux);
 
-            (local + global, 0.0)
+            ((local + global), 0.0)
         } else {
             // Did not hit... so, let's check the sky
             if let Some(sky) = &scene.sky {
@@ -325,13 +324,9 @@ impl RayTracer {
 
         let depth = ray.depth;
         aux.rays[depth] = *ray; // store a copy.
-        let n = n_ambient_samples;
-        let n_ambient_samples = n_ambient_samples as Float;
-        // let n_shadow_samples = n_shadow_samples as Float;
 
-        // for _ in 0..n {
         let mut count = 0;
-        while count < n {
+        while count < n_ambient_samples {
             // Choose a direction.
             let (bsdf_value, ray_pdf) =
                 material.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng);
@@ -348,23 +343,23 @@ impl RayTracer {
             ray.value *= bsdf_rad * cos_theta / ray_pdf;
 
             let (li, light_pdf) = self.trace_ray(rng, scene, ray, aux);
-            
+
             if light_pdf > 0. {
                 // ray hit a light... reset and try again
                 *ray = aux.rays[depth];
                 continue;
             }
             count += 1;
-                        
+
             let fx = li * cos_theta;
- 
+
             global += fx / ray_pdf;
 
             // restore ray, because it was modified by trace_ray executions
             *ray = aux.rays[depth];
         }
         // return
-        global / n_ambient_samples
+        global / (n_ambient_samples as Float)
     }
 
     #[allow(clippy::needless_collect)]

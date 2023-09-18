@@ -7,7 +7,17 @@ use geometry::{
 /// The smallest definition of a Triangle I could think of
 pub type Triangle = [Float; 9];
 
-pub fn triangle_area(triangle: &Triangle) -> Float {
+pub fn triangle_area(
+    ax: Float,
+    ay: Float,
+    az: Float,
+    bx: Float,
+    by: Float,
+    bz: Float,
+    cx: Float,
+    cy: Float,
+    cz: Float,
+) -> Float {
     // let a = std::simd::Simd::from_array([triangle[0], triangle[1], triangle[2], 0.0]);
     // let b = std::simd::Simd::from_array([triangle[3], triangle[4], triangle[5], 0.0]);
     // let c = std::simd::Simd::from_array([triangle[6], triangle[7], triangle[8], 0.0]);
@@ -24,7 +34,6 @@ pub fn triangle_area(triangle: &Triangle) -> Float {
     // ca *= ca;
     // let ca = ca.reduce_sum().sqrt();
 
-    let [ax, ay, az, bx, by, bz, cx, cy, cz] = triangle;
     let ab = ((bx - ax).powi(2) + (by - ay).powi(2) + (bz - az).powi(2)).sqrt();
     let bc = ((cx - bx).powi(2) + (cy - by).powi(2) + (cz - bz).powi(2)).sqrt();
     let ca = ((ax - cx).powi(2) + (ay - cy).powi(2) + (az - cz).powi(2)).sqrt();
@@ -57,7 +66,7 @@ pub fn triangle_solid_angle_pdf(
     if cos_theta < 1e-7 {
         return 0.0;
     }
-    let area = triangle_area(&[ax, ay, az, bx, by, bz, cx, cy, cz]);
+    let area = triangle_area(ax, ay, az, bx, by, bz, cx, cy, cz);
     // return
     d2 / cos_theta.abs() / area
 }
@@ -606,26 +615,22 @@ mod testing {
 
     #[test]
     fn test_triangle_area() {
-        // in XY
-        let t: Triangle = [0., 0., 0., 1., 0., 0., 0., 1., 0.];
-        assert_close!(0.5, triangle_area(&t));
+        // in XY        
+        assert_close!(0.5, triangle_area(0., 0., 0., 1., 0., 0., 0., 1., 0.));
 
-        let t: Triangle = [0., 0., 0., 2., 0., 0., 0., 2., 0.];
-        assert_close!(2., triangle_area(&t));
+        
+        assert_close!(2., triangle_area(0., 0., 0., 2., 0., 0., 0., 2., 0.));
 
         // in XZ
-        let t: Triangle = [0., 0., 0., 1., 0., 0., 0., 0., 1.];
-        assert_close!(0.5, triangle_area(&t));
+        assert_close!(0.5, triangle_area(0., 0., 0., 1., 0., 0., 0., 0., 1.));
 
-        let t: Triangle = [0., 0., 0., 2., 0., 0., 0., 0., 2.];
-        assert_close!(2., triangle_area(&t));
+        
+        assert_close!(2., triangle_area(0., 0., 0., 2., 0., 0., 0., 0., 2.));
 
         // in YZ
-        let t: Triangle = [0., 0., 0., 0., 1., 0., 0., 0., 1.];
-        assert_close!(0.5, triangle_area(&t));
-
-        let t: Triangle = [0., 0., 0., 0., 2., 0., 0., 0., 2.];
-        assert_close!(2., triangle_area(&t));
+        assert_close!(0.5, triangle_area(0., 0., 0., 0., 1., 0., 0., 0., 1.));
+        
+        assert_close!(2., triangle_area(0., 0., 0., 0., 2., 0., 0., 0., 2.));
     }
 
     #[test]
