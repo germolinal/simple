@@ -169,16 +169,6 @@ impl Node {
         ordered_back_materials: &mut Vec<usize>,
         ordered_normals: &mut Vec<(Vector3D, Vector3D, Vector3D)>,
     ) -> Self {
-        let ax = &scene.ax;
-        let ay = &scene.ay;
-        let az = &scene.az;
-        let bx = &scene.bx;
-        let by = &scene.by;
-        let bz = &scene.bz;
-        let cx = &scene.cx;
-        let cy = &scene.cy;
-        let cz = &scene.cz;
-
         let front_materials = &scene.front_material_indexes;
         let back_materials = &scene.back_material_indexes;
         let normals = &scene.normals;
@@ -595,9 +585,7 @@ impl BoundingVolumeTree {
                         if this_t_squared > MIN_T && this_t_squared < t_squared {
                             // If the distance is less than what we had, update return data
                             t_squared = this_t_squared;
-                            // let n = offset as usize + PACK_SIZE * n_packs + i as usize;
-                            let n = ini + i;
-                            prim_index = Some(n);
+                            prim_index = Some(i);
                             ray.interaction.geometry_shading = intersect_info;
                         }
                     }
@@ -726,7 +714,7 @@ impl BoundingVolumeTree {
 
                     /* NON_SIMD */
                     
-                    if let Some((i,p)) = simple_triangle_intersect(scene, ray, ini, fin) {
+                    if let Some((_,p)) = simple_triangle_intersect(scene, ray, ini, fin) {
                         // If hit, check the distance.
                         let this_t_squared = (p - ray.origin).length_squared();
 

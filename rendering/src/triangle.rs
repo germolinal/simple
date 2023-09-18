@@ -341,7 +341,7 @@ pub fn simple_triangle_intersect(
     ray: &geometry::Ray3D,
     ini: usize,
     fin: usize,
-) -> Option<(usize,geometry::Point3D)> {
+) -> Option<(usize, geometry::Point3D)> {
     const MIN_T: Float = 0.0000001;
     let mut t_squared = Float::MAX;
     let mut ret = None;
@@ -357,14 +357,13 @@ pub fn simple_triangle_intersect(
         let cy = scene.cy[i];
         let cz = scene.cz[i];
 
-        if let Some((point, u, v)) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)
-        {
+        if let Some((point, ..)) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz) {
             // If hit, check the distance.
             let this_t_squared = (point - ray.origin).length_squared();
             // if the distance is less than the prevous one, update the info
             if this_t_squared > MIN_T && this_t_squared < t_squared {
                 // If the distance is less than what we had, update return data
-                t_squared = this_t_squared;                
+                t_squared = this_t_squared;
                 ret = Some((i, point));
             }
         }
@@ -712,8 +711,6 @@ mod testing {
         let b = Point3D::new(1., 0., 0.);
         let c = Point3D::new(0., 1., 0.);
 
-        let triangle: Triangle = [a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z];
-
         let mut scene = Scene::new();
         scene.push_material(crate::material::Material::Metal(Metal {
             colour: Spectrum([0.2, 0.2, 0.2]),
@@ -738,7 +735,7 @@ mod testing {
                 direction: dir,
             };
 
-            if let Some((i, info)) = triangle_intersect(&scene, &ray, 0, 1) {
+            if let Some((.., info)) = triangle_intersect(&scene, &ray, 0, 1) {
                 let phit = info.p;
 
                 if let Some(exp_p) = expect_pt {
