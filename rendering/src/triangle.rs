@@ -1,5 +1,3 @@
-use core::slice::SlicePattern;
-
 use crate::Float;
 use geometry::{
     intersection::{IntersectionInfo, SurfaceSide},

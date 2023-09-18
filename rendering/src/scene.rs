@@ -223,7 +223,7 @@ impl Scene {
     /// the Interaction
     pub fn cast_ray(&self, ray: &mut Ray, node_aux: &mut Vec<usize>) -> Option<usize> {
         if let Some(accelerator) = &self.accelerator {
-            accelerator.intersect(&self.triangles, ray, node_aux)
+            accelerator.intersect(self, ray, node_aux)
         } else {
             panic!("Trying to cast_ray() in a scene without an acceleration structure")
         }
