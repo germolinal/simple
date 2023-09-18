@@ -494,9 +494,6 @@ impl BoundingVolumeTree {
         scene.cx = ordered_triangles.iter().map(|t| t.cx).collect();
         scene.cy = ordered_triangles.iter().map(|t| t.cy).collect();
         scene.cz = ordered_triangles.iter().map(|t| t.cz).collect();
-        
-        
-       
 
         scene.front_material_indexes = ordered_front_materials;
         scene.back_material_indexes = ordered_back_materials;
@@ -586,25 +583,23 @@ impl BoundingVolumeTree {
                     // const PACK_SIZE: usize = 4;
                     let ini = offset as usize;
                     let fin = ini + node.n_prims as usize;
-                    let this_prims: &[Triangle] = &scene.triangles[ini..fin];
 
                     /* NON_SIMD */
-                    for (i, tri) in this_prims.iter().enumerate() {
-                        if let Some(intersect_info) = triangle_intersect(tri, &ray.geometry) {
-                            // If hit, check the distance.
-                            let this_t_squared =
-                                (intersect_info.p - ray.geometry.origin).length_squared();
-                            // if the distance is less than the prevous one, update the info
-                            if this_t_squared > MIN_T && this_t_squared < t_squared {
-                                // If the distance is less than what we had, update return data
-                                t_squared = this_t_squared;
-                                // let n = offset as usize + PACK_SIZE * n_packs + i as usize;
-                                let n = ini + i;
-                                prim_index = Some(n);
-                                ray.interaction.geometry_shading = intersect_info;
-                            }
+
+                    if let Some(intersect_info) = triangle_intersect(scene, &ray.geometry, ini, fin)
+                    {
+                        // If hit, check the distance.
+                        let this_t_squared =
+                            (intersect_info.p - ray.geometry.origin).length_squared();
+                        // if the distance is less than the prevous one, update the info
+                        if this_t_squared > MIN_T && this_t_squared < t_squared {
+                            // If the distance is less than what we had, update return data
+                            t_squared = this_t_squared;
+                            // let n = offset as usize + PACK_SIZE * n_packs + i as usize;
+                            let n = ini + i;
+                            prim_index = Some(n);
+                            ray.interaction.geometry_shading = intersect_info;
                         }
-                        // i += 1;
                     }
 
                     /* END OF NON-SIMD */
