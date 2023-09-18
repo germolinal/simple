@@ -1,3 +1,5 @@
+use core::slice::SlicePattern;
+
 use crate::Float;
 use geometry::{
     intersection::{IntersectionInfo, SurfaceSide},
@@ -275,6 +277,7 @@ fn baricentric_coorinates(
 /// Intersects a `Ray3D` and a [`Triangle`], returning the [`IntersectionInfo`]
 /// (or `None` if they don't intersect)
 pub fn triangle_intersect(t: &Triangle, ray: &geometry::Ray3D) -> Option<IntersectionInfo> {
+    
     let ax = t[0];
     let ay = t[1];
     let az = t[2];
