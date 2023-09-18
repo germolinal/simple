@@ -490,7 +490,7 @@ impl BoundingVolumeTree {
     ///
     pub fn intersect(
         &self,
-        primitives: &[Triangle],
+        scene: &Scene,
         ray: &mut Ray,
         nodes_to_visit: &mut Vec<usize>,
     ) -> Option<usize> {
@@ -524,7 +524,7 @@ impl BoundingVolumeTree {
                     // const PACK_SIZE: usize = 4;
                     let ini = offset as usize;
                     let fin = ini + node.n_prims as usize;
-                    let this_prims: &[Triangle] = &primitives[ini..fin];
+                    let this_prims: &[Triangle] = &scene.triangles[ini..fin];
 
                     /* NON_SIMD */
                     for (i, tri) in this_prims.iter().enumerate() {
@@ -767,7 +767,7 @@ mod tests {
         let (bvh, _) = BoundingVolumeTree::new(&mut scene);
         let mut aux = vec![0; 10];
         assert!(bvh
-            .intersect(&scene.triangles, &mut ray, &mut aux)
+            .intersect(&scene, &mut ray, &mut aux)
             .is_none());
     }
 
@@ -884,7 +884,7 @@ mod tests {
         };
         let mut aux = vec![0; 10];
         assert!(bvh
-            .intersect(&scene.triangles, &mut ray, &mut aux)
+            .intersect(&scene, &mut ray, &mut aux)
             .is_some());
 
         assert!(
@@ -902,7 +902,7 @@ mod tests {
         };
         let mut aux = vec![0; 10];
         assert!(bvh
-            .intersect(&scene.triangles, &mut ray, &mut aux)
+            .intersect(&scene, &mut ray, &mut aux)
             .is_some());
 
         assert!((ray.interaction.point - Point3D::new(1., -0.5, 0.)).length() < 1e-5);
@@ -922,7 +922,7 @@ mod tests {
         };
         let mut aux = vec![0; 10];
         assert!(bvh
-            .intersect(&scene.triangles, &mut ray, &mut aux)
+            .intersect(&scene, &mut ray, &mut aux)
             .is_some());
 
         assert!(
@@ -940,7 +940,7 @@ mod tests {
         };
         let mut aux = vec![0; 10];
         assert!(bvh
-            .intersect(&scene.triangles, &mut ray, &mut aux)
+            .intersect(&scene, &mut ray, &mut aux)
             .is_some());
 
         assert!((ray.interaction.point - Point3D::new(0., -0.5, 1.)).length() < 1e-9);
