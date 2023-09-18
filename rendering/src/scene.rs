@@ -25,7 +25,6 @@ use crate::from_simple_model::SimpleModelReader;
 use crate::material::{Light, Material};
 use crate::primitive::Primitive;
 use crate::ray::Ray;
-use crate::triangle::Triangle;
 use crate::Float;
 use calendar::Date;
 use geometry::{Ray3D, Vector3D};
@@ -41,10 +40,19 @@ pub struct Object {
 
 #[derive(Default)]
 pub struct Scene {
-    /// The Triangles in the scene that are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)    
-    pub triangles: Vec<Triangle>,
+    // /// The Triangles in the scene that are not tested
+    // /// directly for shadow (e.g., non-luminous objects
+    // /// and diffuse light)
+    // pub triangles: Vec<Triangle>,
+    pub ax: Vec<Float>,
+    pub ay: Vec<Float>,
+    pub az: Vec<Float>,
+    pub bx: Vec<Float>,
+    pub by: Vec<Float>,
+    pub bz: Vec<Float>,
+    pub cx: Vec<Float>,
+    pub cy: Vec<Float>,
+    pub cz: Vec<Float>,
 
     /// The normal of each vertex of each triangle.
     pub normals: Vec<(Vector3D, Vector3D, Vector3D)>,
@@ -237,7 +245,7 @@ impl Scene {
         node_aux: &mut Vec<usize>,
     ) -> bool {
         if let Some(a) = &self.accelerator {
-            a.unobstructed_distance(&self.triangles, ray, distance_squared, node_aux)
+            a.unobstructed_distance(self, ray, distance_squared, node_aux)
         } else {
             panic!("Trying to check if unobstructed_distance() in a scene without an acceleration structure")
         }
@@ -309,7 +317,23 @@ impl Scene {
         let front = vec![front_material_index; additional];
         let back = vec![back_material_index; additional];
 
-        self.triangles.extend_from_slice(&triangles);
+        // self.triangles.extend_from_slice(&triangles);
+        for t in triangles.iter(){
+            if let [ax,ay,az, bx, by, bz, cx, cy, cz] = t {
+                self.ax.push(*ax);
+                self.ay.push(*ay);
+                self.az.push(*az);
+                self.bx.push(*bx);
+                self.by.push(*by);
+                self.bz.push(*bz);
+                self.cx.push(*cx);
+                self.cy.push(*cy);
+                self.cz.push(*cz);
+            }else{
+                unreachable!("Could not destructure triangle?")
+            }
+        }
+
         self.normals.extend_from_slice(&normals);
         self.front_material_indexes.extend_from_slice(&front);
         self.back_material_indexes.extend_from_slice(&back);
