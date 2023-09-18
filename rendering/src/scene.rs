@@ -318,20 +318,17 @@ impl Scene {
         let back = vec![back_material_index; additional];
 
         // self.triangles.extend_from_slice(&triangles);
-        for t in triangles.iter(){
-            if let [ax,ay,az, bx, by, bz, cx, cy, cz] = t {
-                self.ax.push(*ax);
-                self.ay.push(*ay);
-                self.az.push(*az);
-                self.bx.push(*bx);
-                self.by.push(*by);
-                self.bz.push(*bz);
-                self.cx.push(*cx);
-                self.cy.push(*cy);
-                self.cz.push(*cz);
-            }else{
-                unreachable!("Could not destructure triangle?")
-            }
+        for t in triangles.iter() {
+            let [ax, ay, az, bx, by, bz, cx, cy, cz] = t;
+            self.ax.push(*ax);
+            self.ay.push(*ay);
+            self.az.push(*az);
+            self.bx.push(*bx);
+            self.by.push(*by);
+            self.bz.push(*bz);
+            self.cx.push(*cx);
+            self.cy.push(*cy);
+            self.cz.push(*cz);
         }
 
         self.normals.extend_from_slice(&normals);

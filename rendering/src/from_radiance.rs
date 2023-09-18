@@ -804,7 +804,15 @@ mod tests {
         assert!(!scene.cy.is_empty());
         assert!(!scene.cz.is_empty());
 
-        assert!(scene.normals.is_empty());
+        assert_eq!(scene.normals.len(), scene.ax.len());
+        assert_eq!(scene.normals.len(), scene.ay.len());
+        assert_eq!(scene.normals.len(), scene.az.len());
+        assert_eq!(scene.normals.len(), scene.bx.len());
+        assert_eq!(scene.normals.len(), scene.by.len());
+        assert_eq!(scene.normals.len(), scene.bz.len());
+        assert_eq!(scene.normals.len(), scene.cx.len());
+        assert_eq!(scene.normals.len(), scene.cy.len());
+        assert_eq!(scene.normals.len(), scene.cz.len());
         Ok(())
     }
 
@@ -827,19 +835,22 @@ mod tests {
         scanner.consume_object(src, &mut scene)?; // consume source
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
-        assert!(!scene.ax.is_empty());
-        assert!(!scene.ay.is_empty());
-        assert!(!scene.az.is_empty());
 
-        assert!(!scene.bx.is_empty());
-        assert!(!scene.by.is_empty());
-        assert!(!scene.bz.is_empty());
+        assert!(scene.ax.is_empty());
+        assert!(scene.ay.is_empty());
+        assert!(scene.az.is_empty());
 
-        assert!(!scene.cx.is_empty());
-        assert!(!scene.cy.is_empty());
-        assert!(!scene.cz.is_empty());
+        assert!(scene.bx.is_empty());
+        assert!(scene.by.is_empty());
+        assert!(scene.bz.is_empty());
+
+        assert!(scene.cx.is_empty());
+        assert!(scene.cy.is_empty());
+        assert!(scene.cz.is_empty());
         assert_eq!(1, scene.distant_lights.len());
+        
         assert!(scene.normals.is_empty());
+        
 
         if let Primitive::Source(p) = &scene.distant_lights[0].primitive {
             let l = Vector3D::new(1., 2., 3.).get_normalized();
@@ -902,7 +913,7 @@ mod tests {
 
         assert_close!(bx, scene.bx[0]);
         assert_close!(by, scene.by[0]);
-        assert_close!(bz, scene.cz[0]);
+        assert_close!(bz, scene.bz[0]);
 
         assert_close!(cx, scene.cx[0]);
         assert_close!(cy, scene.cy[0]);
