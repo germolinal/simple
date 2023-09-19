@@ -1,36 +1,19 @@
 use super::fallback;
 use crate::{Float, Scene};
 use geometry::{intersection::IntersectionInfo, Point3D};
+
 use std::arch::aarch64::*;
-
-#[cfg(not(feature = "float"))]
-const PACK_SIZE: usize = 2;
-#[cfg(not(feature = "float"))]
-type BaseSimd = float64x2_t;
-
-#[cfg(feature = "float")]
-const PACK_SIZE: usize = 4;
-#[cfg(feature = "float")]
-type BaseSimd = float32x4_t;
 
 type VLoad = unsafe fn(ptr: *const Float) -> BaseSimd;
 type Vop = unsafe fn(a: BaseSimd, b: BaseSimd) -> BaseSimd;
 type Vtofloat = unsafe fn(a: BaseSimd) -> Float;
 
-#[cfg(not(feature = "float"))]
-const VLOAD: VLoad = vld1q_f64;
-#[cfg(not(feature = "float"))]
-const VSUB: Vop = vsubq_f64;
-#[cfg(not(feature = "float"))]
-const VADD: Vop = vaddq_f64;
-#[cfg(not(feature = "float"))]
-const VDIV: Vop = vdivq_f64;
-#[cfg(not(feature = "float"))]
-const VMUL: Vop = vmulq_f64;
-#[cfg(not(feature = "float"))]
-const VMINV: Vtofloat = vminvq_f64;
-#[cfg(not(feature = "float"))]
-const VMAXV: Vtofloat = vmaxvq_f64;
+#[cfg(feature = "float")]
+const PACK_SIZE: usize = 4;
+#[cfg(feature = "float")]
+pub(crate) const LEAF_SIZE: usize = 24;
+#[cfg(feature = "float")]
+type BaseSimd = float32x4_t;
 
 #[cfg(feature = "float")]
 const VLOAD: VLoad = vld1q_f32;
@@ -46,6 +29,27 @@ const VMUL: Vop = vmulq_f32;
 const VMINV: Vtofloat = vminvq_f32;
 #[cfg(feature = "float")]
 const VMAXV: Vtofloat = vmaxvq_f32;
+
+#[cfg(not(feature = "float"))]
+pub(crate) const PACK_SIZE: usize = 2;
+#[cfg(not(feature = "float"))]
+type BaseSimd = float64x2_t;
+#[cfg(not(feature = "float"))]
+pub(crate) const LEAF_SIZE: usize = 24;
+#[cfg(not(feature = "float"))]
+const VLOAD: VLoad = vld1q_f64;
+#[cfg(not(feature = "float"))]
+const VSUB: Vop = vsubq_f64;
+#[cfg(not(feature = "float"))]
+const VADD: Vop = vaddq_f64;
+#[cfg(not(feature = "float"))]
+const VDIV: Vop = vdivq_f64;
+#[cfg(not(feature = "float"))]
+const VMUL: Vop = vmulq_f64;
+#[cfg(not(feature = "float"))]
+const VMINV: Vtofloat = vminvq_f64;
+#[cfg(not(feature = "float"))]
+const VMAXV: Vtofloat = vmaxvq_f64;
 
 #[target_feature(enable = "neon")]
 pub(crate) unsafe fn simple_intersect_triangle_slice(
@@ -82,7 +86,7 @@ pub(crate) unsafe fn simple_intersect_triangle_slice(
 
     for (n_pack, aux) in iter.enumerate() {
         let ((((((((ax, ay), az), bx), by), bz), cx), cy), cz) = aux;
-        if ax.len() == PACK_SIZE {            
+        if ax.len() == PACK_SIZE {
             if let Some((i, point, ..)) = baricentric_coordinates_neon(
                 ray,
                 ax.as_ptr(),
@@ -117,7 +121,7 @@ pub(crate) unsafe fn simple_intersect_triangle_slice(
                         // If the distance is less than what we had, update return data
                         t_squared = this_t_squared;
 
-                        ret = Some((ini + n_pack * PACK_SIZE, point));
+                        ret = Some((ini + i + n_pack * PACK_SIZE, point));
                     }
                 }
             }
@@ -126,7 +130,6 @@ pub(crate) unsafe fn simple_intersect_triangle_slice(
 
     ret
 }
-
 
 #[target_feature(enable = "neon")]
 pub(crate) unsafe fn intersect_triangle_slice(
@@ -163,7 +166,7 @@ pub(crate) unsafe fn intersect_triangle_slice(
 
     for (n_pack, aux) in iter.enumerate() {
         let ((((((((ax, ay), az), bx), by), bz), cx), cy), cz) = aux;
-        if ax.len() == PACK_SIZE {            
+        if ax.len() == PACK_SIZE {
             if let Some((i, point, u, v)) = baricentric_coordinates_neon(
                 ray,
                 ax.as_ptr(),
@@ -226,7 +229,7 @@ pub(crate) unsafe fn intersect_triangle_slice(
                             v,
                             ray.direction,
                         );
-                        ret = Some((ini + n_pack * PACK_SIZE, info));
+                        ret = Some((ini + i + n_pack * PACK_SIZE, info));
                     }
                 }
             }
@@ -234,6 +237,17 @@ pub(crate) unsafe fn intersect_triangle_slice(
     }
 
     ret
+}
+
+unsafe fn destr(v: BaseSimd) -> [Float; PACK_SIZE] {
+    union Float64x2ToF64 {
+        float64x2: BaseSimd,
+        f64_array: [Float; PACK_SIZE],
+    }
+
+    let float64x2_to_f64 = Float64x2ToF64 { float64x2: v };
+    let us = float64x2_to_f64.f64_array;
+    us
 }
 
 /// Tests the intersection between a `Ray3D` and a pack (i.e., `&[]`)
@@ -267,18 +281,18 @@ unsafe fn baricentric_coordinates_neon(
     let cz = VLOAD(cz);
 
     // Calculate baricentric coordinates
-    let ox = [ray.origin.x, ray.origin.x];
+    let ox = [ray.origin.x; PACK_SIZE];
     let ox = VLOAD(&ox[0]);
-    let oy = [ray.origin.y, ray.origin.y];
+    let oy = [ray.origin.y; PACK_SIZE];
     let oy = VLOAD(&oy[0]);
-    let oz = [ray.origin.z, ray.origin.z];
+    let oz = [ray.origin.z; PACK_SIZE];
     let oz = VLOAD(&oz[0]);
 
-    let dx = [ray.direction.x, ray.direction.x];
+    let dx = [ray.direction.x; PACK_SIZE];
     let dx = VLOAD(&dx[0]);
-    let dy = [ray.direction.y, ray.direction.y];
+    let dy = [ray.direction.y; PACK_SIZE];
     let dy = VLOAD(&dy[0]);
-    let dz = [ray.direction.z, ray.direction.z];
+    let dz = [ray.direction.z; PACK_SIZE];
     let dz = VLOAD(&dz[0]);
 
     let edge1 = [VSUB(bx, ax), VSUB(by, ay), VSUB(bz, az)];
@@ -291,7 +305,7 @@ unsafe fn baricentric_coordinates_neon(
     if VMINV(a).abs() < TINY {
         return None;
     }
-    let f = [1., 1.];
+    let f = [1.; PACK_SIZE];
     let f = VDIV(VLOAD(&f[0]), a);
     let s = [VSUB(ox, ax), VSUB(oy, ay), VSUB(oz, az)];
 
@@ -308,17 +322,6 @@ unsafe fn baricentric_coordinates_neon(
     let t = VMUL(f, dot_neon(&edge2, &q));
     if VMAXV(t) < TINY {
         return None;
-    }
-
-    unsafe fn destr(v: BaseSimd) -> [Float; PACK_SIZE] {
-        union Float64x2ToF64 {
-            float64x2: BaseSimd,
-            f64_array: [Float; PACK_SIZE],
-        }
-
-        let float64x2_to_f64 = Float64x2ToF64 { float64x2: v };
-        let us = float64x2_to_f64.f64_array;
-        us
     }
 
     let us = destr(u);
