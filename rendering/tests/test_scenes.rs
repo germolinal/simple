@@ -326,6 +326,7 @@ fn cornell() -> Result<(), String> {
 
     // Create camera
     let film = Film {
+        // resolution: (320, 240),
         resolution: (512, 367),
         // resolution: (1024, 768),
         // resolution: (512, 512),
@@ -344,8 +345,8 @@ fn cornell() -> Result<(), String> {
     let camera = Pinhole::new(view, film);
 
     let integrator = RayTracer {
-        n_ambient_samples: 120,
-        n_shadow_samples: 10,
+        n_ambient_samples: 5240,
+        n_shadow_samples: 1,
         max_depth: 2,
         // count_specular_bounce: 0.1,
         ..RayTracer::default()
@@ -358,7 +359,7 @@ fn cornell() -> Result<(), String> {
 #[test]
 #[ignore]
 fn room() -> Result<(), String> {
-    // 60 seconds
+    // 11 seconds
     // cargo test --features parallel --release --package rendering --test test_scenes -- room --exact --nocapture --ignored
     // oconv ../room.rad ../white_sky.rad > room.oct ;time rpict -x 512 -y 512 -vv 60 -vh 60 -ab 3 -ad 220 -aa 0 -vp 2 1 1 -vd 0 1 0 ./room.oct > rad_room.hdr
 

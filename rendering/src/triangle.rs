@@ -223,6 +223,8 @@ where
     [dx, dy, dz]
 }
 
+
+
 /// Tests the intersection between a `Ray3D` and a
 /// [`Triangle`]. Returns the the point of intersection, and the `u`
 /// and `v` baricentric coordinates of the intersection point.
@@ -291,7 +293,7 @@ fn baricentric_coorinates(
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the [`IntersectionInfo`]
 /// (or `None` if they don't intersect)
-pub fn triangle_intersect(
+pub fn intersect_triangle_slice(
     scene: &Scene,
     ray: &geometry::Ray3D,
     ini: usize,
@@ -301,18 +303,23 @@ pub fn triangle_intersect(
     let mut t_squared = Float::MAX;
     let mut ret = None;
 
-    for i in ini..fin {
-        let ax = scene.ax[i];
-        let ay = scene.ay[i];
-        let az = scene.az[i];
-        let bx = scene.bx[i];
-        let by = scene.by[i];
-        let bz = scene.bz[i];
-        let cx = scene.cx[i];
-        let cy = scene.cy[i];
-        let cz = scene.cz[i];
-
-        if let Some((point, u, v)) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz)
+    let it = scene
+        .ax
+        .iter()
+        .zip(&scene.ay)
+        .zip(&scene.az)
+        .zip(&scene.bx)
+        .zip(&scene.by)
+        .zip(&scene.bz)
+        .zip(&scene.cx)
+        .zip(&scene.cy)
+        .zip(&scene.cz)
+        .enumerate()
+        .skip(ini)
+        .take(fin - ini);
+    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
+        if let Some((point, u, v)) =
+            baricentric_coorinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
         {
             // If hit, check the distance.
             let this_t_squared = (point - ray.origin).length_squared();
@@ -321,15 +328,15 @@ pub fn triangle_intersect(
                 // If the distance is less than what we had, update return data
                 t_squared = this_t_squared;
                 let info = new_info(
-                    ax,
-                    ay,
-                    az,
-                    bx,
-                    by,
-                    bz,
-                    cx,
-                    cy,
-                    cz,
+                    *ax,
+                    *ay,
+                    *az,
+                    *bx,
+                    *by,
+                    *bz,
+                    *cx,
+                    *cy,
+                    *cz,
                     point,
                     u,
                     v,
@@ -355,18 +362,24 @@ pub fn simple_triangle_intersect(
     let mut t_squared = Float::MAX;
     let mut ret = None;
 
-    for i in ini..fin {
-        let ax = scene.ax[i];
-        let ay = scene.ay[i];
-        let az = scene.az[i];
-        let bx = scene.bx[i];
-        let by = scene.by[i];
-        let bz = scene.bz[i];
-        let cx = scene.cx[i];
-        let cy = scene.cy[i];
-        let cz = scene.cz[i];
-
-        if let Some((point, ..)) = baricentric_coorinates(ray, ax, ay, az, bx, by, bz, cx, cy, cz) {
+    let it = scene
+        .ax
+        .iter()
+        .zip(&scene.ay)
+        .zip(&scene.az)
+        .zip(&scene.bx)
+        .zip(&scene.by)
+        .zip(&scene.bz)
+        .zip(&scene.cx)
+        .zip(&scene.cy)
+        .zip(&scene.cz)
+        .enumerate()
+        .skip(ini)
+        .take(fin - ini);
+    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
+        if let Some((point, ..)) =
+            baricentric_coorinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
+        {
             // If hit, check the distance.
             let this_t_squared = (point - ray.origin).length_squared();
             // if the distance is less than the prevous one, update the info
@@ -615,21 +628,19 @@ mod testing {
 
     #[test]
     fn test_triangle_area() {
-        // in XY        
+        // in XY
         assert_close!(0.5, triangle_area(0., 0., 0., 1., 0., 0., 0., 1., 0.));
 
-        
         assert_close!(2., triangle_area(0., 0., 0., 2., 0., 0., 0., 2., 0.));
 
         // in XZ
         assert_close!(0.5, triangle_area(0., 0., 0., 1., 0., 0., 0., 0., 1.));
 
-        
         assert_close!(2., triangle_area(0., 0., 0., 2., 0., 0., 0., 0., 2.));
 
         // in YZ
         assert_close!(0.5, triangle_area(0., 0., 0., 0., 1., 0., 0., 0., 1.));
-        
+
         assert_close!(2., triangle_area(0., 0., 0., 0., 2., 0., 0., 0., 2.));
     }
 
@@ -740,7 +751,7 @@ mod testing {
                 direction: dir,
             };
 
-            if let Some((.., info)) = triangle_intersect(&scene, &ray, 0, 1) {
+            if let Some((.., info)) = intersect_triangle_slice(&scene, &ray, 0, 1) {
                 let phit = info.p;
 
                 if let Some(exp_p) = expect_pt {
