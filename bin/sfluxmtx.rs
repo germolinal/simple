@@ -67,7 +67,7 @@ struct Inputs {
 fn main() -> Result<(), String> {
     // time cargo run --release --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
     // cargo instruments --release --template Allocations --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
-    // cargo instruments --release --template 'CPU Profiler' --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
+    // RUSTFLAGS='-C target-feature=+neon' cargo instruments --release --template 'CPU Profiler' --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
 
     let inputs = Inputs::parse();
 
