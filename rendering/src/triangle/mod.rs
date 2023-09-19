@@ -4,6 +4,11 @@ use geometry::{
     BBox3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
 };
 
+mod fallback;
+
+#[cfg(target_arch = "aarch64")]
+mod neon;
+
 /// The smallest definition of a Triangle I could think of
 pub type Triangle = [Float; 9];
 
@@ -18,22 +23,6 @@ pub fn triangle_area(
     cy: Float,
     cz: Float,
 ) -> Float {
-    // let a = std::simd::Simd::from_array([triangle[0], triangle[1], triangle[2], 0.0]);
-    // let b = std::simd::Simd::from_array([triangle[3], triangle[4], triangle[5], 0.0]);
-    // let c = std::simd::Simd::from_array([triangle[6], triangle[7], triangle[8], 0.0]);
-
-    // let mut ab = b - a;
-    // ab *= ab;
-    // let ab = ab.reduce_sum().sqrt();
-
-    // let mut bc = c - b;
-    // bc *= bc;
-    // let bc = bc.reduce_sum().sqrt();
-
-    // let mut ca = c - a;
-    // ca *= ca;
-    // let ca = ca.reduce_sum().sqrt();
-
     let ab = ((bx - ax).powi(2) + (by - ay).powi(2) + (bz - az).powi(2)).sqrt();
     let bc = ((cx - bx).powi(2) + (cy - by).powi(2) + (cz - bz).powi(2)).sqrt();
     let ca = ((ax - cx).powi(2) + (ay - cy).powi(2) + (az - cz).powi(2)).sqrt();
@@ -83,214 +72,6 @@ pub fn world_bounds(t: &Triangle) -> BBox3D {
     BBox3D::from_union_point(&bbox, c)
 }
 
-// /// Tests the intersection between a `Ray3D` and a pack (i.e., `&[]`)
-// /// of [`Triangle`]. Returns the index of the intersected triangle within the
-// /// pack, the point of intersection, and the `u` and `v` baricentric coordinates
-// /// of the intersection point.
-// pub fn triangle_pack_baricentric_coorinates(
-//     ts: &[Triangle],
-//     ray: &geometry::Ray3D,
-// ) -> Option<(usize, geometry::Point3D, Float, Float)> {
-//     let ax = std::simd::Simd::from([ts[0][0], ts[1][0], ts[2][0], ts[3][0]]);
-//     let ay = std::simd::Simd::from([ts[0][1], ts[1][1], ts[2][1], ts[3][1]]);
-//     let az = std::simd::Simd::from([ts[0][2], ts[1][2], ts[2][2], ts[3][2]]);
-
-//     let bx = std::simd::Simd::from([ts[0][3], ts[1][3], ts[2][3], ts[3][3]]);
-//     let by = std::simd::Simd::from([ts[0][4], ts[1][4], ts[2][4], ts[3][4]]);
-//     let bz = std::simd::Simd::from([ts[0][5], ts[1][5], ts[2][5], ts[3][5]]);
-
-//     let cx = std::simd::Simd::from([ts[0][6], ts[1][6], ts[2][6], ts[3][6]]);
-//     let cy = std::simd::Simd::from([ts[0][7], ts[1][7], ts[2][7], ts[3][7]]);
-//     let cz = std::simd::Simd::from([ts[0][8], ts[1][8], ts[2][8], ts[3][8]]);
-
-//     // Calculate baricentric coordinates
-//     let ox: std::simd::Simd<Float, 4> = std::simd::Simd::splat(ray.origin.x);
-//     let oy: std::simd::Simd<Float, 4> = std::simd::Simd::splat(ray.origin.y);
-//     let oz: std::simd::Simd<Float, 4> = std::simd::Simd::splat(ray.origin.z);
-
-//     let dx: std::simd::Simd<Float, 4> = std::simd::Simd::splat(ray.direction.x);
-//     let dy: std::simd::Simd<Float, 4> = std::simd::Simd::splat(ray.direction.y);
-//     let dz: std::simd::Simd<Float, 4> = std::simd::Simd::splat(ray.direction.z);
-
-//     // let a_rox = ax - ox;
-//     // let a_roy = ay - oy;
-//     // let a_roz = az - oz;
-
-//     let edge1_x = bx - ax;
-//     let edge1_y = by - ay;
-//     let edge1_z = bz - az;
-
-//     let edge2_x = cx - ax;
-//     let edge2_y = cy - ay;
-//     let edge2_z = cz - az;
-
-//     let edge1 = &[edge1_x, edge1_y, edge1_z];
-//     let edge2 = &[edge2_x, edge2_y, edge2_z];
-//     let ray_direction = &[dx, dy, dz];
-//     const TINY: Float = 1e-5;
-//     let h = cross(ray_direction, edge2);
-//     let a = dot(edge1, &h);
-//     if a.reduce_min().abs() < TINY {
-//         return None;
-//     }
-//     let f = std::simd::Simd::splat(1.) / a;
-//     let s = [ox - ax, oy - ay, oz - az];
-//     let u = f * dot(&s, &h);
-//     if u.reduce_min() > 1. + Float::EPSILON || u.reduce_max() < -Float::EPSILON {
-//         return None;
-//     }
-//     let q = cross(&s, edge1);
-//     let v = f * dot(ray_direction, &q);
-//     let uv = u + v;
-//     if uv.reduce_min() > 1.0 + Float::EPSILON || uv.reduce_max() < -Float::EPSILON {
-//         return None;
-//     }
-//     let t = f * dot(edge2, &q);
-//     if t.reduce_max() < TINY {
-//         return None;
-//     }
-
-//     // t must be positive, and alpha, beta and gamma must add to 1 and
-//     // be positive
-//     let us = u.as_array();
-//     let vs = v.as_array();
-//     let ts = t.as_array();
-
-//     let mut any_intersect = false;
-//     let mut t = Float::MAX;
-//     let mut v = Float::MAX;
-//     let mut u = Float::MAX;
-//     let mut which_tri = usize::MAX;
-
-//     for (i, found_t) in ts.iter().enumerate() {
-//         let found_u = us[i];
-//         let found_v = vs[i];
-
-//         // If it is valid AND is closer than the other
-//         let is_valid = *found_t > TINY
-//             && found_u + found_v <= 1.
-//             && found_u > -Float::EPSILON
-//             && found_v > -Float::EPSILON;
-//         if is_valid && *found_t < t {
-//             any_intersect = true; // mark as found
-//             t = *found_t;
-//             u = found_u;
-//             v = found_v;
-//             which_tri = i;
-//         }
-//     }
-
-//     if any_intersect {
-//         Some((which_tri, ray.project(t), u, v))
-//     } else {
-//         None
-//     }
-// }
-
-// /// Calculates the determinant of a 3x3 matrix
-// fn det_3x3<T>(col0: &[T; 3], col1: &[T; 3], col2: &[T; 3]) -> T
-// where
-//     T: std::ops::Mul<T, Output = T>
-//         + std::ops::Sub<T, Output = T>
-//         + std::ops::Add<T, Output = T>
-//         + Copy,
-// {
-//     col0[0] * (col1[1] * col2[2] - col2[1] * col1[2])
-//         - col1[0] * (col0[1] * col2[2] - col2[1] * col0[2])
-//         + col2[0] * (col0[1] * col1[2] - col1[1] * col0[2])
-// }
-
-fn dot<T>(a: &[T; 3], b: &[T; 3]) -> T
-where
-    T: std::ops::Mul<T, Output = T>
-        + std::ops::Sub<T, Output = T>
-        + std::ops::Add<T, Output = T>
-        + Copy,
-{
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-
-fn cross<T>(a: &[T; 3], b: &[T; 3]) -> [T; 3]
-where
-    T: std::ops::Mul<T, Output = T>
-        + std::ops::Sub<T, Output = T>
-        + std::ops::Add<T, Output = T>
-        + Copy,
-{
-    let dx = a[1] * b[2] - a[2] * b[1];
-    let dy = a[2] * b[0] - a[0] * b[2];
-    let dz = a[0] * b[1] - a[1] * b[0];
-    [dx, dy, dz]
-}
-
-
-
-/// Tests the intersection between a `Ray3D` and a
-/// [`Triangle`]. Returns the the point of intersection, and the `u`
-/// and `v` baricentric coordinates of the intersection point.
-#[allow(clippy::too_many_arguments)]
-fn baricentric_coorinates(
-    ray: &Ray3D,
-    ax: Float,
-    ay: Float,
-    az: Float,
-    bx: Float,
-    by: Float,
-    bz: Float,
-    cx: Float,
-    cy: Float,
-    cz: Float,
-) -> Option<(Point3D, Float, Float)> {
-    // let ox = ray.origin.x;
-    // let oy = ray.origin.y;
-    // let oz = ray.origin.z;
-
-    // let dx = ray.direction.x;
-    // let dy = ray.direction.y;
-    // let dz = ray.direction.z;
-
-    // let a_rox = ax - ox;
-    // let a_roy = ay - oy;
-    // let a_roz = az - oz;
-
-    let edge1_x = bx - ax;
-    let edge1_y = by - ay;
-    let edge1_z = bz - az;
-
-    let edge2_x = cx - ax;
-    let edge2_y = cy - ay;
-    let edge2_z = cz - az;
-
-    let edge1 = &[edge1_x, edge1_y, edge1_z];
-    let edge2 = &[edge2_x, edge2_y, edge2_z];
-    let ray_direction = [ray.direction.x, ray.direction.y, ray.direction.z];
-    const TINY: Float = 1e-5;
-    let h = cross(&ray_direction, edge2);
-    let a = dot(edge1, &h);
-
-    if a.abs() < TINY {
-        return None; // ray is parallel
-    }
-    let f = 1. / a;
-    let s = [ray.origin.x - ax, ray.origin.y - ay, ray.origin.z - az];
-    let u = f * dot(&s, &h);
-    // if u > 1. + Float::EPSILON || u < -Float::EPSILON {
-    if !(-Float::EPSILON..=1. + Float::EPSILON).contains(&u) {
-        return None;
-    }
-    let q = cross(&s, edge1);
-    let v = f * dot(&ray_direction, &q);
-    if u + v > 1.0 + Float::EPSILON || v < -Float::EPSILON {
-        return None; // intersection is outside
-    }
-    let t = f * dot(edge2, &q);
-    if t > TINY {
-        Some((ray.project(t), u, v))
-    } else {
-        None
-    }
-}
-
 /// Intersects a `Ray3D` and a [`Triangle`], returning the [`IntersectionInfo`]
 /// (or `None` if they don't intersect)
 pub fn intersect_triangle_slice(
@@ -299,55 +80,13 @@ pub fn intersect_triangle_slice(
     ini: usize,
     fin: usize,
 ) -> Option<(usize, IntersectionInfo)> {
-    const MIN_T: Float = 0.0000001;
-    let mut t_squared = Float::MAX;
-    let mut ret = None;
-
-    let it = scene
-        .ax
-        .iter()
-        .zip(&scene.ay)
-        .zip(&scene.az)
-        .zip(&scene.bx)
-        .zip(&scene.by)
-        .zip(&scene.bz)
-        .zip(&scene.cx)
-        .zip(&scene.cy)
-        .zip(&scene.cz)
-        .enumerate()
-        .skip(ini)
-        .take(fin - ini);
-    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
-        if let Some((point, u, v)) =
-            baricentric_coorinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
-        {
-            // If hit, check the distance.
-            let this_t_squared = (point - ray.origin).length_squared();
-            // if the distance is less than the prevous one, update the info
-            if this_t_squared > MIN_T && this_t_squared < t_squared {
-                // If the distance is less than what we had, update return data
-                t_squared = this_t_squared;
-                let info = new_info(
-                    *ax,
-                    *ay,
-                    *az,
-                    *bx,
-                    *by,
-                    *bz,
-                    *cx,
-                    *cy,
-                    *cz,
-                    point,
-                    u,
-                    v,
-                    ray.direction,
-                );
-                ret = Some((i, info));
-            }
-        }
+    #[cfg(target_arch = "aarch64")]
+    {
+        return unsafe { neon::intersect_triangle_slice(scene, ray, ini, fin) };
     }
 
-    ret
+    #[allow(unused)]
+    fallback::intersect_triangle_slice(scene, ray, ini, fin)
 }
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the `Point3D` of
@@ -358,64 +97,14 @@ pub fn simple_triangle_intersect(
     ini: usize,
     fin: usize,
 ) -> Option<(usize, geometry::Point3D)> {
-    const MIN_T: Float = 0.0000001;
-    let mut t_squared = Float::MAX;
-    let mut ret = None;
-
-    let it = scene
-        .ax
-        .iter()
-        .zip(&scene.ay)
-        .zip(&scene.az)
-        .zip(&scene.bx)
-        .zip(&scene.by)
-        .zip(&scene.bz)
-        .zip(&scene.cx)
-        .zip(&scene.cy)
-        .zip(&scene.cz)
-        .enumerate()
-        .skip(ini)
-        .take(fin - ini);
-    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
-        if let Some((point, ..)) =
-            baricentric_coorinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
-        {
-            // If hit, check the distance.
-            let this_t_squared = (point - ray.origin).length_squared();
-            // if the distance is less than the prevous one, update the info
-            if this_t_squared > MIN_T && this_t_squared < t_squared {
-                // If the distance is less than what we had, update return data
-                t_squared = this_t_squared;
-                ret = Some((i, point));
-            }
-        }
+    #[cfg(target_arch = "aarch64")]
+    {
+        return unsafe { neon::simple_intersect_triangle_slice(scene, ray, ini, fin) };
     }
 
-    ret
+    #[allow(unused)]
+    fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
-
-// /// Intersects a `Ray3D` and a pack (i.e., `&[]`) of [`Triangle`], returning the
-// /// index of the intersected [`Triangle`] within the pack, and its [`IntersectionInfo`]
-// /// (or `None` if they don't intersect)
-// pub fn triangle_intersect_pack(
-//     t: &[Triangle],
-//     ray: &geometry::Ray3D,
-// ) -> Option<(usize, IntersectionInfo)> {
-//     let (tri_index, p, u, v) = triangle_pack_baricentric_coorinates(t, ray)?;
-//     let triangle = &t[tri_index];
-//     Some((tri_index, new_info(triangle, p, u, v, ray.direction)))
-// }
-
-// /// Intersects a `Ray3D` and a pack (i.e., `&[]`) of [`Triangle`], returning the
-// /// index of the intersected [`Triangle`] within the pack, and the `Point3D` of
-// /// intersection
-// pub fn simple_triangle_intersect_pack(
-//     t: &[Triangle],
-//     ray: &geometry::Ray3D,
-// ) -> Option<(usize, geometry::Point3D)> {
-//     let (tri_index, pt, ..) = triangle_pack_baricentric_coorinates(t, ray)?;
-//     Some((tri_index, pt))
-// }
 
 pub struct Intersection {
     pub e1: Vector3D,
