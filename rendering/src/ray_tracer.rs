@@ -188,6 +188,7 @@ impl RayTracer {
                 self.get_global_illumination(scene, n_ambient_samples, material, ray, rng, aux);
 
             ((local + global), 0.0)
+            // (local,0.0)
         } else {
             // Did not hit... so, let's check the sky
             if let Some(sky) = &scene.sky {
@@ -350,10 +351,9 @@ impl RayTracer {
                 continue;
             }
             count += 1;
-
-            let fx = li * cos_theta;
-
-            global += fx / ray_pdf;
+            
+            
+            global += li * ray.value;
 
             // restore ray, because it was modified by trace_ray executions
             *ray = aux.rays[depth];

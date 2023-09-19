@@ -576,7 +576,7 @@ impl BoundingVolumeTree {
 
                     /* NON_SIMD */
 
-                    if let Some((i,intersect_info)) = triangle_intersect(scene, &ray.geometry, ini, fin)
+                    if let Some((i,intersect_info)) = intersect_triangle_slice(scene, &ray.geometry, ini, fin)
                     {
                         // If hit, check the distance.
                         let this_t_squared =

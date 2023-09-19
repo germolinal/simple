@@ -65,7 +65,7 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
     scene.build_accelerator();
 
     let n_ambient_samples = if max_depth > 0 {
-        6120
+        60120
     }else{
         5120
     };
