@@ -79,12 +79,10 @@ impl SimpleModelReader {
             let front_substance = model.get_material_substance(front_mat_name)?;
             let front_mat_index = self
                 .push_substance(&mut scene, &front_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Front material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
 
             let last_mat_name = construction
                 .materials
@@ -93,12 +91,10 @@ impl SimpleModelReader {
             let back_substance = model.get_material_substance(last_mat_name)?;
             let back_mat_index = self
                 .push_substance(&mut scene, &back_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Back material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
 
             // Add all the triangles necessary
             let t: Triangulation3D = polygon.try_into()?;
@@ -131,12 +127,10 @@ impl SimpleModelReader {
             let front_substance = model.get_material_substance(front_material_name)?;
             let front_mat_index = self
                 .push_substance(&mut scene, &front_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Front material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
             let back_material_name = construction
                 .materials
                 .last()
@@ -144,17 +138,13 @@ impl SimpleModelReader {
             let back_substance = model.get_material_substance(back_material_name)?;
             let back_mat_index = self
                 .push_substance(&mut scene, &back_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Back material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
 
             // Add all the triangles necessary
-            let t: Triangulation3D = polygon
-                .try_into()
-                .map_err(|e| format!("Could not transform polyton into triantilagion: {}", e))?;
+            let t: Triangulation3D = polygon.try_into()?;
 
             let triangles = t.get_trilist();
             for tri in triangles {
@@ -367,7 +357,7 @@ mod tests {
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
-        
+
         assert_eq!(map.len(), scene.ax.len());
         assert_eq!(map.len(), scene.ay.len());
         assert_eq!(map.len(), scene.az.len());
@@ -406,7 +396,7 @@ mod tests {
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
-        
+
         assert_eq!(map.len(), scene.ax.len());
         assert_eq!(map.len(), scene.ay.len());
         assert_eq!(map.len(), scene.az.len());
@@ -453,7 +443,7 @@ mod tests {
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
-        
+
         assert_eq!(map.len(), scene.ax.len());
         assert_eq!(map.len(), scene.ay.len());
         assert_eq!(map.len(), scene.az.len());
