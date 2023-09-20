@@ -125,20 +125,33 @@ impl<'de> Deserialize<'de> for Loop3D {
 
             while let Some(x) = it.next() {
                 let x = match x {
-                    Value::Number(x) => x.as_f64().ok_or("Could not get X... it does not seem to be a number").map_err(serde::de::Error::custom)? as Float,
+                    Value::Number(x) => {
+                        x.as_f64()
+                            .ok_or("Could not get X... it does not seem to be a number")
+                            .map_err(serde::de::Error::custom)? as Float
+                    }
                     _ => panic!("Expecting Polygon3D to be an array of numbers"),
                 };
                 let y = it.next();
                 let y = match y {
-                    Some(Value::Number(y)) => y.as_f64().ok_or("Could not get Y... it does not seem to be a number").map_err(serde::de::Error::custom)? as Float,
+                    Some(Value::Number(y)) => {
+                        y.as_f64()
+                            .ok_or("Could not get Y... it does not seem to be a number")
+                            .map_err(serde::de::Error::custom)? as Float
+                    }
                     _ => panic!("Expecting Polygon3D to be an array of numbers"),
                 };
                 let z = it.next();
                 let z = match z {
-                    Some(Value::Number(z)) => z.as_f64().ok_or("Could not get Z... it does not seem to be a number").map_err(serde::de::Error::custom)? as Float,
+                    Some(Value::Number(z)) => {
+                        z.as_f64()
+                            .ok_or("Could not get Z... it does not seem to be a number")
+                            .map_err(serde::de::Error::custom)? as Float
+                    }
                     _ => panic!("Expecting Polygon3D to be an array of numbers"),
                 };
-                ret.push(Point3D { x, y, z }).map_err(serde::de::Error::custom)?;
+                ret.push(Point3D { x, y, z })
+                    .map_err(serde::de::Error::custom)?;
             }
         }
 
@@ -386,9 +399,9 @@ impl Loop3D {
         Ok(())
     }
 
-    /// It is like `push`, but the `avoid_dollinear` parameters let us choose whether we want to 
+    /// It is like `push`, but the `avoid_dollinear` parameters let us choose whether we want to
     /// allow multiple collinear points being put together.
-    pub fn push_collinear(&mut self, point: Point3D, avoid_collinear: bool) -> Result<(),String>{
+    pub fn push_collinear(&mut self, point: Point3D, avoid_collinear: bool) -> Result<(), String> {
         // Check the point
         self.valid_to_add(point)?;
 
@@ -421,7 +434,6 @@ impl Loop3D {
             self.set_normal()?;
         }
         Ok(())
-
     }
 
     /// Pushes a new [`Point3D`] into the [`Loop3D`].
@@ -576,7 +588,7 @@ impl Loop3D {
         let first_point = self.vertices[0];
         let d = first_point - p;
 
-        let aux = (self.normal * d).abs();                
+        let aux = (self.normal * d).abs();
         Ok(aux < 1e-7)
     }
 
@@ -779,11 +791,16 @@ impl Loop3D {
             return Err("when projecting Loop3D: other is not closed".to_string());
         }
 
-        let anchor = other.vertices.get(0).ok_or("no vertices")?;
+        let anchor = other.vertices.get(0).ok_or("no vertices in anchor")?;
         let normal = other.normal();
 
         for p in self.vertices.iter_mut() {
             *p = p.project_into_plane(*anchor, normal);
+        }
+        if self.normal * normal > 0.0 {
+            self.normal = normal;
+        } else {
+            self.normal = -normal;
         }
         Ok(())
     }
@@ -870,12 +887,12 @@ impl Loop3D {
                 // add only if this intersection has not been added already
                 let mut already_in = false;
                 for (_, p) in ret.iter() {
-                    if inter.compare(*p){
+                    if inter.compare(*p) {
                         already_in = true;
                         break;
                     }
                 }
-                if!already_in{
+                if !already_in {
                     ret.push((i, inter))
                 }
             }
