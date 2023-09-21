@@ -94,6 +94,11 @@ validate = { git = "https://github.com/germolinal/validate" }
 
 [features]
 default = []
+
+simd = [
+    "light/simd"
+]
+
 parallel = [
     "rayon",
     # "heat/parallel", 

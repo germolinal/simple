@@ -31,7 +31,8 @@ pub(crate) fn baricentric_coordinates(
     let h = ray.direction.cross(edge2);
     let a = edge1 * h;
 
-    if a.abs() < TINY {
+    // if a.abs() < TINY {
+    if a < TINY && a > -TINY {
         return None; // ray is parallel
     }
     let f = 1. / a;
