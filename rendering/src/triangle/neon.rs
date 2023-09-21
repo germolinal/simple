@@ -302,25 +302,32 @@ unsafe fn baricentric_coordinates_neon(
     let h = cross_neon(&ray_direction, &edge2);
     let a = dot_neon(&edge1, &h);
 
-    if VMINV(a).abs() < TINY {
+    let mina = VMINV(a);
+    if mina < TINY && mina > -TINY {
         return None;
     }
     let f = [1.; PACK_SIZE];
-    let f = VDIV(VLOAD(&f[0]), a);
+    let f = VLOAD(&f[0]);
+    let f = VDIV(f, a);
     let s = [VSUB(ox, ax), VSUB(oy, ay), VSUB(oz, az)];
 
     let u = VMUL(f, dot_neon(&s, &h));
-    if VMINV(u) > 1. + Float::EPSILON || VMAXV(u) < -Float::EPSILON {
+    let minu = VMINV(u);
+    let maxu = VMAXV(u);
+    if minu > 1. + Float::EPSILON || maxu < -Float::EPSILON {
         return None;
     }
     let q = cross_neon(&s, &edge1);
     let v = VMUL(f, dot_neon(&ray_direction, &q));
     let uv = VADD(u, v);
-    if VMINV(uv) > 1.0 + Float::EPSILON || VMAXV(uv) < -Float::EPSILON {
+    let minuv = VMINV(uv);
+    let maxuv = VMAXV(uv);
+    if minuv > 1.0 + Float::EPSILON || maxuv < -Float::EPSILON {
         return None;
     }
     let t = VMUL(f, dot_neon(&edge2, &q));
-    if VMAXV(t) < TINY {
+    let maxt = VMAXV(t);
+    if maxt < TINY {
         return None;
     }
 

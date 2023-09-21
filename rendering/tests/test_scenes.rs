@@ -317,7 +317,7 @@ fn sponza() -> Result<(), String> {
 #[test]
 #[ignore]
 fn cornell() -> Result<(), String> {
-    // RUSTFLAGS='-C target-feature=+neon' cargo test --features parallel --features float --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
+    // RUSTFLAGS='-C target-feature=+neon' cargo test --features parallel --features float --features simd --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture    
 
     let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string())?;
 
