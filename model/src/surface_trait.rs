@@ -16,6 +16,10 @@ pub trait SurfaceTrait: Clone + Send + Sync {
     /// this surface
     fn mut_vertices(&mut self) -> &mut Polygon3D;
 
+    /// Borrows a mutable reference to the [`Polygon3D`] describing
+    /// this surface
+    fn vertices(&self) -> &Polygon3D;
+
     /// Borrows the outer loop
     fn outer(&self) -> &Loop3D;
 

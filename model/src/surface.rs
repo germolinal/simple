@@ -192,6 +192,9 @@ impl SurfaceTrait for Surface {
     fn mut_vertices(&mut self) -> &mut Polygon3D {
         &mut self.vertices
     }
+    fn vertices(&self) -> &Polygon3D {
+        &self.vertices
+    }
 
     fn outer(&self) -> &Loop3D {
         self.vertices.outer()
