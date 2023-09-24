@@ -6,7 +6,6 @@ use geometry::{
 
 mod fallback;
 
-
 #[cfg(all(target_arch = "aarch64", feature = "simd"))]
 mod neon;
 #[cfg(all(target_arch = "aarch64", feature = "simd"))]
@@ -17,6 +16,7 @@ pub(crate) const LEAF_SIZE: usize = 24;
 /// The smallest definition of a Triangle I could think of
 pub type Triangle = [Float; 9];
 
+#[allow(clippy::too_many_arguments)]
 pub fn triangle_area(
     ax: Float,
     ay: Float,
@@ -40,6 +40,7 @@ pub fn triangle_area(
         .sqrt()
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn triangle_solid_angle_pdf(
     ax: Float,
     ay: Float,
@@ -122,6 +123,7 @@ pub struct Intersection {
     pub v: Float,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn new_info(
     ax: Float,
     ay: Float,

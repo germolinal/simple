@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use std::cmp::Ordering;
+
 use serde::ser::SerializeSeq;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_json::Value;
@@ -194,6 +196,77 @@ impl Loop3D {
             area: -1.0,
             perimeter: -1.0,
         }
+    }
+
+    /// Check if two Polygon3D have the same vertices (i.e., same shape and position),
+    /// ignoring their starting point or their normal.
+    ///
+    /// # Example
+    /// ```
+    /// use geometry::{Loop3D, Point3D};
+    ///
+    /// let mut l = Loop3D::with_capacity(3);
+    /// let a = Point3D::new(0., 0., 0.);
+    /// let b = Point3D::new(1., 1., 0.);
+    /// let c = Point3D::new(0., 1., 0.);
+    ///
+    /// assert!(l.push(a).is_ok());
+    /// assert!(l.push(b).is_ok());
+    /// assert!(l.push(c).is_ok());
+    /// assert!(l.close().is_ok());
+    ///
+    /// let mut l2 = Loop3D::with_capacity(4);
+    /// assert!(l2.push(b).is_ok());
+    /// assert!(l2.push(c).is_ok());
+    /// assert!(l2.push(a).is_ok());
+    /// assert!(l2.close().is_ok());
+    ///
+    /// if let Ok(is_equal) = l.is_equal(&l2){
+    ///     assert!(is_equal);
+    /// }else{
+    ///     panic!("these should have been equal");
+    /// }
+    /// ```
+    pub fn is_equal(&self, other: &Loop3D) -> Result<bool, String> {
+        if !self.closed || !other.closed {
+            return Err("Trying to compare two Loop3D that might not be closed".into());
+        }
+        // Cant be equal if they have different area or n vertices
+        if self.len() != other.len() || (self.area - other.area).abs() > 1e-3 {
+            return Ok(false);
+        }
+
+        // find the vertex in other that matches the first vertex in self.
+        let mut anchor = 0;
+        let mut found = false;
+        for (i, p) in other.vertices.iter().enumerate() {
+            if p.compare(self.vertices[0]) {
+                found = true;
+                anchor = i;
+                break;
+            }
+        }
+        if !found {
+            return Ok(false);
+        }
+
+        let is_reversed = self.normal * other.normal < 0.0;
+        let n = self.len();
+
+        let mut other_i = anchor;
+        for this_pt in self.vertices.iter() {
+            let other_pt = other.vertices[other_i];
+            if !this_pt.compare(other_pt) {
+                return Ok(false);
+            }
+            if is_reversed {
+                other_i = (other_i + n - 1) % n;
+            } else {
+                other_i = (other_i + 1) % n;
+            }
+        }
+
+        Ok(true)
     }
 
     /// Reverses the order of the vertices in the [`Loop3D`]
@@ -774,6 +847,29 @@ impl Loop3D {
         false
     }
 
+    /// Checks whether a loop contains a specific [`Point3D`] as one of
+    /// its vertices.
+    pub fn contains_vertex(&self, vertex: Point3D) -> bool {
+        self.vertices.iter().any(|v| v.compare(vertex))
+    }
+
+    /// Returns the index of the first segment that contains
+    /// a certain point... if any.
+    ///
+    /// The first segment is the one that groes from point [0] to [1]
+    pub fn containing_segment(&self, point: Point3D) -> Option<usize> {
+        let n = self.len();
+        for i in 0..n {
+            let ini = self[i];
+            let fin = self[(i + 1) % n];
+            let seg = Segment3D::new(ini, fin);
+            if let Ok(true) = seg.contains_point(point) {
+                return Some(i);
+            }
+        }
+        None
+    }
+
     /// Projects one [`Loop3D`] into the plane of another [`Loop3D`].
     ///
     /// This means translating all points of `self` to the plane of `other`.
@@ -901,64 +997,205 @@ impl Loop3D {
         ret
     }
 
-    /// Clips a [`Loop3D`] as determined by another [`Loop3D`], returning a `Vec` of new [`Loop3D`]
-    /// created by the clipping.
-    ///
-    /// Uses the Sutherland-Hodgman algorithm. The algorithm proceeds by iteratively clipping
-    /// the polygon against each edge of the cutting segment.
-    pub fn clip(&self, cutter: &Loop3D) -> Result<Loop3D, String> {
-        let edge_count = self.len();
+    /// Bites a loop, changing its shape
+    pub fn bite(&self, other: &Self) -> Result<Self, String> {
+        if !self.closed {
+            return Err("Trying to bite an open Polygon3D".into());
+        }
+        if !other.closed {
+            return Err("Trying to bite a Polygon3D using an open Polygon3D".into());
+        }
 
-        // let mut input_polygon = self.clone();
-        let mut output_polygon: Loop3D = Loop3D::new();
+        // We build the chewer... this has no vertices outside of self now
+        let chewer = self.intersection(other)?;
+        if chewer.is_none() {
+            // no intersection... bitten Self is Self
+            return Ok(self.clone());
+        }
+        let mut chewer = chewer.unwrap();
 
-        for i in 0..edge_count {
-            let start = self.vertices[i];
-            let end = self.vertices[(i + 1) % edge_count];
+        let ch_n = chewer.len();
+        let n = self.len();
+        // They need to circle in different directions.
+        if chewer.normal.is_same_direction(self.normal) {
+            chewer.reverse();
+        }
 
-            let inside_start = cutter.test_point(start)?;
-            let inside_end = cutter.test_point(end)?;
+        // Find a pooint that is part of self but not other.
+        let mut anchor = 0;
+        loop {
+            let this_v = self[anchor];
+            if !chewer.test_point(this_v)? {
+                break;
+            }
 
-            let current_segment = Segment3D::new(start, end);
-
-            if inside_start && inside_end {
-                // Both start and end points are inside the loop, add the end point to the output polygon
-                output_polygon.push(start)?;
-            } else if inside_start && !inside_end {
-                // Start point is inside, end point is outside,
-                // add the `start` point and the intersection
-                output_polygon.push(start)?;
-
-                let intersections = cutter.intersect(&current_segment);
-                assert!(intersections.len() <= 1, "Expecting None or One intersection points between segment and Loop3D when clipping.");
-                if intersections.len() == 1 {
-                    let (.., inter_pt) = intersections[0];
-                    output_polygon.push(inter_pt)?;
-                } else {
-                    // we had established that one was inside and the other outside...
-                    unreachable!()
-                }
-            } else if !inside_start && inside_end {
-                // Start point is outside, end point is inside, add the intersection point to the output polygon
-                let intersections = cutter.intersect(&current_segment);
-                assert!(intersections.len() <= 1, "Expecting None or One intersection points between segment and Loop3D when clipping.");
-                if intersections.len() == 1 {
-                    output_polygon.push(intersections[0].1)?;
-                } else {
-                    unreachable!()
-                }
-            } else {
-                // Both outside... but they can go THROUGH
-                let intersections = cutter.intersect(&current_segment);
-                if !intersections.is_empty() {
-                    todo!()
-                }
+            anchor += 1;
+            if anchor == self.len() {
+                return Err("Biting a polygon with itself".into());
             }
         }
 
-        output_polygon.close()?;
+        // start from anchor and proceed.
+        let mut walking_through_self = true;
+        let mut l = Self::new();
+        let mut index = anchor;
 
-        Ok(output_polygon)
+        loop {
+            // Get point
+            let pt = if walking_through_self {
+                self[index % n]
+            } else {
+                chewer[index % ch_n]
+            };
+            // add point
+            l.push(pt)?;
+
+            // Select next point.
+            if walking_through_self {
+                // build this segment
+                let seg = Segment3D::new(pt, self[(index + 1) % n]);
+                // see if any point in chewer is contained within this segment.
+                let mut did_branch = false;
+                for (ch_i, ch_pt) in chewer.vertices.iter().enumerate() {
+                    if seg.contains_point(*ch_pt)? {
+                        // if it does, then we need to start walking through chewer
+                        index = ch_i;
+                        if seg.contains_point(chewer[(ch_i + 1) % ch_n])? {
+                            // if it includes the next one as well, then add one more.
+                            index += 1;
+                        }
+                        walking_through_self = false;
+                        did_branch = true;
+                        break;
+                    }
+                }
+                if !did_branch {
+                    index += 1;
+                }
+            } else {
+                // get next point
+                let pt = chewer[(index + 1) % ch_n];
+                // if it is somewhere in self, then go back to self.
+                if let Some(i) = self.containing_segment(pt) {
+                    walking_through_self = true;
+                    l.push(pt)?;
+                    index = (i + 1) % n;
+                } else {
+                    index += 1;
+                }
+            }
+
+            // Break if we have circled back
+            if l.len() > 1 && pt.compare(self[anchor]) {
+                break;
+            }
+        }
+
+        l.close()?;
+        Ok(l)
+    }
+
+    /// Finds the intersection between two Polygon3D
+    ///
+    /// The normal of the output Loop3D will be the same as `self`
+    fn intersection(&self, other: &Loop3D) -> Result<Option<Loop3D>, String> {
+        if !self.closed || !other.closed {
+            return Err("Trying to find the intersection between two Polygon3D... but at least one of them is not closed".into());
+        }
+
+        let mut other = other.clone();
+        // They need to circle in the same direction.
+        if !other.normal.is_same_direction(self.normal) {
+            other.reverse();
+        }
+
+        // Find a pooint that is part of self and of other.
+        let mut walking_through_self = true;
+        let first_pt: Option<Point3D>;
+        let mut index = 0;
+        loop {
+            if walking_through_self {
+                if index == self.len() {
+                    index = 0;
+                    walking_through_self = !walking_through_self;
+                    continue;
+                }
+                let this_v = self[index];
+                if other.test_point(this_v)? {
+                    first_pt = Some(self[index]);
+                    break; // found it!
+                }
+            } else {
+                if index == other.len() {
+                    // There is no intersection between both polygons
+                    return Ok(None);
+                }
+                let this_v = other[index];
+                if self.test_point(this_v)? {
+                    first_pt = Some(other[index]);
+                    break; // found it!
+                }
+            }
+            index += 1;
+        }
+
+        let mut l: Loop3D = Loop3D::new();
+        // add first point
+        l.push(first_pt.unwrap())?;
+        index += 1;
+
+        loop {
+            let candidate_pt = if walking_through_self {
+                self[index % self.len()]
+            } else {
+                other[index % other.len()]
+            };
+
+            // Break if we have circled back
+            if l.len() > 2
+                && (l.vertices[0].compare(candidate_pt)
+                    || l.vertices[0].compare(l.vertices[l.len() - 1]))
+            {
+                break;
+            }
+
+            let last_pt = l.vertices[l.len() - 1];
+            // this should always work, as we push a point before entering this loop.
+            let candidate_seg = Segment3D::new(last_pt, candidate_pt);
+
+            let (intersections, walking_n, non_walking_n) = if walking_through_self {
+                (other.intersect(&candidate_seg), self.len(), other.len())
+            } else {
+                (self.intersect(&candidate_seg), other.len(), self.len())
+            };
+
+            // select next point
+            if intersections.is_empty() {
+                l.push(candidate_pt)?;
+                index = (index + 1) % walking_n;
+            } else {
+                let (other_seg_i, inter_pt) = intersections
+                    .into_iter()
+                    .min_by(|(_, other_pt), (_, aux_pt)| {
+                        let other_d = last_pt.squared_distance(*other_pt);
+                        let aux_d = last_pt.squared_distance(*aux_pt);
+                        if other_d > aux_d {
+                            Ordering::Greater
+                        } else {
+                            Ordering::Less
+                        }
+                    })
+                    .unwrap();
+                l.push(inter_pt)?;
+                index = (other_seg_i + 1) % non_walking_n;
+
+                walking_through_self = !walking_through_self;
+            }
+        }
+
+        l.close()?;
+
+        Ok(Some(l))
     }
 
     /// Splits a [`Loop3D`] into two pieces according to a
@@ -2201,36 +2438,385 @@ mod testing {
     }
 
     #[test]
-    fn test_clip() -> Result<(), String> {
+    fn test_bite() -> Result<(), String> {
+        fn try_to_byte(this_str: &str, chewer: &str, exp_str: &str) -> Result<(), String> {
+            let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+            let chewer: Loop3D = serde_json::from_str(chewer).map_err(|e| e.to_string())?;
+            let mut reversed_chewer = chewer.clone();
+            reversed_chewer.reverse();
+            let exp: Loop3D = serde_json::from_str(exp_str).map_err(|e| e.to_string())?;
+
+            let bitten = this_loop.bite(&chewer)?;
+            assert_eq!(bitten.len(), exp.len());
+            assert!(bitten.is_equal(&exp)?);
+
+            let reverse_bitten = this_loop.bite(&reversed_chewer)?;
+            assert_eq!(reverse_bitten.len(), exp.len());
+            assert!(reverse_bitten.is_equal(&exp)?);
+
+            Ok(())
+        }
+
+        /*
+                Case 1
+                ------
+
+        (-0.5,2) ____________ (0.5,2)
+                |           |
+                | (0,1).....|....(1,1)
+                |      :////|   :
+                |      :////|   :
+                | (0,0):....|.. :(1,0)
+                |___________|
+        (-0.5,-1)         (0.5,-1)
+                 */
+        let chewer = "[
+                    0, 0, 0,
+                    1, 0, 0,
+                    1, 1, 0,
+                    0, 1, 0
+                ]";
+        let this_str = "[
+                    -0.5, -1, 0,
+                    0.5,  -1, 0,
+                    0.5, 2, 0,
+                    -0.5, 2, 0
+                ]";
+        let exp_str = "[
+            -0.5, -1, 0,
+            0.5,  -1, 0,
+            0.5,   0, 0,
+            0,0,0,
+            0,1,0,
+            0.5,1,0,
+            0.5, 2, 0,
+            -0.5, 2, 0
+        ]";
+        try_to_byte(this_str, chewer, exp_str)?;
+
+        /*
+               Case 2
+               ------
+        (-0.5,2)____________ (0.5,2)
+               |           |
+               | (0,1).....|........(1,1)
+               |      :////|        :
+               |      :////|        :
+               |______:....|....... :
+          (-0.5,0)  (0,0)  (0.5,0)  (1,0)
+
+                */
+        let chewer = "[
+                    0, 0, 0,
+                    1, 0, 0,
+                    1, 1, 0,
+                    0, 1, 0
+                ]";
+        let this_str = "[
+                    -0.5, 0, 0,
+                    0.5,  0, 0,
+                    0.5,  2, 0,
+                    -0.5, 2, 0
+                ]";
+        let exp_str = "[
+            -0.5, 0, 0,
+            0,0,0,
+            0,1,0,
+            0.5, 1, 0,            
+            0.5,  2, 0,
+            -0.5, 2, 0
+        ]";
+        try_to_byte(this_str, chewer, exp_str)?;
+
+        /*
+             Case 3
+             ------
+             (-0.5,2)____________ (1,2)
+             |                    |
+             | (0,1)..............(1,1)
+             |      ://///////////:
+             |      ://///////////:
+             |______:............ :
+        (-0.5,0)  (0,0)          (1,0)
+
+              */
+        let chewer = "[
+                    0, 0, 0,
+                    1, 0, 0,
+                    1, 1, 0,
+                    0, 1, 0
+                ]";
+        let this_str = "[
+                    -0.5, 0, 0,
+                    1.0,  0, 0,
+                    1.0,  2, 0,
+                    -0.5, 2, 0
+                ]";
+        let exp_str = "[
+            -0.5, 0, 0,
+            0,0,0,
+            0,1,0,
+            1,1,0,
+            1.0,  2, 0,
+            -0.5, 2, 0
+        ]";
+        try_to_byte(this_str, chewer, exp_str)?;
+
+        /*
+        Case 4
+        ------
+
+         ___________       .........
+        |          |       :       :
+        |          |       :       :
+        |          |       :.......:
+        |__________|
+
+         */
+        let chewer = "[
+                4, 4, 0,
+                5, 4, 0,
+                5, 5, 0,
+                4, 5, 0
+            ]";
+        let this_str = "[
+                0,0,0,
+                1,0,0,
+                1,1,0,
+                0,1,0
+            ]";
+        let exp_str = "[
+        0,0,0,
+        1,0,0,
+        1,1,0,
+        0,1,0
+    ]";
+        try_to_byte(this_str, chewer, exp_str)?;
+
+        /*
+        Case 5 :
+        ------
+
+         THEY ARE THE SAME POLYGON
+
+         */
+        let chewer = "[
+                4, 4, 0,
+                5, 4, 0,
+                5, 5, 0,
+                4, 5, 0
+            ]";
+        let this_str = chewer.clone();
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+        let chewer: Loop3D = serde_json::from_str(chewer).map_err(|e| e.to_string())?;
+        let mut reversed_chewer = chewer.clone();
+        reversed_chewer.reverse();
+
+        assert!(this_loop.bite(&chewer).is_err());
+        assert!(this_loop.bite(&reversed_chewer).is_err());
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_intersection() -> Result<(), String> {
+        fn try_to_intersect(this_str: &str, other_str: &str, exp_str: &str) -> Result<(), String> {
+            let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
+            let other: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
+            let exp: Loop3D = serde_json::from_str(exp_str).map_err(|e| e.to_string())?;
+
+            let this_clipped = this_loop
+                .intersection(&other)?
+                .ok_or("No intersection for this_loop")?;
+            assert_eq!(this_clipped.len(), exp.len());
+            assert!(this_clipped.is_equal(&exp)?);
+
+            let other_clipped = other
+                .intersection(&this_loop)?
+                .ok_or("No intersection for other")?;
+            assert_eq!(other_clipped.len(), exp.len());
+            assert!(other_clipped.is_equal(&exp)?);
+
+            let clippity_clip = this_loop
+                .intersection(&this_clipped)?
+                .ok_or("No intersection for this_clipped")?;
+            assert_eq!(clippity_clip.len(), exp.len());
+            assert!(clippity_clip.is_equal(&exp)?);
+
+            Ok(())
+        }
+
+        /*
+                Case 1
+                ------
+
+        (-0.5,2) ____________ (0.5,2)
+                |           |
+                | (0,1).....|....(1,1)
+                |      :////|   :
+                |      :////|   :
+                | (0,0):....|.. :(1,0)
+                |___________|
+        (-0.5,-1)         (0.5,-1)
+                 */
         let this_str = "[
             0, 0, 0,
             1, 0, 0,
             1, 1, 0,
             0, 1, 0
         ]";
-
-        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
-
         let other_str = "[
             -0.5, -1, 0,
             0.5,  -1, 0,
             0.5, 2, 0,
             -0.5, 2, 0
         ]";
+        let exp_str = "[
+            0, 0, 0,
+            0.5, 0, 0,
+            0.5, 1, 0,
+            0, 1, 0
+        ]";
+        try_to_intersect(this_str, other_str, exp_str)?;
+
+        /*
+               Case 2
+               ------
+        (-0.5,2)____________ (0.5,2)
+               |           |
+               | (0,1).....|........(1,1)
+               |      :////|        :
+               |      :////|        :
+               |______:....|....... :
+          (-0.5,0)  (0,0)  (0.5,0)  (1,0)
+
+                */
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+        let other_str = "[
+            -0.5, 0, 0,
+            0.5,  0, 0,
+            0.5,  2, 0,
+            -0.5, 2, 0
+        ]";
+        let exp_str = "[
+            0, 0, 0,
+            0.5, 0, 0,
+            0.5, 1, 0,
+            0, 1, 0
+        ]";
+        try_to_intersect(this_str, other_str, exp_str)?;
+
+        /*
+             Case 3
+             ------
+             (-0.5,2)____________ (1,2)
+             |                    |
+             | (0,1)..............(1,1)
+             |      ://///////////:
+             |      ://///////////:
+             |______:............ :
+        (-0.5,0)  (0,0)          (1,0)
+
+              */
+        let this_str = "[
+            0, 0, 0,
+            1, 0, 0,
+            1, 1, 0,
+            0, 1, 0
+        ]";
+        let other_str = "[
+            -0.5, 0, 0,
+            1.0,  0, 0,
+            1.0,  2, 0,
+            -0.5, 2, 0
+        ]";
+        let exp_str = "[
+            0, 0, 0,
+            1.0, 0, 0,
+            1.0, 1, 0,
+            0, 1, 0
+        ]";
+        try_to_intersect(this_str, other_str, exp_str)?;
+
+        /*
+        Case 4
+        ------
+
+         ___________       .........
+        |          |       :       :
+        |          |       :       :
+        |          |       :.......:
+        |__________|
+
+         */
+        let this_str = "[
+                4, 4, 0,
+                5, 4, 0,
+                5, 5, 0,
+                4, 5, 0
+            ]";
+        let other_str = "[
+                0,0,0,
+                1,0,0,
+                1,1,0,
+                0,1,0
+            ]";
+
+        let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
         let other: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
+        assert!(this_loop.intersection(&other).unwrap().is_none());
 
-        let v = this_loop.clip(&other)?;
-        // assert_eq!(v.len(), 2);
+        /*
+        Case 5 :
+        ------
 
-        let exp_pts = vec![
-            Point3D::new(0., 0., 0.),
-            Point3D::new(0.5, 0., 0.),
-            Point3D::new(0.5, 1., 0.),
-            Point3D::new(0., 1., 0.),
-        ];
-        for (i, p) in v.vertices.iter().enumerate() {
-            assert!(p.compare(exp_pts[i]))
-        }
+         THEY ARE THE SAME POLYGON
+
+         */
+        let other_str = "[
+                4, 4, 0,
+                5, 4, 0,
+                5, 5, 0,
+                4, 5, 0
+            ]";
+        let this_str = other_str.clone();
+        let exp_str = other_str.clone();
+
+        try_to_intersect(this_str, other_str, exp_str)?;
+
+        /*
+        Case 6
+        ------
+
+
+         */
+        let this_str = "[
+                -0.5, 0, 0,
+                0.5, 0, 0,
+                0.5, 2, 0,
+                -0.5, 2, 0
+            ]";
+        let other_str = "[
+                0,1,0,
+                1,1,0,
+                1,0,0,
+                0,0,0
+            ]";
+
+        let exp_str = "[
+            0,0,0,
+            0.5, 0,0,
+            0.5, 1, 0,
+            0, 1, 0
+        ]";
+        try_to_intersect(this_str, other_str, exp_str)?;
+
         Ok(())
     }
 
@@ -2570,6 +3156,93 @@ mod testing {
         let bbox = l.bbox()?;
         assert!(bbox.min.compare(a));
         assert!(bbox.max.compare(b));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_containing_segment() -> Result<(), String> {
+        fn check(l: &Loop3D, p: Point3D, exp: Option<usize>) -> Result<(), String> {
+            let contained = l.containing_segment(p);
+            if contained == exp {
+                Ok(())
+            } else {
+                if contained.is_none() && exp.is_some() {
+                    return Err("Expecting point to be in a segment".to_string());
+                } else if contained.is_some() && exp.is_none() {
+                    return Err("NOT expecting point to be in a segment".to_string());
+                } else {
+                    // the number does not agree.
+                    let foundi = contained.unwrap();
+                    let expi = exp.unwrap();
+                    return Err(format!(
+                        "Expecting segment to be {}... found {}",
+                        expi, foundi
+                    ));
+                }
+            }
+        }
+
+        let loop_str = "[
+                    0, 0, 0,
+                    1, 0, 0,
+                    1, 1, 0,
+                    0, 1, 0
+                ]";
+        let theloop: Loop3D = serde_json::from_str(loop_str).map_err(|e| e.to_string())?;
+
+        check(&theloop, theloop[0], Some(0))?; // is in first segment
+        check(&theloop, Point3D::new(0.5, 0., 0.), Some(0))?;
+        check(&theloop, theloop[1], Some(0))?; // is also on first segment
+        check(&theloop, Point3D::new(1.0, 0.5, 0.), Some(1))?;
+        check(&theloop, theloop[2], Some(1))?; // is in second
+        check(&theloop, Point3D::new(0.5, 1., 0.), Some(2))?;
+        check(&theloop, theloop[3], Some(2))?; // is in third segment
+        check(&theloop, Point3D::new(0.0, 0.5, 0.), Some(3))?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_is_equal() -> Result<(), String> {
+        let loop_str = "[
+                    0, 0, 0,
+                    1, 0, 0,
+                    1, 1, 0,
+                    0, 1, 0
+                ]";
+        let theloop: Loop3D = serde_json::from_str(loop_str).map_err(|e| e.to_string())?;
+        let mut theloop_rev = theloop.clone();
+        theloop_rev.reverse();
+
+        assert!(theloop.is_equal(&theloop)?);
+        assert!(theloop.is_equal(&theloop_rev)?);
+
+        let other_str = "[
+                    0, 1, 0,
+                    0, 0, 0,
+                    1, 0, 0,
+                    1, 1, 0
+                ]";
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
+        assert!(theloop.is_equal(&other_loop)?);
+
+        let other_str = "[
+                    0, 2, 0,
+                    0, 0, 0,
+                    1, 0, 0,
+                    1, 1, 0
+                ]";
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
+        assert!(!theloop.is_equal(&other_loop)?);
+
+        let other_str = "[
+                    0, 1, 0,
+                    0, 0, 0,
+                    1, 0, 0
+                ]";
+        let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
+        assert!(!theloop.is_equal(&other_loop)?);
 
         Ok(())
     }
