@@ -231,6 +231,10 @@ impl SurfaceTrait for Fenestration {
         self.vertices.area()
     }
 
+    fn vertices(&self) -> &Polygon3D {
+        &self.vertices
+    }
+
     fn mut_vertices(&mut self) -> &mut Polygon3D {
         &mut self.vertices
     }
