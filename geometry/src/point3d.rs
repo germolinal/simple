@@ -151,6 +151,24 @@ impl Point3D {
         aux * normal
     }
 
+    /// Calculates the squared distance from `self` to the 3D line between `a` and `b`
+    pub fn squared_distance_to_line(self, a: Self, b: Self) -> Float {
+        assert!(!a.compare(b), "Line cannot be defined by a single point (i.e., a == b) ");
+        let dir = (b - a).get_normalized();
+        let a_self = self - a;
+
+        // prpjection of a_self into dir
+        let proj = dir * (a_self * dir);
+        // a_self = proj + perp ---> perp = a_self - proj
+        let perp = a_self - proj;
+        perp.length_squared()
+    }
+
+    /// Calculates the distance from `self` to the 3D line between `a` and `b`
+    pub fn distance_to_line(self, a: Self, b: Self) -> Float {
+        self.squared_distance_to_line(a, b).sqrt()
+    }
+
     /// Projects a point into a plane, defined by an `anchor` [`Point3D`] and a `normal` [`Vector3D`]
     ///
     /// # Example
@@ -589,5 +607,24 @@ mod testing {
 
         let distance = point.distance_to_plane(plane_point, plane_normal);
         println!("Distance to the plane: {}", distance);
+    }
+
+    #[test]
+    fn test_distance_to_line(){
+
+        let pt = Point3D::new(0.,0., 0.);
+        let a = Point3D::new(0., 0., 1.);
+        let b = Point3D::new(1., 0., 1.);
+        let exp = 1.0;
+        assert!(( exp - pt.distance_to_line(a, b)).abs() < 1e-9, "expecting {}... found {}", exp, pt.distance_to_line(a, b));
+
+        let pt = Point3D::new(0.,0., 0.);
+        let a = Point3D::new(-1., 0., 0.);
+        let b = Point3D::new(-1., 0., 1.);
+        let exp = 1.0;
+        assert!(( exp - pt.distance_to_line(a, b)).abs() < 1e-9, "expecting {}... found {}", exp, pt.distance_to_line(a, b));
+
+        
+
     }
 } // end of Testing module

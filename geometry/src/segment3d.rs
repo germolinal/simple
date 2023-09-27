@@ -138,7 +138,7 @@ impl Segment3D {
         let dir1 = self.end - self.start;
         let dir2 = input.end - input.start;
 
-        if dir1.is_same_direction(dir2) {
+        if dir1.is_parallel(dir2) {
             return None;
         }
 
