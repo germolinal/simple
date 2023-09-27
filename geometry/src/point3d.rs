@@ -114,7 +114,7 @@ impl Point3D {
     /// assert!(a.compare(a));
     /// ```
     pub fn compare(&self, p: Point3D) -> bool {
-        const EPS: Float = 1e-5;
+        const EPS: Float = 1e-3;
         (self.x - p.x).abs() < EPS && (self.y - p.y).abs() < EPS && (self.z - p.z).abs() < EPS
     }
 

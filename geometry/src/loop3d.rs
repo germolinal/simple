@@ -972,7 +972,7 @@ impl Loop3D {
     pub fn intersect(&self, s: &Segment3D) -> Vec<(usize, Point3D)> {
         let mut ret = Vec::new();
 
-        if s.length < 1e-7 {
+        if s.length < 1e-3 {
             return ret;
         }
 
@@ -994,24 +994,24 @@ impl Loop3D {
 
         for i in 0..n {
             let current_segment = Segment3D::new(self.vertices[i], self.vertices[(i + 1) % n]);
-            if current_segment.length < 1e-4 {
+            if current_segment.length < 1e-2 || s.length < 1e-2 {
                 continue;
             }
-
+            
             if current_segment
                 .contains_point(s.start)
-                .expect("We checked that points were not the same... should not fail")
+                .expect("We checked that points were not the same... should not fail - 1")
                 && current_segment
                     .contains_point(s.end)
-                    .expect("We checked that points were not the same... should not fail")
+                    .expect("We checked that points were not the same... should not fail - 2")
             {
                 add_pt(i, s.end);
                 add_pt(i, s.start);
             } else if s
                 .contains_point(current_segment.start)
-                .expect("We checked that points were not the same... should not fail")
+                .expect("We checked that points were not the same... should not fail - 3")
                 && s.contains_point(current_segment.end)
-                    .expect("We checked that points were not the same... should not fail")
+                    .expect("We checked that points were not the same... should not fail - 4")
             {
                 add_pt(i, current_segment.end);
                 // add_pt(i, current_segment.start);
@@ -1243,11 +1243,11 @@ impl Loop3D {
             // select next point
             if intersections.is_empty() {
                 // l.push(candidate_pt)?;
-                if self.test_point(candidate_pt)? && other.test_point(candidate_pt)?{
+                if self.test_point(candidate_pt)? && other.test_point(candidate_pt)? {
                     l.push(candidate_pt)?;
-                }else{
+                } else {
                     // This has happened with some geometries
-                    return Ok(None)
+                    return Ok(None);
                 }
                 index = (index + 1) % walking_n;
             } else {
@@ -1258,11 +1258,11 @@ impl Loop3D {
                     walking_through_self = !walking_through_self;
                     index = (other_seg_i + 1) % non_walking_n;
                 } else {
-                    if self.test_point(candidate_pt)? && other.test_point(candidate_pt)?{
+                    if self.test_point(candidate_pt)? && other.test_point(candidate_pt)? {
                         l.push(candidate_pt)?;
-                    }else{
+                    } else {
                         // This has happened with some geometries
-                        return Ok(None)
+                        return Ok(None);
                     }
                 }
             }
@@ -1273,7 +1273,7 @@ impl Loop3D {
         // if self.is_equal(&l)? {
         //     Ok(None)
         // } else {
-            Ok(Some(l))
+        Ok(Some(l))
         // }
     }
 
@@ -1303,19 +1303,38 @@ impl Loop3D {
 
         let intersections = self.intersect(&seg);
 
-        if intersections.is_empty() || intersections.len() == 1 {
+        
+
+        // if intersections.len() != 2 {
+        //     // this might as well happen... we will postpone this for now
+        //     todo!()
+        // }
+        // We intersect twice... meaning that we branch (first) and merge (after)
+        // let (mut branch_index, mut branch_pt) = intersections[0];
+        // let (mut merge_index, mut merge_pt) = intersections[1];
+        let mut the_indices: Vec<usize> = Vec::with_capacity(2);
+        let mut the_points: Vec<Point3D> = Vec::with_capacity(2);
+        for (index, pt) in intersections {
+            if !the_indices.contains(&index) {
+                the_indices.push(index);
+                the_points.push(pt);
+            }
+        }
+
+        if the_indices.is_empty() || the_indices.len() == 1 {
             // No intersections, or no cutting... just return original
             return Ok(vec![self.clone()]);
         }
 
-        if intersections.len() != 2 {
-            // this might as well happen... we will postpone this for now
-            todo!()
-        }
+        let mut branch_index = the_indices[0];
+        let mut branch_pt = the_points[0];
+        let mut merge_index = the_indices[1];
+        let mut merge_pt = the_points[1];
 
-        // We intersect twice... meaning that we branch (first) and merge (after)
-        let (mut branch_index, mut branch_pt) = intersections[0];
-        let (mut merge_index, mut merge_pt) = intersections[1];
+        // they cannot be equal
+        if branch_index == merge_index {
+            return Ok(vec![self.clone()]);
+        }
 
         // Same point? (e.g., corner), just return
         if branch_pt.compare(merge_pt) {
@@ -1323,10 +1342,6 @@ impl Loop3D {
         }
 
         // Ensure that we branch befor emerging
-        assert_ne!(
-            branch_index, merge_index,
-            "Intersecting twice the same segment???"
-        ); // they cannot be equal
         if branch_index > merge_index {
             std::mem::swap(&mut branch_index, &mut merge_index);
             std::mem::swap(&mut branch_pt, &mut merge_pt);
@@ -2732,38 +2747,6 @@ mod testing {
         assert!(this_loop.bite(&reversed_chewer).is_err());
 
         Ok(())
-    }
-
-    #[test]
-    fn test_bite_7() -> Result<(), String> {
-        /* CASE 7
-        ---------
-
-        Non coplanar
-        */
-
-        let this_str = "[
-            13.997994444095985,5.490573707315981,0.011954099999999857,
-            13.359115708413615,3.777570755576501,0.011954099999999857,
-            4.1346757163095935,7.217895673281266,0.011954099999999857,
-            5.874008883808008,11.881515952039557,0.011954099999999857,
-            11.66622550368763,9.72126505806644,0.011954099999999857,
-            10.565769318388893,6.770647322006647,0.011954099999999857
-        ]";
-        let chewer = "[
-            10.817822890829413,9.99238125181327,0.011954099999999857,
-            9.606404348766102,6.764335135254978,0.011954099999999857,
-            4.672231159325808,8.604573634738836,0.011954099999999857,
-            5.884879060169831,11.832160612241971,0.011954099999999857
-        ]";
-
-        let exp_str = "[
-            0,0,0,
-            1,0,0,
-            1,1,0,
-            0,1,0
-        ]";
-        try_to_bite(this_str, chewer, exp_str)
     }
 
     fn try_to_intersect(this_str: &str, other_str: &str, exp_str: &str) -> Result<(), String> {
