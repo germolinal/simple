@@ -86,6 +86,9 @@ impl Segment3D {
 
     /// Checks if a [`Segment3D`] contains another [`Point3D`].
     pub fn contains_point(&self, point: Point3D) -> Result<bool, String> {
+        if self.length < 1e-2 {
+            return Ok(false);
+        }
         // This was a very old implementation.
         if !point.is_collinear(self.start, self.end)? {
             return Ok(false);
