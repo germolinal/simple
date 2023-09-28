@@ -96,6 +96,18 @@ impl std::iter::IntoIterator for Loop3D {
     }
 }
 
+impl std::fmt::Display for Loop3D {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let n = self.vertices.len();
+        for p in self.vertices.iter().take(n-1) {            
+            write!(f, "{},{},{},\n", p.x, p.y, p.z)?;            
+        }
+        let p = self.vertices.last().unwrap();
+        write!(f, "{},{},{}", p.x, p.y, p.z)
+    }
+}
+
 impl Serialize for Loop3D {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -997,7 +1009,7 @@ impl Loop3D {
             if current_segment.length < 1e-2 || s.length < 1e-2 {
                 continue;
             }
-            
+
             if current_segment
                 .contains_point(s.start)
                 .expect("We checked that points were not the same... should not fail - 1")
@@ -1301,17 +1313,7 @@ impl Loop3D {
             return Ok(vec![self.clone()]);
         }
 
-        let intersections = self.intersect(&seg);
-
-        
-
-        // if intersections.len() != 2 {
-        //     // this might as well happen... we will postpone this for now
-        //     todo!()
-        // }
-        // We intersect twice... meaning that we branch (first) and merge (after)
-        // let (mut branch_index, mut branch_pt) = intersections[0];
-        // let (mut merge_index, mut merge_pt) = intersections[1];
+        let intersections = self.intersect(&seg);                
         let mut the_indices: Vec<usize> = Vec::with_capacity(2);
         let mut the_points: Vec<Point3D> = Vec::with_capacity(2);
         for (index, pt) in intersections {
@@ -3481,6 +3483,8 @@ mod testing {
         let theloop: Loop3D = serde_json::from_str(loop_str).map_err(|e| e.to_string())?;
         let mut theloop_rev = theloop.clone();
         theloop_rev.reverse();
+
+        println!("{}", theloop);
 
         assert!(theloop.is_equal(&theloop)?);
         assert!(theloop.is_equal(&theloop_rev)?);
