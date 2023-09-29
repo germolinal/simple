@@ -62,6 +62,16 @@ impl std::convert::From<Loop3D> for Polygon3D {
     }
 }
 
+impl std::fmt::Display for Polygon3D {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        
+        let l = self.get_closed_loop();
+        write!(f, "{}", l)
+
+    }
+}
+
 impl<'de> Deserialize<'de> for Polygon3D {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
