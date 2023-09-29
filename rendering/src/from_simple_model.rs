@@ -65,6 +65,9 @@ impl SimpleModelReader {
         // Add surfaces
         for (surface_i, s) in model.surfaces.iter().enumerate() {
             let polygon = &s.vertices;
+            if polygon.area() < 1e-5 {
+                continue;
+            }
             let c_name = &s.construction;
             let construction = model.get_construction(c_name)?;
             // Should not be empty, and should have been check before this
@@ -96,7 +99,7 @@ impl SimpleModelReader {
                     construction.name()
                 ))?;
 
-            // Add all the triangles necessary
+            // Add all the triangles necessary            
             let t: Triangulation3D = polygon.try_into()?;
 
             let triangles = t.get_trilist();
