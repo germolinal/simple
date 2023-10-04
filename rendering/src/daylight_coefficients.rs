@@ -76,7 +76,6 @@ impl DCFactory {
         // Iterate the rays
         let dcs: Vec<ColourMatrix> = aux_iter
             .map(|primary_ray| -> ColourMatrix {
-
                 let normal = primary_ray.direction;
                 let origin = primary_ray.origin;
                 let e2 = normal.get_perpendicular().unwrap();
@@ -99,9 +98,6 @@ impl DCFactory {
                 // Iterate primary rays
                 let ray_contributions: Vec<ColourMatrix> = aux_iter
                     .map(|local_ray_dir: Vector3D| -> ColourMatrix {
-
-                        
-
                         let (x, y, z) = crate::samplers::local_to_world(
                             e1,
                             e2,
@@ -120,7 +116,6 @@ impl DCFactory {
                             "length is {}",
                             new_ray_dir.length()
                         );
-                        
 
                         let mut aux = RayTracerHelper::with_capacity(self.max_depth + 1);
                         let mut new_ray = Ray {
@@ -146,7 +141,7 @@ impl DCFactory {
                         //     *lp = progress;
                         //     println!("... Done {:.0}%", progress);
                         // }
-                        
+
                         this_ret
                     })
                     .collect(); // End of iterating primary rays
@@ -237,7 +232,6 @@ impl DCFactory {
                 self.limit_weight,
                 rng,
             );
-            
 
             // Spawn more rays
             let depth = ray.depth;

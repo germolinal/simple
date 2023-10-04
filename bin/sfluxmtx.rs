@@ -91,7 +91,7 @@ fn main() -> Result<(), String> {
         count_specular_bounce: inputs.count_specular_bounce,
     };
 
-    let rays = vec![        
+    let rays = vec![
         Ray3D {
             origin: Point3D::new(1., 6., 1.),
             direction: Vector3D::new(0., 0., 1.),
@@ -116,12 +116,10 @@ fn main() -> Result<(), String> {
             origin: Point3D::new(1., 6., 1.),
             direction: Vector3D::new(0., 0., 1.),
         },
-        
     ];
 
     let dc_matrix = factory.calc_dc(&rays, &scene);
     save_colour_matrix(&dc_matrix, std::path::Path::new(&inputs.output))?;
-        
 
     Ok(())
 }

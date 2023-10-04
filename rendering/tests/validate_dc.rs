@@ -65,13 +65,7 @@ fn get_simple_results(
     };
     scene.build_accelerator();
 
-    let n_ambient_samples = if max_depth > 0 {
-        9020
-    } else {
-        100020
-    };
-
-    
+    let n_ambient_samples = if max_depth > 0 { 9020 } else { 100020 };
 
     let integrator = DCFactory {
         n_ambient_samples,
@@ -156,7 +150,7 @@ fn room(validator: &mut Validator) -> Result<(), String> {
 #[test]
 #[ignore]
 fn validate_dc() -> Result<(), String> {
-    // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture     
+    // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture
     let mut validator = Validator::new(
         "Validate Daylight Coefficients",
         "../docs/validation/daylight_coefficient.html",

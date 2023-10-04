@@ -99,7 +99,7 @@ impl SimpleModelReader {
                     construction.name()
                 ))?;
 
-            // Add all the triangles necessary            
+            // Add all the triangles necessary
             let t: Triangulation3D = polygon.try_into()?;
 
             let triangles = t.get_trilist();

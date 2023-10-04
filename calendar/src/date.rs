@@ -968,7 +968,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "chrono")]
-    fn test_into_naive_datetime() -> Result<(),String> {
+    fn test_into_naive_datetime() -> Result<(), String> {
         use chrono::{Datelike, Timelike};
 
         let d = Date {

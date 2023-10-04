@@ -100,7 +100,7 @@ impl std::fmt::Display for Loop3D {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let n = self.vertices.len();
         for p in self.vertices.iter().take(n - 1) {
-            write!(f, "{},{},{},\n", p.x, p.y, p.z)?;
+            writeln!(f, "{},{},{},", p.x, p.y, p.z)?;
         }
         let p = self.vertices.last().unwrap();
         write!(f, "{},{},{}", p.x, p.y, p.z)
@@ -1010,7 +1010,7 @@ impl Loop3D {
             if current_segment.length < 1e-2 || s.length < 1e-2 {
                 continue;
             }
-           
+
             if current_segment.intersect(s, &mut inter) {
                 add_pt(i, inter);
             }
@@ -1034,11 +1034,7 @@ impl Loop3D {
                 inter_pt = Some(this_inter_pt);
             }
         }
-        if let Some(inter_pt) = inter_pt {
-            Some((other_seg_i, inter_pt))
-        } else {
-            None
-        }
+        inter_pt.map(|inter_pt| (other_seg_i, inter_pt))
     }
     /// Bites a loop, changing its shape
     pub fn bite(&self, chewer: &Self) -> Result<Self, String> {
@@ -1048,8 +1044,6 @@ impl Loop3D {
         if !chewer.closed {
             return Err("Trying to bite a Polygon3D using an open Polygon3D".into());
         }
-
-        
 
         debug_assert!((1.0 - self.normal.length()).abs() < 1e-5);
         debug_assert!((1.0 - chewer.normal.length()).abs() < 1e-5);
@@ -1067,12 +1061,10 @@ impl Loop3D {
         }
         let mut chewer = chewer.expect("We checked that is not None already");
 
-        
         // They need to circle in different directions.
         if chewer.normal.is_same_direction(self.normal) {
             chewer.reverse();
         }
-        
 
         // Find a pooint that is part of self but not other.
         let mut walking_through_self = true;
@@ -1142,16 +1134,14 @@ impl Loop3D {
             if intersections.is_empty() {
                 l.push(candidate_pt)?;
                 index = (index + 1) % walking_n;
+            } else if let Some((other_seg_i, inter_pt)) =
+                Self::get_closest_intersection_pt(intersections, last_pt)
+            {
+                l.push(inter_pt)?;
+                index = (other_seg_i + 1) % non_walking_n;
+                walking_through_self = !walking_through_self;
             } else {
-                if let Some((other_seg_i, inter_pt)) =
-                    Self::get_closest_intersection_pt(intersections, last_pt)
-                {
-                    l.push(inter_pt)?;
-                    index = (other_seg_i + 1) % non_walking_n;
-                    walking_through_self = !walking_through_self;
-                } else {
-                    l.push(candidate_pt)?;
-                }
+                l.push(candidate_pt)?;
             }
         }
 
@@ -1261,21 +1251,17 @@ impl Loop3D {
                     return Ok(None);
                 }
                 index = (index + 1) % walking_n;
+            } else if let Some((other_seg_i, inter_pt)) =
+                Self::get_closest_intersection_pt(intersections, last_pt)
+            {
+                l.push(inter_pt)?;
+                walking_through_self = !walking_through_self;
+                index = (other_seg_i + 1) % non_walking_n;
+            } else if self.test_point(candidate_pt)? && other.test_point(candidate_pt)? {
+                l.push(candidate_pt)?;
             } else {
-                if let Some((other_seg_i, inter_pt)) =
-                    Self::get_closest_intersection_pt(intersections, last_pt)
-                {
-                    l.push(inter_pt)?;
-                    walking_through_self = !walking_through_self;
-                    index = (other_seg_i + 1) % non_walking_n;
-                } else {
-                    if self.test_point(candidate_pt)? && other.test_point(candidate_pt)? {
-                        l.push(candidate_pt)?;
-                    } else {
-                        // This has happened with some geometries
-                        return Ok(None);
-                    }
-                }
+                // This has happened with some geometries
+                return Ok(None);
             }
         }
 
@@ -3246,7 +3232,7 @@ mod testing {
         let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 1);
 
-        assert!(this_loop.is_equal(&v[0], 1e-3)?);        
+        assert!(this_loop.is_equal(&v[0], 1e-3)?);
         Ok(())
     }
 

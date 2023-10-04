@@ -61,14 +61,10 @@ fn load_rays(filename: &str) -> Result<Vec<Ray>, String> {
 
 fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Float>), String> {
     let mut scene =
-        Scene::from_radiance(format!("./tests/ray_tracer/{dir}/box.rad")).expect("Could not read");        
+        Scene::from_radiance(format!("./tests/ray_tracer/{dir}/box.rad")).expect("Could not read");
     scene.build_accelerator();
 
-    let n_ambient_samples = if max_depth > 0 {
-        60120
-    }else{
-        5120
-    };
+    let n_ambient_samples = if max_depth > 0 { 60120 } else { 5120 };
     let integrator = RayTracer {
         n_ambient_samples,
         n_shadow_samples: 10,
@@ -277,8 +273,8 @@ fn glass(validator: &mut Validator) -> Result<(), String> {
 #[ignore]
 #[test]
 fn validate_ray_tracer() -> Result<(), String> {
-    // cargo test --release  --features parallel --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture --ignored    
-    let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");    
+    // cargo test --release  --features parallel --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture --ignored
+    let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");
 
     metal(&mut validator)?;
     plastic(&mut validator)?;

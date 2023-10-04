@@ -3,7 +3,7 @@ use validate::{valid, ScatterValidator, ValidFunc, Validator};
 
 #[test]
 #[ignore]
-fn apartment_sim() -> Result<(),String> {
+fn apartment_sim() -> Result<(), String> {
     // cargo test --release --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
@@ -22,8 +22,7 @@ fn apartment_sim() -> Result<(),String> {
     };
 
     // Create model
-    let (simple_model, mut state_header) =
-        Model::from_file(&options.input_file)?;
+    let (simple_model, mut state_header) = Model::from_file(&options.input_file)?;
 
     let controller = simple::void_control::VoidControl {};
 

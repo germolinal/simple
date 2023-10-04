@@ -104,7 +104,7 @@ impl Point3D {
         d2.sqrt()
     }
 
-    /// Checks if two [`Point3D`] are sifnificantly close, 
+    /// Checks if two [`Point3D`] are sifnificantly close,
     /// as defined by the given `eps` distance.
     /// ```
     /// # use geometry::Point3D;
@@ -119,7 +119,7 @@ impl Point3D {
         (*self - p).length_squared() <= eps * eps
     }
 
-    /// Checks if two [`Point3D`] are sifnificantly close, 
+    /// Checks if two [`Point3D`] are sifnificantly close,
     /// using a maximum distance of 1e-3
     /// ```
     /// # use geometry::Point3D;
