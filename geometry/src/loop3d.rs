@@ -230,13 +230,13 @@ impl Loop3D {
     /// assert!(l2.push(a).is_ok());
     /// assert!(l2.close().is_ok());
     ///
-    /// if let Ok(is_equal) = l.is_equal(&l2){
+    /// if let Ok(is_equal) = l.is_equal(&l2, 0.001){
     ///     assert!(is_equal);
     /// }else{
     ///     panic!("these should have been equal");
     /// }
     /// ```
-    pub fn is_equal(&self, other: &Loop3D) -> Result<bool, String> {
+    pub fn is_equal(&self, other: &Loop3D, eps: Float) -> Result<bool, String> {
         if !self.closed || !other.closed {
             return Err("Trying to compare two Loop3D that might not be closed".into());
         }
@@ -249,7 +249,7 @@ impl Loop3D {
         let mut anchor = 0;
         let mut found = false;
         for (i, p) in other.vertices.iter().enumerate() {
-            if p.compare(self.vertices[0]) {
+            if p.compare_by(self.vertices[0], eps) {
                 found = true;
                 anchor = i;
                 break;
@@ -265,7 +265,7 @@ impl Loop3D {
         let mut other_i = anchor;
         for this_pt in self.vertices.iter() {
             let other_pt = other.vertices[other_i];
-            if !this_pt.compare(other_pt) {
+            if !this_pt.compare_by(other_pt, eps) {
                 return Ok(false);
             }
             if is_reversed {
@@ -858,9 +858,9 @@ impl Loop3D {
     }
 
     /// Checks whether a loop contains a specific [`Point3D`] as one of
-    /// its vertices.
-    pub fn contains_vertex(&self, vertex: Point3D) -> bool {
-        self.vertices.iter().any(|v| v.compare(vertex))
+    /// its vertices, comparing points with a maximum distance of `eps`.
+    pub fn contains_vertex(&self, vertex: Point3D, eps: Float) -> bool {
+        self.vertices.iter().any(|v| v.compare_by(vertex, eps))
     }
 
     /// Returns the index of the first segment that contains
@@ -2536,11 +2536,11 @@ mod testing {
 
         let bitten = this_loop.bite(&chewer)?;
         assert_eq!(bitten.len(), exp.len());
-        assert!(bitten.is_equal(&exp)?);
+        assert!(bitten.is_equal(&exp, 1e-3)?);
 
         let reverse_bitten = this_loop.bite(&reversed_chewer)?;
         assert_eq!(reverse_bitten.len(), exp.len());
-        assert!(reverse_bitten.is_equal(&exp)?);
+        assert!(reverse_bitten.is_equal(&exp, 1e-3)?);
 
         Ok(())
     }
@@ -2784,20 +2784,20 @@ mod testing {
             .ok_or("No intersection for this_loop")?;
 
         assert_eq!(this_clipped.len(), exp.len());
-        assert!(this_clipped.is_equal(&exp)?);
+        assert!(this_clipped.is_equal(&exp, 1e-3)?);
 
         let other_clipped = other
             .intersection(&this_loop)?
             .ok_or("No intersection for other")?;
         assert_eq!(other_clipped.len(), exp.len());
-        assert!(other_clipped.is_equal(&exp)?);
+        assert!(other_clipped.is_equal(&exp, 1e-3)?);
 
         let clippity_clip = this_loop
             .intersection(&this_clipped)?
             .ok_or("No intersection for this_clipped")?;
         println!("\n\n{}\n\n", serde_json::to_string(&clippity_clip).unwrap());
         assert_eq!(clippity_clip.len(), exp.len());
-        assert!(clippity_clip.is_equal(&exp)?);
+        assert!(clippity_clip.is_equal(&exp, 1e-3)?);
 
         Ok(())
     }
@@ -3246,7 +3246,7 @@ mod testing {
         let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 1);
 
-        assert!(this_loop.is_equal(&v[0])?);        
+        assert!(this_loop.is_equal(&v[0], 1e-3)?);        
         Ok(())
     }
 
@@ -3499,8 +3499,8 @@ mod testing {
 
         println!("{}", theloop);
 
-        assert!(theloop.is_equal(&theloop)?);
-        assert!(theloop.is_equal(&theloop_rev)?);
+        assert!(theloop.is_equal(&theloop, 1e-3)?);
+        assert!(theloop.is_equal(&theloop_rev, 1e-3)?);
 
         let other_str = "[
                     0, 1, 0,
@@ -3509,7 +3509,7 @@ mod testing {
                     1, 1, 0
                 ]";
         let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
-        assert!(theloop.is_equal(&other_loop)?);
+        assert!(theloop.is_equal(&other_loop, 1e-3)?);
 
         let other_str = "[
                     0, 2, 0,
@@ -3518,7 +3518,7 @@ mod testing {
                     1, 1, 0
                 ]";
         let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
-        assert!(!theloop.is_equal(&other_loop)?);
+        assert!(!theloop.is_equal(&other_loop, 1e-3)?);
 
         let other_str = "[
                     0, 1, 0,
@@ -3526,7 +3526,7 @@ mod testing {
                     1, 0, 0
                 ]";
         let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
-        assert!(!theloop.is_equal(&other_loop)?);
+        assert!(!theloop.is_equal(&other_loop, 1e-3)?);
 
         Ok(())
     }

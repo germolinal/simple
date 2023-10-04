@@ -104,18 +104,33 @@ impl Point3D {
         d2.sqrt()
     }
 
-    /// Checks if two [`Point3D`] are sifnificantly close
+    /// Checks if two [`Point3D`] are sifnificantly close, 
+    /// as defined by the given `eps` distance.
     /// ```
     /// # use geometry::Point3D;
     ///
     /// let a = Point3D::new(0., 0., 0.);
-    /// let b = Point3D::new(2., 0., 0.);
+    /// let b = Point3D::new(0.1, 0., 0.);
+    /// assert!(!a.compare_by(b, 0.0));
+    /// assert!(a.compare_by(a, 0.0));
+    /// assert!(a.compare_by(b, 0.12));
+    /// ```
+    pub fn compare_by(&self, p: Point3D, eps: Float) -> bool {
+        (*self - p).length_squared() <= eps * eps
+    }
+
+    /// Checks if two [`Point3D`] are sifnificantly close, 
+    /// using a maximum distance of 1e-3
+    /// ```
+    /// # use geometry::Point3D;
+    ///
+    /// let a = Point3D::new(0., 0., 0.);
+    /// let b = Point3D::new(0.1, 0., 0.);
     /// assert!(!a.compare(b));
     /// assert!(a.compare(a));
     /// ```
     pub fn compare(&self, p: Point3D) -> bool {
-        const EPS: Float = 1e-3;
-        (self.x - p.x).abs() < EPS && (self.y - p.y).abs() < EPS && (self.z - p.z).abs() < EPS
+        self.compare_by(p, 1e-3)
     }
 
     /// Checks if a certain [`Point3D`] is collinear with two
@@ -153,7 +168,10 @@ impl Point3D {
 
     /// Calculates the squared distance from `self` to the 3D line between `a` and `b`
     pub fn squared_distance_to_line(self, a: Self, b: Self) -> Float {
-        assert!(!a.compare(b), "Line cannot be defined by a single point (i.e., a == b) ");
+        assert!(
+            !a.compare_by(b, 1e-5),
+            "Line cannot be defined by a single point (i.e., a == b) "
+        );
         let dir = (b - a).get_normalized();
         let a_self = self - a;
 
@@ -610,21 +628,27 @@ mod testing {
     }
 
     #[test]
-    fn test_distance_to_line(){
-
-        let pt = Point3D::new(0.,0., 0.);
+    fn test_distance_to_line() {
+        let pt = Point3D::new(0., 0., 0.);
         let a = Point3D::new(0., 0., 1.);
         let b = Point3D::new(1., 0., 1.);
         let exp = 1.0;
-        assert!(( exp - pt.distance_to_line(a, b)).abs() < 1e-9, "expecting {}... found {}", exp, pt.distance_to_line(a, b));
+        assert!(
+            (exp - pt.distance_to_line(a, b)).abs() < 1e-9,
+            "expecting {}... found {}",
+            exp,
+            pt.distance_to_line(a, b)
+        );
 
-        let pt = Point3D::new(0.,0., 0.);
+        let pt = Point3D::new(0., 0., 0.);
         let a = Point3D::new(-1., 0., 0.);
         let b = Point3D::new(-1., 0., 1.);
         let exp = 1.0;
-        assert!(( exp - pt.distance_to_line(a, b)).abs() < 1e-9, "expecting {}... found {}", exp, pt.distance_to_line(a, b));
-
-        
-
+        assert!(
+            (exp - pt.distance_to_line(a, b)).abs() < 1e-9,
+            "expecting {}... found {}",
+            exp,
+            pt.distance_to_line(a, b)
+        );
     }
 } // end of Testing module
