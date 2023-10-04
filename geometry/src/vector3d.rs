@@ -187,10 +187,14 @@ impl Vector3D {
 
     /// Normalizes a Vector, mutating it.
     pub fn normalize(&mut self) {
+
+        let l2 = self.length_squared();
+        assert!(l2 > 1e-20, "Trying to normalize a vector with zero length");
+
         #[cfg(not(feature = "quick_inv_sqrt"))]
-        let l = 1. / self.length();
+        let l = 1. / l2.sqrt();
         #[cfg(feature = "quick_inv_sqrt")]
-        let l = crate::quick_inverse_sqrt::quick_inv_sqrt(self.length_squared());
+        let l = crate::quick_inverse_sqrt::quick_inv_sqrt(l2);
 
         self.x *= l;
         self.y *= l;
