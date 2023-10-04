@@ -93,7 +93,7 @@ impl Segment3D {
         if !point.is_collinear(self.start, self.end)? {
             return Ok(false);
         }
-        
+
         let v0 = self.end.x - self.start.x;
         let v1 = self.end.y - self.start.y;
         let v2 = self.end.z - self.start.z;
@@ -101,14 +101,14 @@ impl Segment3D {
         let dot01 = v0 * (point.x - self.start.x)
             + v1 * (point.y - self.start.y)
             + v2 * (point.z - self.start.z);
-        Ok(dot01 >= 0.0 && dot01 <= dot00)
+        Ok(dot01 >= -1e-9 && dot01 <= dot00)
     }
 
     /// Checks if a [`Segment3D`] contains another [`Segment3D`].
     ///
     /// It does this by checking that both [`Point3D`] in `input` are
     /// contained within `self`
-    pub fn contains(&self, input: &Segment3D) -> Result<bool, String> {        
+    pub fn contains(&self, input: &Segment3D) -> Result<bool, String> {
         Ok(self.contains_point(input.start)? && self.contains_point(input.end)?)
     }
 
@@ -186,7 +186,7 @@ impl Segment3D {
             Some((t_a, t_b)) => {
                 let a = self.end - self.start;
 
-                if (0. ..1.).contains(&t_a) && INTERSECT_RANGE.contains(&t_b) {
+                if (-1e-12..(1. + 1e-7)).contains(&t_a) && INTERSECT_RANGE.contains(&t_b) {
                     *output = self.start + a * t_a;
                     true
                 } else {

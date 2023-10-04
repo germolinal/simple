@@ -97,11 +97,10 @@ impl std::iter::IntoIterator for Loop3D {
 }
 
 impl std::fmt::Display for Loop3D {
-
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let n = self.vertices.len();
-        for p in self.vertices.iter().take(n-1) {            
-            write!(f, "{},{},{},\n", p.x, p.y, p.z)?;            
+        for p in self.vertices.iter().take(n - 1) {
+            write!(f, "{},{},{},\n", p.x, p.y, p.z)?;
         }
         let p = self.vertices.last().unwrap();
         write!(f, "{},{},{}", p.x, p.y, p.z)
@@ -619,6 +618,7 @@ impl Loop3D {
         self.closed = true;
         self.set_area()?;
         self.set_perimeter()?;
+        self.vertices.shrink_to_fit(); // save space
         Ok(())
     }
 
@@ -980,7 +980,8 @@ impl Loop3D {
 
     /// Intersects a [`Loop3D`] with a [`Segment3D`], returning
     /// a vector with all the [`Point3D`] where intersection
-    /// happens.
+    /// happens, and a `usize` with the index of the edge that is intersected
+    /// at that point
     pub fn intersect(&self, s: &Segment3D) -> Vec<(usize, Point3D)> {
         let mut ret = Vec::new();
 
@@ -1009,25 +1010,8 @@ impl Loop3D {
             if current_segment.length < 1e-2 || s.length < 1e-2 {
                 continue;
             }
-
-            if current_segment
-                .contains_point(s.start)
-                .expect("We checked that points were not the same... should not fail - 1")
-                && current_segment
-                    .contains_point(s.end)
-                    .expect("We checked that points were not the same... should not fail - 2")
-            {
-                add_pt(i, s.end);
-                add_pt(i, s.start);
-            } else if s
-                .contains_point(current_segment.start)
-                .expect("We checked that points were not the same... should not fail - 3")
-                && s.contains_point(current_segment.end)
-                    .expect("We checked that points were not the same... should not fail - 4")
-            {
-                add_pt(i, current_segment.end);
-                // add_pt(i, current_segment.start);
-            } else if current_segment.intersect(s, &mut inter) {
+           
+            if current_segment.intersect(s, &mut inter) {
                 add_pt(i, inter);
             }
         }
@@ -1065,6 +1049,8 @@ impl Loop3D {
             return Err("Trying to bite a Polygon3D using an open Polygon3D".into());
         }
 
+        
+
         debug_assert!((1.0 - self.normal.length()).abs() < 1e-5);
         debug_assert!((1.0 - chewer.normal.length()).abs() < 1e-5);
         if (self.normal * chewer.normal).abs() < 0.999 {
@@ -1081,10 +1067,12 @@ impl Loop3D {
         }
         let mut chewer = chewer.expect("We checked that is not None already");
 
+        
         // They need to circle in different directions.
         if chewer.normal.is_same_direction(self.normal) {
             chewer.reverse();
         }
+        
 
         // Find a pooint that is part of self but not other.
         let mut walking_through_self = true;
@@ -1129,15 +1117,26 @@ impl Loop3D {
             if l.len() > 1 && candidate_pt.compare(first_pt) {
                 break;
             }
+
+            let (walking_n, non_walking_n) = if walking_through_self {
+                (self.len(), chewer.len())
+            } else {
+                (chewer.len(), self.len())
+            };
+
             let last_pt = l.vertices[l.len() - 1]; // we know len is at least 1
+            if last_pt.compare(candidate_pt) {
+                index = (index + 1) % walking_n;
+                continue;
+            }
             let delta = (candidate_pt - last_pt).get_normalized() * 0.001;
 
             let candidate_seg = Segment3D::new(last_pt, candidate_pt + delta);
 
-            let (intersections, walking_n, non_walking_n) = if walking_through_self {
-                (chewer.intersect(&candidate_seg), self.len(), chewer.len())
+            let intersections = if walking_through_self {
+                chewer.intersect(&candidate_seg)
             } else {
-                (self.intersect(&candidate_seg), chewer.len(), self.len())
+                self.intersect(&candidate_seg)
             };
 
             if intersections.is_empty() {
@@ -1184,7 +1183,7 @@ impl Loop3D {
             other.reverse();
         }
 
-        // Find a pooint that is part of self and of other.
+        // Find a posint that is part of self and of other.
         let mut walking_through_self = true;
         let first_pt: Option<Point3D>;
         let mut index = 0;
@@ -1282,11 +1281,7 @@ impl Loop3D {
 
         l.close()?;
 
-        // if self.is_equal(&l)? {
-        //     Ok(None)
-        // } else {
         Ok(Some(l))
-        // }
     }
 
     /// Splits a [`Loop3D`] into two pieces according to a
@@ -1313,7 +1308,7 @@ impl Loop3D {
             return Ok(vec![self.clone()]);
         }
 
-        let intersections = self.intersect(&seg);                
+        let intersections = self.intersect(&seg);
         let mut the_indices: Vec<usize> = Vec::with_capacity(2);
         let mut the_points: Vec<Point3D> = Vec::with_capacity(2);
         for (index, pt) in intersections {
@@ -2540,8 +2535,6 @@ mod testing {
         let exp: Loop3D = serde_json::from_str(exp_str).map_err(|e| e.to_string())?;
 
         let bitten = this_loop.bite(&chewer)?;
-        let bitten_str = serde_json::to_string(&bitten).unwrap();
-        println!("bitten = \n\n{}", bitten_str);
         assert_eq!(bitten.len(), exp.len());
         assert!(bitten.is_equal(&exp)?);
 
@@ -2749,6 +2742,36 @@ mod testing {
         assert!(this_loop.bite(&reversed_chewer).is_err());
 
         Ok(())
+    }
+
+    #[test]
+    fn test_bite_7() -> Result<(), String> {
+        /*
+        Case 7 :
+        ------
+
+
+
+         */
+        let chewer = "[
+            2.6397675407798626,-6.909950781785453,1.315362463352675,
+            4.7744262940712305,-7.826319424405565,1.315362463352675,
+            4.120359205911263,-8.115971036089993,1.315362463352675
+        ]";
+
+        let this_str = "[
+            4.774426294071231,-7.826319424405565,1.315362463352675,
+            4.120359205911263,-8.115971036089993,1.315362463352675,
+            3.157255631736398,-5.941159318880256,1.315362463352675
+        ]";
+
+        let exp_str = "[
+            4.7744262940712305,-7.826319424405565,1.315362463352675,
+            3.157255631736398,-5.941159318880256,1.315362463352675,
+            3.8084522554181546,-7.411645033362059,1.315362463352675
+        ]";
+
+        try_to_bite(this_str, chewer, exp_str)
     }
 
     fn try_to_intersect(this_str: &str, other_str: &str, exp_str: &str) -> Result<(), String> {
@@ -3218,22 +3241,12 @@ mod testing {
 
         let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
-        let seg = Segment3D::new(Point3D::new(-10., 0., 0.0), Point3D::new(10., 0., 0.0));
+        let seg = Segment3D::new(Point3D::new(-10., 0., 0.), Point3D::new(10., 0., 0.));
 
         let v = this_loop.split(&seg)?;
         assert_eq!(v.len(), 1);
 
-        let left = &v[0];
-        let left_exp_pts = vec![
-            Point3D::new(0., 0., 0.),
-            Point3D::new(1.0, 0., 0.),
-            Point3D::new(1.0, 1.0, 0.),
-            Point3D::new(0.0, 1., 0.),
-        ];
-        for (i, p) in left.vertices.iter().enumerate() {
-            println!("    {}", p);
-            assert!(p.compare(left_exp_pts[i]))
-        }
+        assert!(this_loop.is_equal(&v[0])?);        
         Ok(())
     }
 
