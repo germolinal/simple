@@ -187,7 +187,6 @@ impl Vector3D {
 
     /// Normalizes a Vector, mutating it.
     pub fn normalize(&mut self) {
-
         let l2 = self.length_squared();
         assert!(l2 > 1e-20, "Trying to normalize a vector with zero length");
 

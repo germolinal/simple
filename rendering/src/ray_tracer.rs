@@ -351,8 +351,7 @@ impl RayTracer {
                 continue;
             }
             count += 1;
-            
-            
+
             global += li * ray.value;
 
             // restore ray, because it was modified by trace_ray executions

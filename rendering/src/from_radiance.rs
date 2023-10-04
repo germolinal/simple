@@ -198,11 +198,26 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "5".to_string());
-        let red = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let green = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let blue = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let specularity = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let roughness = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+        let red = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let green = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let blue = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let specularity = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let roughness = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
 
         self.modifiers.push(name.to_string());
 
@@ -230,11 +245,26 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "5".to_string());
-        let red = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let green = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let blue = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let specularity = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let roughness = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+        let red = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let green = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let blue = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let specularity = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let roughness = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
 
         self.modifiers.push(name.to_string());
 
@@ -262,9 +292,18 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "3".to_string());
-        let red = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let green = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let blue = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+        let red = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let green = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let blue = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
 
         self.modifiers.push(name.to_string());
 
@@ -288,9 +327,18 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "3".to_string());
-        let red = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let green = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let blue = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+        let red = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let green = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let blue = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
 
         self.modifiers.push(name.to_string());
 
@@ -314,11 +362,26 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "5".to_string());
-        let red = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let green = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let blue = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let refraction_index = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let _hartmans = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+        let red = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let green = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let blue = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let refraction_index = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let _hartmans = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
 
         self.modifiers.push(name.to_string());
 
@@ -346,10 +409,22 @@ impl RadianceReader {
         let t = self.consume_token(source)?;
         let mat = match t.as_bytes() {
             b"4" => {
-                let red = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-                let green = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-                let blue = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-                let refraction_index = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+                let red = self
+                    .consume_token(source)?
+                    .parse::<Float>()
+                    .map_err(|e| e.to_string())?;
+                let green = self
+                    .consume_token(source)?
+                    .parse::<Float>()
+                    .map_err(|e| e.to_string())?;
+                let blue = self
+                    .consume_token(source)?
+                    .parse::<Float>()
+                    .map_err(|e| e.to_string())?;
+                let refraction_index = self
+                    .consume_token(source)?
+                    .parse::<Float>()
+                    .map_err(|e| e.to_string())?;
                 let colour = Spectrum([red, green, blue]);
                 Material::Glass(Glass {
                     colour,
@@ -357,9 +432,18 @@ impl RadianceReader {
                 })
             }
             b"3" => {
-                let red = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-                let green = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-                let blue = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+                let red = self
+                    .consume_token(source)?
+                    .parse::<Float>()
+                    .map_err(|e| e.to_string())?;
+                let green = self
+                    .consume_token(source)?
+                    .parse::<Float>()
+                    .map_err(|e| e.to_string())?;
+                let blue = self
+                    .consume_token(source)?
+                    .parse::<Float>()
+                    .map_err(|e| e.to_string())?;
                 let refraction_index = 1.52;
                 let colour = Spectrum([red, green, blue]);
                 Material::Glass(Glass {
@@ -395,10 +479,22 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "4".to_string());
-        let center_x = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let center_y = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let center_z = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let radius = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+        let center_x = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let center_y = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let center_z = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let radius = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
 
         let sphere = Sphere3D::new(radius, Point3D::new(center_x, center_y, center_z));
 
@@ -422,9 +518,18 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "4".to_string());
-        let dir_x = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let dir_y = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-        let dir_z = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+        let dir_x = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let dir_y = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
+        let dir_z = self
+            .consume_token(source)?
+            .parse::<Float>()
+            .map_err(|e| e.to_string())?;
         let angle = self
             .consume_token(source)?
             .parse::<Float>()
@@ -449,7 +554,10 @@ impl RadianceReader {
         assert_eq!(t, "0".to_string());
         let t = self.consume_token(source)?;
         assert_eq!(t, "0".to_string());
-        let mut vertex_n = self.consume_token(source)?.parse::<usize>().map_err(|e| e.to_string())?;
+        let mut vertex_n = self
+            .consume_token(source)?
+            .parse::<usize>()
+            .map_err(|e| e.to_string())?;
         if vertex_n % 3 != 0 {
             panic!("Incorrect Polygon... n%3 != 0")
         }
@@ -457,9 +565,18 @@ impl RadianceReader {
         let mut the_loop = Loop3D::new();
 
         while vertex_n > 0 {
-            let x = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-            let y = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
-            let z = self.consume_token(source)?.parse::<Float>().map_err(|e| e.to_string())?;
+            let x = self
+                .consume_token(source)?
+                .parse::<Float>()
+                .map_err(|e| e.to_string())?;
+            let y = self
+                .consume_token(source)?
+                .parse::<Float>()
+                .map_err(|e| e.to_string())?;
+            let z = self
+                .consume_token(source)?
+                .parse::<Float>()
+                .map_err(|e| e.to_string())?;
             the_loop.push(Point3D::new(x, y, z))?;
             vertex_n -= 3;
         }
@@ -848,9 +965,8 @@ mod tests {
         assert!(scene.cy.is_empty());
         assert!(scene.cz.is_empty());
         assert_eq!(1, scene.distant_lights.len());
-        
+
         assert!(scene.normals.is_empty());
-        
 
         if let Primitive::Source(p) = &scene.distant_lights[0].primitive {
             let l = Vector3D::new(1., 2., 3.).get_normalized();
@@ -887,7 +1003,7 @@ mod tests {
         scanner.consume_object(src, &mut scene)?; // consume source
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
-        
+
         assert_eq!(scene.ax.len(), 1);
         assert_eq!(scene.ay.len(), 1);
         assert_eq!(scene.az.len(), 1);
@@ -900,13 +1016,11 @@ mod tests {
         assert_eq!(scene.cy.len(), 1);
         assert_eq!(scene.cz.len(), 1);
 
-
-
         assert!(scene.distant_lights.is_empty());
         assert_eq!(scene.normals.len(), 1);
 
         let [ax, ay, az, bx, by, bz, cx, cy, cz] = [21., 12., 53., -4., 125., 66., 75., 8.1, 9.2];
-        
+
         assert_close!(ax, scene.ax[0]);
         assert_close!(ay, scene.ay[0]);
         assert_close!(az, scene.az[0]);

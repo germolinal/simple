@@ -63,12 +63,9 @@ impl std::convert::From<Loop3D> for Polygon3D {
 }
 
 impl std::fmt::Display for Polygon3D {
-
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        
         let l = self.get_closed_loop();
         write!(f, "{}", l)
-
     }
 }
 
@@ -335,7 +332,6 @@ impl Polygon3D {
 
                 // Add
                 aux.push_collinear(ext_vertex, false).unwrap();
-                
 
                 // If we are in the vertex through which we want
                 // to connect the interior loop, then go inside.
@@ -911,8 +907,6 @@ mod testing {
 
     #[test]
     fn get_closed_loop_multiple_doors() -> Result<(), String> {
-        
-
         let outer_vertices = vec![
             Point3D::new(10.288120882356054, 4.8911522517954955, 0.011954070000000039),
             Point3D::new(4.1214927526583072, 7.1919133973049894, 0.011954070000000039),
@@ -920,7 +914,7 @@ mod testing {
             Point3D::new(10.288120882356054, 4.8911522517954955, 3.0421447659872975),
         ];
         let mut outer = Loop3D::new();
-        for v in outer_vertices { 
+        for v in outer_vertices {
             outer.push(v)?;
         }
         outer.close()?;
@@ -932,7 +926,7 @@ mod testing {
             Point3D::new(6.2749445994448472, 6.3884632404921478, 2.0732600999999997),
         ];
         let mut inner_1 = Loop3D::new();
-        for v in inner_1_vertices { 
+        for v in inner_1_vertices {
             inner_1.push(v)?;
         }
         inner_1.close()?;
@@ -941,29 +935,25 @@ mod testing {
             Point3D::new(8.3124151415813934, 5.62828556156055, 0.014954099999999748),
             Point3D::new(7.576657755748454, 5.9027957104203024, 0.014954099999999748),
             Point3D::new(7.576657755748454, 5.9027957104203024, 2.0732600999999997),
-            Point3D::new(8.3124151415813934, 5.62828556156055, 2.0732600999999997)
+            Point3D::new(8.3124151415813934, 5.62828556156055, 2.0732600999999997),
         ];
         let mut inner_2 = Loop3D::new();
-        for v in inner_2_vertices { 
+        for v in inner_2_vertices {
             inner_2.push(v)?;
         }
         inner_2.close()?;
-
-
 
         let inner_3_vertices = vec![
             Point3D::new(9.3154744121348684, 5.2540454180340674, 0.014954059999999769),
             Point3D::new(8.4823625968720968, 5.5648783812202911, 0.014954059999999769),
             Point3D::new(8.4823625968720968, 5.5648783812202911, 1.9883438599999999),
-            Point3D::new(9.3154744121348684, 5.2540454180340674, 1.9883438599999999)
+            Point3D::new(9.3154744121348684, 5.2540454180340674, 1.9883438599999999),
         ];
         let mut inner_3 = Loop3D::new();
-        for v in inner_3_vertices { 
+        for v in inner_3_vertices {
             inner_3.push(v)?;
         }
         inner_3.close()?;
-
-        
 
         let mut poly = Polygon3D::new(outer)?;
         poly.cut_hole(inner_1)?;
@@ -972,12 +962,7 @@ mod testing {
 
         let mut l = poly.get_closed_loop();
         l.close()?;
-        
-        
-
 
         Ok(())
     }
-
-    
 }

@@ -332,7 +332,7 @@ impl Node {
 
                 // Decide whether to keep splitting or not.
                 let leaf_cost = n_primitives as Float;
-                if n_primitives > crate::triangle::LEAF_SIZE  || min_cost < leaf_cost {
+                if n_primitives > crate::triangle::LEAF_SIZE || min_cost < leaf_cost {
                     // We need or want to subdivide... create interior
 
                     // Sort based on centroid position
@@ -569,7 +569,7 @@ impl BoundingVolumeTree {
                 if node.is_leaf() {
                     let offset = node.next;
 
-                    // // Check all the objects in this Node                    
+                    // // Check all the objects in this Node
                     let ini = offset as usize;
                     let fin = ini + node.n_prims as usize;
 

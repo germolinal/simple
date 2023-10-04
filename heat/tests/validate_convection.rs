@@ -2,7 +2,7 @@ use geometry::Vector3D;
 use heat::convection::ConvectionParams;
 use heat::surface::is_windward;
 use heat::Float;
-use validate::{valid, ValidFunc, Validator, SeriesValidator};
+use validate::{valid, SeriesValidator, ValidFunc, Validator};
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> ValidFunc {
     Box::new(SeriesValidator {

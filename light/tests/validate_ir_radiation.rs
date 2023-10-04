@@ -62,14 +62,15 @@ fn get_simple_results(
 
     let zone_volume = 600.;
 
-    let (model, mut state_header) = get_single_zone_test_building(&SingleZoneTestBuildingOptions {
-        zone_volume,
-        surface_width: 20.,
-        surface_height: 3.,
-        construction: vec![TestMat::Concrete(0.2)],
-        orientation,
-        ..Default::default()
-    })?;
+    let (model, mut state_header) =
+        get_single_zone_test_building(&SingleZoneTestBuildingOptions {
+            zone_volume,
+            surface_width: 20.,
+            surface_height: 3.,
+            construction: vec![TestMat::Concrete(0.2)],
+            orientation,
+            ..Default::default()
+        })?;
 
     // Finished model the Model
     let mut options = SolarOptions::new();

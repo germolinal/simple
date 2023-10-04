@@ -40,47 +40,47 @@ pub struct Object {
 
 #[derive(Default)]
 pub struct Scene {
-    /// The x component of the first vertex of the 
+    /// The x component of the first vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub ax: Vec<Float>,
-    /// The x component of the first vertex of the 
+    /// The x component of the first vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub ay: Vec<Float>,
-    /// The x component of the first vertex of the 
+    /// The x component of the first vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub az: Vec<Float>,
-    /// The x component of the second vertex of the 
+    /// The x component of the second vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub bx: Vec<Float>,
-    /// The y component of the second vertex of the 
+    /// The y component of the second vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub by: Vec<Float>,
-    /// The z component of the second vertex of the 
+    /// The z component of the second vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub bz: Vec<Float>,
-    /// The x component of the third vertex of the 
+    /// The x component of the third vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub cx: Vec<Float>,
-    /// The y component of the third vertex of the 
+    /// The y component of the third vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)
     pub cy: Vec<Float>,
-    /// The z component of the third vertex of the 
+    /// The z component of the third vertex of the
     /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
     /// and diffuse light)

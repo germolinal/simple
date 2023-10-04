@@ -65,7 +65,6 @@ impl Plastic {
         // let bsdf = Spectrum::gray(direct) + self.colour * diffuse;
         let bsdf = self.colour * direct + self.colour * diffuse;
 
-
         (bsdf, weight)
     }
 
@@ -91,7 +90,6 @@ impl Plastic {
 
         // Spectrum::gray(direct) + self.colour * diffuse
         self.colour * direct + self.colour * diffuse
-
     }
 }
 
