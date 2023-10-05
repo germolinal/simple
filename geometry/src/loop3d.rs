@@ -511,8 +511,8 @@ impl Loop3D {
             self.vertices.push(point);
         }
 
-        // Calcualte the normal if possible
-        if self.vertices.len() == 3 {
+        // Calculate the normal if possible
+        if self.vertices.len() >= 3 {
             self.set_normal()?;
         }
         Ok(())
@@ -614,6 +614,11 @@ impl Loop3D {
             self.vertices.remove(0);
         }
 
+        // check normal
+        if self.normal.length_squared() < 1e-14 {
+            return Err("trying to close loop that was never assigned a normal".to_string());
+        }
+
         // Close
         self.closed = true;
         self.set_area()?;
@@ -624,6 +629,12 @@ impl Loop3D {
 
     /// Sets the normal [`Vector3D`] for a [`Loop3D`]
     fn set_normal(&mut self) -> Result<(), String> {
+        const TINY: Float = 1e-15;
+
+        if self.normal.length_squared() > TINY {
+            // normal has been set already
+            return Ok(());
+        }
         if self.vertices.len() < 3 {
             return Err(
                 "Trying to set the normal of a Polygon3D with less than three Point3D".to_string(),
@@ -632,13 +643,21 @@ impl Loop3D {
 
         let a = self.vertices[0];
         let b = self.vertices[1];
-        let c = self.vertices[2];
 
-        let ab = b - a;
-        let bc = c - b;
+        for i in 2..self.vertices.len(){
 
-        self.normal = ab.cross(bc);
-        self.normal.normalize();
+            let c = self.vertices[i];
+    
+            let ab = b - a;
+            let bc = c - b;
+            let normal = ab.cross(bc);
+            if normal.length_squared() > TINY {
+                self.normal = normal;
+                self.normal.normalize();
+                break;
+            }
+        }
+
 
         Ok(())
     }
@@ -1265,9 +1284,15 @@ impl Loop3D {
             }
         }
 
-        l.close()?;
-
-        Ok(Some(l))
+        let mut l = l.sanitize()?;
+        if l.len() < 3 {
+            Ok(None)
+        }else{
+            l.close()?;
+            Ok(Some(l))
+        }
+        
+    
     }
 
     /// Splits a [`Loop3D`] into two pieces according to a
