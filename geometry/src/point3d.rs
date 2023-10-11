@@ -59,7 +59,7 @@ impl Point3D {
     ///
     /// let pt = Point3D::new(0., 1., 2.);
     /// ```
-    pub fn new(x: Float, y: Float, z: Float) -> Point3D {
+    pub const fn new(x: Float, y: Float, z: Float) -> Point3D {
         Point3D { x, y, z }
     }
 
