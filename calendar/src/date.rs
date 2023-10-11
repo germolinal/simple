@@ -134,7 +134,7 @@ impl Date {
     ///
     /// Because `Date` does not have a year, we need to pass it as a parameter.        
     #[cfg(feature = "chrono")]
-    pub fn into_naive_datetime(self, year: i32) -> NaiveDateTime {
+    pub fn into_naive_datetime(self, year: i32) -> Result<NaiveDateTime, String> {
         let hour = self.hour.floor();
         let remainder = self.hour - hour;
         let min = remainder * 60.0;
@@ -150,10 +150,11 @@ impl Date {
 
         sec %= 60;
 
-        NaiveDate::from_ymd_opt(year, self.month as u32, self.day as u32)
-            .expect("Could not build chronos::Date")
+        let r = NaiveDate::from_ymd_opt(year, self.month as u32, self.day as u32)
+            .ok_or("Could not build chronos::Date")?
             .and_hms_opt(hour.round() as u32, min, sec)
-            .unwrap()
+            .ok_or("Could not add HMS to chrosnos::Date")?;
+        Ok(r)
     }
 
     /// Interpolates between two dates
@@ -967,7 +968,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "chrono")]
-    fn test_into_naive_datetime() {
+    fn test_into_naive_datetime() -> Result<(), String> {
         use chrono::{Datelike, Timelike};
 
         let d = Date {
@@ -978,7 +979,7 @@ mod tests {
 
         let year = 2025;
 
-        let out = d.into_naive_datetime(year);
+        let out = d.into_naive_datetime(year)?;
         println!("{}", out);
         assert_eq!(out.year(), year);
         assert_eq!(out.month() as u8, d.month);
@@ -987,5 +988,7 @@ mod tests {
         assert_eq!(out.hour(), 23);
         assert_eq!(out.minute(), 59);
         assert_eq!(out.second(), 59);
+
+        Ok(())
     }
 }

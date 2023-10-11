@@ -132,22 +132,30 @@ impl Default for SingleZoneTestBuildingOptions {
 }
 
 /// Adds a luminare to the model
-pub fn add_luminaire(model: &mut Model, options: &SingleZoneTestBuildingOptions) {
+pub fn add_luminaire(
+    model: &mut Model,
+    options: &SingleZoneTestBuildingOptions,
+) -> Result<(), String> {
     let power = options.lighting_power;
     assert!(power > 0.);
     let mut luminaire = Luminaire::new("the luminaire");
     luminaire.set_max_power(power as Float);
     luminaire.set_target_space(model.spaces[0].name());
-    model.add_luminaire(luminaire).unwrap();
+    model.add_luminaire(luminaire)?;
+    Ok(())
 }
 
 /// Adds a heater to the model
-pub fn add_heater(model: &mut Model, options: &SingleZoneTestBuildingOptions) {
+pub fn add_heater(
+    model: &mut Model,
+    options: &SingleZoneTestBuildingOptions,
+) -> Result<(), String> {
     let power = options.heating_power;
     assert!(power > 0.);
     let mut hvac = ElectricHeater::new("some hvac");
     hvac.set_target_space(model.spaces[0].name());
-    model.add_hvac(hvac.wrap()).unwrap();
+    model.add_hvac(hvac.wrap())?;
+    Ok(())
 }
 
 /// A single space model with a single surface (optionally) one operable window that has the same construction
@@ -156,7 +164,7 @@ pub fn add_heater(model: &mut Model, options: &SingleZoneTestBuildingOptions) {
 /// The surface_area includes the window; the window_area is cut down from it.
 pub fn get_single_zone_test_building(
     options: &SingleZoneTestBuildingOptions,
-) -> (Model, SimulationStateHeader) {
+) -> Result<(Model, SimulationStateHeader), String> {
     let mut model = Model::default();
 
     /*************** */
@@ -270,29 +278,21 @@ pub fn get_single_zone_test_building(
     let mut the_loop = Loop3D::new();
     let angle = options.orientation.to_radians();
 
-    the_loop
-        .push(Point3D::new(-l * angle.cos(), -l * angle.sin(), 0.))
-        .unwrap();
-    the_loop
-        .push(Point3D::new(l * angle.cos(), l * angle.sin(), 0.))
-        .unwrap();
-    the_loop
-        .push(Point3D::new(
-            l * angle.cos(),
-            l * angle.sin(),
-            options.surface_height,
-        ))
-        .unwrap();
-    the_loop
-        .push(Point3D::new(
-            -l * angle.cos(),
-            -l * angle.sin(),
-            options.surface_height,
-        ))
-        .unwrap();
-    the_loop.close().unwrap();
+    the_loop.push(Point3D::new(-l * angle.cos(), -l * angle.sin(), 0.))?;
+    the_loop.push(Point3D::new(l * angle.cos(), l * angle.sin(), 0.))?;
+    the_loop.push(Point3D::new(
+        l * angle.cos(),
+        l * angle.sin(),
+        options.surface_height,
+    ))?;
+    the_loop.push(Point3D::new(
+        -l * angle.cos(),
+        -l * angle.sin(),
+        options.surface_height,
+    ))?;
+    the_loop.close()?;
 
-    let mut p = Polygon3D::new(the_loop).unwrap();
+    let mut p = Polygon3D::new(the_loop)?;
 
     // Window... if there is any
     let mut window_polygon: Option<Polygon3D> = None;
@@ -305,37 +305,29 @@ pub fn get_single_zone_test_building(
 
         let l = options.window_width / 2.;
         let mut the_inner_loop = Loop3D::new();
-        the_inner_loop
-            .push(Point3D::new(
-                -l * angle.cos(),
-                -l * angle.sin(),
-                options.surface_height / 2. - options.window_height / 2.,
-            ))
-            .unwrap();
-        the_inner_loop
-            .push(Point3D::new(
-                l * angle.cos(),
-                l * angle.sin(),
-                options.surface_height / 2. - options.window_height / 2.,
-            ))
-            .unwrap();
-        the_inner_loop
-            .push(Point3D::new(
-                l * angle.cos(),
-                l * angle.sin(),
-                options.surface_height / 2. + options.window_height / 2.,
-            ))
-            .unwrap();
-        the_inner_loop
-            .push(Point3D::new(
-                -l * angle.cos(),
-                -l * angle.sin(),
-                options.surface_height / 2. + options.window_height / 2.,
-            ))
-            .unwrap();
-        the_inner_loop.close().unwrap();
-        p.cut_hole(the_inner_loop.clone()).unwrap();
-        window_polygon = Some(Polygon3D::new(the_inner_loop).unwrap());
+        the_inner_loop.push(Point3D::new(
+            -l * angle.cos(),
+            -l * angle.sin(),
+            options.surface_height / 2. - options.window_height / 2.,
+        ))?;
+        the_inner_loop.push(Point3D::new(
+            l * angle.cos(),
+            l * angle.sin(),
+            options.surface_height / 2. - options.window_height / 2.,
+        ))?;
+        the_inner_loop.push(Point3D::new(
+            l * angle.cos(),
+            l * angle.sin(),
+            options.surface_height / 2. + options.window_height / 2.,
+        ))?;
+        the_inner_loop.push(Point3D::new(
+            -l * angle.cos(),
+            -l * angle.sin(),
+            options.surface_height / 2. + options.window_height / 2.,
+        ))?;
+        the_inner_loop.close()?;
+        p.cut_hole(the_inner_loop.clone())?;
+        window_polygon = Some(Polygon3D::new(the_inner_loop)?);
     }
 
     /***************** */
@@ -367,26 +359,26 @@ pub fn get_single_zone_test_building(
             Boundary::Outdoor,
         );
 
-        model.add_fenestration(fenestration).unwrap();
+        model.add_fenestration(fenestration)?;
     }
 
     /*********************** */
     /* ADD HEATER, IF NEEDED */
     /*********************** */
     if options.heating_power > 0.0 {
-        add_heater(&mut model, options);
+        add_heater(&mut model, options)?;
     }
 
     /*********************** */
     /* ADD LIGHTS, IF NEEDED */
     /*********************** */
     if options.lighting_power > 0.0 {
-        add_luminaire(&mut model, options);
+        add_luminaire(&mut model, options)?;
     }
 
     // Return
-    let header = model.take_state().unwrap();
-    (model, header)
+    let header = model.take_state().ok_or("Could not take state")?;
+    Ok((model, header))
 }
 
 #[cfg(test)]
@@ -396,7 +388,7 @@ mod testing {
     use model::SurfaceTrait;
 
     #[test]
-    fn test_with_window() {
+    fn test_with_window() -> Result<(), String> {
         let surface_width = 2.;
         let surface_height = 2.;
         let window_width = 1.;
@@ -414,7 +406,7 @@ mod testing {
                 construction: vec![TestMat::Concrete(0.2)],
                 ..Default::default()
             },
-        );
+        )?;
 
         let surf_area = model.surfaces[0].area();
         let exp_area = surface_width * surface_height - window_height * window_width;
@@ -424,10 +416,12 @@ mod testing {
             surf_area,
             exp_area
         );
+
+        Ok(())
     }
 
     #[test]
-    fn test_no_window() {
+    fn test_no_window() -> Result<(), String> {
         let surface_width = 2.;
         let surface_height = 2.;
         let window_width = 0.;
@@ -445,7 +439,7 @@ mod testing {
                 construction: vec![TestMat::Concrete(0.2)],
                 ..Default::default()
             },
-        );
+        )?;
 
         let surf_area = model.surfaces[0].area();
         let exp_area = surface_width * surface_height;
@@ -455,5 +449,7 @@ mod testing {
             surf_area,
             exp_area
         );
+
+        Ok(())
     }
 }

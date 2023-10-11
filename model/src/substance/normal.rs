@@ -155,7 +155,7 @@ mod testing {
     use crate::model::Model;
 
     #[test]
-    fn serde() {
+    fn serde() -> Result<(), String> {
         use json5;
         use std::fs;
 
@@ -173,36 +173,38 @@ mod testing {
             thermal_conductivity: 12,            
         }",
         )
-        .unwrap();
+        .map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", normal), format!("{:?}", json5_heater));
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/normal";
         let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).unwrap();
-        let from_json: Normal = serde_json::from_str(&json_data).unwrap();
+        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
+        let from_json: Normal = serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", normal), format!("{:?}", from_json));
 
         // Serialize and deserialize again... check that everythin matches the pattern
-        let rust_json = serde_json::to_string(&normal).unwrap();
+        let rust_json = serde_json::to_string(&normal).map_err(|e| e.to_string())?;
         println!("{}", &rust_json);
-        let rust_again: Normal = serde_json::from_str(&rust_json).unwrap();
+        let rust_again: Normal = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", normal), format!("{:?}", rust_again));
 
         // Check spl
-        let (model, ..) = Model::from_file("./tests/scanner/substance_normal.spl").unwrap();
+        let (model, ..) = Model::from_file("./tests/scanner/substance_normal.spl")?;
         assert_eq!(1, model.substances.len());
 
         if let Substance::Normal(g) = &model.substances[0] {
             assert_eq!("the substance", g.name());
-            assert!((12. - g.thermal_conductivity.unwrap()).abs() < 1e-9);
+            assert!((12. - g.thermal_conductivity.ok_or("No thermal conductivity")?).abs() < 1e-9);
         } else {
             assert!(false, "Wrong substance")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_substance_basic() {
+    fn test_substance_basic() -> Result<(), String> {
         let s_name = "The Normal".to_string();
         let mut s = Normal::new(s_name.clone());
         assert_eq!(s_name, s.name);
@@ -218,9 +220,11 @@ mod testing {
             .set_specific_heat_capacity(c)
             .set_density(rho);
 
-        assert_eq!(s.thermal_diffusivity().unwrap(), lambda / rho / c);
-        assert_eq!(*s.density().unwrap(), rho);
-        assert_eq!(*s.specific_heat_capacity().unwrap(), c);
-        assert_eq!(*s.thermal_conductivity().unwrap(), lambda);
+        assert_eq!(s.thermal_diffusivity()?, lambda / rho / c);
+        assert_eq!(*s.density()?, rho);
+        assert_eq!(*s.specific_heat_capacity()?, c);
+        assert_eq!(*s.thermal_conductivity()?, lambda);
+
+        Ok(())
     }
 }

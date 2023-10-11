@@ -15,7 +15,8 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // ROOM
 
-    let mut room = black_box(Scene::from_radiance("./tests/scenes/room.rad".to_string()));
+    let mut room = black_box(Scene::from_radiance("./tests/scenes/room.rad".to_string()))
+        .expect("Could not load file");
     room.build_accelerator();
 
     c.bench_function("intersect_room", |b| {

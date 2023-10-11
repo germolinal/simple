@@ -1022,12 +1022,12 @@ mod tests {
     use super::*;
     use crate::{EPWWeather, Weather};
     use calendar::{Date, Period};
-    use validate::{valid, ScatterValidator, Validate, Validator};
+    use validate::{valid, ScatterValidator, ValidFunc, Validator};
 
     #[test]
-    fn test_cloud_cover_to_global_rad_generic() {
-        fn global(filename: &str) -> Box<dyn Validate> {
-            let mut epw: Weather = EPWWeather::from_file(filename).unwrap().into();
+    fn test_cloud_cover_to_global_rad_generic() -> Result<(), String> {
+        fn global(filename: &str) -> Result<ValidFunc, String> {
+            let mut epw: Weather = EPWWeather::from_file(filename)?.into();
 
             let expected: Vec<Float> = epw
                 .data
@@ -1035,7 +1035,7 @@ mod tests {
                 .map(|line| line.global_horizontal_radiation)
                 .collect();
 
-            epw.fill_solar_radiation_data().unwrap();
+            epw.fill_solar_radiation_data()?;
 
             let found: Vec<Float> = epw
                 .data
@@ -1051,11 +1051,11 @@ mod tests {
                 found,
                 ..ScatterValidator::default()
             };
-            Box::new(scatter)
+            Ok(Box::new(scatter))
         }
 
-        fn direct(filename: &str) -> Box<dyn Validate> {
-            let mut epw: Weather = EPWWeather::from_file(filename).unwrap().into();
+        fn direct(filename: &str) -> Result<ValidFunc, String> {
+            let mut epw: Weather = EPWWeather::from_file(filename)?.into();
 
             let expected: Vec<Float> = epw
                 .data
@@ -1063,7 +1063,7 @@ mod tests {
                 .map(|line| line.direct_normal_radiation)
                 .collect();
 
-            epw.fill_solar_radiation_data().unwrap();
+            epw.fill_solar_radiation_data()?;
 
             let found: Vec<Float> = epw
                 .data
@@ -1079,11 +1079,11 @@ mod tests {
                 found,
                 ..ScatterValidator::default()
             };
-            Box::new(scatter)
+            Ok(Box::new(scatter))
         }
 
-        fn diffuse(filename: &str) -> Box<dyn Validate> {
-            let mut epw: Weather = EPWWeather::from_file(filename).unwrap().into();
+        fn diffuse(filename: &str) -> Result<ValidFunc, String> {
+            let mut epw: Weather = EPWWeather::from_file(filename)?.into();
 
             let expected: Vec<Float> = epw
                 .data
@@ -1091,7 +1091,7 @@ mod tests {
                 .map(|line| line.diffuse_horizontal_radiation)
                 .collect();
 
-            epw.fill_solar_radiation_data().unwrap();
+            epw.fill_solar_radiation_data()?;
 
             let found: Vec<Float> = epw
                 .data
@@ -1107,39 +1107,39 @@ mod tests {
                 found,
                 ..ScatterValidator::default()
             };
-            Box::new(scatter)
+            Ok(Box::new(scatter))
         }
 
-        #[valid(Global Horizontal Radiation: Wellington)]
+        #[valid("Global Horizontal Radiation: Wellington")]
         /// Estimated based on cloud cover (in EPW file) vs global radiation (in EPW file) for Wellington
-        fn wellington_global() -> Box<dyn Validate> {
+        fn wellington_global() -> Result<ValidFunc, String> {
             global("./test_data/wellington.epw")
         }
-        #[valid(Global Horizontal Radiation: Barcelona)]
+        #[valid("Global Horizontal Radiation: Barcelona")]
         /// Estimated based on cloud cover (in EPW file) vs global radiation (in EPW file) for Barcelona
-        fn barcelona_global() -> Box<dyn Validate> {
+        fn barcelona_global() -> Result<ValidFunc, String> {
             global("./test_data/barcelona.epw")
         }
 
-        #[valid(Diffuse Horizontal Radiation: Wellington)]
+        #[valid("Diffuse Horizontal Radiation: Wellington")]
         ///Estimated based on cloud cover (in EPW file) vs global radiation (in EPW file) for Wellington
-        fn wellington_diffuse() -> Box<dyn Validate> {
+        fn wellington_diffuse() -> Result<ValidFunc, String> {
             diffuse("./test_data/wellington.epw")
         }
-        #[valid(Diffuse Horizontal Radiation: Barcelona)]
+        #[valid("Diffuse Horizontal Radiation: Barcelona")]
         /// Estimated based on cloud cover (in EPW file) vs global radiation (in EPW file) for Barcelona
-        fn barcelona_diffuse() -> Box<dyn Validate> {
+        fn barcelona_diffuse() -> Result<ValidFunc, String> {
             diffuse("./test_data/barcelona.epw")
         }
 
-        #[valid(Direct Normal Radiation: Wellington)]
+        #[valid("Direct Normal Radiation: Wellington")]
         ///Estimated based on cloud cover (in EPW file) vs global radiation (in EPW file) for Wellington
-        fn wellington_direct() -> Box<dyn Validate> {
+        fn wellington_direct() -> Result<ValidFunc, String> {
             direct("./test_data/wellington.epw")
         }
-        #[valid(Direct Normal Radiation: Barcelona)]
+        #[valid("Direct Normal Radiation: Barcelona")]
         /// Estimated based on cloud cover (in EPW file) vs global radiation (in EPW file) for Barcelona
-        fn barcelona_direct() -> Box<dyn Validate> {
+        fn barcelona_direct() -> Result<ValidFunc, String> {
             direct("./test_data/barcelona.epw")
         }
 
@@ -1147,20 +1147,20 @@ mod tests {
             "Estimation of Global Horizontal Irradiance from Cloud Cover",
             "../docs/validation/global_horizontal_from_cloud_cover.html",
         );
-        validator.push(wellington_global());
-        validator.push(barcelona_global());
+        validator.push(wellington_global()?);
+        validator.push(barcelona_global()?);
 
-        validator.push(wellington_diffuse());
-        validator.push(barcelona_diffuse());
+        validator.push(wellington_diffuse()?);
+        validator.push(barcelona_diffuse()?);
 
-        validator.push(wellington_direct());
-        validator.push(barcelona_direct());
+        validator.push(wellington_direct()?);
+        validator.push(barcelona_direct()?);
 
-        validator.validate().unwrap();
+        validator.validate()
     }
 
     #[test]
-    fn test_atmosphere_transmittance() {
+    fn test_atmosphere_transmittance() -> Result<(), String> {
         // Example 2.8.1
         /*
         Calculate the transmittance for beam radiation of the standard clear
@@ -1184,7 +1184,7 @@ mod tests {
         let stdmed = 20.0; // we are working in solar time, so it is not relevant
         let solar = Solar::new(lat, lon, stdmed);
 
-        let sundir = solar.sun_position(n).unwrap();
+        let sundir = solar.sun_position(n).ok_or("No sun position")?;
         validate::assert_close!(sundir.z, 0.846, 0.01);
 
         let t = solar.beam_atmosphere_transmittance(sundir, site_elevation);
@@ -1202,6 +1202,8 @@ mod tests {
         */
         let clear = solar.clear_sky_global_horizontal_rad(n, sundir, site_elevation);
         validate::assert_close!(clear, 702.0 + 101.0, 20.0);
+
+        Ok(())
     }
 
     #[test]
@@ -1316,7 +1318,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sun_position() {
+    fn test_sun_position() -> Result<(), String> {
         /*
         Example 1.6.2
         Calculate the zenith and solar azimuth angles for φ = 43◦ at 9:30 AM on February 13 and 6:30 PM on July 1.
@@ -1332,7 +1334,9 @@ mod tests {
             hour: 9.5,
         }
         .day_of_year();
-        let dir = solar.sun_position(Time::Solar(n)).unwrap();
+        let dir = solar
+            .sun_position(Time::Solar(n))
+            .ok_or("No sun position")?;
         validate::assert_close!(dir.length(), 1.0, 0.00001);
 
         // check declination
@@ -1357,7 +1361,9 @@ mod tests {
             hour: 18.5,
         }
         .day_of_year();
-        let dir = solar.sun_position(Time::Solar(n)).unwrap();
+        let dir = solar
+            .sun_position(Time::Solar(n))
+            .ok_or("No sun position 2")?;
         validate::assert_close!(dir.length(), 1.0, 0.00001);
 
         // check declination
@@ -1373,10 +1379,12 @@ mod tests {
         // Azimuth
         let azimuth = (dir.x / dir.y).atan().to_degrees();
         validate::assert_close!(180.0 + azimuth, 112., 0.5); // This is working, but atan() returns -67 instead of 112
+
+        Ok(())
     }
 
     #[test]
-    fn test_angle_of_incidence() {
+    fn test_angle_of_incidence() -> Result<(), String> {
         /*
         Example 1.6.1
         Calculate the angle of incidence of beam radiation on a surface
@@ -1393,7 +1401,9 @@ mod tests {
             hour: 10.5,
         }
         .day_of_year();
-        let solar_dir = solar.sun_position(Time::Solar(n)).unwrap();
+        let solar_dir = solar
+            .sun_position(Time::Solar(n))
+            .ok_or("No sun position")?;
         // check declination
         validate::assert_close!(solar.declination(n).to_degrees(), -14., 0.5);
 
@@ -1413,6 +1423,8 @@ mod tests {
         let angle = (solar_dir * surface_dir).acos();
 
         validate::assert_close!(angle.to_degrees(), 35., 0.2);
+
+        Ok(())
     }
 
     #[test]

@@ -25,7 +25,6 @@ use crate::from_simple_model::SimpleModelReader;
 use crate::material::{Light, Material};
 use crate::primitive::Primitive;
 use crate::ray::Ray;
-use crate::triangle::Triangle;
 use crate::Float;
 use calendar::Date;
 use geometry::{Ray3D, Vector3D};
@@ -41,10 +40,51 @@ pub struct Object {
 
 #[derive(Default)]
 pub struct Scene {
-    /// The Triangles in the scene that are not tested
+    /// The x component of the first vertex of the
+    /// Triangles in the scene. These are not tested
     /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)    
-    pub triangles: Vec<Triangle>,
+    /// and diffuse light)
+    pub ax: Vec<Float>,
+    /// The x component of the first vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub ay: Vec<Float>,
+    /// The x component of the first vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub az: Vec<Float>,
+    /// The x component of the second vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub bx: Vec<Float>,
+    /// The y component of the second vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub by: Vec<Float>,
+    /// The z component of the second vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub bz: Vec<Float>,
+    /// The x component of the third vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub cx: Vec<Float>,
+    /// The y component of the third vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub cy: Vec<Float>,
+    /// The z component of the third vertex of the
+    /// Triangles in the scene. These are not tested
+    /// directly for shadow (e.g., non-luminous objects
+    /// and diffuse light)
+    pub cz: Vec<Float>,
 
     /// The normal of each vertex of each triangle.
     pub normals: Vec<(Vector3D, Vector3D, Vector3D)>,
@@ -223,7 +263,7 @@ impl Scene {
     /// the Interaction
     pub fn cast_ray(&self, ray: &mut Ray, node_aux: &mut Vec<usize>) -> Option<usize> {
         if let Some(accelerator) = &self.accelerator {
-            accelerator.intersect(&self.triangles, ray, node_aux)
+            accelerator.intersect(self, ray, node_aux)
         } else {
             panic!("Trying to cast_ray() in a scene without an acceleration structure")
         }
@@ -237,7 +277,7 @@ impl Scene {
         node_aux: &mut Vec<usize>,
     ) -> bool {
         if let Some(a) = &self.accelerator {
-            a.unobstructed_distance(&self.triangles, ray, distance_squared, node_aux)
+            a.unobstructed_distance(self, ray, distance_squared, node_aux)
         } else {
             panic!("Trying to check if unobstructed_distance() in a scene without an acceleration structure")
         }
@@ -309,7 +349,20 @@ impl Scene {
         let front = vec![front_material_index; additional];
         let back = vec![back_material_index; additional];
 
-        self.triangles.extend_from_slice(&triangles);
+        // self.triangles.extend_from_slice(&triangles);
+        for t in triangles.iter() {
+            let [ax, ay, az, bx, by, bz, cx, cy, cz] = t;
+            self.ax.push(*ax);
+            self.ay.push(*ay);
+            self.az.push(*az);
+            self.bx.push(*bx);
+            self.by.push(*by);
+            self.bz.push(*bz);
+            self.cx.push(*cx);
+            self.cy.push(*cy);
+            self.cz.push(*cz);
+        }
+
         self.normals.extend_from_slice(&normals);
         self.front_material_indexes.extend_from_slice(&front);
         self.back_material_indexes.extend_from_slice(&back);

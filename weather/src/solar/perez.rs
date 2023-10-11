@@ -670,8 +670,8 @@ mod tests {
                 filename
             ));
         }
-        let nrows = nrows.unwrap();
-        let ncols = ncols.unwrap();
+        let nrows = nrows.ok_or("no nrows")?;
+        let ncols = ncols.ok_or("no ncols")?;
         let mut matrix = Matrix::new(0.0, nrows, ncols);
 
         // Now go on.
@@ -717,9 +717,7 @@ mod tests {
                     }
                 };
 
-                matrix
-                    .set(nrow, ncol, 0.265 * r + 0.67 * g + 0.065 * b)
-                    .unwrap();
+                matrix.set(nrow, ncol, 0.265 * r + 0.67 * g + 0.065 * b)?;
 
                 ncol += 1;
             }
@@ -729,20 +727,22 @@ mod tests {
     }
 
     #[test]
-    fn test_read_colour_matrix() {
+    fn test_read_colour_matrix() -> Result<(), String> {
         let exp = [
             4.9, 13.6385, 13.032, 12.865, 13.445, 14.925, 17.818, 23.1105,
         ];
-        let matrix = read_colour_matrix("./test_data/solar_no_sun.txt".to_string()).unwrap();
+        let matrix = read_colour_matrix("./test_data/solar_no_sun.txt".to_string())?;
         let (nrows, ncols) = matrix.size();
         assert_eq!(ncols, 1);
         assert_eq!(nrows, 146);
 
         for (nrow, expected) in exp.iter().enumerate() {
-            let found = matrix.get(nrow, 0).unwrap();
+            let found = matrix.get(nrow, 0)?;
             let err = (found - expected).abs();
             assert!(err < 1e-8)
         }
+
+        Ok(())
     }
 
     fn allowed_err(add_sun: bool) -> Float {
@@ -754,7 +754,7 @@ mod tests {
     }
 
     #[test]
-    fn test_gen_sky_vec_visible_no_sky() {
+    fn test_gen_sky_vec_visible_no_sky() -> Result<(), String> {
         let mf = 1;
         let lat = -41.41 * PI / 180.;
         let lon = -174.87 * PI / 180.;
@@ -787,10 +787,9 @@ mod tests {
             albedo,
             add_sky,
             add_sun,
-        )
-        .unwrap();
+        )?;
         println!("{}", found_vec);
-        let exp_vec = read_colour_matrix("./test_data/visible_no_sky.txt".to_string()).unwrap();
+        let exp_vec = read_colour_matrix("./test_data/visible_no_sky.txt".to_string())?;
 
         let (nrows, ncols) = found_vec.size();
         assert_eq!((nrows, ncols), exp_vec.size());
@@ -798,8 +797,8 @@ mod tests {
         let mut max_err_percent = 0.0;
         for nrow in 0..nrows {
             for ncol in 0..ncols {
-                let exp = exp_vec.get(nrow, ncol).unwrap();
-                let found = found_vec.get(nrow, ncol).unwrap();
+                let exp = exp_vec.get(nrow, ncol)?;
+                let found = found_vec.get(nrow, ncol)?;
 
                 if exp < 1e-9 {
                     assert!(found < 1e-9, "Expecting Zero, found {}", exp);
@@ -825,10 +824,12 @@ mod tests {
             }
         }
         println!("err = {} | err_percent = {}%", max_err, max_err_percent);
+
+        Ok(())
     }
 
     #[test]
-    fn test_gen_sky_vec_solar_no_sky() {
+    fn test_gen_sky_vec_solar_no_sky() -> Result<(), String> {
         let mf = 1;
         let lat = -41.41 * PI / 180.;
         let lon = -174.87 * PI / 180.;
@@ -861,10 +862,9 @@ mod tests {
             albedo,
             add_sky,
             add_sun,
-        )
-        .unwrap();
+        )?;
         println!("{}", found_vec);
-        let exp_vec = read_colour_matrix("./test_data/solar_no_sky.txt".to_string()).unwrap();
+        let exp_vec = read_colour_matrix("./test_data/solar_no_sky.txt".to_string())?;
 
         let (nrows, ncols) = found_vec.size();
         assert_eq!((nrows, ncols), exp_vec.size());
@@ -872,8 +872,8 @@ mod tests {
         let mut max_err_percent = 0.0;
         for nrow in 0..nrows {
             for ncol in 0..ncols {
-                let exp = exp_vec.get(nrow, ncol).unwrap();
-                let found = found_vec.get(nrow, ncol).unwrap();
+                let exp = exp_vec.get(nrow, ncol)?;
+                let found = found_vec.get(nrow, ncol)?;
 
                 if exp < 1e-9 {
                     assert!(found < 1e-9, "Expecting Zero, found {}", exp);
@@ -899,10 +899,12 @@ mod tests {
             }
         }
         println!("err = {} | err_percent = {}%", max_err, max_err_percent);
+
+        Ok(())
     }
 
     #[test]
-    fn test_gen_sky_vec_solar_with_sun() {
+    fn test_gen_sky_vec_solar_with_sun() -> Result<(), String> {
         let mf = 1;
         let lat = -41.41 * PI / 180.;
         let lon = -174.87 * PI / 180.;
@@ -935,10 +937,9 @@ mod tests {
             albedo,
             add_sky,
             add_sun,
-        )
-        .unwrap();
+        )?;
         println!("{}", found_vec);
-        let exp_vec = read_colour_matrix("./test_data/solar_with_sun.txt".to_string()).unwrap();
+        let exp_vec = read_colour_matrix("./test_data/solar_with_sun.txt".to_string())?;
 
         let (nrows, ncols) = found_vec.size();
         assert_eq!((nrows, ncols), exp_vec.size());
@@ -946,8 +947,8 @@ mod tests {
         let mut max_err_percent = 0.0;
         for nrow in 0..nrows {
             for ncol in 0..ncols {
-                let exp = exp_vec.get(nrow, ncol).unwrap();
-                let found = found_vec.get(nrow, ncol).unwrap();
+                let exp = exp_vec.get(nrow, ncol)?;
+                let found = found_vec.get(nrow, ncol)?;
 
                 if exp < 1e-9 {
                     assert!(found < 1e-9, "Expecting Zero, found {}", exp);
@@ -973,10 +974,12 @@ mod tests {
             }
         }
         println!("err = {} | err_percent = {}%", max_err, max_err_percent);
+
+        Ok(())
     }
 
     #[test]
-    fn test_gen_sky_vec_solar_no_sun() {
+    fn test_gen_sky_vec_solar_no_sun() -> Result<(), String> {
         let mf = 1;
         let lat = -41.41 * PI / 180.;
         let lon = -174.87 * PI / 180.;
@@ -1009,10 +1012,9 @@ mod tests {
             albedo,
             add_sky,
             add_sun,
-        )
-        .unwrap();
+        )?;
         println!("{}", found_vec);
-        let exp_vec = read_colour_matrix("./test_data/solar_no_sun.txt".to_string()).unwrap();
+        let exp_vec = read_colour_matrix("./test_data/solar_no_sun.txt".to_string())?;
 
         let (nrows, ncols) = found_vec.size();
         assert_eq!((nrows, ncols), exp_vec.size());
@@ -1020,8 +1022,8 @@ mod tests {
         let mut max_err_percent = 0.0;
         for nrow in 0..nrows {
             for ncol in 0..ncols {
-                let exp = exp_vec.get(nrow, ncol).unwrap();
-                let found = found_vec.get(nrow, ncol).unwrap();
+                let exp = exp_vec.get(nrow, ncol)?;
+                let found = found_vec.get(nrow, ncol)?;
 
                 if exp < 1e-9 {
                     assert!(found < 1e-9, "Expecting Zero, found {}", exp);
@@ -1047,10 +1049,11 @@ mod tests {
             }
         }
         println!("err = {} | err_percent = {}%", max_err, max_err_percent);
+        Ok(())
     }
 
     #[test]
-    fn test_gen_sky_vec_visible_no_sun() {
+    fn test_gen_sky_vec_visible_no_sun() -> Result<(), String> {
         let mf = 1;
         let lat = -41.41 * PI / 180.;
         let lon = -174.87 * PI / 180.;
@@ -1083,10 +1086,9 @@ mod tests {
             albedo,
             add_sky,
             add_sun,
-        )
-        .unwrap();
+        )?;
         println!("{}", found_vec);
-        let exp_vec = read_colour_matrix("./test_data/visible_no_sun.txt".to_string()).unwrap();
+        let exp_vec = read_colour_matrix("./test_data/visible_no_sun.txt".to_string())?;
 
         let (nrows, ncols) = found_vec.size();
         assert_eq!((nrows, ncols), exp_vec.size());
@@ -1094,8 +1096,8 @@ mod tests {
         let mut max_err_percent = 0.0;
         for nrow in 0..nrows {
             for ncol in 0..ncols {
-                let exp = exp_vec.get(nrow, ncol).unwrap();
-                let found = found_vec.get(nrow, ncol).unwrap();
+                let exp = exp_vec.get(nrow, ncol)?;
+                let found = found_vec.get(nrow, ncol)?;
 
                 if exp < 1e-9 {
                     assert!(found < 1e-9, "Expecting Zero, found {}", exp);
@@ -1121,10 +1123,12 @@ mod tests {
             }
         }
         println!("err = {} | err_percent = {}%", max_err, max_err_percent);
+
+        Ok(())
     }
 
     #[test]
-    fn test_gen_sky_vec_visible_with_sun() {
+    fn test_gen_sky_vec_visible_with_sun() -> Result<(), String> {
         let mf = 1;
         let lat = -41.41 * PI / 180.;
         let lon = -174.87 * PI / 180.;
@@ -1157,10 +1161,9 @@ mod tests {
             albedo,
             add_sky,
             add_sun,
-        )
-        .unwrap();
+        )?;
         println!("{}", found_vec);
-        let exp_vec = read_colour_matrix("./test_data/visible_with_sun.txt".to_string()).unwrap();
+        let exp_vec = read_colour_matrix("./test_data/visible_with_sun.txt".to_string())?;
 
         let (nrows, ncols) = found_vec.size();
         assert_eq!((nrows, ncols), exp_vec.size());
@@ -1168,8 +1171,8 @@ mod tests {
         let mut max_err_percent = 0.0;
         for nrow in 0..nrows {
             for ncol in 0..ncols {
-                let exp = exp_vec.get(nrow, ncol).unwrap();
-                let found = found_vec.get(nrow, ncol).unwrap();
+                let exp = exp_vec.get(nrow, ncol)?;
+                let found = found_vec.get(nrow, ncol)?;
 
                 if exp < 1e-9 {
                     assert!(found < 1e-9, "Expecting Zero, found {}", exp);
@@ -1195,6 +1198,8 @@ mod tests {
             }
         }
         println!("err = {} | err_percent = {}%", max_err, max_err_percent);
+
+        Ok(())
     }
 
     #[test]

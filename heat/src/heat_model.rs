@@ -727,7 +727,7 @@ mod testing {
     };
 
     #[test]
-    fn test_calculate_zones_abc() {
+    fn test_calculate_zones_abc() -> Result<(), String> {
         let (model, mut state_header) = get_single_zone_test_building(
             // &mut state,
             &SingleZoneTestBuildingOptions {
@@ -738,28 +738,29 @@ mod testing {
                 emissivity: 0.0,
                 ..Default::default()
             },
-        );
+        )?;
 
         let n: usize = 1;
         let thermal_model =
             ThermalModel::new(&META_OPTIONS, (), &model, &mut state_header, n).unwrap();
-        let state = state_header.take_values().unwrap();
+        let state = state_header.take_values().ok_or("Could not take state")?;
         // MAP THE STATE
-        // model.map_simulation_state(&mut state).unwrap();
 
         // Test
         let (a, b, c) = thermal_model.calculate_zones_abc(&model, &state).unwrap();
         assert_eq!(a.len(), 1);
         assert_eq!(c.len(), 1);
         assert_eq!(b.len(), 1);
-        assert_eq!(c[0], thermal_model.get_thermal_zone(0).unwrap().mcp(22.));
+        assert_eq!(c[0], thermal_model.get_thermal_zone(0)?.mcp(22.));
         let hi = model.surfaces[0]
             .front_convection_coefficient(&state)
-            .unwrap();
+            .ok_or("No front convection coefficient")?;
 
         let temp = &thermal_model.surfaces[0].parent.front_temperature(&state);
         let area = &thermal_model.surfaces[0].area;
         assert_eq!(a[0], area * hi * temp);
         assert_eq!(b[0], area * hi);
+
+        Ok(())
     }
 }

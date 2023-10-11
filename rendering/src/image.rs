@@ -224,9 +224,7 @@ impl ImageBuffer {
                 };
 
                 // Size
-                let tuple: Vec<&[u8]> = line
-                    .split(|c| c.is_ascii_whitespace())
-                    .collect();
+                let tuple: Vec<&[u8]> = line.split(|c| c.is_ascii_whitespace()).collect();
                 if tuple.len() != 4 || tuple[2].ne(b"+X") {
                     return errmsg;
                 }

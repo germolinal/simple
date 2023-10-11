@@ -199,7 +199,7 @@ impl<'de> Visitor<'de> for SimpleModelVisitor {
                     }
                 }
                 _ => {
-                    let k = std::str::from_utf8(key).unwrap();
+                    let k = std::str::from_utf8(key).map_err(serde::de::Error::custom)?;
                     Err(format!("Field '{}' in model is not serialized", k))
                         .map_err(serde::de::Error::custom)?;
                 }
@@ -846,12 +846,10 @@ impl Model {
         let fen_index = self.fenestrations.len();
 
         // Push the OpenFraction state, and map into the object
-        let state_index = self
-            .push_to_state(
-                SimulationStateElement::FenestrationOpenFraction(fen_index),
-                0.,
-            )
-            .unwrap();
+        let state_index = self.push_to_state(
+            SimulationStateElement::FenestrationOpenFraction(fen_index),
+            0.,
+        )?;
         add.set_open_fraction_index(state_index)?;
 
         // check the parent surface
@@ -883,7 +881,7 @@ impl Model {
                 return Err(format!(
                     "Fenestration '{}' has been given parent '{}', which does not exist",
                     add.name(),
-                    add.parent_surface().unwrap()
+                    add.parent_surface()?
                 ));
             }
         }
@@ -976,21 +974,17 @@ impl Model {
         let obj_index = self.hvacs.len();
         match &add {
             HVAC::ElectricHeater(hvac) => {
-                let state_index = self
-                    .push_to_state(
-                        SimulationStateElement::HeatingCoolingPowerConsumption(obj_index),
-                        0.,
-                    )
-                    .unwrap();
+                let state_index = self.push_to_state(
+                    SimulationStateElement::HeatingCoolingPowerConsumption(obj_index),
+                    0.,
+                )?;
                 hvac.set_heating_cooling_consumption_index(state_index)?;
             }
             HVAC::IdealHeaterCooler(hvac) => {
-                let state_index = self
-                    .push_to_state(
-                        SimulationStateElement::HeatingCoolingPowerConsumption(obj_index),
-                        0.,
-                    )
-                    .unwrap();
+                let state_index = self.push_to_state(
+                    SimulationStateElement::HeatingCoolingPowerConsumption(obj_index),
+                    0.,
+                )?;
                 hvac.set_heating_cooling_consumption_index(state_index)?;
             }
         }
@@ -1060,12 +1054,10 @@ impl Model {
         }
         let obj_index = self.luminaires.len();
         // Push the state, and map into the object
-        let state_index = self
-            .push_to_state(
-                SimulationStateElement::LuminairePowerConsumption(obj_index),
-                0.,
-            )
-            .unwrap();
+        let state_index = self.push_to_state(
+            SimulationStateElement::LuminairePowerConsumption(obj_index),
+            0.,
+        )?;
         add.set_power_consumption_index(state_index)?;
 
         // Add to model, and return a reference
@@ -1266,11 +1258,9 @@ mod testing {
     use crate::substance::Normal;
 
     #[test]
-    fn serde() {
+    fn serde() -> Result<(), String> {
         // test simple
-        let (model, state) =
-            // Model::from_file("./tests/cold_wellington_apartment.spl").unwrap();
-            Model::from_file("./tests/box.spl").unwrap();
+        let (model, state) = Model::from_file("./tests/box.spl")?;
         assert_eq!(2, model.substances.len());
         assert_eq!(2, model.materials.len());
         assert_eq!(1, model.spaces.len());
@@ -1278,17 +1268,17 @@ mod testing {
         assert_eq!(1, model.surfaces.len());
         assert!(model.solar_options.is_some());
 
-        let model_str = serde_json::to_string(&model).unwrap();
+        let model_str = serde_json::to_string(&model).map_err(|e| e.to_string())?;
 
-        let mut model: Model = serde_json::from_str(&model_str).unwrap();
+        let mut model: Model = serde_json::from_str(&model_str).map_err(|e| e.to_string())?;
 
         // use std::fs::File;
         // use std::io::Write;
-        // let mut file = File::create("./model.json").unwrap();
+        // let mut file = File::create("./model.json").map_err(|e| e.to_string())?;
         // // Write a &str in the file (ignoring the result).
-        // writeln!(&mut file, "{}", serde_json::to_string(&model).unwrap()).unwrap();
+        // writeln!(&mut file, "{}", serde_json::to_string(&model).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
 
-        let other_state = model.take_state().unwrap();
+        let other_state = model.take_state().ok_or("Could not take state")?;
         assert_eq!(2, model.substances.len());
         assert_eq!(2, model.materials.len());
         assert_eq!(1, model.spaces.len());
@@ -1297,6 +1287,8 @@ mod testing {
         assert!(model.solar_options.is_some());
 
         assert_eq!(state.len(), other_state.len());
+
+        Ok(())
     }
 
     #[cfg(debug_assertions)]

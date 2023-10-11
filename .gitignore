@@ -68,3 +68,6 @@ weather/tests/*
 !weather/tests/*.idf
 !weather/tests/*.epw
 !weather/tests/*.rs
+
+
+check.csv

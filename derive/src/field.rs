@@ -63,7 +63,7 @@ impl Field {
     /// Creates a new Field object, with no ident and no attributes.
     ///
     /// This method is meant to be used for nested typs. E.g. the `usize` in `Vec<usize>`
-    pub fn from_type(ty: &syn::Type) -> Self {
+    pub fn from_type(ty: &syn::Type) -> Result<Self, String> {
         let mut data = FieldData {
             ident: None,
             attributes: Vec::new(),
@@ -74,34 +74,37 @@ impl Field {
         };
 
         if let syn::Type::Path(p) = ty {
-            if path_is_float(&p.path) {
-                Self::Float(data)
-            } else if path_is_int(&p.path) {
-                Self::Int(data)
-            } else if path_is_bool(&p.path) {
-                Self::Bool(data)
-            } else if path_is_string(&p.path) {
-                Self::String(data)
-            } else if path_is_option(&p.path) {
-                let ty = extract_type_from_path(&p.path).unwrap();
-                data.child = Some(Box::new(Self::from_type(&ty)));
-                Self::Option(data)
-            } else if path_is_vec(&p.path) {
-                let ty = extract_type_from_path(&p.path).unwrap();
-                data.child = Some(Box::new(Self::from_type(&ty)));
-                Self::Vec(data)
-            } else if path_is_rc(&p.path) {
-                let ty = extract_type_from_path(&p.path).unwrap();
-                data.child = Some(Box::new(Self::from_type(&ty)));
-                Self::Rc(data)
+            if path_is_float(&p.path)? {
+                Ok(Self::Float(data))
+            } else if path_is_int(&p.path)? {
+                Ok(Self::Int(data))
+            } else if path_is_bool(&p.path)? {
+                Ok(Self::Bool(data))
+            } else if path_is_string(&p.path)? {
+                Ok(Self::String(data))
+            } else if path_is_option(&p.path)? {
+                let ty = extract_type_from_path(&p.path)?;
+                let aux = Self::from_type(&ty)?;
+                data.child = Some(Box::new(aux));
+                Ok(Self::Option(data))
+            } else if path_is_vec(&p.path)? {
+                let ty = extract_type_from_path(&p.path)?;
+                let aux = Self::from_type(&ty)?;
+                data.child = Some(Box::new(aux));
+                Ok(Self::Vec(data))
+            } else if path_is_rc(&p.path)? {
+                let ty = extract_type_from_path(&p.path)?;
+                let aux = Self::from_type(&ty)?;
+                data.child = Some(Box::new(aux));
+                Ok(Self::Rc(data))
             } else {
-                let ty_str = path_to_string(&p.path);
+                let ty_str = path_to_string(&p.path)?;
 
                 if ty_str == STATE_ELEMENT_TYPE {
-                    return Self::State(data);
+                    return Ok(Self::State(data));
                 }
                 // Therea re object—e.g., enums—that are stored in other object, not in models
-                Self::Object(data)
+                Ok(Self::Object(data))
             }
         } else {
             panic!("TODO: Error handling 3")
@@ -109,7 +112,7 @@ impl Field {
     }
 
     /// Creates a new Field object based on the tokens in an actual Struct.    
-    pub fn new(field: syn::Field) -> Self {
+    pub fn new(field: syn::Field) -> Result<Self, String> {
         let ident = field.ident.clone();
 
         if let syn::Type::Path(t) = &field.ty {
@@ -125,7 +128,7 @@ impl Field {
 
             let path = t.path.clone();
             let ty = field.ty.clone();
-            let docs = Some(crate::docs::get_docs(&field.attrs));
+            let docs = Some(crate::docs::get_docs(&field.attrs)?);
 
             let mut data = FieldData {
                 ident,
@@ -136,33 +139,36 @@ impl Field {
                 child: None,
             };
 
-            if path_is_float(&path) {
-                Self::Float(data)
-            } else if path_is_int(&path) {
-                Self::Int(data)
-            } else if path_is_bool(&path) {
-                Self::Bool(data)
-            } else if path_is_string(&path) {
-                Self::String(data)
-            } else if path_is_option(&path) {
-                let ty = extract_type_from_path(&path).unwrap();
-                data.child = Some(Box::new(Self::from_type(&ty)));
-                Self::Option(data)
-            } else if path_is_vec(&path) {
-                let ty = extract_type_from_path(&path).unwrap();
-                data.child = Some(Box::new(Self::from_type(&ty)));
-                Self::Vec(data)
-            } else if path_is_rc(&path) {
-                let ty = extract_type_from_path(&path).unwrap();
-                data.child = Some(Box::new(Self::from_type(&ty)));
-                Self::Rc(data)
+            if path_is_float(&path)? {
+                Ok(Self::Float(data))
+            } else if path_is_int(&path)? {
+                Ok(Self::Int(data))
+            } else if path_is_bool(&path)? {
+                Ok(Self::Bool(data))
+            } else if path_is_string(&path)? {
+                Ok(Self::String(data))
+            } else if path_is_option(&path)? {
+                let ty = extract_type_from_path(&path)?;
+                let aux = Self::from_type(&ty)?;
+                data.child = Some(Box::new(aux));
+                Ok(Self::Option(data))
+            } else if path_is_vec(&path)? {
+                let ty = extract_type_from_path(&path)?;
+                let aux = Self::from_type(&ty)?;
+                data.child = Some(Box::new(aux));
+                Ok(Self::Vec(data))
+            } else if path_is_rc(&path)? {
+                let ty = extract_type_from_path(&path)?;
+                let aux = Self::from_type(&ty)?;
+                data.child = Some(Box::new(aux));
+                Ok(Self::Rc(data))
             } else {
-                let ty_str = path_to_string(&path);
+                let ty_str = path_to_string(&path)?;
                 if ty_str == STATE_ELEMENT_TYPE {
-                    return Self::State(data);
+                    return Ok(Self::State(data));
                 }
                 // Therea re object—e.g., enums—that are stored in other object, not in models
-                Self::Object(data)
+                Ok(Self::Object(data))
             }
         } else {
             panic!(
@@ -186,24 +192,25 @@ impl Field {
         }
     }
 
-    pub fn api_name(&self) -> String {
+    pub fn api_name(&self) -> Result<String, String> {
         let data = self.data();
-        match data.api_alias {
+        let ret = match data.api_alias {
             Some(a) => (a[1..a.len() - 1]).to_string(),
-            None => data.ident.clone().unwrap().to_string(),
-        }
+            None => data.ident.clone().ok_or("No ident found")?.to_string(),
+        };
+        Ok(ret)
     }
 
-    pub fn api_getter(&self, object_name: &syn::Ident) -> TokenStream2 {
-        let fieldname = &self.data().ident.unwrap();
+    pub fn api_getter(&self, object_name: &syn::Ident) -> Result<TokenStream2, String> {
+        let fieldname = &self.data().ident.ok_or("Did not find any ident")?;
 
-        let api_fieldname = self.api_name();
+        let api_fieldname = self.api_name()?;
 
         let value_not_available_err = format!(
             "{} called '{{}}' has not been assigned a value for property '{}'",
             object_name, api_fieldname
         );
-        quote!(
+        Ok(quote!(
             // Getter by name
             let new_mod = std::sync::Arc::clone(model);
             let new_state = std::sync::Arc::clone(state);
@@ -214,12 +221,12 @@ impl Field {
                     None => {return Err(format!(#value_not_available_err, this.name).into());}
                 }
             });
-        )
+        ))
     }
 
-    pub fn api_setter(&self, object_name: &syn::Ident) -> TokenStream2 {
+    pub fn api_setter(&self, object_name: &syn::Ident) -> Result<TokenStream2, String> {
         let data = self.data();
-        let fieldname = &data.ident.clone().unwrap();
+        let fieldname = &data.ident.clone().ok_or("no ident found for data")?;
         let api_fieldname = match data.api_alias {
             Some(a) => (a[1..a.len() - 1]).to_string(),
             None => fieldname.to_string(),
@@ -235,7 +242,7 @@ impl Field {
             "Property '{}' has not been initialized for {} called '{{}}' ",
             api_fieldname, object_name
         );
-        quote!(
+        let ret = quote!(
             // Setter by name
             let new_mod = std::sync::Arc::clone(model);
             let new_state = std::sync::Arc::clone(state);
@@ -268,42 +275,57 @@ impl Field {
                 Ok(())
 
             });
-        )
+        );
+
+        Ok(ret)
     }
 
-    pub fn get_documentation_type(&self) -> String {
-        match self {
+    pub fn get_documentation_type(&self) -> Result<String, String> {
+        let r = match self {
             Field::Float(_) => "number".to_string(),
             Field::Int(_) => "int".to_string(),
             Field::Bool(_d) => "boolean".to_string(),
             Field::String(_d) => "string".to_string(),
 
             Field::Vec(d) => {
-                let child_type = d.child.clone().unwrap().get_documentation_type();
+                let child_type = d
+                    .child
+                    .clone()
+                    .ok_or("no child?")?
+                    .get_documentation_type()?;
                 format!("[{}, ...]", child_type)
             }
-            Field::Rc(d) => d.child.clone().unwrap().get_documentation_type(),
+            Field::Rc(d) => d
+                .child
+                .clone()
+                .ok_or("no child found")?
+                .get_documentation_type()?,
             Field::Option(d) => {
-                let child_type = d.child.clone().unwrap().get_documentation_type();
+                let child_type = d
+                    .child
+                    .clone()
+                    .ok_or("no child?")?
+                    .get_documentation_type()?;
                 format!("{}, // optional", child_type)
             }
             Field::Object(d) => {
                 if let syn::Type::Path(t) = &d.ty {
-                    path_to_string(&t.path)
+                    path_to_string(&t.path)?
                 } else {
-                    panic!("Weird object when getting docs")
+                    unreachable!("Weird object when getting docs")
                 }
             }
             Field::State(_d) => {
-                panic!("Trying to doc-type of State field")
+                unreachable!("Trying to doc-type of State field")
             }
-        }
+        };
+        Ok(r)
     }
 
-    pub fn get_documentation(&self) -> String {
-        let f_ident = self.data().ident.unwrap();
+    pub fn get_documentation(&self) -> Result<String, String> {
+        let f_ident = self.data().ident.ok_or("No ident")?;
 
-        match self {
+        let d = match self {
             Field::Float(_)
             | Field::Int(_)
             | Field::Bool(_)
@@ -312,11 +334,12 @@ impl Field {
             | Field::Rc(_)
             | Field::Object(_)
             | Field::Option(_) => {
-                format!("{} : {}", f_ident, self.get_documentation_type())
+                format!("{} : {}", f_ident, self.get_documentation_type()?)
             }
             Field::State(_d) => {
                 panic!("Trying to get verification for State field")
             }
-        }
+        };
+        Ok(d)
     }
 }

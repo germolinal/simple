@@ -37,7 +37,7 @@ impl Variant {
             .map(|a| format!("{}", a.path.segments[0].ident))
             .collect();
 
-        let docs = crate::docs::get_docs(&variant.attrs);
+        let docs = crate::docs::get_docs(&variant.attrs).expect("Could not generate docs");
 
         let mut data = VariantData {
             ident,
@@ -51,7 +51,7 @@ impl Variant {
                 data.fields = fields
                     .unnamed
                     .iter()
-                    .map(|x| Field::new(x.clone()))
+                    .map(|x| Field::new(x.clone()).expect("Could not create field"))
                     .collect();
                 Self::Unnamed(data)
             }
@@ -62,7 +62,7 @@ impl Variant {
                     .into_iter()
                     .filter_map(|f| {
                         // Skip State fields
-                        let a = Field::new(f);
+                        let a = Field::new(f).expect("Could not create field");
                         match a {
                             Field::State(_) => None,
                             _ => Some(a),
@@ -97,24 +97,25 @@ impl EnumObject {
         }
     }
 
-    pub fn gen_docs(&self) -> String {
+    pub fn gen_docs(&self) -> Result<String, String> {
         let mut ret = String::new();
 
         // // Title
-        writeln!(ret, "# {}\n", &self.ident).unwrap();
+        writeln!(ret, "# {}\n", &self.ident).map_err(|e| e.to_string())?;
 
         // Written doc
-        writeln!(ret, "{}\n\n ## Supported Variants\n", &self.docs).unwrap();
+        writeln!(ret, "{}\n\n ## Supported Variants\n", &self.docs).map_err(|e| e.to_string())?;
 
         // Document variants
         for variant in self.variants.iter() {
-            writeln!(ret, "###  {}\n", &variant.data().ident).unwrap();
+            writeln!(ret, "###  {}\n", &variant.data().ident).map_err(|e| e.to_string())?;
 
-            writeln!(ret, "{}\n\n", &variant.data().docs).unwrap();
+            writeln!(ret, "{}\n\n", &variant.data().docs).map_err(|e| e.to_string())?;
             match variant {
                 Variant::Unnamed(s) => {
                     let v_ident = &s.ident;
-                    write!(ret, "```rs\n{} {{\n\t{} : ", &self.ident, v_ident).unwrap();
+                    write!(ret, "```rs\n{} {{\n\t{} : ", &self.ident, v_ident)
+                        .map_err(|e| e.to_string())?;
                     let mut i = 0;
                     for field in s.fields.iter() {
                         if let Field::State(_) = field {
@@ -124,7 +125,7 @@ impl EnumObject {
                             ret += ","
                         }
 
-                        ret += &field.get_documentation_type().to_string();
+                        ret += &field.get_documentation_type()?.to_string();
                         i += 1;
                     }
                     ret += "\n}\n```\n\n";
@@ -139,10 +140,10 @@ impl EnumObject {
                             continue;
                         }
 
-                        let s_ident = &field.data().ident.unwrap();
-                        write!(ret, "\t{} : ", s_ident).unwrap();
+                        let s_ident = &field.data().ident.ok_or("No identity")?;
+                        write!(ret, "\t{} : ", s_ident).map_err(|e| e.to_string())?;
 
-                        ret += &field.get_documentation_type().to_string();
+                        ret += &field.get_documentation_type()?.to_string();
                         if i != 0 {
                             ret += ",\n"
                         } else {
@@ -159,7 +160,7 @@ impl EnumObject {
                         "##### Full Specification\n```json\n{{\n\ttype: \"{}\"\n}}\n```\n\n",
                         v_ident
                     )
-                    .unwrap();
+                    .map_err(|e| e.to_string())?;
                 }
             }
         }
@@ -171,7 +172,7 @@ impl EnumObject {
             writeln!(ret, "\n\n## API Access\n\n```rs\n// by name\n let my_{} = {}(string);\n// by index\nlet my_{} = {}(int);```", name_str_lower, name_str_lower, name_str_lower, name_str_lower).unwrap();
         }
 
-        ret
+        Ok(ret)
     }
 
     pub fn gen_group_behaviour(&self) -> TokenStream2 {
