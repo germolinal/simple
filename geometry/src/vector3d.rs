@@ -55,7 +55,7 @@ impl std::convert::From<Point3D> for Vector3D {
 
 impl Vector3D {
     /// Creates a new vector.
-    pub fn new(x: Float, y: Float, z: Float) -> Vector3D {
+    pub const fn new(x: Float, y: Float, z: Float) -> Vector3D {
         Vector3D { x, y, z }
     }
 

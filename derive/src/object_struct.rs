@@ -402,19 +402,19 @@ impl StructObject {
                     let get_or_ident = format!("{}_or", f_ident);
                     let get_or_ident = syn::Ident::new(&get_or_ident, f_ident.span());
                     let gets_or_doc_string = format!(" Gets the content of `{}` field or a default value given if the field is `None`. If no default is logical, use `self.{}()` instead, which returns an error", f_ident, f_ident);
-                    let gets_or_warning = if self.has_name() {
-                        quote!(
-                            crate::error_msgs::print_warning(module_name,
-                                format!("{} called '{}' has not been assigned any value for field '{}'... assuming a value of {}", self.object_type(), self.name, #f_ident_str, default)
-                            );
-                        )
-                    } else {
-                        quote!(
-                            crate::error_msgs::print_warning(module_name,
-                                format!("{} has not been assigned any value for field '{}'... assuming a value of {}", self.object_type(), #f_ident_str,  default)
-                            );
-                        )
-                    };
+                    // let gets_or_warning = if self.has_name() {
+                    //     quote!(
+                    //         crate::error_msgs::print_warning(module_name,
+                    //             format!("{} called '{}' has not been assigned any value for field '{}'... assuming a value of {}", self.object_type(), self.name, #f_ident_str, default)
+                    //         );
+                    //     )
+                    // } else {
+                    //     quote!(
+                    //         crate::error_msgs::print_warning(module_name,
+                    //             format!("{} has not been assigned any value for field '{}'... assuming a value of {}", self.object_type(), #f_ident_str,  default)
+                    //         );
+                    //     )
+                    // };
 
                     if is_copy {
                         gets = quote!(
@@ -425,7 +425,7 @@ impl StructObject {
                                 match &self.#f_ident {
                                     Some(v) => *v,
                                     None => {
-                                        #gets_or_warning
+                                        // #gets_or_warning
                                         default
                                     },
                                 }
