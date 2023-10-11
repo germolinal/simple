@@ -146,7 +146,7 @@ fn main() -> Result<(), String> {
 
     let input_file = inputs.input;
     let mut scene = if input_file.ends_with(".rad") {
-        Scene::from_radiance(input_file)
+        Scene::from_radiance(input_file)?
     } else if input_file.ends_with(".spl") {
         let (model, _header) = model::Model::from_file(input_file)?;
         Scene::from_simple_model(&model, Wavelengths::Visible)?

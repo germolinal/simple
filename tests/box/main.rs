@@ -1,18 +1,17 @@
 use simple::{run_simulation::*, Model};
-use validate::{valid, ScatterValidator, Validate, Validator};
+use validate::{valid, ScatterValidator, ValidFunc, Validator};
 
 #[test]
-#[ignore]
-fn box_sim() {
+fn box_sim() -> Result<(), String> {
     // cargo test --release --package simple --test box -- box_sim --exact --nocapture
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
-        std::fs::create_dir(p).unwrap();
+        std::fs::create_dir(p).map_err(|e| e.to_string())?;
     }
     let target_file = format!("{}/cold_wellington_box.html", p);
     let mut validations = Validator::new("Simulation of a single room", &target_file);
 
-    #[valid(Simulate a single-zone building in Wellington, New Zealand)]
+    #[valid("Simulate a single-zone building in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes:     
@@ -20,7 +19,7 @@ fn box_sim() {
     /// * Convection Coefficients
     /// * Long wave radiation exchange with the sky
     /// * Direct and Diffuse Solar Radiation
-    fn series() -> Box<dyn Validate> {
+    fn series() -> Result<ValidFunc, String> {
         let options = SimOptions {
             input_file: "./tests/box/box.spl".into(),
             weather_file: "./tests/wellington.epw".into(),
@@ -31,14 +30,12 @@ fn box_sim() {
         };
 
         // Create model
-        let (simple_model, mut state_header) =
-            Model::from_file(options.input_file.to_string()).unwrap();
+        let (simple_model, mut state_header) = Model::from_file(&options.input_file)?;
 
         let controller = simple::void_control::VoidControl {};
-        // let controller = simple::OccupantBehaviour::new(&simple_model).unwrap();
 
-        let res = &options.output.clone().unwrap();
-        let out = std::fs::File::create(res).unwrap();
+        let res = &options.output.clone().ok_or("No output")?;
+        let out = std::fs::File::create(res).map_err(|e| e.to_string())?;
         run(
             &simple_model,
             &mut state_header,
@@ -46,14 +43,13 @@ fn box_sim() {
             &options,
             out,
             controller,
-        )
-        .unwrap();
+        )?;
 
         // Load produced data
         let found = validate::from_csv::<simple::Float>(res, &[1]);
         let expected = validate::from_csv::<simple::Float>("tests/box/cold_box_eplus.csv", &[0]);
 
-        Box::new(ScatterValidator {
+        Ok(Box::new(ScatterValidator {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
@@ -65,10 +61,10 @@ fn box_sim() {
             // allowed_intersect_delta: Some(0.5),
             // allowed_slope_delta: Some(0.06),
             ..Default::default()
-        })
+        }))
     }
 
-    validations.push(series());
+    validations.push(series()?);
 
-    validations.validate().unwrap();
+    validations.validate()
 }

@@ -65,6 +65,9 @@ impl SimpleModelReader {
         // Add surfaces
         for (surface_i, s) in model.surfaces.iter().enumerate() {
             let polygon = &s.vertices;
+            if polygon.area() < 1e-5 {
+                continue;
+            }
             let c_name = &s.construction;
             let construction = model.get_construction(c_name)?;
             // Should not be empty, and should have been check before this
@@ -79,12 +82,10 @@ impl SimpleModelReader {
             let front_substance = model.get_material_substance(front_mat_name)?;
             let front_mat_index = self
                 .push_substance(&mut scene, &front_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Front material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
 
             let last_mat_name = construction
                 .materials
@@ -93,12 +94,10 @@ impl SimpleModelReader {
             let back_substance = model.get_material_substance(last_mat_name)?;
             let back_mat_index = self
                 .push_substance(&mut scene, &back_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Back material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
 
             // Add all the triangles necessary
             let t: Triangulation3D = polygon.try_into()?;
@@ -131,12 +130,10 @@ impl SimpleModelReader {
             let front_substance = model.get_material_substance(front_material_name)?;
             let front_mat_index = self
                 .push_substance(&mut scene, &front_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Front material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
             let back_material_name = construction
                 .materials
                 .last()
@@ -144,17 +141,13 @@ impl SimpleModelReader {
             let back_substance = model.get_material_substance(back_material_name)?;
             let back_mat_index = self
                 .push_substance(&mut scene, &back_substance, wavelength)
-                .unwrap_or_else(|| {
-                    panic!(
+                .ok_or(format!(
                     "Back material of  Construction '{}' seems to be a gas. This is not supported",
                     construction.name()
-                )
-                });
+                ))?;
 
             // Add all the triangles necessary
-            let t: Triangulation3D = polygon
-                .try_into()
-                .map_err(|e| format!("Could not transform polyton into triantilagion: {}", e))?;
+            let t: Triangulation3D = polygon.try_into()?;
 
             let triangles = t.get_trilist();
             for tri in triangles {
@@ -204,7 +197,6 @@ impl SimpleModelReader {
                     Wavelengths::Solar => match s.front_solar_absorbtance() {
                         Ok(v) => *v,
                         Err(_) => {
-                            
                             // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             0.7
                         }
@@ -212,7 +204,6 @@ impl SimpleModelReader {
                     Wavelengths::Visible => match s.front_visible_reflectance() {
                         Ok(v) => *v,
                         Err(_) => {
-                            
                             // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             0.7
                         }
@@ -223,7 +214,6 @@ impl SimpleModelReader {
                     Wavelengths::Solar => match s.solar_transmittance() {
                         Ok(v) => transmittance_to_transmissivity(*v),
                         Err(_) => {
-                            
                             // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             0.
                         }
@@ -231,7 +221,6 @@ impl SimpleModelReader {
                     Wavelengths::Visible => match s.visible_transmissivity() {
                         Ok(v) => *v,
                         Err(_) => {
-                            
                             // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
                             0.
                         }
@@ -283,7 +272,17 @@ mod tests {
         let mut reader = SimpleModelReader::default();
         let (mut scene, map) = reader.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.triangles.len());
+        assert_eq!(map.len(), scene.ax.len());
+        assert_eq!(map.len(), scene.ay.len());
+        assert_eq!(map.len(), scene.az.len());
+
+        assert_eq!(map.len(), scene.bx.len());
+        assert_eq!(map.len(), scene.by.len());
+        assert_eq!(map.len(), scene.bz.len());
+
+        assert_eq!(map.len(), scene.cx.len());
+        assert_eq!(map.len(), scene.cy.len());
+        assert_eq!(map.len(), scene.cz.len());
 
         let light_index = scene.push_material(Material::Light(Light(Spectrum::gray(10000.))));
         scene.push_object(
@@ -361,7 +360,18 @@ mod tests {
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
-        assert_eq!(scene.triangles.len(), map.len());
+
+        assert_eq!(map.len(), scene.ax.len());
+        assert_eq!(map.len(), scene.ay.len());
+        assert_eq!(map.len(), scene.az.len());
+
+        assert_eq!(map.len(), scene.bx.len());
+        assert_eq!(map.len(), scene.by.len());
+        assert_eq!(map.len(), scene.bz.len());
+
+        assert_eq!(map.len(), scene.cx.len());
+        assert_eq!(map.len(), scene.cy.len());
+        assert_eq!(map.len(), scene.cz.len());
 
         assert_eq!(map.len(), 1);
         let (element_type, index) = map[0];
@@ -389,7 +399,18 @@ mod tests {
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
-        assert_eq!(scene.triangles.len(), map.len());
+
+        assert_eq!(map.len(), scene.ax.len());
+        assert_eq!(map.len(), scene.ay.len());
+        assert_eq!(map.len(), scene.az.len());
+
+        assert_eq!(map.len(), scene.bx.len());
+        assert_eq!(map.len(), scene.by.len());
+        assert_eq!(map.len(), scene.bz.len());
+
+        assert_eq!(map.len(), scene.cx.len());
+        assert_eq!(map.len(), scene.cy.len());
+        assert_eq!(map.len(), scene.cz.len());
 
         assert_eq!(map.len(), 3);
 
@@ -425,7 +446,18 @@ mod tests {
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
-        assert_eq!(scene.triangles.len(), map.len());
+
+        assert_eq!(map.len(), scene.ax.len());
+        assert_eq!(map.len(), scene.ay.len());
+        assert_eq!(map.len(), scene.az.len());
+
+        assert_eq!(map.len(), scene.bx.len());
+        assert_eq!(map.len(), scene.by.len());
+        assert_eq!(map.len(), scene.bz.len());
+
+        assert_eq!(map.len(), scene.cx.len());
+        assert_eq!(map.len(), scene.cy.len());
+        assert_eq!(map.len(), scene.cz.len());
 
         assert_eq!(map.len(), 5);
 

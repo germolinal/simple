@@ -287,7 +287,7 @@ fn sponza() -> Result<(), String> {
 
     // Create film
     let film = Film {
-        resolution: (1024, 1024),
+        resolution: (330, 330),
     };
 
     // Create view
@@ -317,15 +317,15 @@ fn sponza() -> Result<(), String> {
 #[test]
 #[ignore]
 fn cornell() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
-    // RUSTFLAGS="-C target-cpu=native -C target-feature=+neon" cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
+    // RUSTFLAGS='-C target-feature=+neon' cargo test --features parallel --features float --features simd --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
 
-    let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string());
+    let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string())?;
 
     scene.build_accelerator();
 
     // Create camera
     let film = Film {
+        // resolution: (320, 240),
         resolution: (512, 367),
         // resolution: (1024, 768),
         // resolution: (512, 512),
@@ -345,7 +345,7 @@ fn cornell() -> Result<(), String> {
 
     let integrator = RayTracer {
         n_ambient_samples: 120,
-        n_shadow_samples: 10,
+        n_shadow_samples: 1,
         max_depth: 2,
         // count_specular_bounce: 0.1,
         ..RayTracer::default()
@@ -358,11 +358,11 @@ fn cornell() -> Result<(), String> {
 #[test]
 #[ignore]
 fn room() -> Result<(), String> {
-    // 60 seconds
+    // 11 seconds
     // cargo test --features parallel --release --package rendering --test test_scenes -- room --exact --nocapture --ignored
     // oconv ../room.rad ../white_sky.rad > room.oct ;time rpict -x 512 -y 512 -vv 60 -vh 60 -ab 3 -ad 220 -aa 0 -vp 2 1 1 -vd 0 1 0 ./room.oct > rad_room.hdr
 
-    let mut scene = Scene::from_radiance("./tests/scenes/room.rad".to_string());
+    let mut scene = Scene::from_radiance("./tests/scenes/room.rad".to_string())?;
     // scene.add_perez_sky(
     //     calendar::Date {
     //         month: 6,
