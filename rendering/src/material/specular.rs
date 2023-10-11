@@ -136,7 +136,6 @@ pub fn fresnel_transmission_dir(
     debug_assert!(n1 > 0.);
     debug_assert!(n2 > 0.);
     if vin * normal > 0.0 {
-        dbg!(vin * normal);
         debug_assert!(vin * normal < 0., "vin*normal = {}", vin * normal);
     }
 
@@ -195,7 +194,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_mirror_direction() {
+    fn test_mirror_direction() -> Result<(), String> {
         fn check(v: Vector3D, normal: Vector3D, mirror: Vector3D) -> Result<(), String> {
             let v = v.get_normalized();
             let normal = normal.get_normalized();
@@ -215,20 +214,19 @@ mod tests {
             Vector3D::new(0., 0., 1.),
             Vector3D::new(0., 0., 1.),
             Vector3D::new(0., 0., -1.),
-        )
-        .unwrap();
+        )?;
         check(
             Vector3D::new(0., 0., -1.),
             Vector3D::new(0., 0., -1.),
             Vector3D::new(0., 0., 1.),
-        )
-        .unwrap();
+        )?;
         check(
             Vector3D::new(1., 0., -1.).get_normalized(),
             Vector3D::new(0., 0., 1.),
             Vector3D::new(1., 0., 1.),
-        )
-        .unwrap();
+        )?;
+
+        Ok(())
     }
 
     #[test]

@@ -186,7 +186,7 @@ pub fn derive_output(
         }
 
         // Extract the docs
-        let v_doc_str = crate::docs::get_docs(&v.attrs);
+        let v_doc_str = crate::docs::get_docs(&v.attrs).expect("Could not generate docs");
         let v_doc = sanitize_docs(&v_doc_str);
 
         // Add to enum
@@ -206,10 +206,10 @@ pub fn derive_output(
                     .map(|(i, x)| {
                         let mut x = x.trim();
                         if x.starts_with('\"') {
-                            x = x.strip_prefix('\"').unwrap();
+                            x = x.strip_prefix('\"').expect("Unreachable?");
                         }
                         if x.ends_with('\"') {
-                            x = x.strip_suffix('\"').unwrap();
+                            x = x.strip_suffix('\"').expect("Unreachable?");
                         }
                         let varname = syn::Ident::new(&format!("in{}", i), Span::call_site());
                         let x = x.to_string();

@@ -47,6 +47,15 @@ impl std::default::Default for RayTracerHelper {
     }
 }
 
+impl RayTracerHelper {
+    pub fn with_capacity(n: usize) -> Self {
+        Self {
+            rays: vec![Ray::default(); n],
+            nodes: Vec::with_capacity(64),
+        }
+    }
+}
+
 pub struct RayTracer {
     pub max_depth: usize,
     pub n_shadow_samples: usize,
@@ -97,7 +106,15 @@ impl RayTracer {
             // are visible when viewed directly from the camera
             if material.emits_light() {
                 let light_pdf = crate::triangle::triangle_solid_angle_pdf(
-                    &scene.triangles[triangle_index],
+                    scene.ax[triangle_index],
+                    scene.ay[triangle_index],
+                    scene.az[triangle_index],
+                    scene.bx[triangle_index],
+                    scene.by[triangle_index],
+                    scene.bz[triangle_index],
+                    scene.cx[triangle_index],
+                    scene.cy[triangle_index],
+                    scene.cz[triangle_index],
                     intersection_pt,
                     ray.interaction.geometry_shading.normal,
                     &ray.geometry,
@@ -154,11 +171,9 @@ impl RayTracer {
                 self.n_shadow_samples
             } else {
                 1
-                // self.n_shadow_samples
             };
 
             /* DIRECT LIGHT */
-            // let local = Spectrum::BLACK;
             let local = self.get_local_illumination(
                 scene,
                 material,
@@ -172,7 +187,8 @@ impl RayTracer {
             let global =
                 self.get_global_illumination(scene, n_ambient_samples, material, ray, rng, aux);
 
-            (local + global, 0.0)
+            ((local + global), 0.0)
+            // (local,0.0)
         } else {
             // Did not hit... so, let's check the sky
             if let Some(sky) = &scene.sky {
@@ -309,13 +325,9 @@ impl RayTracer {
 
         let depth = ray.depth;
         aux.rays[depth] = *ray; // store a copy.
-        let n = n_ambient_samples;
-        let n_ambient_samples = n_ambient_samples as Float;
-        // let n_shadow_samples = n_shadow_samples as Float;
 
-        // for _ in 0..n {
         let mut count = 0;
-        while count < n {
+        while count < n_ambient_samples {
             // Choose a direction.
             let (bsdf_value, ray_pdf) =
                 material.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng);
@@ -340,15 +352,13 @@ impl RayTracer {
             }
             count += 1;
 
-            let fx = li * bsdf_value * cos_theta;
-
-            global += fx / ray_pdf;
+            global += li * ray.value;
 
             // restore ray, because it was modified by trace_ray executions
             *ray = aux.rays[depth];
         }
         // return
-        global / n_ambient_samples
+        global / (n_ambient_samples as Float)
     }
 
     #[allow(clippy::needless_collect)]
@@ -374,7 +384,7 @@ impl RayTracer {
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
-            let mut aux = RayTracerHelper::default();
+            let mut aux = RayTracerHelper::with_capacity(self.max_depth + 1);
             let mut rng = get_rng();
 
             for pixel in chunk {

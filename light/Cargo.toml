@@ -7,9 +7,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rayon = { workspace=true, optional = true }
-serde = { workspace=true, features = ['derive'] }
-serde_json = { workspace=true}
+rayon = { workspace = true, optional = true }
+serde = { workspace = true, features = ['derive'] }
+serde_json = { workspace = true }
 calendar = { path = "../calendar" }
 weather = { path = "../weather" }
 model = { path = "../model" }
@@ -20,17 +20,17 @@ geometry = { path = "../geometry" }
 # clap = { version = "4.0.14", features = ["derive"] }
 
 
-
 [dev-dependencies]
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models" }
 
-validate = {git="https://github.com/germolinal/validate"}
-json5 = { workspace=true }
+validate = { git = "https://github.com/germolinal/validate" }
+json5 = { workspace = true }
 
 
 [features]
 default = []
+simd = ["rendering/simd"]
 parallel = [
     "rayon",
     "rendering/parallel",
@@ -41,7 +41,7 @@ float = [
     "communication/float",
     "calendar/float",
     "weather/float",
-    "model/float",    
+    "model/float",
     "rendering/float",
     "geometry/float",
 ]

@@ -1,13 +1,13 @@
 use simple::{run_simulation::*, Model};
-use validate::{valid, ScatterValidator, Validate, Validator};
+use validate::{valid, ScatterValidator, ValidFunc, Validator};
 
 #[test]
 #[ignore]
-fn apartment_sim() {
-    // cargo test --release --package simple --test cold_apartment -- apartment_sim --exact --nocapture
+fn apartment_sim() -> Result<(), String> {
+    // cargo test --release --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
-        std::fs::create_dir(p).unwrap();
+        std::fs::create_dir(p).map_err(|e| e.to_string())?;
     }
     let target_file = format!("{}/cold_wellington_apartment.html", p);
     let mut validations = Validator::new("Simulation of a single room", &target_file);
@@ -22,14 +22,12 @@ fn apartment_sim() {
     };
 
     // Create model
-    let (simple_model, mut state_header) =
-        Model::from_file(options.input_file.to_string()).unwrap();
+    let (simple_model, mut state_header) = Model::from_file(&options.input_file)?;
 
     let controller = simple::void_control::VoidControl {};
-    // let controller = simple::OccupantBehaviour::new(&simple_model).unwrap();
 
-    let res = &options.output.clone().unwrap();
-    let out = std::fs::File::create(res).unwrap();
+    let res = &options.output.clone().ok_or("No output")?;
+    let out = std::fs::File::create(res).map_err(|e| e.to_string())?;
     run(
         &simple_model,
         &mut state_header,
@@ -37,10 +35,9 @@ fn apartment_sim() {
         &options,
         out,
         controller,
-    )
-    .unwrap();
+    )?;
 
-    fn process_space(i: usize) -> Box<dyn Validate> {
+    fn process_space(i: usize) -> ValidFunc {
         // Load produced data
         let found = validate::from_csv::<simple::Float>(
             "./tests/cold_apartment/check.csv",
@@ -66,67 +63,67 @@ fn apartment_sim() {
         })
     }
 
-    #[valid(Kids bedroom in an apartment in Wellington, New Zealand)]
+    #[valid("Kids bedroom in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn kids_bedroom() -> Box<dyn Validate> {
+    fn kids_bedroom() -> ValidFunc {
         process_space(0)
     }
 
-    #[valid(Bathrooom in an apartment in Wellington, New Zealand)]
+    #[valid("Bathrooom in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn bathroom() -> Box<dyn Validate> {
+    fn bathroom() -> ValidFunc {
         process_space(1)
     }
 
-    #[valid(Storage in an apartment in Wellington, New Zealand)]
+    #[valid("Storage in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn storage() -> Box<dyn Validate> {
+    fn storage() -> ValidFunc {
         process_space(2)
     }
 
-    #[valid(Kitchen in an apartment in Wellington, New Zealand)]
+    #[valid("Kitchen in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn kitchen() -> Box<dyn Validate> {
+    fn kitchen() -> ValidFunc {
         process_space(3)
     }
 
-    #[valid(Laundry in an apartment in Wellington, New Zealand)]
+    #[valid("Laundry in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn laundry() -> Box<dyn Validate> {
+    fn laundry() -> ValidFunc {
         process_space(4)
     }
 
-    #[valid(Livingroom in an apartment in Wellington, New Zealand)]
+    #[valid("Livingroom in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn livingroom() -> Box<dyn Validate> {
+    fn livingroom() -> ValidFunc {
         process_space(5)
     }
 
-    #[valid(Main Bedroom in an apartment in Wellington, New Zealand)]
+    #[valid("Main Bedroom in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn main_bedroom() -> Box<dyn Validate> {
+    fn main_bedroom() -> ValidFunc {
         process_space(6)
     }
 
-    #[valid(Hallway in an apartment in Wellington, New Zealand)]
+    #[valid("Hallway in an apartment in Wellington, New Zealand")]
     /// This simulation runs throughout the whole year at 15-minute timesteps.
     ///
     /// It includes pretty much everything
-    fn hallway() -> Box<dyn Validate> {
+    fn hallway() -> ValidFunc {
         process_space(7)
     }
 
@@ -139,5 +136,5 @@ fn apartment_sim() {
     validations.push(main_bedroom());
     validations.push(hallway());
 
-    validations.validate().unwrap();
+    validations.validate()
 }

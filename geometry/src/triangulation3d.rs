@@ -218,14 +218,9 @@ impl std::convert::TryFrom<&Polygon3D> for Triangulation3D {
                 return Err("Excessive number of iteration when triangulating polygon".into());
             }
 
-            let mut n = the_loop.len();
-            if count % 10 == 0 {
-                the_loop = the_loop.sanitize()?;
-                n = the_loop.len();
-            }
-
             let last_added = t.n_triangles();
 
+            let n = the_loop.len();
             if n == 2 {
                 // return
                 t.mark_neighbourhouds()?;
@@ -2528,6 +2523,139 @@ mod testing {
                 ("Case 3", case3),
             ],
         )?;
+        Ok(())
+    }
+
+    #[test]
+    fn draw_multiple_doors() -> Result<(), String> {
+        let outer_vertices = vec![
+            Point3D::new(
+                10.288120882356054,
+                /*4.8911522517954955,*/ 0.011954070000000039,
+                0.0,
+            ),
+            Point3D::new(
+                4.1214927526583072,
+                /*7.1919133973049894,*/ 0.011954070000000039,
+                0.0,
+            ),
+            Point3D::new(
+                4.1214927526583072,
+                /*7.1919133973049894,*/ 2.8027003087477782,
+                0.0,
+            ),
+            Point3D::new(
+                10.288120882356054,
+                /*4.8911522517954955,*/ 3.0421447659872975,
+                0.0,
+            ),
+        ];
+        let mut outer = Loop3D::new();
+        for v in outer_vertices {
+            outer.push(v)?;
+        }
+        outer.close()?;
+
+        let inner_1_vertices = vec![
+            Point3D::new(
+                6.2749445994448472,
+                /*6.3884632404921478,*/ 0.014954099999999748,
+                0.0,
+            ),
+            Point3D::new(
+                5.5580492649418591,
+                /*6.6559359818884003,*/ 0.014954099999999748,
+                0.0,
+            ),
+            Point3D::new(
+                5.5580492649418591,
+                /*6.6559359818884003,*/ 2.0732600999999997,
+                0.0,
+            ),
+            Point3D::new(
+                6.2749445994448472,
+                /*6.3884632404921478,*/ 2.0732600999999997,
+                0.0,
+            ),
+        ];
+        let mut inner_1 = Loop3D::new();
+        for v in inner_1_vertices {
+            inner_1.push(v)?;
+        }
+        inner_1.close()?;
+
+        let inner_2_vertices = vec![
+            Point3D::new(
+                8.3124151415813934,
+                /*5.62828556156055,*/ 0.014954099999999748,
+                0.0,
+            ),
+            Point3D::new(
+                7.576657755748454,
+                /*5.9027957104203024,*/ 0.014954099999999748,
+                0.0,
+            ),
+            Point3D::new(
+                7.576657755748454,
+                /*5.9027957104203024,*/ 2.0732600999999997,
+                0.0,
+            ),
+            Point3D::new(
+                8.3124151415813934,
+                /*5.62828556156055,*/ 2.0732600999999997,
+                0.0,
+            ),
+        ];
+        let mut inner_2 = Loop3D::new();
+        for v in inner_2_vertices {
+            inner_2.push(v)?;
+        }
+        inner_2.close()?;
+
+        let inner_3_vertices = vec![
+            Point3D::new(
+                9.3154744121348684,
+                /*5.2540454180340674,*/ 0.014954059999999769,
+                0.0,
+            ),
+            Point3D::new(
+                8.4823625968720968,
+                /*5.5648783812202911,*/ 0.014954059999999769,
+                0.0,
+            ),
+            Point3D::new(
+                8.4823625968720968,
+                /*5.5648783812202911,*/ 1.9883438599999999,
+                0.0,
+            ),
+            Point3D::new(
+                9.3154744121348684,
+                /*5.2540454180340674,*/ 1.9883438599999999,
+                0.0,
+            ),
+        ];
+        let mut inner_3 = Loop3D::new();
+        for v in inner_3_vertices {
+            inner_3.push(v)?;
+        }
+        inner_3.close()?;
+
+        let mut poly = Polygon3D::new(outer)?;
+        poly.cut_hole(inner_1)?;
+        poly.cut_hole(inner_2)?;
+        poly.cut_hole(inner_3)?;
+
+        let t: Triangulation3D = (&poly).try_into()?;
+        // test_triangulation_results(&t, &poly, 1000., 1000.)?;
+
+        let mut closed = poly.get_closed_loop();
+        closed.close()?;
+        let poly = Polygon3D::new(closed)?;
+
+        let case0 = get_svg(&t, &poly)?;
+
+        draw_triangulation("test_from_polygon_doors.html", vec![("Case 0", case0)])?;
+
         Ok(())
     }
 

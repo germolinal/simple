@@ -128,9 +128,10 @@ fn pre_process(
         .outputs
         .iter()
         .filter_map(|item| {
-            full_header
-                .iter()
-                .position(|x| x == &serde_json::to_string(item).unwrap())
+            full_header.iter().position(|x| {
+                x == &serde_json::to_string(item)
+                    .expect("There was an error interpreting the inputs")
+            })
         })
         .collect();
 

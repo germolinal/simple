@@ -124,7 +124,7 @@ mod testing {
     use crate::model::Model;
 
     #[test]
-    fn test_control_electric_heater() {
+    fn test_control_electric_heater() -> Result<(), String> {
         let mut model = Model::default();
 
         // add a space
@@ -141,60 +141,58 @@ mod testing {
             .set_heating_setpoint(heating_setpoint)
             .set_target_space(space.name().clone())
             .set_max_heating_power(max_heating_power);
-        let hvac = model.add_hvac(heater.wrap()).unwrap();
+        let hvac = model.add_hvac(heater.wrap())?;
 
         // Get state
-        let mut state_header = model.take_state().unwrap();
+        let mut state_header = model.take_state().ok_or("Could not take state")?;
 
         // Create a model... we don't use it, but we need it as an input.
         let meta_option = MetaOptions::default();
-        let physics_model =
-            MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1).unwrap();
+        let physics_model = MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1)?;
 
-        let mut state = state_header.take_values().unwrap();
-        let controller = OccupantBehaviour::new(&model).unwrap();
+        let mut state = state_header.take_values().ok_or("Could not take state")?;
+        let controller = OccupantBehaviour::new(&model)?;
 
         // Emulate previous data
         if let HVAC::ElectricHeater(heater) = &hvac {
-            heater
-                .set_heating_cooling_consumption(&mut state, 129081298.0)
-                .unwrap()
+            heater.set_heating_cooling_consumption(&mut state, 129081298.0)?;
         } else {
             panic!("as")
         }
 
         // Test 1: temp is below setpoint
-        space
-            .set_dry_bulb_temperature(&mut state, heating_setpoint - 0.1)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, heating_setpoint - 0.1)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::ElectricHeater(heater) = &hvac {
             assert_close!(
                 max_heating_power,
-                heater.heating_cooling_consumption(&state).unwrap()
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling consumption")?
             )
         } else {
             panic!("as")
         }
 
         // Test 1: temp is now above
-        space
-            .set_dry_bulb_temperature(&mut state, heating_setpoint + 0.1)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, heating_setpoint + 0.1)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::ElectricHeater(heater) = &hvac {
-            assert_close!(0.0, heater.heating_cooling_consumption(&state).unwrap())
+            assert_close!(
+                0.0,
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling consumption")?
+            )
         } else {
             panic!("as")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_control_ideal_heating_cooling() {
+    fn test_control_ideal_heating_cooling() -> Result<(), String> {
         let mut model = Model::default();
 
         // add a space
@@ -216,76 +214,75 @@ mod testing {
             .set_max_heating_power(max_heating_power)
             .set_max_cooling_power(max_cooling_power);
 
-        let hvac = model.add_hvac(heater.wrap()).unwrap();
+        let hvac = model.add_hvac(heater.wrap())?;
 
         // Get state
-        let mut state_header = model.take_state().unwrap();
+        let mut state_header = model.take_state().ok_or("Could not take state")?;
 
         // Create a model... we don't use it, but we need it as an input.
         let meta_option = MetaOptions::default();
-        let physics_model =
-            MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1).unwrap();
+        let physics_model = MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1)?;
 
-        let mut state = state_header.take_values().unwrap();
-        let controller = OccupantBehaviour::new(&model).unwrap();
+        let mut state = state_header.take_values().ok_or("Could not take state")?;
+        let controller = OccupantBehaviour::new(&model)?;
 
         // Emulate previous data
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
-            heater
-                .set_heating_cooling_consumption(&mut state, 129081298.0)
-                .unwrap()
+            heater.set_heating_cooling_consumption(&mut state, 129081298.0)?;
         } else {
             panic!("as")
         }
 
         // Test 1: temp is below heating setpoint
-        space
-            .set_dry_bulb_temperature(&mut state, heating_setpoint - 0.1)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, heating_setpoint - 0.1)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
             assert_close!(
                 max_heating_power,
-                heater.heating_cooling_consumption(&state).unwrap()
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling consumption")?
             )
         } else {
             panic!("as")
         }
 
         // Test 2: temp is between heating and cooling setpoints
-        space
-            .set_dry_bulb_temperature(&mut state, heating_setpoint / 2.0 + cooling_setpoint / 2.0)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(
+            &mut state,
+            heating_setpoint / 2.0 + cooling_setpoint / 2.0,
+        )?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
-            assert_close!(0.0, heater.heating_cooling_consumption(&state).unwrap())
+            assert_close!(
+                0.0,
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling")?
+            )
         } else {
             panic!("as")
         }
 
         // Test 3: temp is above cooling setpoint
-        space
-            .set_dry_bulb_temperature(&mut state, cooling_setpoint + 2.0)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, cooling_setpoint + 2.0)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
             assert_close!(
                 -max_cooling_power,
-                heater.heating_cooling_consumption(&state).unwrap()
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling consumption")?
             )
         } else {
             panic!("as")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_control_ideal_heating_cooling_no_heating() {
+    fn test_control_ideal_heating_cooling_no_heating() -> Result<(), String> {
         let mut model = Model::default();
 
         // add a space
@@ -302,60 +299,58 @@ mod testing {
             .set_cooling_setpoint(cooling_setpoint)
             .set_target_space(space.name().clone())
             .set_max_cooling_power(max_cooling_power);
-        let hvac = model.add_hvac(heater.wrap()).unwrap();
+        let hvac = model.add_hvac(heater.wrap())?;
 
         // Get state
-        let mut state_header = model.take_state().unwrap();
+        let mut state_header = model.take_state().ok_or("Could not take state")?;
 
         // Create a model... we don't use it, but we need it as an input.
         let meta_option = MetaOptions::default();
-        let physics_model =
-            MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1).unwrap();
+        let physics_model = MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1)?;
 
-        let mut state = state_header.take_values().unwrap();
-        let controller = OccupantBehaviour::new(&model).unwrap();
+        let mut state = state_header.take_values().ok_or("Could not take test")?;
+        let controller = OccupantBehaviour::new(&model)?;
 
         // Emulate previous data
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
-            heater
-                .set_heating_cooling_consumption(&mut state, 129081298.0)
-                .unwrap()
+            heater.set_heating_cooling_consumption(&mut state, 129081298.0)?
         } else {
             panic!("as")
         }
 
         // Test 1: temp is above cooling setpoint
-        space
-            .set_dry_bulb_temperature(&mut state, cooling_setpoint + 0.1)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, cooling_setpoint + 0.1)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
             assert_close!(
                 -max_cooling_power,
-                heater.heating_cooling_consumption(&state).unwrap()
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating-cooling consumption")?
             )
         } else {
             panic!("as")
         }
 
         // Test 2: temp is below cooling setpoint
-        space
-            .set_dry_bulb_temperature(&mut state, cooling_setpoint - 2.0)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, cooling_setpoint - 2.0)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
-            assert_close!(0.0, heater.heating_cooling_consumption(&state).unwrap())
+            assert_close!(
+                0.0,
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling consumption")?
+            )
         } else {
             panic!("as")
         }
+
+        Ok(())
     }
 
     #[test]
-    fn test_control_ideal_heating_cooling_no_cooling() {
+    fn test_control_ideal_heating_cooling_no_cooling() -> Result<(), String> {
         let mut model = Model::default();
 
         // add a space
@@ -372,55 +367,53 @@ mod testing {
             .set_heating_setpoint(heating_setpoint)
             .set_target_space(space.name().clone())
             .set_max_heating_power(max_heating_power);
-        let hvac = model.add_hvac(heater.wrap()).unwrap();
+        let hvac = model.add_hvac(heater.wrap())?;
 
         // Get state
-        let mut state_header = model.take_state().unwrap();
+        let mut state_header = model.take_state().ok_or("Could not take state")?;
 
         // Create a model... we don't use it, but we need it as an input.
         let meta_option = MetaOptions::default();
-        let physics_model =
-            MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1).unwrap();
+        let physics_model = MultiphysicsModel::new(&meta_option, (), &model, &mut state_header, 1)?;
 
-        let mut state = state_header.take_values().unwrap();
-        let controller = OccupantBehaviour::new(&model).unwrap();
+        let mut state = state_header.take_values().ok_or("Could not take state")?;
+        let controller = OccupantBehaviour::new(&model)?;
 
         // Emulate previous data
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
-            heater
-                .set_heating_cooling_consumption(&mut state, 129081298.0)
-                .unwrap()
+            heater.set_heating_cooling_consumption(&mut state, 129081298.0)?;
         } else {
             panic!("as")
         }
 
         // Test 1: temp is below heating setpoint
-        space
-            .set_dry_bulb_temperature(&mut state, heating_setpoint - 0.1)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, heating_setpoint - 0.1)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
             assert_close!(
                 max_heating_power,
-                heater.heating_cooling_consumption(&state).unwrap()
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling consumption")?
             )
         } else {
             panic!("as")
         }
 
         // Test 2: temp is above heating setpoint
-        space
-            .set_dry_bulb_temperature(&mut state, heating_setpoint + 2.0)
-            .unwrap();
-        controller
-            .control(&model, &physics_model, &mut state)
-            .unwrap();
+        space.set_dry_bulb_temperature(&mut state, heating_setpoint + 2.0)?;
+        controller.control(&model, &physics_model, &mut state)?;
         if let HVAC::IdealHeaterCooler(heater) = &hvac {
-            assert_close!(0.0, heater.heating_cooling_consumption(&state).unwrap())
+            assert_close!(
+                0.0,
+                heater
+                    .heating_cooling_consumption(&state)
+                    .ok_or("Could not get heating/cooling consumption")?
+            )
         } else {
             panic!("as")
         }
+
+        Ok(())
     }
 }

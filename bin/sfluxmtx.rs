@@ -27,7 +27,7 @@ use rendering::Float;
 use rendering::Wavelengths;
 
 /// Calculates the Daylight Coefficients
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 struct Inputs {
     #[clap(short, long)]
     /// The file to load the model from
@@ -65,107 +65,23 @@ struct Inputs {
 }
 
 fn main() -> Result<(), String> {
+    // time cargo run --release --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
+    // cargo instruments --release --template Allocations --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
+    // RUSTFLAGS='-C target-feature=+neon' cargo instruments --features simd --release --template 'CPU Profiler' --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
+
     let inputs = Inputs::parse();
 
     let input_file = inputs.input;
     let mut scene = if input_file.ends_with(".rad") {
-        Scene::from_radiance(input_file)
+        Scene::from_radiance(input_file)?
     } else if input_file.ends_with(".spl") {
         let (model, _header) = model::Model::from_file(input_file)?;
-        Scene::from_simple_model(&model, Wavelengths::Visible)?
+        Scene::from_simple_model(&model, Wavelengths::Solar)?
     } else {
         return Err(format!("Unkwown format in file {}", input_file));
     };
 
     scene.build_accelerator();
-
-    // Setup sensors
-    let mut rays: Vec<Ray3D> = Vec::with_capacity(inputs.n_sensors);
-    let mut buffer = String::new();
-    let mut ln = 0;
-    while let Ok(n) = std::io::stdin().read_line(&mut buffer) {
-        if n == 0 {
-            break; // Reached EOF
-        }
-        ln += 1;
-        {
-            let st: Vec<&str> = buffer.trim().split(' ').collect();
-            // let st : Vec<&str> = buffer.split_ascii_whitespace().collect();
-
-            if st.len() != 6 {
-                eprintln!(
-                    "Expecting six values—e.g., '1. 2. 3. 4. 5. 6.'—... line {} contains '{:?}'",
-                    ln, st
-                );
-                std::process::exit(1);
-            }
-            let ox = match st[0].parse::<Float>() {
-                Ok(v) => v,
-                Err(_) => {
-                    eprintln!(
-                        "Expecting value 1 in sensor line to be a number... found '{}'",
-                        st[0]
-                    );
-                    std::process::exit(1);
-                }
-            };
-            let oy = match st[1].parse::<Float>() {
-                Ok(v) => v,
-                Err(_) => {
-                    eprintln!(
-                        "Expecting value 2 in sensor line to be a number... found '{}'",
-                        st[1]
-                    );
-                    std::process::exit(1);
-                }
-            };
-            let oz = match st[2].parse::<Float>() {
-                Ok(v) => v,
-                Err(_) => {
-                    eprintln!(
-                        "Expecting value 3 in sensor line to be a number... found '{}'",
-                        st[2]
-                    );
-                    std::process::exit(1);
-                }
-            };
-            let dx = match st[3].parse::<Float>() {
-                Ok(v) => v,
-                Err(_) => {
-                    eprintln!(
-                        "Expecting value 4 in sensor line to be a number... found '{}'",
-                        st[3]
-                    );
-                    std::process::exit(1);
-                }
-            };
-            let dy = match st[4].parse::<Float>() {
-                Ok(v) => v,
-                Err(_) => {
-                    eprintln!(
-                        "Expecting value 5 in sensor line to be a number... found '{}'",
-                        st[4]
-                    );
-                    std::process::exit(1);
-                }
-            };
-            let dz = match st[5].parse::<Float>() {
-                Ok(v) => v,
-                Err(_) => {
-                    eprintln!(
-                        "Expecting value 6 in sensor line to be a number... found '{}'",
-                        st[5]
-                    );
-                    std::process::exit(1);
-                }
-            };
-            rays.push(Ray3D {
-                origin: Point3D::new(ox, oy, oz),
-                direction: Vector3D::new(dx, dy, dz).get_normalized(),
-            })
-        }
-        buffer.truncate(0);
-    }
 
     let factory = DCFactory {
         max_depth: inputs.max_depth,
@@ -175,10 +91,126 @@ fn main() -> Result<(), String> {
         count_specular_bounce: inputs.count_specular_bounce,
     };
 
+    let rays = vec![
+        Ray3D {
+            origin: Point3D::new(1., 6., 1.),
+            direction: Vector3D::new(0., 0., 1.),
+        },
+        Ray3D {
+            origin: Point3D::new(1., 6., 1.),
+            direction: Vector3D::new(0., 0., 1.),
+        },
+        Ray3D {
+            origin: Point3D::new(1., 6., 1.),
+            direction: Vector3D::new(0., 0., 1.),
+        },
+        Ray3D {
+            origin: Point3D::new(1., 6., 1.),
+            direction: Vector3D::new(0., 0., 1.),
+        },
+        Ray3D {
+            origin: Point3D::new(1., 6., 1.),
+            direction: Vector3D::new(0., 0., 1.),
+        },
+        Ray3D {
+            origin: Point3D::new(1., 6., 1.),
+            direction: Vector3D::new(0., 0., 1.),
+        },
+    ];
+
     let dc_matrix = factory.calc_dc(&rays, &scene);
     save_colour_matrix(&dc_matrix, std::path::Path::new(&inputs.output))?;
-    // let dc_matrix = rendering::colour_matrix::colour_matrix_to_luminance(&dc_matrix);
-    // rendering::colour_matrix::save_matrix(&dc_matrix, &std::path::Path::new(&inputs.output))?;
 
     Ok(())
 }
+
+//fn load_sensor_file() -> Vec<Ray3D> {
+//     let mut rays: Vec<Ray3D> = Vec::with_capacity(inputs.n_sensors);
+//     let mut buffer = String::new();
+//     let mut ln = 0;
+//     dbg!("Before while");
+//     while let Ok(n) = std::io::stdin().read_line(&mut buffer) {
+//         if n == 0 {
+//             break; // Reached EOF
+//         }
+//         ln += 1;
+//         {
+//             let st: Vec<&str> = buffer.trim().split(' ').collect();
+//             // let st : Vec<&str> = buffer.split_ascii_whitespace().collect();
+
+//             if st.len() != 6 {
+//                 eprintln!(
+//                     "Expecting six values—e.g., '1. 2. 3. 4. 5. 6.'—... line {} contains '{:?}'",
+//                     ln, st
+//                 );
+//                 std::process::exit(1);
+//             }
+//             let ox = match st[0].parse::<Float>() {
+//                 Ok(v) => v,
+//                 Err(_) => {
+//                     eprintln!(
+//                         "Expecting value 1 in sensor line to be a number... found '{}'",
+//                         st[0]
+//                     );
+//                     std::process::exit(1);
+//                 }
+//             };
+//             let oy = match st[1].parse::<Float>() {
+//                 Ok(v) => v,
+//                 Err(_) => {
+//                     eprintln!(
+//                         "Expecting value 2 in sensor line to be a number... found '{}'",
+//                         st[1]
+//                     );
+//                     std::process::exit(1);
+//                 }
+//             };
+//             let oz = match st[2].parse::<Float>() {
+//                 Ok(v) => v,
+//                 Err(_) => {
+//                     eprintln!(
+//                         "Expecting value 3 in sensor line to be a number... found '{}'",
+//                         st[2]
+//                     );
+//                     std::process::exit(1);
+//                 }
+//             };
+//             let dx = match st[3].parse::<Float>() {
+//                 Ok(v) => v,
+//                 Err(_) => {
+//                     eprintln!(
+//                         "Expecting value 4 in sensor line to be a number... found '{}'",
+//                         st[3]
+//                     );
+//                     std::process::exit(1);
+//                 }
+//             };
+//             let dy = match st[4].parse::<Float>() {
+//                 Ok(v) => v,
+//                 Err(_) => {
+//                     eprintln!(
+//                         "Expecting value 5 in sensor line to be a number... found '{}'",
+//                         st[4]
+//                     );
+//                     std::process::exit(1);
+//                 }
+//             };
+//             let dz = match st[5].parse::<Float>() {
+//                 Ok(v) => v,
+//                 Err(_) => {
+//                     eprintln!(
+//                         "Expecting value 6 in sensor line to be a number... found '{}'",
+//                         st[5]
+//                     );
+//                     std::process::exit(1);
+//                 }
+//             };
+//             rays.push(Ray3D {
+//                 origin: Point3D::new(ox, oy, oz),
+//                 direction: Vector3D::new(dx, dy, dz).get_normalized(),
+//             })
+//         }
+//         buffer.truncate(0);
+//     }
+//     rays
+// }
