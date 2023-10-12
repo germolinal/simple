@@ -43,6 +43,7 @@ pub struct Luminaire {
     name: String,
 
     /// The maximum power consumption
+    #[serde(skip_serializing_if = "Option::is_none")]
     max_power: Option<Float>,
 
     /// The name of the space in which the space is located
@@ -53,6 +54,7 @@ pub struct Luminaire {
     /// a luminaire will be disipated into the air of a thermal
     /// zone. So, if this is an exterior luminaire or if no thermal
     /// calculation is performed, this can be left empty.
+    #[serde(skip_serializing_if = "Option::is_none")]
     target_space: Option<String>,
 
     /// The state of the luminaire    

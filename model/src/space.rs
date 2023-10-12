@@ -47,18 +47,22 @@ pub struct Space {
     pub name: String,
 
     /// Volume of the space
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub volume: Option<Float>,
 
     /// The infiltration in the space
+    #[serde(skip_serializing_if = "Option::is_none")]
     infiltration: Option<Infiltration>,
 
     // The importance of this space over time
     // importance : Option<Box<dyn Schedule<Float>>>,
     /// The building in which this `Space` is inserted
+    #[serde(skip_serializing_if = "Option::is_none")]
     building: Option<String>,
 
     /// The storey in which the space is located,
     /// indexing from 0 (i.e., ground floor is 0)
+    #[serde(skip_serializing_if = "Option::is_none")]
     storey: Option<usize>,
 
     #[physical]
