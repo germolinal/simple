@@ -132,6 +132,7 @@ pub struct Fenestration {
     /// The opportunity for operating the Fenestration.
     /// If none is given, the window is assumed to be Fixed
     /// at Closed position.
+    #[serde(skip_serializing_if = "Option::is_none")]
     operation: Option<FenestrationPosition>,
 
     /// The front Boundary. No boundary means it leads to the
@@ -148,12 +149,14 @@ pub struct Fenestration {
     ///
     /// This value fixes the value, so the automatic calculations
     /// in SIMPLE have no effect.
+    #[serde(skip_serializing_if = "Option::is_none")]
     precalculated_front_convection_coef: Option<Float>,
 
     /// The back convection coefficient, in `W/m2K`
     ///
     /// This value fixes the value, so the automatic calculations
     /// in SIMPLE have no effect.
+    #[serde(skip_serializing_if = "Option::is_none")]
     precalculated_back_convection_coef: Option<Float>,
 
     /// The name of the surface containing this `Fenestration`,
