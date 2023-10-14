@@ -84,6 +84,7 @@ pub struct Building {
     /// directly by assigning values to the `stack_coefficient` and
     /// `wind_coefficient` fields, in which case the `n_storeys` field will
     /// be ignored.
+    #[serde(skip_serializing_if = "Option::is_none")]
     n_storeys: Option<usize>,
 
     /// The `ShelterClass` of this building.
@@ -95,6 +96,7 @@ pub struct Building {
     /// `EffectiveAirLeakageArea` infiltration.  $C_w$ can be inputed
     /// directly by assigning values to the `wind_coefficient` field, in
     /// which case the `shelter_class` field will be ignored.
+    #[serde(skip_serializing_if = "Option::is_none")]
     shelter_class: Option<ShelterClass>,
 
     /// The stack coefficient of this building, used for
@@ -106,6 +108,7 @@ pub struct Building {
     ///
     /// > **Note:** The `EffectiveAirLeakageArea` object is appropriate for buildings
     /// > of 3 storeys or less.
+    #[serde(skip_serializing_if = "Option::is_none")]
     stack_coefficient: Option<Float>,
 
     /// The wind coefficient of this building, used for
@@ -117,6 +120,7 @@ pub struct Building {
     ///
     /// > **Note:** The `EffectiveAirLeakageArea` object is appropriate for buildings
     /// > of 3 storeys or less.
+    #[serde(skip_serializing_if = "Option::is_none")]
     wind_coefficient: Option<Float>,
 }
 

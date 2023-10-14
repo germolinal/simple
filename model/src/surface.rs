@@ -124,18 +124,21 @@ pub struct Surface {
     /// [`SurfaceType`] documentation). So, if no [`SurfaceType`]
     /// is assigned, we cannot tell you what to do.
     #[serde(default)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     category: Option<SurfaceType>,
 
     /// The front convection coefficient, in `W/m2K`
     ///
     /// This value fixes the value, so the automatic calculations
     /// in SIMPLE have no effect.
+    #[serde(skip_serializing_if = "Option::is_none")]
     precalculated_front_convection_coef: Option<Float>,
 
     /// The back convection coefficient, in `W/m2K`
     ///
     /// This value fixes the value, so the automatic calculations
     /// in SIMPLE have no effect.
+    #[serde(skip_serializing_if = "Option::is_none")]
     precalculated_back_convection_coef: Option<Float>,
 
     /* STATE */

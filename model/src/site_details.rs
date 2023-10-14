@@ -63,9 +63,11 @@ impl std::default::Default for TerrainClass {
 #[serde(deny_unknown_fields)]
 pub struct SiteDetails {
     /// The altitude of the site.
+    #[serde(skip_serializing_if = "Option::is_none")]
     altitude: Option<Float>,
 
     /// The kind of terrain
+    #[serde(skip_serializing_if = "Option::is_none")]
     terrain: Option<TerrainClass>,
 
     /// In degrees. South is negative and North is positive
@@ -74,6 +76,7 @@ pub struct SiteDetails {
     /// on an EPW weather file (in which case it is extracted
     /// such file). However, it can be useful when producing
     /// synthetic weathers or HVAC sizing, or other applications.
+    #[serde(skip_serializing_if = "Option::is_none")]
     latitude: Option<Float>,
 
     /// In degrees. West is negative, east is positive.
@@ -82,6 +85,7 @@ pub struct SiteDetails {
     /// on an EPW weather file (in which case it is extracted
     /// such file). However, it can be useful when producing
     /// synthetic weathers or HVAC sizing, or other applications.
+    #[serde(skip_serializing_if = "Option::is_none")]
     longitude: Option<Float>,
 
     /// In degrees. This is 15*GMT Time Zone
@@ -90,6 +94,7 @@ pub struct SiteDetails {
     /// on an EPW weather file (in which case it is extracted
     /// such file). However, it can be useful when producing
     /// synthetic weathers or HVAC sizing, or other applications.
+    #[serde(skip_serializing_if = "Option::is_none")]
     standard_meridian: Option<Float>,
 }
 
