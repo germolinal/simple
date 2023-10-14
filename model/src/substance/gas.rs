@@ -75,6 +75,7 @@ pub struct Gas {
     pub name: String,
 
     /// A predefined gas
+    #[serde(skip_serializing_if = "Option::is_none")]
     gas: Option<GasSpecification>,
 }
 

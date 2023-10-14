@@ -161,7 +161,8 @@ impl<'de> Deserialize<'de> for Loop3D {
                     }
                     _ => panic!("Expecting Polygon3D to be an array of numbers"),
                 };
-                ret.push(Point3D { x, y, z })
+                // We push "as is"
+                ret.push_collinear(Point3D { x, y, z }, false)
                     .map_err(serde::de::Error::custom)?;
             }
         }

@@ -60,6 +60,7 @@ pub struct Model {
     pub materials: Vec<Arc<Material>>,
 
     /// The name of the model.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
     /// The requested outputs
@@ -70,9 +71,11 @@ pub struct Model {
     pub outputs: Vec<Output>,
 
     /// Some information about the site in which the building(s) are located
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub site_details: Option<SiteDetails>,
 
     /// The options for the Solar calculations
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub solar_options: Option<SolarOptions>,
 
     /// The [`Space`]s in the model
