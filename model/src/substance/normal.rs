@@ -51,12 +51,15 @@ pub struct Normal {
 
     /* THERMAL PROPERTIES */
     /// The thermal conductivity of the substance in W/m.K    
+    #[serde(skip_serializing_if = "Option::is_none")]
     thermal_conductivity: Option<Float>,
 
     /// The specific heat capacity of the substance in J/kg.K
+    #[serde(skip_serializing_if = "Option::is_none")]
     specific_heat_capacity: Option<Float>,
 
     /// The density of the substance in kg/m3
+    #[serde(skip_serializing_if = "Option::is_none")]
     density: Option<Float>,
 
     /* SOLAR RADIATION PROPERTIES */
@@ -65,6 +68,7 @@ pub struct Normal {
     ///
     /// Absorbtance is used instead of reflectance (which is used in visible radiation
     /// properties) to maintain coherence with EnergyPlus
+    #[serde(skip_serializing_if = "Option::is_none")]
     front_solar_absorbtance: Option<Float>,
 
     /// Solar absorbtance (from 0 to 1) at the front side
@@ -74,6 +78,7 @@ pub struct Normal {
     /// properties) to maintain coherence with EnergyPlus... because in Thermal calculation
     /// we mostly care about how much is absorbed; in lighting we care mainly about how much
     /// is reflected.
+    #[serde(skip_serializing_if = "Option::is_none")]
     back_solar_absorbtance: Option<Float>,
 
     /// The front solar transmittance at normal incidence (from 0 to 1)    
@@ -87,6 +92,7 @@ pub struct Normal {
     /// properties) to maintain coherence with EnergyPlus... because in Thermal calculation
     /// we mostly care about how much is absorbed; in lighting we care mainly about how much
     /// is reflected.
+    #[serde(skip_serializing_if = "Option::is_none")]
     solar_transmittance: Option<Float>,
 
     /* VISIBLE RADIATION PROPERTIES */
@@ -97,6 +103,7 @@ pub struct Normal {
     /// properties) to maintain coherence with Radiance... because in Lighting
     /// we really care about how much is reflected; in thermal we care mainly about how much
     /// is absorbed.
+    #[serde(skip_serializing_if = "Option::is_none")]
     front_visible_reflectance: Option<Float>,
 
     /// Solar absorbtance (from 0 to 1) at the front side
@@ -106,6 +113,7 @@ pub struct Normal {
     /// properties) to maintain coherence with Radiance... because in Lighting
     /// we really care about how much is reflected; in thermal we care mainly about how much
     /// is absorbed.
+    #[serde(skip_serializing_if = "Option::is_none")]
     back_visible_reflectance: Option<Float>,
 
     /// The front solar transmittance at normal incidence (from 0 to 1)    
@@ -117,15 +125,18 @@ pub struct Normal {
     ///
     /// Transmissivity is used instead of Transmittance (which is used in solar radiation
     /// properties) to maintain coherence with Radiance
+    #[serde(skip_serializing_if = "Option::is_none")]
     visible_transmissivity: Option<Float>,
 
     /* INFRARED RADIATION PROPERTIES */
     /// Front thermal absorbtance (i.e., emissitivy; from 0 to 1)
     /// (Front being the side closer to the first material in a construction)
+    #[serde(skip_serializing_if = "Option::is_none")]
     front_thermal_absorbtance: Option<Float>,
 
     /// Back thermal absorbtance (i.e., emissitivy; from 0 to 1)
     /// (Back being the side closer to the last material in a construction)
+    #[serde(skip_serializing_if = "Option::is_none")]
     back_thermal_absorbtance: Option<Float>,
 }
 
