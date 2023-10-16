@@ -352,7 +352,7 @@ impl SimulationModel for SolarModel {
                     Ok(v) => v,
                     Err(_) => {
                         return Err(format!(
-                            "Unable to patse optical_info object in file '{}'",
+                            "Unable to parse optical_info object in file '{}'",
                             path_str
                         ))
                     }
