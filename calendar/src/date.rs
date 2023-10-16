@@ -151,8 +151,10 @@ impl Date {
         sec %= 60;
 
         let r = NaiveDate::from_ymd_opt(year, self.month as u32, self.day as u32)
-            .ok_or("Could not build chronos::Date")?
-            .and_hms_opt(hour.round() as u32, min, sec)
+            .ok_or("Could not build chronos::Date")?;
+        let hour= hour.round() as u32;
+        let r = r
+            .and_hms_opt(hour, min, sec)
             .ok_or("Could not add HMS to chrosnos::Date")?;
         Ok(r)
     }
