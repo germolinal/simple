@@ -55,14 +55,14 @@ pub fn get_orientation(normal: Vector3D) -> Orientation {
     const UP: Vector3D = Vector3D::new(0., 0., 1.);
 
     // more than 45 degrees of elevation is a horizontal window
-    let is_up = (normal * UP).abs() >= (45.0 as f64).to_radians().cos();
+    let is_up = (normal * UP).abs() >= (45.0 as Float).to_radians().cos();
     if is_up {
         Orientation::Horizontal
     } else {
         // Project normal onto a horizontal
         let normal = Vector3D::new(normal.x, normal.y, 0.0).get_normalized();
 
-        const COS_22_5: f64 = 0.923879532511287; // cos(22.5 degrees)
+        const COS_22_5: Float = 0.923879532511287; // cos(22.5 degrees)
 
         let faces_north = normal.y > 0.0;
         let faces_east = normal.x > 0.0;
@@ -365,7 +365,7 @@ mod testing {
 
     #[test]
     fn test_get_orientation() -> Result<(), String> {
-        fn check(exp: Orientation, alpha_deg: f64, phi_deg: f64) -> Result<(), String> {
+        fn check(exp: Orientation, alpha_deg: Float, phi_deg: Float) -> Result<(), String> {
             let alpha = alpha_deg.to_radians();
             let phi = phi_deg.to_radians();
             let z = alpha.sin();
@@ -390,12 +390,12 @@ mod testing {
             let min_alpha = 45.000001;
             let max_alpha = 90.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = 0.0;
                 let max_phi = 90.0;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -405,12 +405,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = -22.49999;
                 let max_phi = 22.499999;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -420,12 +420,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = 22.5;
                 let max_phi = 22.5 + 22.499999;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -435,12 +435,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = -22.49999 + 90.0;
                 let max_phi = 22.499999 + 90.0;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -450,12 +450,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = 22.5 + 90.0;
                 let max_phi = min_phi + 22.499999;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -465,12 +465,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = -22.49999 + 180.0;
                 let max_phi = 22.499999 + 180.0;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -480,12 +480,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = 22.5 + 180.0;
                 let max_phi = min_phi + 22.499999;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -495,12 +495,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = -22.49999 + 270.0;
                 let max_phi = 22.499999 + 270.0;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
@@ -510,12 +510,12 @@ mod testing {
             let min_alpha = 0.0;
             let max_alpha = 45.0;
             let delta_alpha = (max_alpha - min_alpha) / 100.0;
-            let alpha = min_alpha + (i as f64) * delta_alpha;
+            let alpha = min_alpha + (i as Float) * delta_alpha;
             for j in 0..100 {
                 let min_phi = 270.0 + 22.5;
                 let max_phi = min_phi + 22.499999;
                 let delta_phi = (max_phi - min_phi) / 100.0;
-                let phi = min_phi + (j as f64) * delta_phi;
+                let phi = min_phi + (j as Float) * delta_phi;
                 check(exp, alpha, phi)?;
             }
         }
