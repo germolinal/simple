@@ -246,9 +246,10 @@ impl Model {
     /// ```
     pub fn geolocation(&self) -> Option<(Float, Float, Float)> {
         if let Some(site) = &self.site_details {
-            if let (Ok(lat), Ok(lon), Ok(stdmer)) =
-                (site.latitude(), site.longitude(), site.standard_meridian())
-            {
+            let lat = site.latitude();
+            let lon = site.longitude();
+            let stdmer = site.standard_meridian();
+            if let (Ok(lat), Ok(lon), Ok(stdmer)) = (lat, lon, stdmer) {
                 return Some((*lat, *lon, *stdmer));
             }
             return None;
