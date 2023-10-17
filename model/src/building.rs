@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
 /// as it is always embeded on a `Building` object
-#[derive(Copy, Clone, ObjectIO, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, ObjectIO, Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 #[serde(tag = "type")]
 pub enum ShelterClass {
@@ -44,6 +44,7 @@ pub enum ShelterClass {
     IsolatedRural,
 
     /// Typical shelter caused by other buildings across the street
+    #[default]
     Urban,
 
     /// Typical shelter for urban buildings on larger lots
@@ -97,6 +98,7 @@ pub struct Building {
     /// directly by assigning values to the `wind_coefficient` field, in
     /// which case the `shelter_class` field will be ignored.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     shelter_class: Option<ShelterClass>,
 
     /// The stack coefficient of this building, used for
