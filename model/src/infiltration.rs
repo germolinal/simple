@@ -109,7 +109,7 @@ pub enum Infiltration {
     /// $$ \phi = \frac{A_L}{1000} \sqrt{C_s \Delta T + C_w W^2_{speed}}$$
     ///
     /// where:
-    /// * $A_L$ is the effecctive air leakage in $cm^2$ @ 4Pa
+    /// * $A_L$ is the effective air leakage in $cm^2$ @ 4Pa (**NOTE THAT THE INPUT IS IN M2**)
     /// * $C_s$ is the coefficient for stack induced infiltration
     /// * $C_w$ is the coefficient for wind induced infiltration
     ///
@@ -164,10 +164,9 @@ pub enum Infiltration {
     ///
     /// Where $\rho$ is the air density of $1.2 kg/m^3$. So, the estimated $A_L$ would be $0.0496 m^2$
     EffectiveAirLeakageArea {
-        /// The Effective Air Leakage Area (in m2 ... ? check)
+        /// The Effective Air Leakage Area (in m2)
         area: Float,
     },
-    // FlowCoefficient...?
 }
 
 /***********/
