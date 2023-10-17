@@ -146,7 +146,9 @@ impl Weather {
             .enumerate()
             .map(|(line_index, current_data)| {
                 let date = current_data.date;
-                if let Some(sun_direction) = solar.sun_position_from_standard_time(date) {
+
+                let pos = solar.sun_position_from_standard_time(date);                
+                if let Some(sun_direction) = pos {
                     let three_hours_prior_data = if line_index >= 3 {
                         self.data[line_index - 3]
                     } else {
