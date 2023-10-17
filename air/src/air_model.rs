@@ -22,7 +22,7 @@ SOFTWARE.
 use crate::resolvers::*;
 use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
-use model::{Infiltration, Model, SimulationState, SimulationStateElement, SimulationStateHeader};
+use model::{Infiltration, Model, SimulationState, SimulationStateElement, SimulationStateHeader, SiteDetails};
 use std::borrow::Borrow;
 use weather::{CurrentWeather, WeatherTrait};
 
@@ -60,6 +60,11 @@ impl SimulationModel for AirFlowModel {
     ) -> Result<Self, String> {
         let mut infiltration_calcs = Vec::with_capacity(model.borrow().spaces.len());
 
+        let site_details = match &model.borrow().site_details {
+            Some(d)=> d.clone(),
+            None => SiteDetails::default()
+        };
+
         for (i, space) in model.borrow().spaces.iter().enumerate() {
             // Should these initial values be different?
             let initial_vol = 0.0;
@@ -73,16 +78,16 @@ impl SimulationModel for AirFlowModel {
                 SimulationStateElement::SpaceInfiltrationTemperature(i),
                 initial_temp,
             )?;
-            space.set_infiltration_temperature_index(inf_temp_index)?;
+            space.set_infiltration_temperature_index(inf_temp_index)?;            
 
             // Pre-process infiltration calculations
             if let Ok(infiltration) = space.infiltration() {
                 let infiltration_fn = match infiltration {
                     Infiltration::Constant { flow } => constant_resolver(space, *flow)?,
-                    Infiltration::Blast { flow } => blast_resolver(space, *flow)?,
-                    Infiltration::Doe2 { flow } => doe2_resolver(space, *flow)?,
+                    Infiltration::Blast { flow } => blast_resolver(space, &site_details, *flow)?,
+                    Infiltration::Doe2 { flow } => doe2_resolver(space, &site_details, *flow)?,
                     Infiltration::DesignFlowRate { a, b, c, d, phi } => {
-                        design_flow_rate_resolver(space, *a, *b, *c, *d, *phi)?
+                        design_flow_rate_resolver(space, &site_details, *a, *b, *c, *d, *phi)?
                     }
                     Infiltration::EffectiveAirLeakageArea { area } => {
                         effective_air_leakage_resolver(space, model.borrow(), *area)?

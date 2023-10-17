@@ -38,14 +38,18 @@ pub fn design_flow_rate(
     b: Float,
     c: Float,
     d: Float,
+    wind_speed_modifier: Float,
 ) -> Float {
     let t_space = space
         .dry_bulb_temperature(state)
         .expect("Space does not have Dry Bulb temperature");
     let t_out = weather.dry_bulb_temperature;
-    let wind_speed = weather.wind_speed;
+    let wind_speed = weather.wind_speed * wind_speed_modifier;
+    
+    let ret = design_rate
+        * (a + b * (t_space - t_out).abs() + c * wind_speed + d * wind_speed * wind_speed);
 
-    design_rate * (a + b * (t_space - t_out).abs() + c * wind_speed + d * wind_speed * wind_speed)
+    ret
 }
 
 /// Calculates the design flow rates using the BLAST defaults (reported in EnergyPlus' Input/Output reference)
@@ -54,6 +58,7 @@ pub fn blast_design_flow_rate(
     space: &Arc<Space>,
     state: &SimulationState,
     design_rate: Float,
+    wind_speed_modifier: Float,
 ) -> Float {
     design_flow_rate(
         weather,
@@ -64,6 +69,7 @@ pub fn blast_design_flow_rate(
         0.03636,
         0.1177,
         0.,
+        wind_speed_modifier,
     )
 }
 
@@ -73,10 +79,22 @@ pub fn doe2_design_flow_rate(
     space: &Arc<Space>,
     state: &SimulationState,
     design_rate: Float,
+    wind_speed_modifier: Float,
 ) -> Float {
-    design_flow_rate(weather, space, state, design_rate, 0., 0., 0.224, 0.)
+    design_flow_rate(
+        weather,
+        space,
+        state,
+        design_rate,
+        0.,
+        0.,
+        0.224,
+        0.,
+        wind_speed_modifier,
+    )
 }
 
+/// Calculates the infiltration flow in m3/s. Area should be defined in m2
 pub fn effective_leakage_area(
     weather: &CurrentWeather,
     space: &Arc<Space>,
@@ -92,7 +110,11 @@ pub fn effective_leakage_area(
     let delta_t = (outdoor_temp - space_temp).abs();
     let ws = weather.wind_speed;
 
-    (area / 1000.) * (cs * delta_t + cw * ws * ws).sqrt()
+    let aux = cs * delta_t + cw * ws * ws;
+    let aux = aux.sqrt();
+    let l_s = (area * 10.0) * aux;
+
+    l_s // m3/s
 }
 
 #[cfg(test)]
@@ -137,7 +159,7 @@ mod tests {
 
         let design_rate = 1.;
         let current_weather = weather.get_weather_data(date);
-        let flow = blast_design_flow_rate(&current_weather, &space, &state, design_rate);
+        let flow = blast_design_flow_rate(&current_weather, &space, &state, design_rate,1.0);
         assert!((1. - flow).abs() < 0.02);
 
         // WINTER
@@ -160,7 +182,7 @@ mod tests {
 
         let design_rate = 1.;
         let current_weather = weather.get_weather_data(date);
-        let flow = blast_design_flow_rate(&current_weather, &space, &state, design_rate);
+        let flow = blast_design_flow_rate(&current_weather, &space, &state, design_rate, 1.0);
         assert!((2.75 - flow).abs() < 0.02);
 
         Ok(())
@@ -195,7 +217,7 @@ mod tests {
 
         let design_rate = 1.;
         let current_weather = weather.get_weather_data(date);
-        let flow = doe2_design_flow_rate(&current_weather, &space, &state, design_rate);
+        let flow = doe2_design_flow_rate(&current_weather, &space, &state, design_rate, 1.0);
         assert!((0.75 - flow).abs() < 0.02);
 
         // WINTER
@@ -218,7 +240,7 @@ mod tests {
 
         let design_rate = 1.;
         let current_weather = weather.get_weather_data(date);
-        let flow = doe2_design_flow_rate(&current_weather, &space, &state, design_rate);
+        let flow = doe2_design_flow_rate(&current_weather, &space, &state, design_rate, 1.0);
         assert!((1.34 - flow).abs() < 0.02);
 
         // ... A windspeed of 4.47 m/s (10 mph) gives a factor of 1.0.
@@ -241,8 +263,64 @@ mod tests {
 
         let design_rate = 1.;
         let current_weather = weather.get_weather_data(date);
-        let flow = doe2_design_flow_rate(&current_weather, &space, &state, design_rate);
+        let flow = doe2_design_flow_rate(&current_weather, &space, &state, design_rate, 1.0);
         assert!((1. - flow).abs() < 0.02);
+        Ok(())
+    }
+
+    #[test]
+    fn test_effective_leakage_area() -> Result<(), String> {
+        /* FROM ASHRAE FUNDAMENTALS 2001 - Chapter 26 */
+        /*
+        Estimate the infiltration at design conditions for a two-storey
+        house in Lincoln, Nebraska. The house has an effective leakage area of
+        500cm2 and a volume of 340m4, and the predominant wind is operpendicular
+        to the street (shelter class 3). The indoor temp is 20C.
+
+        > Assume outside is -19C; and wind speed is 6.7m/s
+         */
+
+        let t_out = -19.0;
+        let wind_speed = 6.7;
+        let t_in = 20.0;
+
+        let mut weather = SyntheticWeather::default();
+        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(t_out));
+        let state = vec![t_in];
+        //
+        weather.wind_speed = Box::new(ScheduleConstant::new(wind_speed));
+
+        let space = Space::new("some space".to_string());
+        space.set_dry_bulb_temperature_index(0)?;
+        let space = Arc::new(space);
+
+        let date = Date {
+            month: 1,
+            day: 1,
+            hour: 1.,
+        };
+
+        let current_weather = weather.get_weather_data(date);
+
+        let a_cm2 = 500.0;
+        let a_m2 = a_cm2 / 10000.0;
+
+        assert!((a_m2 - 0.05 as f64).abs() < 1e-8);
+
+        // for 1 storey
+        let cs = 0.000290;
+        let cw = 0.000231;
+
+        let found = effective_leakage_area(&current_weather, &space, &state, a_m2, cw, cs);
+
+        let exp = 0.0736;
+        assert!(
+            (exp - found).abs() < 1e-3,
+            "Expecting {}... found {}",
+            exp,
+            found
+        );
+
         Ok(())
     }
 }
