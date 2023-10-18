@@ -149,7 +149,6 @@ pub struct SiteDetails {
 }
 
 impl SiteDetails {
-
     /// Calculates the value by which
     /// the weather file wind speed needs to be multiplied in order to estimate the wind
     /// speed at a certain height.

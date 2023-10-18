@@ -100,8 +100,6 @@ pub struct SurfaceMemory {
     pub q: Matrix,
 }
 
-
-
 fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
     let (crows, ..) = memory.c.size();
     // Rearrenge into dT = (dt/C) * K + (dt/C)*q
@@ -473,8 +471,8 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
         let cos_tilt = normal * Vector3D::new(0., 0., 1.);
         let wind_speed_modifier = match site_details {
-            Some(d)=> d.wind_speed_modifier(height),
-            None => TerrainClass::default().wind_speed_modifier(height)
+            Some(d) => d.wind_speed_modifier(height),
+            None => TerrainClass::default().wind_speed_modifier(height),
         };
 
         let parent = parent.clone();

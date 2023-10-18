@@ -144,7 +144,7 @@ pub trait SurfaceTrait: Clone + Send + Sync {
     }
 
     /// Retrieves the orientation of the side that faces
-    /// outdoors, only if the other side faces inside. 
+    /// outdoors, only if the other side faces inside.
     /// If both sides face outdoors, or if no side face indoors, it returns None.
     fn outside_orientation(&self) -> Option<Orientation> {
         let front_b = self.front_boundary();
@@ -164,7 +164,7 @@ pub trait SurfaceTrait: Clone + Send + Sync {
     }
 
     /// Retrieves the orientation of the side that faces
-    /// indoors, only if the other side faces outdoors. 
+    /// indoors, only if the other side faces outdoors.
     /// If both sides face indoors, or if no side face outdoors, it returns None.
     fn inside_orientation(&self) -> Option<Orientation> {
         let front_b = self.front_boundary();
@@ -176,13 +176,12 @@ pub trait SurfaceTrait: Clone + Send + Sync {
         } else if let (Boundary::Space { .. }, Boundary::Outdoor) = (front_b, back_b) {
             // Space is at the front.
             let n = self.normal();
-            Some( get_orientation(n))
+            Some(get_orientation(n))
         } else {
             // both sides lead to spaces
             None
         }
     }
-    
 
     /// Adds the front-convection state element
     fn add_front_convection_state(

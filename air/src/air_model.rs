@@ -22,7 +22,10 @@ SOFTWARE.
 use crate::resolvers::*;
 use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
-use model::{Infiltration, Model, SimulationState, SimulationStateElement, SimulationStateHeader, SiteDetails};
+use model::{
+    Infiltration, Model, SimulationState, SimulationStateElement, SimulationStateHeader,
+    SiteDetails,
+};
 use std::borrow::Borrow;
 use weather::{CurrentWeather, WeatherTrait};
 
@@ -61,8 +64,8 @@ impl SimulationModel for AirFlowModel {
         let mut infiltration_calcs = Vec::with_capacity(model.borrow().spaces.len());
 
         let site_details = match &model.borrow().site_details {
-            Some(d)=> d.clone(),
-            None => SiteDetails::default()
+            Some(d) => d.clone(),
+            None => SiteDetails::default(),
         };
 
         for (i, space) in model.borrow().spaces.iter().enumerate() {
@@ -78,7 +81,7 @@ impl SimulationModel for AirFlowModel {
                 SimulationStateElement::SpaceInfiltrationTemperature(i),
                 initial_temp,
             )?;
-            space.set_infiltration_temperature_index(inf_temp_index)?;            
+            space.set_infiltration_temperature_index(inf_temp_index)?;
 
             // Pre-process infiltration calculations
             if let Ok(infiltration) = space.infiltration() {
