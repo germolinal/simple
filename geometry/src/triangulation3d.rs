@@ -214,7 +214,8 @@ impl std::convert::TryFrom<&Polygon3D> for Triangulation3D {
         let mut count = 0;
         loop {
             count += 1;
-            if count > 1000 {
+
+            if count > 220 {                
                 return Err("Excessive number of iteration when triangulating polygon".into());
             }
 
@@ -235,8 +236,8 @@ impl std::convert::TryFrom<&Polygon3D> for Triangulation3D {
             let is_line = v0.is_collinear(v1, v2)?;
 
             // this will be false if potential_diag is very small.
-            let is_diagonal = the_loop.is_diagonal(potential_diag)?;
-            if !is_line && is_diagonal {
+            let is_diagonal = the_loop.is_diagonal(potential_diag)?;            
+            if (n == 3) || (!is_line && is_diagonal) {
                 // Add triangle
                 t.push(v0, v1, v2, last_added)?;
 
@@ -286,6 +287,11 @@ impl Triangulation3D {
             n_valid_triangles: 0,
             triangles: Vec::with_capacity(i),
         }
+    }
+
+    /// Returns the number of triangles 
+    pub fn len(&self)->usize {
+        self.triangles.len()
     }
 
     /// Transforms the `Triangulation3D` into a `Vec<Triangle3D>`.
@@ -2306,7 +2312,7 @@ mod testing {
         let max_aspect_ratio = 1.6;
         let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio)?;
         let case0 = get_svg(&t, &poly)?;
-        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio)?;
+        test_triangulation_results(&t, &poly, max_area, max_aspect_ratio)?;
 
         /* SOMEHOW MORE COMPLICATED CASE ... 6 vertices */
         // let min_x = 0.;
@@ -2335,7 +2341,7 @@ mod testing {
 
         let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio)?;
         let case1 = get_svg(&t, &poly)?;
-        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio)?;
+        test_triangulation_results(&t, &poly, max_area * 1.5, max_aspect_ratio * 300.)?;
 
         /* SOMEHOW MORE COMPLICATED CASE ... 6 vertices + hole */
         // let min_x = 0.;
@@ -2387,7 +2393,7 @@ mod testing {
 
         let t = Triangulation3D::mesh_polygon(&poly, max_area, max_aspect_ratio)?;
         let case2 = get_svg(&t, &poly)?;
-        // test_triangulation_results(&t, &poly, max_area, max_aspect_ratio)?;
+        test_triangulation_results(&t, &poly, max_area * 10., max_aspect_ratio * 30.)?;
 
         draw_triangulation(
             "test_mesh_polygon.html",
@@ -2742,4 +2748,46 @@ mod testing {
         assert_eq!(Edge::Ca, edge + 2);
         assert_eq!(Edge::Ab, edge + 3);
     }
+
+    #[test]
+    fn test_failing_1() -> Result<(), String> {
+        let l: Loop3D = serde_json::from_str(
+            "[
+            4.7847290740519615,8.445952497556162,0.0000000724007875874122,
+            5.679076639428427,0.6837141470127328,0.0000000724007875874122,
+            5.679076639428427,0.6837141470127337,2.413359527599212,
+            4.7847290740519615,8.445952497556162,2.413359527599212,
+            4.802505378891448,8.29166805546912,2.1836085,
+            4.869331339188083,7.711670913521197,2.1836085,
+            4.869331339188083,7.711670913521197,0.5201700999999996,
+            4.802505378891448,8.29166805546912,0.5201700999999996,
+            4.802505378891448,8.29166805546912,2.1836085,
+            4.7847290740519615,8.445952497556162,2.413359527599212
+        ]",
+        )
+        .map_err(|e| format!("{}", e))?;
+
+        let poly: Polygon3D = l.into();
+        let t: Triangulation3D = poly.clone().try_into()?;
+        let mut draw_t = Triangulation3D::with_capacity(t.len());
+
+        t.get_trilist().iter().for_each(|tri| {
+            let a = tri.a();
+            let b = tri.b();
+            let c = tri.c();
+
+            let a = Point3D::new(a.y, a.z, 0.0);
+            let b = Point3D::new(b.y, b.z, 0.0);
+            let c = Point3D::new(c.y, c.z, 0.0);
+            let i = t.triangles.len();
+            draw_t.push(a, b, c, i).unwrap();
+        });
+        test_triangulation_results(&t, &poly, 1000., 1000.)?;
+
+        let svg = get_triangulation_svg(&draw_t, 0.0, 9.0, 0.0, 2.5)?;
+        draw_triangulation("failing_case_1.html", vec![("Triangulated", svg)])?;
+        Ok(())
+    }
+
+    
 } // end of test module

@@ -552,20 +552,20 @@ impl Loop3D {
         }
         let mut inter = Point3D::new(0., 0., 0.);
         let n = self.len();
-        // It cannot intercect any
+        // It cannot intersect any
         for i in 0..=n {
             let a = self.vertices[i % n];
             let b = self.vertices[(i + 1) % n];
 
             let poly_s = Segment3D::new(a, b);
             let intersects = s.intersect(&poly_s, &mut inter);
+                        
             // If they are contained and are the same length, then they are the same segment
-
             const TINY: Float = 1e-7;
-
             let different_length = (s.length() - poly_s.length()).abs() > TINY;
             let contains = s.contains(&poly_s)? && different_length;
-            if intersects || contains {
+            let is_equal = s.compare(&poly_s);
+            if intersects || contains || is_equal {
                 return Ok(false);
             }
         }
