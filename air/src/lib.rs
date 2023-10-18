@@ -28,10 +28,10 @@ SOFTWARE.
 /// library... the `"float"` feature means it becomes `f32`
 /// and `f64` is used otherwise.
 #[cfg(feature = "float")]
-type Float = f32;
+pub type Float = f32;
 
 #[cfg(not(feature = "float"))]
-type Float = f64;
+pub type Float = f64;
 
 pub mod air_model;
 mod eplus;
