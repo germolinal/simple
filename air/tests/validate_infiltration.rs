@@ -20,7 +20,6 @@ fn get_validator(
 
         // allowed_intersect_delta: Some(1e-2),
         // allowed_slope_delta: Some(1e-2),
-
         ..validate::ScatterValidator::default()
     })
 }
@@ -61,7 +60,7 @@ fn sim(inf: Infiltration, dir: &str) -> Result<(Vec<Float>, Vec<Float>), String>
     let path_string = format!("./tests/{}/eplusout.csv", dir);
     let path = path_string.as_str();
     let cols = validate::from_csv(path, &[1, 2, 3]);
-    
+
     let temp = &cols[1];
     let vol = &cols[2];
 
@@ -95,7 +94,7 @@ fn sim(inf: Infiltration, dir: &str) -> Result<(Vec<Float>, Vec<Float>), String>
     let sim_period = Period::new(start, end, dt);
     for (i, date) in sim_period.into_iter().enumerate() {
         // Set interior temperature
-        model.spaces[0].set_dry_bulb_temperature(&mut state, temp[i])?;    
+        model.spaces[0].set_dry_bulb_temperature(&mut state, temp[i])?;
         physics.march(date, &weather, &model, &mut state, &mut mem)?;
 
         let inf = model.spaces[0]

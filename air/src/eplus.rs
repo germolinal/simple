@@ -45,11 +45,8 @@ pub fn design_flow_rate(
         .expect("Space does not have Dry Bulb temperature");
     let t_out = weather.dry_bulb_temperature;
     let wind_speed = weather.wind_speed * wind_speed_modifier;
-    
-    let ret = design_rate
-        * (a + b * (t_space - t_out).abs() + c * wind_speed + d * wind_speed * wind_speed);
 
-    ret
+    design_rate * (a + b * (t_space - t_out).abs() + c * wind_speed + d * wind_speed * wind_speed)
 }
 
 /// Calculates the design flow rates using the BLAST defaults (reported in EnergyPlus' Input/Output reference)
@@ -112,9 +109,7 @@ pub fn effective_leakage_area(
 
     let aux = cs * delta_t + cw * ws * ws;
     let aux = aux.sqrt();
-    let l_s = (area * 10.0) * aux;
-
-    l_s // m3/s
+    area * 10.0 * aux // m3/s
 }
 
 #[cfg(test)]
@@ -159,7 +154,7 @@ mod tests {
 
         let design_rate = 1.;
         let current_weather = weather.get_weather_data(date);
-        let flow = blast_design_flow_rate(&current_weather, &space, &state, design_rate,1.0);
+        let flow = blast_design_flow_rate(&current_weather, &space, &state, design_rate, 1.0);
         assert!((1. - flow).abs() < 0.02);
 
         // WINTER

@@ -645,10 +645,9 @@ impl Loop3D {
         let a = self.vertices[0];
         let b = self.vertices[1];
 
-        for i in 2..self.vertices.len(){
-
+        for i in 2..self.vertices.len() {
             let c = self.vertices[i];
-    
+
             let ab = b - a;
             let bc = c - b;
             let normal = ab.cross(bc);
@@ -658,7 +657,6 @@ impl Loop3D {
                 break;
             }
         }
-
 
         Ok(())
     }
@@ -1288,12 +1286,10 @@ impl Loop3D {
         let mut l = l.sanitize()?;
         if l.len() < 3 {
             Ok(None)
-        }else{
+        } else {
             l.close()?;
             Ok(Some(l))
         }
-        
-    
     }
 
     /// Splits a [`Loop3D`] into two pieces according to a
