@@ -47,6 +47,56 @@ impl std::default::Default for TerrainClass {
     }
 }
 
+impl TerrainClass {
+    /// Calculates the value by which
+    /// the weather file wind speed needs to be multiplied in order to estimate the wind
+    /// speed at a certain height.
+    ///
+    /// This is a rip off from EnergyPlus' Engineering Reference, where they explain that
+    /// the corrected wind speed ($`V_z`$ in $`m/s`$) at a certain altitude $`z`$ in $`m`$
+    /// (e.g., the height of the window's centroid) can be estimated through an equation that
+    /// relates the measurements at the meteorological station and those in the site.
+    ///
+    /// Specifically, this equation depends on the altitude
+    /// at which the wind speed was measured at the meteorological station ($`z_{met}`$,
+    /// assumed to be $`10m`$), the so-called "wind speed profile boundary layer" at the
+    /// weather station ($`\delta_{met}`$, assumed to be $`240m`$) and the "wind speed profile
+    /// exponent" at the meteorological station $`\alpha_{met}`$. Also, it depends on the
+    /// "wind speed profile boundary layer" at the site ($`\delta`$) and the "wind speed profile
+    /// exponent" $`\alpha`$.
+    ///
+    /// ```math
+    /// V_z = \left(\frac{\delta_{met}}{z_{met}}\right)^{\alpha_{met}}\left(\frac{z}{\delta} \right)^{\alpha}
+    /// ```
+    /// The values for $`\alpha`$ and $`\delta`$ depend on the kind of terrain.
+    ///
+    /// | Terrain Class | $`\alpha`$ | $`\delta`$ |
+    /// |---------------|------------|------------|
+    /// | Country       | 0.14       | 270        |
+    /// | Suburbs       | 0.22       | 370        |
+    /// | City          | 0.33       | 460        |
+    /// | Ocean         | 0.10       | 210        |
+    /// | Urban         | 0.22       | 370        |
+    ///
+    /// > Note: if height is Zero, then we assume the wind speed to be Zero
+    pub fn wind_speed_modifier(&self, height: Float) -> Float {
+        // Surface touching the ground... no wind
+        if height < 1e-5 {
+            return 0.0;
+        }
+
+        let (alpha, delta) = match self {
+            Self::Country => (0.14, 270.),
+            Self::Suburbs => (0.22, 370.),
+            Self::City => (0.33, 460.),
+            Self::Ocean => (0.10, 210.),
+            Self::Urban => (0.22, 370.),
+        };
+
+        (270. / 10. as Float).powf(0.14) * (height / delta).powf(alpha)
+    }
+}
+
 /// Some information about the site in which the building(s) are located
 ///
 /// # Examples
@@ -96,6 +146,48 @@ pub struct SiteDetails {
     /// synthetic weathers or HVAC sizing, or other applications.
     #[serde(skip_serializing_if = "Option::is_none")]
     standard_meridian: Option<Float>,
+}
+
+impl SiteDetails {
+    /// Calculates the value by which
+    /// the weather file wind speed needs to be multiplied in order to estimate the wind
+    /// speed at a certain height.
+    ///
+    /// This is a rip off from EnergyPlus' Engineering Reference, where they explain that
+    /// the corrected wind speed ($`V_z`$ in $`m/s`$) at a certain altitude $`z`$ in $`m`$
+    /// (e.g., the height of the window's centroid) can be estimated through an equation that
+    /// relates the measurements at the meteorological station and those in the site.
+    ///
+    /// Specifically, this equation depends on the altitude
+    /// at which the wind speed was measured at the meteorological station ($`z_{met}`$,
+    /// assumed to be $`10m`$), the so-called "wind speed profile boundary layer" at the
+    /// weather station ($`\delta_{met}`$, assumed to be $`240m`$) and the "wind speed profile
+    /// exponent" at the meteorological station $`\alpha_{met}`$. Also, it depends on the
+    /// "wind speed profile boundary layer" at the site ($`\delta`$) and the "wind speed profile
+    /// exponent" $`\alpha`$.
+    ///
+    /// ```math
+    /// V_z = \left(\frac{\delta_{met}}{z_{met}}\right)^{\alpha_{met}}\left(\frac{z}{\delta} \right)^{\alpha}
+    /// ```
+    /// The values for $`\alpha`$ and $`\delta`$ depend on the kind of terrain.
+    ///
+    /// | Terrain Class | $`\alpha`$ | $`\delta`$ |
+    /// |---------------|------------|------------|
+    /// | Country       | 0.14       | 270        |
+    /// | Suburbs       | 0.22       | 370        |
+    /// | City          | 0.33       | 460        |
+    /// | Ocean         | 0.10       | 210        |
+    /// | Urban         | 0.22       | 370        |
+    ///
+    /// > Note: if height is Zero, then we assume the wind speed to be Zero
+    pub fn wind_speed_modifier(&self, height: Float) -> Float {
+        if let Some(terrain) = self.terrain {
+            terrain.wind_speed_modifier(height)
+        } else {
+            // default to default
+            TerrainClass::default().wind_speed_modifier(height)
+        }
+    }
 }
 
 /***********/

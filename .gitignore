@@ -31,6 +31,15 @@ model/model.json
 ############
 geometry/test_data/*.html
 
+# AIR
+############
+air/tests/Energy+.idd
+air/tests/*/*
+!air/tests/*/*.csv
+!air/tests/**/**/*.idf
+!air/tests/**/**/*.spl
+!air/tests/**/**/*.epw
+
 # HEAT
 #########
 # EnergyPlus test stuff

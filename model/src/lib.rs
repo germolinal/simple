@@ -207,4 +207,4 @@ pub use error_msgs::{print_error, print_warning};
 
 ///
 pub mod surface_trait;
-pub use surface_trait::{SurfaceTrait, Orientation, get_orientation};
+pub use surface_trait::{get_orientation, Orientation, SurfaceTrait};

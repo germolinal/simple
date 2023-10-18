@@ -2,7 +2,7 @@ use crate::air_model::Resolver;
 use crate::Float;
 use std::sync::Arc;
 
-use model::{Building, Model, ShelterClass, SimulationState, Space};
+use model::{Building, Model, ShelterClass, SimulationState, SiteDetails, Space};
 
 use crate::eplus::*;
 use weather::CurrentWeather;
@@ -24,8 +24,13 @@ pub fn constant_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, Strin
     ))
 }
 
-pub fn blast_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
+pub fn blast_resolver(
+    space: &Arc<Space>,
+    details: &SiteDetails,
+    v: Float,
+) -> Result<Resolver, String> {
     let space_clone = Arc::clone(space);
+    let wind_speed_modifier = details.wind_speed_modifier(1.0);
     Ok(Box::new(
         move |current_weather: &CurrentWeather,
               state: &mut SimulationState|
@@ -35,15 +40,26 @@ pub fn blast_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> 
             space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
             // Set volume
-            let volume = blast_design_flow_rate(current_weather, &space_clone, state, v);
+            let volume = blast_design_flow_rate(
+                current_weather,
+                &space_clone,
+                state,
+                v,
+                wind_speed_modifier,
+            );
             space_clone.set_infiltration_volume(state, volume)?;
             Ok(())
         },
     ))
 }
 
-pub fn doe2_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
+pub fn doe2_resolver(
+    space: &Arc<Space>,
+    details: &SiteDetails,
+    v: Float,
+) -> Result<Resolver, String> {
     let space_clone = Arc::clone(space);
+    let wind_speed_modifier = details.wind_speed_modifier(1.0);
     Ok(Box::new(
         move |current_weather: &CurrentWeather,
               state: &mut SimulationState|
@@ -53,7 +69,8 @@ pub fn doe2_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
             space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
             // Set volume
-            let volume = doe2_design_flow_rate(current_weather, &space_clone, state, v);
+            let volume =
+                doe2_design_flow_rate(current_weather, &space_clone, state, v, wind_speed_modifier);
             space_clone.set_infiltration_volume(state, volume)?;
             Ok(())
         },
@@ -62,6 +79,7 @@ pub fn doe2_resolver(space: &Arc<Space>, v: Float) -> Result<Resolver, String> {
 
 pub fn design_flow_rate_resolver(
     space: &Arc<Space>,
+    details: &SiteDetails,
     a: Float,
     b: Float,
     c: Float,
@@ -69,6 +87,8 @@ pub fn design_flow_rate_resolver(
     v: Float,
 ) -> Result<Resolver, String> {
     let space_clone = Arc::clone(space);
+    let wind_speed_modifier = details.wind_speed_modifier(1.0);
+
     Ok(Box::new(
         move |current_weather: &CurrentWeather,
               state: &mut SimulationState|
@@ -78,7 +98,17 @@ pub fn design_flow_rate_resolver(
             space_clone.set_infiltration_temperature(state, outdoor_temperature)?;
 
             // Set volume
-            let volume = design_flow_rate(current_weather, &space_clone, state, a, b, c, d, v);
+            let volume = design_flow_rate(
+                current_weather,
+                &space_clone,
+                state,
+                v,
+                a,
+                b,
+                c,
+                d,
+                wind_speed_modifier,
+            );
             space_clone.set_infiltration_volume(state, volume)?;
             Ok(())
         },

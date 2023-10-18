@@ -100,70 +100,6 @@ pub struct SurfaceMemory {
     pub q: Matrix,
 }
 
-/// Calculates a surface's wind speed modifier; that is to say, the value by which
-/// the weather file wind speed needs to be multiplied in order to estimate the wind
-/// speed next to the window
-///
-/// This is a rip off from EnergyPlus' Engineering Reference, where they explain that
-/// the corrected wind speed ($`V_z`$ in $`m/s`$) at a certain altitude $`z`$ in $`m`$
-/// (e.g., the height of the window's centroid) can be estimated through an equation that
-/// relates the measurements at the meteorological station and those in the site.
-///
-/// Specifically, this equation depends on the altitude
-/// at which the wind speed was measured at the meteorological station ($`z_{met}`$,
-/// assumed to be $`10m`$), the so-called "wind speed profile boundary layer" at the
-/// weather station ($`\delta_{met}`$, assumed to be $`240m`$) and the "wind speed profile
-/// exponent" at the meteorological station $`\alpha_{met}`$. Also, it depends on the
-/// "wind speed profile boundary layer" at the site ($`\delta`$) and the "wind speed profile
-/// exponent" $`\alpha`$.
-///
-/// ```math
-/// V_z = \left(\frac{\delta_{met}}{z_{met}}\right)^{\alpha_{met}}\left(\frac{z}{\delta} \right)^{\alpha}
-/// ```
-/// The values for $`\alpha`$ and $`\delta`$ depend on the kind of terrain.
-///
-/// | Terrain Class | $`\alpha`$ | $`\delta`$ |
-/// |---------------|------------|------------|
-/// | Country       | 0.14       | 270        |
-/// | Suburbs       | 0.22       | 370        |
-/// | City          | 0.33       | 460        |
-/// | Ocean         | 0.10       | 210        |
-/// | Urban         | 0.22       | 370        |
-///
-/// > Note: if height is Zero, then we assume the wind speed to be Zero
-pub fn wind_speed_modifier(height: Float, site_details: &Option<SiteDetails>) -> Float {
-    // Surface touching the ground... no wind
-    if height < 1e-5 {
-        return 0.0;
-    }
-    // this bit does not change... it is assumed constant for all meterological stations
-
-    let mut alpha = 0.0;
-    let mut delta = 0.0;
-
-    if let Some(details) = site_details {
-        // raise all surfaces, if needed
-        // if let Ok(z_terrain) = details.altitude(){
-        //     height += z_terrain;
-        // }
-        if let Ok(terrain) = details.terrain() {
-            (alpha, delta) = match terrain {
-                TerrainClass::Country => (0.14, 270.),
-                TerrainClass::Suburbs => (0.22, 370.),
-                TerrainClass::City => (0.33, 460.),
-                TerrainClass::Ocean => (0.10, 210.),
-                TerrainClass::Urban => (0.22, 370.),
-            }
-        }
-    } else {
-        // default to Urban
-        alpha = 0.22;
-        delta = 370.;
-    }
-
-    (270. / 10. as Float).powf(0.14) * (height / delta).powf(alpha)
-}
-
 fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
     let (crows, ..) = memory.c.size();
     // Rearrenge into dT = (dt/C) * K + (dt/C)*q
@@ -534,7 +470,10 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         }
 
         let cos_tilt = normal * Vector3D::new(0., 0., 1.);
-        let wind_speed_modifier = wind_speed_modifier(height, site_details);
+        let wind_speed_modifier = match site_details {
+            Some(d) => d.wind_speed_modifier(height),
+            None => TerrainClass::default().wind_speed_modifier(height),
+        };
 
         let parent = parent.clone();
 
