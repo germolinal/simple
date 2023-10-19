@@ -334,13 +334,13 @@ impl Solar {
     pub fn direct_diffuse_from_cloud_generic(
         &self,
         sun_direction: Vector3D,
-        current_data: CurrentWeather,
+        mut current_data: CurrentWeather,
         next_hour_data: Option<CurrentWeather>,
         prev_hour_data: Option<CurrentWeather>,
         three_hours_prior_data: CurrentWeather,
     ) -> (Float, Float, Float) {
         // let global_horizontal = self.cloud_cover_to_global_rad_generic(n, sun_direction, site_elevation, cloud_cover);
-        let global_horizontal = self.estimate_global_horizontal_radiation(
+        let mut global_horizontal = self.estimate_global_horizontal_radiation(
             sun_direction,
             current_data.opaque_sky_cover,
             current_data.dry_bulb_temperature,
@@ -348,15 +348,23 @@ impl Solar {
             current_data.wind_speed,
             current_data.relative_humidity,
         );
-        let cos_theta = sun_direction.z;
+        if global_horizontal.is_nan() || global_horizontal.is_infinite() {
+            global_horizontal = 0.0;
+        }        
+        current_data.global_horizontal_radiation = global_horizontal;
 
-        let direct_normal_radiation = self.perez_direct_normal_radiation(
+        
+        let mut direct_normal_radiation = self.perez_direct_normal_radiation(
             sun_direction,
             current_data,
             next_hour_data,
             prev_hour_data,
         );
-
+        if direct_normal_radiation.is_nan() && direct_normal_radiation.is_infinite() {
+            direct_normal_radiation = 0.0;
+        }
+                
+        let cos_theta = sun_direction.z;
         let diffuse_horizontal = (global_horizontal - direct_normal_radiation * cos_theta).max(0.0);
 
         (
@@ -544,9 +552,6 @@ impl Solar {
 
     /// Calculates the direct normal radiation according to Perez's et al.
     /// Units are W/m2, C, Pa.
-    ///
-    /// `current_data`, `next_hour_data` and `prev_hour_data` are tuples containing
-    /// horizontal_global_radiation and Time.
     ///
     /// > Note: this is not compatible with the `diffuse_fraction` function.
     ///
