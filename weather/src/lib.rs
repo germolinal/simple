@@ -175,7 +175,7 @@ impl Weather {
                             next_data,
                             prior_data,
                             three_hours_prior_data,
-                        );
+                        );                    
                     (direct_normal, diffuse_horizontal, global)
                 } else {
                     (0.0, 0.0, 0.0)
