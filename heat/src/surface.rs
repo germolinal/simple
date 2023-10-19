@@ -663,11 +663,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             }
             Boundary::Ground => unreachable!(),
             Boundary::Outdoor => {
+                let surface_temperature = self.parent.back_temperature(state);
                 let back_env = ConvectionParams {
                     air_temperature: t_back,
                     air_speed: wind_speed * self.wind_speed_modifier,
                     rad_temperature: (ir_back / crate::SIGMA).powf(0.25) - 273.15,
-                    surface_temperature: self.parent.back_temperature(state),
+                    surface_temperature,
                     roughness_index: 1,
                     cos_surface_tilt: self.cos_tilt,
                 };
