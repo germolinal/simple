@@ -121,8 +121,9 @@ impl SimulationModel for MultiphysicsModel {
             None => {
                 let mut opt = SolarOptions::new();
 
-                opt.set_n_solar_irradiance_points(1000)
-                    .set_solar_ambient_divitions(3000)
+                opt.set_n_solar_irradiance_points(10)
+                    .set_solar_ambient_divitions(300)
+                    .set_solar_sky_discretization(1)
                     .set_solar_sky_discretization(1);
 
                 opt
@@ -153,7 +154,7 @@ impl SimulationModel for MultiphysicsModel {
         model: M,
         state: &mut SimulationState,
         alloc: &mut MultiphysicsModelMemory,
-    ) -> Result<(), String> {
+    ) -> Result<(), String> {        
         // First solar,
         self.solar_model
             .march(date, weather, model.borrow(), state, &mut alloc.solar)?;
