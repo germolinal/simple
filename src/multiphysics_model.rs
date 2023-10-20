@@ -1,6 +1,6 @@
 /*
 MIT License
-Copyright (c) 2021 Germán Molina
+Copyright (c)  Germán Molina
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -121,8 +121,9 @@ impl SimulationModel for MultiphysicsModel {
             None => {
                 let mut opt = SolarOptions::new();
 
-                opt.set_n_solar_irradiance_points(1000)
-                    .set_solar_ambient_divitions(3000)
+                opt.set_n_solar_irradiance_points(10)
+                    .set_solar_ambient_divitions(300)
+                    .set_solar_sky_discretization(1)
                     .set_solar_sky_discretization(1);
 
                 opt

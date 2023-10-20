@@ -1,6 +1,6 @@
 /*
 MIT License
-Copyright (c) 2021 Germán Molina
+Copyright (c)  Germán Molina
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -663,11 +663,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             }
             Boundary::Ground => unreachable!(),
             Boundary::Outdoor => {
+                let surface_temperature = self.parent.back_temperature(state);
                 let back_env = ConvectionParams {
                     air_temperature: t_back,
                     air_speed: wind_speed * self.wind_speed_modifier,
                     rad_temperature: (ir_back / crate::SIGMA).powf(0.25) - 273.15,
-                    surface_temperature: self.parent.back_temperature(state),
+                    surface_temperature,
                     roughness_index: 1,
                     cos_surface_tilt: self.cos_tilt,
                 };
@@ -790,6 +791,9 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let mut old_err = 99999.;
         let mut count = 0;
 
+        let mut temp_k = memory.k.clone();
+        let mut temps = memory.q.clone();
+
         loop {
             // Update convection coefficients
             let (front_env, back_env, front_hs, back_hs) =
@@ -816,7 +820,10 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             }
             memory.q *= -1.;
 
-            let temps = memory.k.clone().mut_n_diag_gaussian(memory.q.clone(), 3)?; // and just like that, q is the new temperatures
+            temp_k.copy_from(&memory.k);
+            temps.copy_from(&memory.q);
+
+            temp_k.mut_n_diag_gaussian(&mut temps, 3)?; // and just like that, q is the new temperatures
 
             let mut err = 0.0;
             for (local_i, i) in (ini..fin).enumerate() {

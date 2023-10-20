@@ -1,6 +1,6 @@
 /*
 MIT License
-Copyright (c) 2021 Germán Molina
+Copyright (c)  Germán Molina
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -90,15 +90,36 @@ fn choose_controller(
 fn main() {
     // cargo instruments --release --template Allocations -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
     // cargo instruments --release --template 'CPU Profiler' --package simple --bin simple -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
+    // time cargo run --release --package simple --bin simple -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
+
+    // time cargo run --release --package simple --bin simple -- -i tests/neighbours/neighbours.json -w tests/wellington.epw -n 1 -o check.csv
 
     let options = SimOptions::parse();
+    let filename = options.input_file.to_string();
 
-    let (model, mut state_header) = match Model::from_file(options.input_file.to_string()) {
-        Ok(o) => o,
-        Err(e) => {
-            simple::error_msgs::print_error("", e);
-            std::process::exit(1);
+    let (model, mut state_header) = if filename.ends_with(".spl") {
+        match Model::from_file(filename) {
+            Ok(o) => o,
+            Err(e) => {
+                simple::error_msgs::print_error("", e);
+                std::process::exit(1);
+            }
         }
+    } else if filename.ends_with(".json") {
+        match Model::from_json_file(filename) {
+            Ok(o) => o,
+            Err(e) => {
+                simple::error_msgs::print_error("", e);
+                std::process::exit(1);
+            }
+        }
+    } else {
+        simple::error_msgs::print_error(
+            "Unkown kind of file '{}'... expecting .json or .spl",
+            filename,
+        );
+        // I am not sure what this number should be/
+        std::process::exit(1);
     };
 
     if let Err(e) = choose_controller(model, &mut state_header, &options) {

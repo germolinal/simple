@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) 2021 Germán Molina
+Copyright (c)  Germán Molina
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -559,7 +559,7 @@ impl Loop3D {
 
             let poly_s = Segment3D::new(a, b);
             let intersects = s.intersect(&poly_s, &mut inter);
-                        
+
             // If they are contained and are the same length, then they are the same segment
             const TINY: Float = 1e-7;
             let different_length = (s.length() - poly_s.length()).abs() > TINY;

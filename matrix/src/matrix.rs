@@ -19,21 +19,23 @@ impl Matrix {
     /// for what might be a more conservative approach.
     pub fn n_diag_gaussian(&self, b: &Matrix, n: usize) -> Result<Matrix, String> {
         // Clone Self and B; then solve... put results on X
-        let a = self.clone();
-        let b = b.clone();
-        a.mut_n_diag_gaussian(b, n)
+        let mut a = self.clone();
+        let mut b = b.clone();
+        a.mut_n_diag_gaussian(&mut b, n)?;
+        Ok(b)
     }
+
     /// Solves an $`A \times x=b`$ problem using the  [Gaussian Elimination](https://en.wikipedia.org/wiki/Gaussian_elimination)
     /// algorithm. It assumes that $`A`$ is `n`-diagonal (e.g., [tri-diaglnal](https://en.wikipedia.org/wiki/Tridiagonal_matrix)).
     ///
-    /// Both `self` and `b` are completely consumed, as they are modified in the process.
+    /// Both `self` and `b` are modified in the process, `b` becomes the answer.
     ///
     /// Returns an error if an element in the diagonal of the matrix is Zero (row-swapping is not
     /// yet supported)
     ///
     /// # Note
     /// It mutates both `self` and `b`. If this is not what you want, call `n_diag_gaussian()` instead
-    pub fn mut_n_diag_gaussian(mut self, mut b: Matrix, n: usize) -> Result<Matrix, String> {
+    pub fn mut_n_diag_gaussian(&mut self, b: &mut Matrix, n: usize) -> Result<(), String> {
         const TINY: Float = 1e-26;
         let one_sided_n = one_sided_n!(n);
 
@@ -92,7 +94,7 @@ impl Matrix {
             }
 
             // Make the pivot equals to 1.
-            scale_row(&mut self, &mut b, c, 1. / pivot);
+            scale_row(self, b, c, 1. / pivot);
 
             // We do not need to pivot any more
             if c == self.ncols - 1 {
@@ -106,7 +108,7 @@ impl Matrix {
                 if let Ok(other) = self.get(r, c) {
                     // if it is Zero already, just skip
                     if other.abs() > TINY {
-                        add_rows(&mut self, &mut b, c, r, -other);
+                        add_rows(self, b, c, r, -other);
                     }
                 } else {
                     break;
@@ -125,13 +127,12 @@ impl Matrix {
                 if let Ok(other) = self.get(r, c) {
                     // if it is Zero already, just skip
                     if other.abs() > TINY {
-                        add_rows(&mut self, &mut b, c, r, -other);
+                        add_rows(self, b, c, r, -other);
                     }
                 }
             }
         }
-
-        Ok(b)
+        Ok(())
     }
 
     /// Solves an $A \times x=b$ problem using the  [Gauss-Seidel](https://en.wikipedia.org/wiki/Gauss–Seidel_method)

@@ -1,6 +1,6 @@
 /*
 MIT License
-Copyright (c) 2021 Germán Molina
+Copyright (c)  Germán Molina
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -214,7 +214,7 @@ impl SolarSurface {
     ) -> Result<Vec<SolarSurface>, String> {
         let mut ret: Vec<SolarSurface> = Vec::with_capacity(list.len());
 
-        for (i, s) in list.iter().enumerate() {            
+        for (i, s) in list.iter().enumerate() {
             if s.front_incident_solar_irradiance_index().is_none() {
                 let i = state.push(SimulationStateElement::SurfaceFrontSolarIrradiance(i), 0.0)?;
                 s.set_front_incident_solar_irradiance_index(i)?;
