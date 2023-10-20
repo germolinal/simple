@@ -358,7 +358,7 @@ impl SimulationModel for ThermalModel {
         let mut dt = 60. * 60. / (n as Float * dt_subdivisions as Float);
 
         // safety.
-        const SAFETY: usize = 2;
+        const SAFETY: usize = 5;
         dt /= SAFETY as Float;
         dt_subdivisions *= SAFETY;
 
