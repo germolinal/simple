@@ -1355,13 +1355,13 @@ mod tests {
         let a = Matrix::from_data(2, 2, vec![2., 3., 5., 7.]);
         let exp_x = Matrix::from_data(2, 1, vec![-38., 29.]);
         let b = &a * &exp_x;
+        let mut x = b.clone();
 
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3)?;
+        a.clone().mut_n_diag_gaussian(&mut x, 3)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
-
         let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
 
@@ -1370,7 +1370,8 @@ mod tests {
         let a = Matrix::from_data(2, 2, vec![16., 3., 7., -11.]);
         let exp_x = Matrix::from_data(2, 1, vec![0.8122, -0.6650]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 4)?;
+        let mut x = b.clone();
+        a.clone().mut_n_diag_gaussian(&mut x, 4)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
@@ -1390,7 +1391,8 @@ mod tests {
 
         let exp_x = Matrix::from_data(4, 1, vec![1., 2., 3., 4.]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3)?;
+        let mut x = b.clone();
+        a.clone().mut_n_diag_gaussian(&mut x, 3)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
@@ -1410,7 +1412,8 @@ mod tests {
         );
         let exp_x = Matrix::from_data(5, 1, vec![1., 2., 3., 4., 5.]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 5)?;
+        let mut x = b.clone();
+        a.clone().mut_n_diag_gaussian(&mut x, 5)?;
         println!("delta = {}", &x - &exp_x);
         println!("x = {}", &x);
         println!("b = {}", &b);
@@ -1425,7 +1428,8 @@ mod tests {
         let a = Matrix::from_data(3, 3, vec![-8.4, 8.4, 0., 8.4, -16.8, 8.4, 0., 8.4, -18.6]);
         let exp_x = Matrix::from_data(3, 1, vec![120., 0., 120.]);
         let b = &a * &exp_x;
-        let x = a.clone().mut_n_diag_gaussian(b.clone(), 3)?;
+        let mut x = b.clone();
+        a.clone().mut_n_diag_gaussian(&mut x, 3)?;
         println!("delta = {}", &x - &exp_x);
         println!("b = {}", &b);
         println!("x = {}", &x);
