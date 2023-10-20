@@ -154,7 +154,7 @@ impl SimulationModel for MultiphysicsModel {
         model: M,
         state: &mut SimulationState,
         alloc: &mut MultiphysicsModelMemory,
-    ) -> Result<(), String> {        
+    ) -> Result<(), String> {
         // First solar,
         self.solar_model
             .march(date, weather, model.borrow(), state, &mut alloc.solar)?;

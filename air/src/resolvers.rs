@@ -232,7 +232,7 @@ pub fn effective_air_leakage_resolver(
 
                 // Set volume
                 let volume =
-                    effective_leakage_area(current_weather, &space_clone, state, al, cw, cs);                    
+                    effective_leakage_area(current_weather, &space_clone, state, al, cw, cs);
                 space_clone.set_infiltration_volume(state, volume)?;
                 Ok(())
             },

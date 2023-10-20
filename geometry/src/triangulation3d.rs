@@ -215,7 +215,7 @@ impl std::convert::TryFrom<&Polygon3D> for Triangulation3D {
         loop {
             count += 1;
 
-            if count > 220 {                
+            if count > 220 {
                 return Err("Excessive number of iteration when triangulating polygon".into());
             }
 
@@ -236,7 +236,7 @@ impl std::convert::TryFrom<&Polygon3D> for Triangulation3D {
             let is_line = v0.is_collinear(v1, v2)?;
 
             // this will be false if potential_diag is very small.
-            let is_diagonal = the_loop.is_diagonal(potential_diag)?;            
+            let is_diagonal = the_loop.is_diagonal(potential_diag)?;
             if (n == 3) || (!is_line && is_diagonal) {
                 // Add triangle
                 t.push(v0, v1, v2, last_added)?;
@@ -289,13 +289,13 @@ impl Triangulation3D {
         }
     }
 
-    /// Returns the number of triangles 
-    pub fn len(&self)->usize {
+    /// Returns the number of triangles
+    pub fn len(&self) -> usize {
         self.triangles.len()
     }
 
     /// Returns true if the triangulation has more than Zero triangles.
-    pub fn is_empty(&self)->bool {
+    pub fn is_empty(&self) -> bool {
         self.triangles.len() == 0
     }
 
@@ -2793,6 +2793,4 @@ mod testing {
         draw_triangulation("failing_case_1.html", vec![("Triangulated", svg)])?;
         Ok(())
     }
-
-    
 } // end of test module

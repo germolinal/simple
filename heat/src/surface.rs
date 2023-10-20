@@ -791,10 +791,8 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let mut old_err = 99999.;
         let mut count = 0;
 
-        
         let mut temp_k = memory.k.clone();
         let mut temps = memory.q.clone();
-
 
         loop {
             // Update convection coefficients
@@ -822,9 +820,6 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             }
             memory.q *= -1.;
 
-
-            
-            
             temp_k.copy_from(&memory.k);
             temps.copy_from(&memory.q);
 
