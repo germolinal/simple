@@ -130,4 +130,3 @@ impl SimulationModel for AirFlowModel {
         Ok(())
     }
 }
-

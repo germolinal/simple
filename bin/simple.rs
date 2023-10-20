@@ -91,7 +91,7 @@ fn main() {
     // cargo instruments --release --template Allocations -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
     // cargo instruments --release --template 'CPU Profiler' --package simple --bin simple -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
     // time cargo run --release --package simple --bin simple -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
-    
+
     // time cargo run --release --package simple --bin simple -- -i tests/neighbours/neighbours.json -w tests/wellington.epw -n 1 -o check.csv
 
     let options = SimOptions::parse();
@@ -105,7 +105,7 @@ fn main() {
                 std::process::exit(1);
             }
         }
-    } else if filename.ends_with(".json") {        
+    } else if filename.ends_with(".json") {
         match Model::from_json_file(filename) {
             Ok(o) => o,
             Err(e) => {

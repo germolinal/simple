@@ -350,10 +350,9 @@ impl Solar {
         );
         if global_horizontal.is_nan() || global_horizontal.is_infinite() {
             global_horizontal = 0.0;
-        }        
+        }
         current_data.global_horizontal_radiation = global_horizontal;
 
-        
         let mut direct_normal_radiation = self.perez_direct_normal_radiation(
             sun_direction,
             current_data,
@@ -363,7 +362,7 @@ impl Solar {
         if direct_normal_radiation.is_nan() && direct_normal_radiation.is_infinite() {
             direct_normal_radiation = 0.0;
         }
-                
+
         let cos_theta = sun_direction.z;
         let diffuse_horizontal = (global_horizontal - direct_normal_radiation * cos_theta).max(0.0);
 
