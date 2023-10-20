@@ -294,6 +294,11 @@ impl Triangulation3D {
         self.triangles.len()
     }
 
+    /// Returns true if the triangulation has more than Zero triangles.
+    pub fn is_empty(&self)->bool {
+        self.triangles.len() == 0
+    }
+
     /// Transforms the `Triangulation3D` into a `Vec<Triangle3D>`.
     pub fn get_trilist(&self) -> Vec<Triangle3D> {
         self.triangles.iter().map(|t| t.triangle).collect()

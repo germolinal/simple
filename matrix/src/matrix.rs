@@ -22,7 +22,7 @@ impl Matrix {
         let mut a = self.clone();
         let mut b = b.clone();
         a.mut_n_diag_gaussian(&mut b, n)?;
-        return Ok(b)
+        Ok(b)
     }
 
     /// Solves an $`A \times x=b`$ problem using the  [Gaussian Elimination](https://en.wikipedia.org/wiki/Gaussian_elimination)
