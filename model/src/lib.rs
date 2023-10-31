@@ -195,7 +195,7 @@ pub use infiltration::Infiltration;
 
 /// A collection of elements heating and cooling systems
 pub mod hvac;
-pub use hvac::HVAC;
+pub use hvac::{HVAC, SmallHVAC};
 
 /// For setting options in simulations
 pub mod simulation_options;

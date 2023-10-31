@@ -31,7 +31,7 @@ use crate::multiphysics_model::MultiphysicsModel;
 use weather::{EPWWeather, Weather};
 
 /// The options we can pass to the simulation
-#[derive(Parser)]
+#[derive(Parser, Default)]
 #[clap(author, version, about, long_about = None)]
 pub struct SimOptions {
     /// The input simple file

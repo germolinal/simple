@@ -96,6 +96,7 @@ fn main() {
 
     let options = SimOptions::parse();
     let filename = options.input_file.to_string();
+    
 
     let (model, mut state_header) = if filename.ends_with(".spl") {
         match Model::from_file(filename) {
