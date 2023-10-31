@@ -82,6 +82,25 @@ impl ElectricHeater {
     }
 }
 
+impl super::SmallHVAC for ElectricHeater {
+        
+    fn heating_setpoint(&self)->Result<Float,String>{
+        match self.heating_setpoint() {
+            Ok(v)=>Ok(*v),
+            Err(e)=>Err(e)
+        }
+    }
+
+    fn cooling_setpoint(&self)->Result<Float,String>{
+        Err("Electric Heaters do not cool".into())
+    }
+
+    fn target_space(&self)->Result<&String,String>{
+        self.target_space()
+    }
+    
+}
+
 #[cfg(test)]
 mod testing {
 

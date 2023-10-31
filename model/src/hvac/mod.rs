@@ -18,6 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use serde::{Deserialize, Serialize};
 mod electric_heater;
 mod ideal_heater_cooler;
@@ -55,6 +56,40 @@ pub enum HVAC {
     /// heat.
     ElectricHeater(Arc<ElectricHeater>),
 }
+
+
+
+
+/// A trait containing basic functions for single-room HVAC systems
+pub trait SmallHVAC {
+    
+    /// Retrieves the heating setpoint, in C
+    fn heating_setpoint(&self)->Result<Float,String>{
+        Err("This kind of device cannot heat".to_string())
+    }
+
+    /// Retrieves the cooling setpoint, in C
+    fn cooling_setpoint(&self)->Result<Float,String>{
+        Err("This kind of device cannot cool".to_string())
+    }
+
+    /// Retrieves the max heating power, in W
+    fn max_heating_power(&self)->Result<Float,String>{
+        Err("This kind of device cannot heat".to_string())
+    }
+
+    /// Retrieves the max cooling power, in W
+    fn max_cooling_power(&self)->Result<Float,String>{
+        Err("This kind of device cannot cool".to_string())
+    }
+
+    /// Retrieves the space being heated/cooled by this device
+    fn target_space(&self)->Result<&String,String>;
+    
+}
+
+
+
 
 /***********/
 /* TESTING */
