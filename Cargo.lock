@@ -593,6 +593,7 @@ version = "1.0.0"
 dependencies = [
  "calendar",
  "communication",
+ "criterion 0.5.1",
  "geometry",
  "matrix",
  "model",

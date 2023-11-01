@@ -268,7 +268,7 @@ impl SimulationModel for ThermalModel {
         // choose the smallest timestep in all constructions
 
         let max_dx = 0.04; // 4cm
-        let min_dt = 60.; // 60 seconds
+        let min_dt = 60. * 5.0; // 60 seconds
 
         let mut dt_subdivisions: usize = 1;
         let main_dt = 60. * 60. / n as Float;

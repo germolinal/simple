@@ -30,6 +30,11 @@ debug = true
 lto = true
 codegen-units = 1
 
+[package.metadata.docs.rs]
+rustdoc-args = [
+    "--html-in-header",
+    "./katex.html",
+]
 
 [lib]
 name = "simple"

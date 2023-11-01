@@ -884,7 +884,7 @@ impl Loop3D {
     /// Returns the index of the first segment that contains
     /// a certain point... if any.
     ///
-    /// The first segment is the one that groes from point [0] to [1]
+    /// The first segment is the one that goes from point `0`` to `1`
     pub fn containing_segment(&self, point: Point3D) -> Option<usize> {
         let n = self.len();
         for i in 0..n {

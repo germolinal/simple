@@ -239,7 +239,7 @@ pub trait SurfaceTrait: Clone + Send + Sync {
     ) -> Result<(), String>;
 
     /// Adds the temperature state elements for all the nodes in
-    /// the [`Surface`] or [`Fenestration`]
+    /// the `Surface` or `Fenestration`
     fn add_node_temperature_states(
         &self,
         state: &mut SimulationStateHeader,
