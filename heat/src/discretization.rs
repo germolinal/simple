@@ -1125,9 +1125,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
+            // k2: Matrix::new(0.0, n + 1, 1),
+            // k3: Matrix::new(0.0, n + 1, 1),
+            // k4: Matrix::new(0.0, n + 1, 1),
         };
         d.get_k_q(
             0,
@@ -1210,9 +1210,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
+            // k2: Matrix::new(0.0, n + 1, 1),
+            // k3: Matrix::new(0.0, n + 1, 1),
+            // k4: Matrix::new(0.0, n + 1, 1),
         };
 
         d.get_k_q(
@@ -1295,9 +1295,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
+            // k2: Matrix::new(0.0, n + 1, 1),
+            // k3: Matrix::new(0.0, n + 1, 1),
+            // k4: Matrix::new(0.0, n + 1, 1),
         };
         d.get_k_q(
             2,
@@ -1404,9 +1404,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
+            // k2: Matrix::new(0.0, n + 1, 1),
+            // k3: Matrix::new(0.0, n + 1, 1),
+            // k4: Matrix::new(0.0, n + 1, 1),
         };
         d.get_k_q(
             1,
