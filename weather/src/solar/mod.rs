@@ -476,7 +476,7 @@ impl Solar {
     ///
     /// Units are W/m2 and Pascals
     ///
-    /// https://www.nrel.gov/grid/solar-resource/disc.html
+    /// <https://www.nrel.gov/grid/solar-resource/disc.html>
     pub fn disc_direct_solar(
         &self,
         n: Time,
