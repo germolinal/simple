@@ -95,6 +95,13 @@ fn main() {
     // time cargo run --release --package simple --bin simple -- -i tests/neighbours/neighbours.json -w tests/wellington.epw -n 1 -o check.csv
 
     let options = SimOptions::parse();
+    // let options = SimOptions { 
+    //     input_file: "tests/neighbours/neighbours.json".to_string(), 
+    //     weather_file: "tests/wellington.epw".to_string(), 
+    //     n: 1,
+    //     output: Some("check.csv".to_string()), 
+    //     .. SimOptions::default()
+    // };
     let filename = options.input_file.to_string();
     
 

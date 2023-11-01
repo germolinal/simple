@@ -399,7 +399,7 @@ impl Discretization {
     /// All that said, the value for $`\Delta t`$ actually used by the final model is
     /// actually half of what these equations use. This is because what we are using
     /// is a heuristic and I want to be safe... ish
-    fn discretize_construction(
+    pub fn discretize_construction(
         construction: &Arc<Construction>,
         model: &Model,
         model_dt: Float,
@@ -461,14 +461,14 @@ impl Discretization {
                     // given timestep because its thickness leads to a dx that
                     // does not ensure convergence...
                     // check if there is room for reducing dt (hence reducing min_dx)
-                    let next_dt = main_dt / ((n + 1) as Float);
-                    if next_dt > min_dt {
-                        // If there is room for that, do it.
-                        return aux(construction, model, main_dt, n + 1, max_dx, min_dt);
-                    } else {
+                    // let next_dt = main_dt / ((n + 1) as Float);
+                    // if next_dt > min_dt {
+                    //     // If there is room for that, do it.
+                    //     return aux(construction, model, main_dt, n + 1, max_dx, min_dt);
+                    // } else {
                         // otherwise, mark this layer as no-mass
                         n_elements.push(0);
-                    }
+                    // }
                 } else {
                     // subdivide the layer, making all the elements of equal thickness
                     let m = (thickness / min_dx).floor();
@@ -698,6 +698,8 @@ impl Discretization {
 
 #[cfg(test)]
 mod testing {
+    use model::{substance::{Normal, self}, Material};
+
     use super::*;
 
     impl std::default::Default for ConvectionParams {
@@ -1125,9 +1127,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            // k2: Matrix::new(0.0, n + 1, 1),
-            // k3: Matrix::new(0.0, n + 1, 1),
-            // k4: Matrix::new(0.0, n + 1, 1),
+            k2: Matrix::new(0.0, n + 1, 1),
+            k3: Matrix::new(0.0, n + 1, 1),
+            k4: Matrix::new(0.0, n + 1, 1),
         };
         d.get_k_q(
             0,
@@ -1210,9 +1212,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            // k2: Matrix::new(0.0, n + 1, 1),
-            // k3: Matrix::new(0.0, n + 1, 1),
-            // k4: Matrix::new(0.0, n + 1, 1),
+            k2: Matrix::new(0.0, n + 1, 1),
+            k3: Matrix::new(0.0, n + 1, 1),
+            k4: Matrix::new(0.0, n + 1, 1),
         };
 
         d.get_k_q(
@@ -1295,9 +1297,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            // k2: Matrix::new(0.0, n + 1, 1),
-            // k3: Matrix::new(0.0, n + 1, 1),
-            // k4: Matrix::new(0.0, n + 1, 1),
+            k2: Matrix::new(0.0, n + 1, 1),
+            k3: Matrix::new(0.0, n + 1, 1),
+            k4: Matrix::new(0.0, n + 1, 1),
         };
         d.get_k_q(
             2,
@@ -1404,9 +1406,9 @@ mod testing {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            // k2: Matrix::new(0.0, n + 1, 1),
-            // k3: Matrix::new(0.0, n + 1, 1),
-            // k4: Matrix::new(0.0, n + 1, 1),
+            k2: Matrix::new(0.0, n + 1, 1),
+            k3: Matrix::new(0.0, n + 1, 1),
+            k4: Matrix::new(0.0, n + 1, 1),
         };
         d.get_k_q(
             1,
@@ -1554,5 +1556,32 @@ mod testing {
         assert_eq!(mass_chunks, vec![(0, 3)]);
         assert_eq!(nomass_chunks.len(), 1);
         assert_eq!(nomass_chunks, vec![(3, 5)]);
+    }
+
+    #[test]
+    fn test_discretize_construction(){
+
+        let mut model = Model::default();
+
+
+        let mut substance = Normal::new("the substance");
+        substance.set_density(2400.)
+            .set_thermal_conductivity(1.63)
+            .set_specific_heat_capacity(900.);
+        let substance = Substance::Normal(Arc::new(substance));
+        let substance = model.add_substance(substance);
+
+        let material = Material::new("the material", substance.name(), 0.003);
+        let material = model.add_material(material);
+
+        let mut construction = Construction::new("the construction");
+        construction.materials.push(material.name().clone());
+        let construction = model.add_construction(construction);
+
+
+
+        Discretization::discretize_construction(&construction, &model, 3600./4.0, 0.04, 60.).unwrap();
+
+        
     }
 }
