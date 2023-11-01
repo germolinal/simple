@@ -22,6 +22,11 @@ rayon = { workspace = true, optional = true}
 validate = { git = "https://github.com/germolinal/validate.git"}
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models"}
+criterion = "0.5.1"
+
+[[bench]]
+name = "my_benchmark"
+harness = false
 
 
 # Check https://stackoverflow.com/questions/53127722/how-can-i-activate-features-in-all-my-crates
