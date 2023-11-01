@@ -60,14 +60,14 @@ pub struct ChunkMemory {
     pub q: Matrix,
     /// memory for a matrix
     pub k1: Matrix,
-    /* 
+    
     /// memory for a matrix
     pub k2: Matrix,
     /// memory for a matrix
     pub k3: Matrix,
     /// memory for a matrix
     pub k4: Matrix,
-    */
+    
 }
 
 impl ChunkMemory {
@@ -83,9 +83,9 @@ impl ChunkMemory {
             q: Matrix::new(0.0, n + 1, 1),
             temps: Matrix::new(0.0, n + 1, 1),
             k1: Matrix::new(0.0, n + 1, 1),
-            // k2: Matrix::new(0.0, n + 1, 1),
-            // k3: Matrix::new(0.0, n + 1, 1),
-            // k4: Matrix::new(0.0, n + 1, 1),
+            k2: Matrix::new(0.0, n + 1, 1),
+            k3: Matrix::new(0.0, n + 1, 1),
+            k4: Matrix::new(0.0, n + 1, 1),
         }
     }
 }
@@ -197,9 +197,9 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
 
     // I am not sure why I need to clean... I thought this was not necessary.
     memory.k1 *= 0.0;
-    // memory.k2 *= 0.0;
-    // memory.k3 *= 0.0;
-    // memory.k4 *= 0.0;
+    memory.k2 *= 0.0;
+    memory.k3 *= 0.0;
+    memory.k4 *= 0.0;
     memory.aux *= 0.0;
 
     // get k1
@@ -209,42 +209,42 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
     // returning "temperatures + k1" is Euler... continuing is
     // Runge–Kutta 4th order
     /* 
-    */
     memory.temps += &memory.k1;
     return Ok(());
+    */
 
-    // memory.k1.scale_into(0.5, &mut memory.aux)?;
-    // memory.aux += &memory.temps;
+    memory.k1.scale_into(0.5, &mut memory.aux)?;
+    memory.aux += &memory.temps;
 
-    // // k2
-    // memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k2)?;
-    // memory.k2 += &memory.q;
+    // k2
+    memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k2)?;
+    memory.k2 += &memory.q;
 
-    // // k3
-    // memory.k2.scale_into(0.5, &mut memory.aux)?;
-    // memory.aux += &memory.temps;
-    // memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k3)?;
-    // memory.k3 += &memory.q;
+    // k3
+    memory.k2.scale_into(0.5, &mut memory.aux)?;
+    memory.aux += &memory.temps;
+    memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k3)?;
+    memory.k3 += &memory.q;
 
-    // // k4
-    // memory.aux.copy_from(&memory.k3);
-    // memory.aux += &memory.temps;
-    // memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k4)?;
-    // memory.k4 += &memory.q;
+    // k4
+    memory.aux.copy_from(&memory.k3);
+    memory.aux += &memory.temps;
+    memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k4)?;
+    memory.k4 += &memory.q;
 
-    // // Scale them and add them all up
-    // memory.k1 /= 6.;
-    // memory.k2 /= 3.;
-    // memory.k3 /= 3.;
-    // memory.k4 /= 6.;
+    // Scale them and add them all up
+    memory.k1 /= 6.;
+    memory.k2 /= 3.;
+    memory.k3 /= 3.;
+    memory.k4 /= 6.;
 
-    // // Let's add it all and return
-    // memory.temps += &memory.k1;
-    // memory.temps += &memory.k2;
-    // memory.temps += &memory.k3;
-    // memory.temps += &memory.k4;
+    // Let's add it all and return
+    memory.temps += &memory.k1;
+    memory.temps += &memory.k2;
+    memory.temps += &memory.k3;
+    memory.temps += &memory.k4;
 
-    // Ok(())
+    Ok(())
 }
 
 /// This is a Surface from the point of view of our thermal solver.
@@ -1574,9 +1574,9 @@ mod testing {
             // These are just to put intermediate data
             aux: Matrix::new(0.0, 2, 1),
             k1: Matrix::new(0.0, 2, 1),
-            // k2: Matrix::new(0.0, 2, 1),
-            // k3: Matrix::new(0.0, 2, 1),
-            // k4: Matrix::new(0.0, 2, 1),
+            k2: Matrix::new(0.0, 2, 1),
+            k3: Matrix::new(0.0, 2, 1),
+            k4: Matrix::new(0.0, 2, 1),
         };
         let dt = 0.01;
         rearrange_k(dt, /*&c,*/ &mut memory)?;
@@ -1620,4 +1620,7 @@ mod testing {
 
         Ok(())
     }
+
+
+    
 }
