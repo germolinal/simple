@@ -2716,8 +2716,8 @@ mod testing {
                 5, 5, 0,
                 4, 5, 0
             ]";
-        let this_str = chewer.clone();
-        let exp_str = chewer.clone();
+        let this_str = chewer;
+        let exp_str = chewer;
 
         try_to_bite(this_str, chewer, exp_str)
     }
@@ -2963,8 +2963,8 @@ mod testing {
                 5, 5, 0,
                 4, 5, 0
             ]";
-        let this_str = other_str.clone();
-        let exp_str = other_str.clone();
+        let this_str = other_str;
+        let exp_str = other_str;
         try_to_intersect(this_str, other_str, exp_str)
     }
 
