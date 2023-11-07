@@ -466,8 +466,8 @@ impl Discretization {
                     //     // If there is room for that, do it.
                     //     return aux(construction, model, main_dt, n + 1, max_dx, min_dt);
                     // } else {
-                        // otherwise, mark this layer as no-mass
-                        n_elements.push(0);
+                    // otherwise, mark this layer as no-mass
+                    n_elements.push(0);
                     // }
                 } else {
                     // subdivide the layer, making all the elements of equal thickness
@@ -698,7 +698,7 @@ impl Discretization {
 
 #[cfg(test)]
 mod testing {
-    use model::{substance::{Normal, self}, Material};
+    use model::{substance::Normal, Material};
 
     use super::*;
 
@@ -1559,29 +1559,27 @@ mod testing {
     }
 
     #[test]
-    fn test_discretize_construction(){
-
+    fn test_discretize_construction() {
         let mut model = Model::default();
 
-
         let mut substance = Normal::new("the substance");
-        substance.set_density(2400.)
+        substance
+            .set_density(2400.)
             .set_thermal_conductivity(1.63)
             .set_specific_heat_capacity(900.);
         let substance = Substance::Normal(Arc::new(substance));
         let substance = model.add_substance(substance);
 
-        let material = Material::new("the material", substance.name(), 0.003);
+        let material = Material::new("the material", substance.name(), 0.2);
         let material = model.add_material(material);
 
         let mut construction = Construction::new("the construction");
         construction.materials.push(material.name().clone());
         let construction = model.add_construction(construction);
 
-
-
-        Discretization::discretize_construction(&construction, &model, 3600./4.0, 0.04, 60.).unwrap();
-
-        
+        let r =
+            Discretization::discretize_construction(&construction, &model, 3600. / 4.0, 0.04, 60.)
+                .unwrap();
+        dbg!(r);
     }
 }
