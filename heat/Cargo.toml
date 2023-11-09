@@ -41,7 +41,7 @@ rustdoc-args = [
 default = []
 parallel=[
     "rayon",
-    "matrix/parallel"
+    # "matrix/parallel"
 ]
 float = [
     "model/float",  
