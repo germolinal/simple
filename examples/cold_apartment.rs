@@ -2,7 +2,9 @@ use simple::{run_simulation::*, Model};
 
 
 fn main() -> Result<(), String> {
-    // cargo instruments --template 'CPU Profiler' --release --example cold_apartment 
+    // cargo instruments --features parallel --template 'CPU Profiler' --release --example cold_apartment 
+    
+    // time cargo run  --release --example cold_apartment 
 
     let options = SimOptions {
         input_file: "./tests/cold_apartment/cold.spl".into(),
