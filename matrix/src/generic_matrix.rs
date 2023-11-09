@@ -256,14 +256,13 @@ impl<T: Numberish> GenericMatrix<T> {
 
         self_rows.for_each(|(row_data, into_data)| {
             for (col, item) in into_data.iter_mut().enumerate().take(other.ncols) {
-                // Add the numbers
-                for (row, a) in row_data.iter().enumerate().take(other.nrows) {
-                    // let a = *inner_item; //row_data[i];
-                    let other_i = other.index(row, col);
-
-                    let b = other.data[other_i];
-                    *item += *a * b;
-                }
+                let coldata = other.data.iter().skip(col).step_by(other.ncols);
+                let row_data = row_data.iter();
+                let aux = row_data
+                    .zip(coldata)
+                    .map(|(a, b)| *a * *b)
+                    .fold(T::zero(), |acc, val| acc + val);
+                *item = aux;
             }
         });
 
@@ -315,35 +314,47 @@ impl<T: Numberish> GenericMatrix<T> {
                 // Add before the diagonal
 
                 let ini = if r >= one_sided_n { r - one_sided_n } else { 0 };
-
-                let fin = r;
-                for (i, a) in row_data.iter().enumerate().take(fin).skip(ini) {
-                    let other_i = other.index(i, c);
-                    let b = other.data[other_i];
-                    *item += *a * b;
-                }
-
-                // Add the diagonal
-                let a = row_data[r];
-                let other_i = other.index(r, c);
-                let b = other.data[other_i];
-                *item += a * b;
-
-                // Add after the diagonal
-                let ini = if r < self.ncols { r + 1 } else { self.ncols };
-
+                // let fin = r;
                 let fin = if r + one_sided_n + 1 > self.ncols {
                     self.ncols
                 } else {
                     r + one_sided_n + 1
                 };
 
-                // for i in ini..fin {
+                // dbg!("b",ini,fin);
+
                 for (i, a) in row_data.iter().enumerate().take(fin).skip(ini) {
                     let other_i = other.index(i, c);
                     let b = other.data[other_i];
                     *item += *a * b;
                 }
+
+                // // Add the diagonal
+                // dbg!(r);
+                // let a = row_data[r];
+                // let other_i = other.index(r, c);
+                // let b = other.data[other_i];
+                // *item += a * b;
+
+
+
+
+                // // Add after the diagonal
+                // let ini = if r < self.ncols { r + 1 } else { self.ncols };
+
+                // let fin = if r + one_sided_n + 1 > self.ncols {
+                //     self.ncols
+                // } else {
+                //     r + one_sided_n + 1
+                // };
+                // dbg!("a",ini,fin);
+
+                // // for i in ini..fin {
+                // for (i, a) in row_data.iter().enumerate().take(fin).skip(ini) {
+                //     let other_i = other.index(i, c);
+                //     let b = other.data[other_i];
+                //     *item += *a * b;
+                // }
             }
         });
 

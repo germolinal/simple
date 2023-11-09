@@ -106,7 +106,7 @@ simd = [
 
 parallel = [
     "rayon",
-    # "heat/parallel", 
+    "heat/parallel", 
     "light/parallel",
     #"air_flow/parallel"
 ]
