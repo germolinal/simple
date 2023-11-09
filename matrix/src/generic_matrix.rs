@@ -185,6 +185,7 @@ impl<T: Numberish> GenericMatrix<T> {
             into.data.iter_mut(),
         )
         .for_each(|((x, y), res)| *res = *x + *y);
+        
 
         // return
         Ok(())
@@ -308,53 +309,26 @@ impl<T: Numberish> GenericMatrix<T> {
         let i = i.into_iter().zip(into.data.chunks_exact_mut(other.ncols));
 
         let one_sided_n = one_sided_n!(n);
-        i.enumerate().for_each(|(r, (row_data, into_data))| {
+        i.enumerate().for_each(|(diag_i, (row_data, into_data))| {
             // for c in 0..other.ncols {
             for (c, item) in into_data.iter_mut().enumerate().take(other.ncols) {
-                // Add before the diagonal
-
-                let ini = if r >= one_sided_n { r - one_sided_n } else { 0 };
-                // let fin = r;
-                let fin = if r + one_sided_n + 1 > self.ncols {
+                // dbg!(diag_i, c);
+                let ini = if diag_i >= one_sided_n {
+                    diag_i - one_sided_n
+                } else {
+                    0
+                };
+                let fin = if diag_i + one_sided_n + 1 > self.ncols {
                     self.ncols
                 } else {
-                    r + one_sided_n + 1
+                    diag_i + one_sided_n + 1
                 };
-
-                // dbg!("b",ini,fin);
 
                 for (i, a) in row_data.iter().enumerate().take(fin).skip(ini) {
                     let other_i = other.index(i, c);
                     let b = other.data[other_i];
                     *item += *a * b;
                 }
-
-                // // Add the diagonal
-                // dbg!(r);
-                // let a = row_data[r];
-                // let other_i = other.index(r, c);
-                // let b = other.data[other_i];
-                // *item += a * b;
-
-
-
-
-                // // Add after the diagonal
-                // let ini = if r < self.ncols { r + 1 } else { self.ncols };
-
-                // let fin = if r + one_sided_n + 1 > self.ncols {
-                //     self.ncols
-                // } else {
-                //     r + one_sided_n + 1
-                // };
-                // dbg!("a",ini,fin);
-
-                // // for i in ini..fin {
-                // for (i, a) in row_data.iter().enumerate().take(fin).skip(ini) {
-                //     let other_i = other.index(i, c);
-                //     let b = other.data[other_i];
-                //     *item += *a * b;
-                // }
             }
         });
 
@@ -1225,7 +1199,7 @@ mod tests {
             }
         }
 
-        let b = Matrix::new(1.0, n_rows, 1);
+        let b = Matrix::new(1.0, n_rows, 3);
 
         let c = a.from_prod_n_diag(&b, n)?;
 
