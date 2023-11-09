@@ -35,8 +35,8 @@ use crate::zone::ThermalZone;
 use model::{Boundary, Model, SimulationState, SimulationStateHeader};
 use std::borrow::Borrow;
 
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
+// #[cfg(feature = "parallel")]
+// use rayon::prelude::*;
 
 /// The module name. For debugging purposes
 pub(crate) const MODULE_NAME: &str = "Thermal model";
@@ -111,10 +111,10 @@ pub(crate) fn iterate_surfaces<T: SurfaceTrait + Send + Sync>(
     model: &Model,
     state: &mut SimulationState,
 ) -> Result<(), String> {
-    #[cfg(not(feature = "parallel"))]
+    // #[cfg(not(feature = "parallel"))]
     let surface_iter = surfaces.iter().zip(alloc.iter_mut());
-    #[cfg(feature = "parallel")]
-    let surface_iter = (*surfaces).into_par_iter().zip(alloc.par_iter_mut());
+    // #[cfg(feature = "parallel")]
+    // let surface_iter = (*surfaces).into_par_iter().zip(alloc.par_iter_mut());
 
     // Collect boundary temperatures
     let boundary_temps: Vec<(Float, Float)> = surfaces
