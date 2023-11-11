@@ -100,6 +100,9 @@ fn pre_process(
         hour: 23.99999,
     };
 
+    if options.n == 0 {
+        return Err("Parameter 'n' should be larger than 0".to_string())
+    }
     let dt = 60. * 60. / options.n as Float;
     let sim_period = Period::new(start, end, dt);
 
