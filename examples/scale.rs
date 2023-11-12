@@ -9,7 +9,7 @@ fn main() -> Result<(), String> {
     // time cargo run  --release --example scale
 
 
-    const N:usize=200;
+    const N:usize=600;
     let mut options = SimOptions::default();
     options.output = Some("./tests/cold_apartment/check.csv".into());
     options.weather_file = "./tests/wellington.epw".into();
@@ -73,6 +73,7 @@ fn main() -> Result<(), String> {
 
     let res = &options.output.clone().ok_or("No output")?;
     let out = std::fs::File::create(res).map_err(|e| e.to_string())?;
+
     run(
         &simple_model,
         &mut state_header,        
