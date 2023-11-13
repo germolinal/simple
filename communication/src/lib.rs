@@ -120,5 +120,5 @@ pub trait SimulationModel: ErrorHandling {
     ///
     /// The purpose of this is to allocate memory once and thus save time
     /// during the simulation
-    fn allocate_memory(&self) -> Result<Self::AllocType, String>;
+    fn allocate_memory(&self, state: &SimulationState) -> Result<Self::AllocType, String>;
 }

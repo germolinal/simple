@@ -65,7 +65,7 @@ path = "bin/scompare.rs"
 
 [[examples]]
 name = "box"
-path = "examples/box/main.rs"
+path = "examples/cold_apartment.rs"
 
 [workspace.dependencies]
 rayon = { version = "1.8.0" }
@@ -99,30 +99,22 @@ validate = { git = "https://github.com/germolinal/validate" }
 
 [features]
 default = []
-
 simd = [
     "light/simd"
 ]
-
 parallel = [
     "rayon",
-    # "heat/parallel", 
+    "heat/parallel", 
     "light/parallel",
     #"air_flow/parallel"
 ]
-
 float = [
     "calendar/float",
     "communication/float",
-
     "air/float",
     "heat/float",
     "light/float",
-
     "model/float",
     "weather/float",
-
 ]
-
-
 wasm = ["model/wasm"]
