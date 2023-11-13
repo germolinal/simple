@@ -10,7 +10,7 @@ fn apartment_sim() -> Result<(), String> {
         std::fs::create_dir(p).map_err(|e| e.to_string())?;
     }
     let target_file = format!("{}/cold_wellington_apartment.html", p);
-    let mut validations = Validator::new("Simulation of a single room", &target_file);
+    let mut validations = Validator::new("Simulation of an entire apartment in Wellington, New Zealand", &target_file);
 
     let options = SimOptions {
         input_file: "./tests/cold_apartment/cold.spl".into(),
