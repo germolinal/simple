@@ -121,9 +121,9 @@ fn march_with_window() -> Result<(Vec<Float>, Vec<Float>), String> {
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
         ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
-    let mut memory = thermal_model.allocate_memory()?;
 
     let mut state = state_header.take_values().ok_or("Could not take state")?;
+    let mut memory = thermal_model.allocate_memory(&state)?;
 
     // START TESTING.
     let hs_front = 10.;
@@ -210,9 +210,9 @@ fn very_simple_march() -> Result<(Vec<Float>, Vec<Float>), String> {
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
         ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
-    let mut memory = thermal_model.allocate_memory()?;
 
     let mut state = state_header.take_values().ok_or("Could not take state")?;
+    let mut memory = thermal_model.allocate_memory(&state)?;
 
     let hs_front = 10.;
     let hs_back = 10.;
@@ -300,9 +300,9 @@ fn march_with_window_and_luminaire() -> Result<(Vec<Float>, Vec<Float>), String>
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
         ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
-    let mut memory = thermal_model.allocate_memory()?;
 
     let mut state = state_header.take_values().ok_or("Could not take state")?;
+    let mut memory = thermal_model.allocate_memory(&state)?;
 
     // turn the lights on
     let lum_state_i = simple_model.luminaires[0]
@@ -402,8 +402,8 @@ fn march_with_window_and_heater() -> Result<(Vec<Float>, Vec<Float>), String> {
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
         ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
-    let mut memory = thermal_model.allocate_memory()?;
     let mut state = state_header.take_values().ok_or("Could not take state")?;
+    let mut memory = thermal_model.allocate_memory(&state)?;
 
     // turn the heater on
     if let HVAC::ElectricHeater(heater) = &simple_model.hvacs[0] {
@@ -507,7 +507,7 @@ fn march_with_window_heater_and_infiltration() -> Result<(Vec<Float>, Vec<Float>
     let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
         ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
-    let mut memory = thermal_model.allocate_memory()?;
+
     // Set infiltration
     let inf_vol_index = state_header.push(
         SimulationStateElement::SpaceInfiltrationVolume(0),
@@ -523,6 +523,7 @@ fn march_with_window_heater_and_infiltration() -> Result<(Vec<Float>, Vec<Float>
     // MAP THE STATE
 
     let mut state = state_header.take_values().ok_or("Could not take state")?;
+    let mut memory = thermal_model.allocate_memory(&state)?;
 
     // turn the heater on
     if let HVAC::ElectricHeater(heater) = &simple_model.hvacs[0] {
@@ -610,11 +611,11 @@ fn march_model(
     // let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
         ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
-    let mut memory = thermal_model.allocate_memory()?;
-    // in model like these—i.e., a single surface—EnergyPlus assumes Zero IR radation
-    thermal_model.surfaces[0].back_emissivity = 0.0;
-
-    let mut state = state_header.take_values().ok_or("Could not find state")?;
+        // in model like these—i.e., a single surface—EnergyPlus assumes Zero IR radation
+        thermal_model.surfaces[0].back_emissivity = 0.0;
+        
+        let mut state = state_header.take_values().ok_or("Could not find state")?;
+        let mut memory = thermal_model.allocate_memory(&state)?;
 
     let path_string = format!("./tests/{}/eplusout.csv", dir);
     let path = path_string.as_str();

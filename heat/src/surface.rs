@@ -905,11 +905,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         wind_speed: Float,
         dt: Float,
         memory: &mut SurfaceMemory,
-    ) -> Result<(), String> {
-        // isn't this already here?
-        self.parent
-            .get_node_temperatures(state, &mut memory.temperatures)?;
-
+    ) -> Result<(), String> {        
         // Calculate and set Front and Back Solar Irradiance
         let mut solar_front = self.parent.front_solar_irradiance(state);
         if solar_front.is_nan() || solar_front < 0.0 {
