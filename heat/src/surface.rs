@@ -1119,7 +1119,8 @@ mod testing {
         let t_environment = 10.;
         let v = crate::SIGMA * (t_environment + 273.15 as Float).powi(4);
 
-        let memory = ts.allocate_memory();
+        let mut memory = ts.allocate_memory();
+        ts.parent.get_node_temperatures(&state, &mut memory.temperatures)?;
         let surfaces = vec![ts];
         let mut alloc = vec![memory];
 
@@ -1492,7 +1493,8 @@ mod testing {
 
         let mut state = state_header.take_values().ok_or("Could not take values")?;
 
-        let memory = ts.allocate_memory();
+        let mut memory = ts.allocate_memory();
+        ts.parent.get_node_temperatures(&state, &mut memory.temperatures)?;
         let surfaces = vec![ts];
         let mut alloc = vec![memory];
 
