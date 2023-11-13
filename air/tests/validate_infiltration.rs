@@ -71,8 +71,8 @@ fn sim(inf: Infiltration, dir: &str) -> Result<(Vec<Float>, Vec<Float>), String>
     let weather = EPWWeather::from_file("./tests/wellington.epw")?;
     let weather: Weather = weather.into();
     let physics = AirFlowModel::new(&meta_options, options, &model, &mut state_header, 1)?;
-    let mut mem = physics.allocate_memory()?;
     let mut state = state_header.take_values().expect("could not take values");
+    let mut mem = physics.allocate_memory(&state)?;
 
     let mut exp = Vec::with_capacity(weather.data.len());
     let mut found = Vec::with_capacity(weather.data.len());
