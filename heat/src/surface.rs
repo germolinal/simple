@@ -905,10 +905,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         wind_speed: Float,
         dt: Float,
         memory: &mut SurfaceMemory,
-    ) -> Result<(), String> {
-        self.parent
-            .get_node_temperatures(state, &mut memory.temperatures)?;
-
+    ) -> Result<(), String> {        
         // Calculate and set Front and Back Solar Irradiance
         let mut solar_front = self.parent.front_solar_irradiance(state);
         if solar_front.is_nan() || solar_front < 0.0 {
@@ -920,14 +917,11 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         }
 
         /////////////////////
-        // 1st: Calculate the solar absorption in each node
+        // 1st: Calculate the solar radiation absorbed by each node
         /////////////////////
-        // memory.q *= 0.0; // clean, just in case
-        // self.front_alphas.scale_into(solar_front, &mut memory.q)?;
         let mut solar_radiation = &self.front_alphas * solar_front;
         solar_radiation += &(&self.back_alphas * solar_back);
-        // memory.q += &(&self.back_alphas * solar_back);
-
+        
         /////////////////////
         // 2nd: Calculate the temperature in all no-mass nodes.
         // Also, the heat flow into
@@ -1125,7 +1119,8 @@ mod testing {
         let t_environment = 10.;
         let v = crate::SIGMA * (t_environment + 273.15 as Float).powi(4);
 
-        let memory = ts.allocate_memory();
+        let mut memory = ts.allocate_memory();
+        ts.parent.get_node_temperatures(&state, &mut memory.temperatures)?;
         let surfaces = vec![ts];
         let mut alloc = vec![memory];
 
@@ -1498,7 +1493,8 @@ mod testing {
 
         let mut state = state_header.take_values().ok_or("Could not take values")?;
 
-        let memory = ts.allocate_memory();
+        let mut memory = ts.allocate_memory();
+        ts.parent.get_node_temperatures(&state, &mut memory.temperatures)?;
         let surfaces = vec![ts];
         let mut alloc = vec![memory];
 

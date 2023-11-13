@@ -100,6 +100,9 @@ fn pre_process(
         hour: 23.99999,
     };
 
+    if options.n == 0 {
+        return Err("Parameter 'n' should be larger than 0".to_string());
+    }
     let dt = 60. * 60. / options.n as Float;
     let sim_period = Period::new(start, end, dt);
 
@@ -176,7 +179,7 @@ where
         model.borrow().outputs.len()
     };
 
-    let mut memory = pre_process_data.model.allocate_memory()?;
+    let mut memory = pre_process_data.model.allocate_memory(&state)?;
 
     // Write header
     let _u = out
@@ -259,11 +262,11 @@ where
     let model = std::sync::Arc::new(model);
 
     let pre_process_data = pre_process(model.borrow(), options, state_header)?;
-    let mut memory = pre_process_data.model.allocate_memory()?;
 
     let state = state_header
         .take_values()
         .ok_or("Could not take values from SimulationStateHeader")?;
+    let mut memory = pre_process_data.model.allocate_memory(&state)?;
 
     let (controller, state) =
         RhaiControlScript::new(&model, state, control_file, options.research_mode)?;

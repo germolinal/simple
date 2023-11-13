@@ -17,7 +17,6 @@ communication = { path = "../communication" }
 rendering = { path = "../rendering" }
 matrix = { path = "../matrix" }
 geometry = { path = "../geometry" }
-# clap = { version = "4.0.14", features = ["derive"] }
 
 
 [dev-dependencies]
@@ -34,7 +33,7 @@ simd = ["rendering/simd"]
 parallel = [
     "rayon",
     "rendering/parallel",
-    # "matrix/parallel",
+    "matrix/parallel",
     "geometry/parallel",
 ]
 float = [
