@@ -49,7 +49,7 @@ impl SimulationModel for AirFlowModel {
     type OptionType = ();
     type AllocType = AirFlowModelMemory;
 
-    fn allocate_memory(&self) -> Result<Self::AllocType, String> {
+    fn allocate_memory(&self, _state: &SimulationState) -> Result<Self::AllocType, String> {
         Ok(())
     }
 

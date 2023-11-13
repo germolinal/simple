@@ -224,13 +224,29 @@ impl SimulationModel for ThermalModel {
     type OptionType = (); // No options
     type AllocType = ThermalModelMemory;
 
-    fn allocate_memory(&self) -> Result<Self::AllocType, String> {
-        let surfaces = self.surfaces.iter().map(|s| s.allocate_memory()).collect();
+    fn allocate_memory(&self, state: &SimulationState) -> Result<Self::AllocType, String> {
+        let surfaces = self
+            .surfaces
+            .iter()
+            .map(|s| {
+                let mut memory = s.allocate_memory();
+                s.parent
+                    .get_node_temperatures(state, &mut memory.temperatures)
+                    .expect("could not get temperatures");
+                memory
+            })
+            .collect();
 
         let fenestrations = self
             .fenestrations
             .iter()
-            .map(|s| s.allocate_memory())
+            .map(|s| {
+                let mut memory = s.allocate_memory();
+                s.parent
+                    .get_node_temperatures(state, &mut memory.temperatures)
+                    .expect("could not get temperatures");
+                memory
+            })
             .collect();
 
         let ret = ThermalModelMemory {
