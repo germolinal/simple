@@ -129,6 +129,8 @@ fn design_flow_rate(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "EnergyPlus";
 
     /// This test intends to test non-vertical convection coefficients and their correct placement
+    /// 
+    /// > **NOTE:** This algorithm is still under development. Do not utilize.
     #[valid("Design flow rate")]
     fn aux() -> Result<ValidFunc, String> {
         let inf = Infiltration::DesignFlowRate {
