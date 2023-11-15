@@ -1,7 +1,7 @@
 # `SIMPLE` - Simulating for People
 
 
-Thanks for your interest in `SIMPLE` an Open-Source simulation tool aiming to 
+Thanks for your interest in `SIMPLE` a simulation tool aiming to 
 satisfy the present needs of Building Performance Simulation. In very simple 
 terms, **`SIMPLE` is developed by acknowledging that current Building Science 
 has to see people as its first priority**. You can read more about this in the ["Do we need `SIMPLE`? section"](what_is_simple.md#do-we-need-simple?)
