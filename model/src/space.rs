@@ -29,7 +29,6 @@ use serde::{Deserialize, Serialize};
 
 /// The category of a space.
 #[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[serde(tag = "type")]
 pub enum SpacePurpose {
     /// Bathroom, toilette, shower, etc.    
     Bathroom,
@@ -49,7 +48,7 @@ pub enum SpacePurpose {
     Hallway,
     /// Other
     #[default]
-    Unidentified,
+    Other,
 }
 
 impl std::fmt::Display for SpacePurpose {
@@ -63,7 +62,7 @@ impl std::fmt::Display for SpacePurpose {
             SpacePurpose::Office => "Office",
             SpacePurpose::Garage => "Garage",
             SpacePurpose::Hallway => "Hallway",
-            SpacePurpose::Unidentified => "Unidentified",
+            SpacePurpose::Other => "Other",
         };
         write!(f, "{}", s)
     }
