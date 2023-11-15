@@ -25,6 +25,33 @@ use crate::Float;
 use derive::{ObjectAPI, ObjectIO};
 use serde::{Deserialize, Serialize};
 
+
+/// The category of a space.
+#[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[serde(tag = "type")]
+pub enum SpaceCategory {
+    /// Bathroom, toilette, shower, etc.    
+    Bathroom,
+    /// Bedroom
+    Bedroom,
+    /// Dining room
+    DiningRoom,
+    /// Kitchen
+    Kitchen,
+    /// Living room
+    LivingRoom,
+    /// Office
+    Office,
+    /// Garage
+    Garage,
+    /// Hallway
+    Hallway,    
+    /// Other
+    #[default]
+    Unidentified
+}
+
+
 /// Represents a space with homogeneous temperature within a building. It is often actual room enclosed by walls, but it can also
 /// be more than one room. In this latter case, there will be walls
 /// within the Space, meaning that there are walls whose Front and Back
@@ -64,6 +91,10 @@ pub struct Space {
     /// indexing from 0 (i.e., ground floor is 0)
     #[serde(skip_serializing_if = "Option::is_none")]
     storey: Option<usize>,
+
+    /// The purposes in a room. It can have multiple 
+    /// purposes (e.g., a Living/Dining/Kithen space)
+    pub purposes: Vec<SpaceCategory>,
 
     #[physical]
     #[serde(skip)]
