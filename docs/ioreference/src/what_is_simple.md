@@ -11,9 +11,7 @@ The first one is that—based on the [research that led to the design and develo
 integrating heat, moisture, light and acoustics). The reason for this is that, when 
 people get into a room, they just *feel* it. They do not separate—as Software and 
 Building Scientists do—the Thermal from the Daylight from the Acoustic domains. So, 
-`SIMPLE` aims to enable holistic Building Performance Simulation. This is done by having 
-an architecture that allows separating [the source code of different simulation modules](https://github.com/SIMPLE-BuildingSimulation) while allowing communication between 
-modules.
+`SIMPLE` aims to enable holistic Building Performance Simulation. 
 
 The second reason to focus on people is more related to the changing challenges of 
 Building Science. One or two decades ago, many of the buildings we lived in were ~~crap~~ 
