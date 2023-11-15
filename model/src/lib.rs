@@ -187,7 +187,7 @@ pub use simulation_state_element::Output;
 /// Represents a space within a building. This will
 /// often be a room, but it might also be half a room
 mod space;
-pub use space::{Space, SpaceCategory};
+pub use space::{Space, SpacePurpose};
 
 /// An infiltration rate for a `Space`
 mod infiltration;
