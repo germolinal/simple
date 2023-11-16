@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 
 /// This class modifies the wind speed in the site
 #[derive(Debug, Eq, PartialEq, Clone, Copy, ObjectIO, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[inline_enum]
 pub enum TerrainClass {
     /// Describes a Flat, Open Country
     Country,
@@ -214,9 +214,7 @@ mod testing {
         let from_hardcoded_json: SiteDetails = json5::from_str(
             "{            
             altitude: 123.0,
-            terrain: {
-                type: 'Urban'
-            }
+            terrain: 'Urban'
         }",
         )
         .map_err(|e| e.to_string())?;

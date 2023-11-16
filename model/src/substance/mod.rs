@@ -93,9 +93,7 @@ mod testing {
             "{    
             type: 'Gas',
             name: 'Some Gas',     
-            gas: {
-                type: 'Xenon'
-            }
+            gas: 'Xenon'
         }",
         )
         .map_err(|e| e.to_string())?;

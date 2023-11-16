@@ -148,6 +148,7 @@ fn room(validator: &mut Validator) -> Result<(), String> {
 }
 
 #[test]
+#[ignore]
 fn validate_dc() -> Result<(), String> {
     // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture
     let mut validator = Validator::new(

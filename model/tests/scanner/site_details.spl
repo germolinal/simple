@@ -1,6 +1,4 @@
 SiteDetails {    
     altitude: 123.0,
-    terrain: {
-        type : "Urban"
-    }
+    terrain: "Urban"
 }

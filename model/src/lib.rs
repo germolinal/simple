@@ -205,6 +205,17 @@ pub use simulation_options::SolarOptions;
 pub mod error_msgs;
 pub use error_msgs::{print_error, print_warning};
 
-///
+/// Common methods used for Surface-like elements (fenestration and surfaces)
 pub mod surface_trait;
 pub use surface_trait::{get_orientation, Orientation, SurfaceTrait};
+
+/// Appliances, furniture, etc.
+pub mod objects;
+pub use objects::{
+    Object, 
+    ObjectSpecs,
+    chair::*,
+    table::*,
+    sofa::*,
+    storage::*,
+};

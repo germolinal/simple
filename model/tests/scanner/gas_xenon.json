@@ -1,6 +1,4 @@
 {
     "name": "Xenon",
-    "gas": {
-        "type": "Xenon"
-    }
+    "gas": "Xenon"
 }
