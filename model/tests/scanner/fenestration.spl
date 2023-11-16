@@ -8,9 +8,7 @@ Fenestration {
     operation: {
         type: "Fixed",
     },
-    category: {
-        type: "Window",
-    },
+    category: "Window",
     vertices: [
         0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
         0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}

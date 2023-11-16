@@ -17,6 +17,29 @@
 use crate::simulation_state_behaviour::*;
 use std::collections::HashMap;
 
+fn get_attributes(ast: &DeriveInput)->Vec<String>{
+    let allowed_attributes = vec![
+        "inline_enum".to_string()
+    ];
+
+    ast
+    .attrs
+    .iter()
+    .filter_map(|a| {
+        if let Some(seg) = a.path.segments.iter().next() {
+            let ident = format!("{}", seg.ident);            
+            if allowed_attributes.contains(&ident) {
+                Some(ident)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    })
+    .collect()
+}
+
 fn object_location(typename: String) -> Option<&'static str> {
     let mapping = HashMap::from([
         ("Substance", "substances"),
@@ -29,6 +52,7 @@ fn object_location(typename: String) -> Option<&'static str> {
         ("HVAC", "hvacs"),
         ("Luminaire", "luminaires"),
         ("SiteDetails", "site_details"),
+        ("Object", "objects"),
     ]);
 
     if let Some(v) = mapping.get(&typename.as_str()) {
@@ -104,12 +128,15 @@ pub fn derive_simulation_state_behaviour(input: TokenStream) -> TokenStream {
     }
 }
 
-#[proc_macro_derive(ObjectIO)]
+#[proc_macro_derive(ObjectIO, attributes(inline_enum))]
 pub fn derive_input_output(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
 
+    
+
+    let attributes = get_attributes(&ast);
     let docs = get_docs(&ast.attrs).expect("Could not generate docs");
-    let obj = Object::new(ast.clone(), docs);
+    let obj = Object::new(ast.clone(), docs, attributes);
     let object_name = &ast.ident;
     let name_str = format!("{}", object_name);
 
@@ -161,8 +188,9 @@ pub fn derive_input_output(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(GroupIO)]
 pub fn derive_group_input_output(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
+    let attributes = get_attributes(&ast);
     let docs = get_docs(&ast.attrs).expect("Could not generate docs");
-    let obj = Object::new(ast, docs);
+    let obj = Object::new(ast, docs, attributes);
 
     let q = obj.gen_group_behaviour();
     TokenStream::from(q)
@@ -171,23 +199,26 @@ pub fn derive_group_input_output(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(ObjectAPI, attributes(operational, physical))]
 pub fn derive_object_api(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
+    let attributes = get_attributes(&ast);
     let docs = get_docs(&ast.attrs).expect("Could not generate docs");
-    let obj = Object::new(ast, docs);
+    let obj = Object::new(ast, docs, attributes);
     TokenStream::from(obj.gen_object_api())
 }
 
 #[proc_macro_derive(GroupAPI)]
 pub fn derive_group_api(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
+    let attributes = get_attributes(&ast);
     let docs = get_docs(&ast.attrs).expect("Could not generate API docs");
-    let obj = Object::new(ast, docs);
+    let obj = Object::new(ast, docs, attributes);
     TokenStream::from(obj.gen_group_api())
 }
 
 #[proc_macro_derive(GroupMemberAPI, attributes(operational, physical))]
 pub fn derive_group_member_api(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
+    let attributes = get_attributes(&ast);
     let docs = get_docs(&ast.attrs).expect("Could not generate API docs");
-    let obj = Object::new(ast, docs);
+    let obj = Object::new(ast, docs, attributes);
     TokenStream::from(obj.gen_group_member_api())
 }

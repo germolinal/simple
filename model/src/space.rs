@@ -18,12 +18,55 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use core::fmt;
+
 use crate::infiltration::Infiltration;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
 use crate::Float;
 use derive::{ObjectAPI, ObjectIO};
 use serde::{Deserialize, Serialize};
+
+/// The category of a space.
+#[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, PartialEq, Eq)]
+pub enum SpacePurpose {
+    /// Bathroom, toilette, shower, etc.    
+    Bathroom,
+    /// Bedroom
+    Bedroom,
+    /// Dining room
+    DiningRoom,
+    /// Kitchen
+    Kitchen,
+    /// Living room
+    LivingRoom,
+    /// Office
+    Office,
+    /// Garage
+    Garage,
+    /// Hallway
+    Hallway,
+    /// Other
+    #[default]
+    Other,
+}
+
+impl std::fmt::Display for SpacePurpose {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            SpacePurpose::Bathroom => "Bathroom",
+            SpacePurpose::Bedroom => "Bedroom",
+            SpacePurpose::DiningRoom => "Dining Room",
+            SpacePurpose::Kitchen => "Kitchen",
+            SpacePurpose::LivingRoom => "Living Room",
+            SpacePurpose::Office => "Office",
+            SpacePurpose::Garage => "Garage",
+            SpacePurpose::Hallway => "Hallway",
+            SpacePurpose::Other => "Other",
+        };
+        write!(f, "{}", s)
+    }
+}
 
 /// Represents a space with homogeneous temperature within a building. It is often actual room enclosed by walls, but it can also
 /// be more than one room. In this latter case, there will be walls
@@ -64,6 +107,12 @@ pub struct Space {
     /// indexing from 0 (i.e., ground floor is 0)
     #[serde(skip_serializing_if = "Option::is_none")]
     storey: Option<usize>,
+
+    /// The purposes in a room. It can have multiple
+    /// purposes (e.g., a Living/Dining/Kithen space)
+    #[serde(skip_serializing_if = "Vec::is_empty")]    
+    #[serde(default)]
+    pub purposes: Vec<SpacePurpose>,
 
     #[physical]
     #[serde(skip)]
