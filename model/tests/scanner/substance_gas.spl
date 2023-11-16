@@ -1,7 +1,5 @@
 Substance {
     type: "Gas",
     name: "Some Gas",
-    gas: {
-        "type": "Xenon"
-    }
+    gas: "Xenon"
 }

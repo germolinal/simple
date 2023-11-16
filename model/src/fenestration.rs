@@ -83,7 +83,7 @@ pub enum FenestrationPosition {
 /// as it is always embeded on a `Fenestration` object
 ///
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, ObjectIO, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[inline_enum]
 #[serde(deny_unknown_fields)]
 pub enum FenestrationType {
     /// This is a Window. This is the default.
@@ -585,9 +585,7 @@ mod testing {
 
         // Deserialize from hardcoded string and check they are the same
         let from_hardcoded_json: FenestrationType = json5::from_str(
-            "{
-            type : 'Window',             
-        }",
+            "'Window'",
         )
         .map_err(|e| e.to_string())?;
         assert_eq!(
@@ -642,9 +640,7 @@ mod testing {
             operation: {
                 type: 'Fixed',
             },
-            category: {
-                type: 'Window',
-            },
+            category: 'Window',
             vertices: [
                 0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
                 0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}

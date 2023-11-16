@@ -10,14 +10,14 @@ pub enum Object {
 }
 
 impl Object {
-    pub fn new(ast: syn::DeriveInput, docs: String) -> Self {
+    pub fn new(ast: syn::DeriveInput, docs: String, attributes: Vec<String>) -> Self {
         match ast.data {
             syn::Data::Struct(stru) => {
                 let data = StructObject::new(ast.ident.clone(), stru, docs);
                 Object::StructObject(data)
             }
             syn::Data::Enum(stru) => {
-                let data = EnumObject::new(ast.ident.clone(), stru, docs);
+                let data = EnumObject::new(ast.ident.clone(), stru, docs, attributes);
                 Object::Enum(data)
             }
             _ => {

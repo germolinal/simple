@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 /// as it is always embeded on a `Building` object
 #[derive(Copy, Clone, ObjectIO, Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
-#[serde(tag = "type")]
+#[inline_enum]
 pub enum ShelterClass {
     /// No obstructions or local shielding
     NoObstructions,
@@ -140,9 +140,7 @@ mod testing {
         let hardcoded_ref = ShelterClass::Urban;
         // Deserialize from hardcoded string and check they are the same
         let from_hardcoded_json: ShelterClass = json5::from_str(
-            "{            
-            type: 'Urban',
-        }",
+            "'Urban'",
         )
         .map_err(|e| e.to_string())?;
         assert_eq!(
@@ -198,9 +196,7 @@ mod testing {
         let from_harcoded_json: Building = json5::from_str(
             "{            
             name: 'Main Building',
-            shelter_class: {
-                type: 'Urban',
-            }
+            shelter_class: 'Urban'
         }",
         )
         .map_err(|e| e.to_string())?;

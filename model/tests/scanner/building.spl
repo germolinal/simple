@@ -1,6 +1,4 @@
 Building {
     name: "Main Building",
-    shelter_class: {
-        type: "Urban"
-    }
+    shelter_class: "Urban"    
 }
