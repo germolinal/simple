@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::error_msgs::print_warning_no_module;
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
-use crate::SurfaceTrait;
+use crate::{SurfaceTrait, Object};
 use crate::{hvac::*, Boundary, SolarOptions, SurfaceType};
 use crate::{Float, SiteDetails};
 use crate::{Output, SimulationStateHeader};
@@ -63,6 +63,9 @@ pub struct Model {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
 
+    /// The furniture and appliances in the property
+    pub objects: Vec<Object>,
+
     /// The requested outputs
     ///
     /// These aren't checked too much while parsing, but after
@@ -102,6 +105,7 @@ impl std::default::Default for Model {
             hvacs: Vec::default(),
             luminaires: Vec::default(),
             materials: Vec::default(),
+            objects: Vec::default(),
             outputs: Vec::default(),
             site_details: None,
             solar_options: None,
@@ -170,6 +174,12 @@ impl<'de> Visitor<'de> for SimpleModelVisitor {
                 }
                 b"name" => {
                     model.name = map.next_value()?;
+                }
+                b"objects" => {
+                    let objs: Vec<Object> = map.next_value()?;
+                    for o in objs.into_iter() {
+                        model.objects.push(o);
+                    }
                 }
                 b"outputs" => {
                     let objs: Vec<Output> = map.next_value()?;
@@ -302,9 +312,7 @@ impl Model {
     /// let json_str = r#"{
     ///     "buildings": [{
     ///         "name": "The Building",
-    ///         "shelter_class" : {
-    ///             "type" : "Urban"
-    ///         }
+    ///         "shelter_class" : "Urban"
     ///     }]
     /// }"#;
     ///
@@ -334,9 +342,7 @@ impl Model {
     /// let s = r#"{
     ///     "buildings": [{
     ///         "name": "The Building",
-    ///         "shelter_class" : {
-    ///             "type" : "Urban"
-    ///         }
+    ///         "shelter_class" : "Urban"
     ///     }]
     /// }"#;
     /// write!(file, "{}", s).unwrap();
@@ -365,9 +371,7 @@ impl Model {
     /// let s = r#"
     ///     Building{
     ///         name: "The Building",
-    ///         shelter_class : {
-    ///             type : "Urban"
-    ///         }
+    ///         shelter_class : "Urban"
     ///     }
     /// "#;
     ///
@@ -391,9 +395,7 @@ impl Model {
     /// let s = r#"
     ///     Building{
     ///         name: "The Building",
-    ///         shelter_class : {
-    ///             type : "Urban"
-    ///         }
+    ///         shelter_class : "Urban"
     ///     }
     /// "#;
     /// write!(file, "{}", s).unwrap();
@@ -927,9 +929,7 @@ impl Model {
     ///     operation: {
     ///         type: 'Fixed',
     ///     },
-    ///     category: {
-    ///         type: 'Window',
-    ///     },
+    ///     category: 'Window',
     ///     vertices: [
     ///         0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
     ///         0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}
@@ -1301,7 +1301,7 @@ mod testing {
         use crate::boundary::Boundary;
         use crate::building::Building;
         use crate::fenestration::{FenestrationPosition, FenestrationType};
-        use crate::hvac;
+        use crate::{hvac, Object, ChairArmType, ChairBackType, ChairLegType, ChairType, SofaType, StorageType, TableShape, TableType, SpacePurpose, ObjectSpecs};
         use crate::substance;
         use crate::Output;
         use crate::ShelterClass;
@@ -1342,6 +1342,10 @@ mod testing {
         /*****/
         /* C */
         /*****/
+        ChairArmType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        ChairBackType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        ChairLegType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        ChairType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         Construction::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
@@ -1408,6 +1412,8 @@ mod testing {
         /*****/
         /* O */
         /*****/
+        Object::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        ObjectSpecs::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
         Output::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
@@ -1426,9 +1432,12 @@ mod testing {
         /* S */
         /*****/
         SiteDetails::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        SofaType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         SolarOptions::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Space::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Space::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;        
         Space::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        SpacePurpose::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;        
+        StorageType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         Substance::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         summary.push_str(&format!("\t"));
@@ -1448,6 +1457,8 @@ mod testing {
         /*****/
         /* T */
         /*****/
+        TableShape::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        TableType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
         TerrainClass::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
@@ -1502,9 +1513,7 @@ mod testing {
         let json_str = r#"{
             "buildings": [{
                 "name": "The Building",
-                "shelter_class" : {
-                    "type" : "Urban"
-                }
+                "shelter_class" : "Urban"
             }]
         }"#;
 

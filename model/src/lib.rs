@@ -187,7 +187,7 @@ pub use simulation_state_element::Output;
 /// Represents a space within a building. This will
 /// often be a room, but it might also be half a room
 mod space;
-pub use space::Space;
+pub use space::{Space, SpacePurpose};
 
 /// An infiltration rate for a `Space`
 mod infiltration;
@@ -205,6 +205,17 @@ pub use simulation_options::SolarOptions;
 pub mod error_msgs;
 pub use error_msgs::{print_error, print_warning};
 
-///
+/// Common methods used for Surface-like elements (fenestration and surfaces)
 pub mod surface_trait;
 pub use surface_trait::{get_orientation, Orientation, SurfaceTrait};
+
+/// Appliances, furniture, etc.
+pub mod objects;
+pub use objects::{
+    Object, 
+    ObjectSpecs,
+    chair::*,
+    table::*,
+    sofa::*,
+    storage::*,
+};

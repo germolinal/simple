@@ -305,6 +305,16 @@ impl<'a> SimpleScanner<'a> {
                     };
                     model.add_material(s);
                 }
+                b"Object" => {
+                    let s: crate::Object = match json5::from_str(obj_str) {
+                        Ok(s) => s,
+                        Err(e) => {
+                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                            return Err(errmsg);
+                        }
+                    };
+                    model.objects.push(s);
+                }
                 b"Output" => {
                     let s: crate::Output = match json5::from_str(obj_str) {
                         Ok(s) => s,

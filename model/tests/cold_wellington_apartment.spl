@@ -1,8 +1,6 @@
 SiteDetails {
    altitude : 0.0,
-   terrain : {
-        type: "City"
-    },
+   terrain : "City",
    latitude : -41.0, 
    longitude : 174.0, 
    standard_meridian : 180.0, 
@@ -13,9 +11,7 @@ SiteDetails {
 Building {
     name: "Art Deco Building", 
     n_storeys: 2,
-    shelter_class: {
-        type: "Urban"
-    }, 
+    shelter_class: "Urban",
 }
 // ANCHOR_END: building
 

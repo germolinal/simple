@@ -36,7 +36,7 @@ use serde::{Deserialize, Serialize};
 /// as it is always embeded on a `Substance` of type `Gas`
 ///
 #[derive(Debug, Copy, Clone, ObjectIO, Serialize, Deserialize)]
-#[serde(tag = "type")]
+#[inline_enum]
 #[serde(deny_unknown_fields)]
 pub enum GasSpecification {
     /// Air
@@ -104,30 +104,28 @@ mod testing {
         // Hardcode a reference
         let air = GasSpecification::Air;
         assert_eq!(
-            "{\"type\":\"Air\"}",
+            "\"Air\"",
             json5::to_string(&air).map_err(|e| e.to_string())?
         );
         let argon = GasSpecification::Argon;
         assert_eq!(
-            "{\"type\":\"Argon\"}",
+            "\"Argon\"",
             json5::to_string(&argon).map_err(|e| e.to_string())?
         );
         let krypton = GasSpecification::Krypton;
         assert_eq!(
-            "{\"type\":\"Krypton\"}",
+            "\"Krypton\"",
             json5::to_string(&krypton).map_err(|e| e.to_string())?
         );
         let xenon = GasSpecification::Xenon;
         assert_eq!(
-            "{\"type\":\"Xenon\"}",
+            "\"Xenon\"",
             json5::to_string(&xenon).map_err(|e| e.to_string())?
         );
 
         // Deserialize from hardcoded string and check they are the same
         let json5_heater: GasSpecification = json5::from_str(
-            "{            
-            type: 'Air',            
-        }",
+            "'Air'",
         )
         .map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", json5_heater));
@@ -166,9 +164,7 @@ mod testing {
         let json5_heater: Gas = json5::from_str(
             "{    
             name: 'Xenon',     
-            gas: {
-                type: 'Xenon'
-            }            
+            gas: 'Xenon'        
         }",
         )
         .map_err(|e| e.to_string())?;
