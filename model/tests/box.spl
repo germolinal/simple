@@ -13,9 +13,7 @@ isn't it cool?
 Building {
     name: "Main campus", 
     n_storeys: 2,
-    shelter_class: {
-        type: "Urban"
-    }, 
+    shelter_class: "Urban"
 }
 // ANCHOR_END: building
 
@@ -27,9 +25,7 @@ Substance {
 Substance {
     type: "Gas",
     name: "the gas substance", // We will use this name to assign this to a construction
-    gas:  {
-        "type": "Xenon", // There are other gases available as well
-    }, 
+    gas:  "Xenon", // There are other gases available as well
 }
 Material {
     name: "the material", // This is the name of this material
