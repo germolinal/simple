@@ -46,6 +46,7 @@ pub enum ChairLegType {
 
 /// Type of chair
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, ObjectIO)]
+#[inline_enum]
 pub enum ChairType {
     /// Other
     #[default]
