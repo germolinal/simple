@@ -40,15 +40,12 @@ use crate::simulation_state_element::StateElementField;
 /// ```json
 /// {{#include ../../../model/tests/scanner/surface_type.json}}
 /// ```
-/// ```json
-/// {{#include ../../../model/tests/scanner/surface_type_2.json}}
-/// ```
 ///
 #[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, PartialEq, Eq)]
-#[serde(tag = "type")]
+#[inline_enum]
 pub enum SurfaceType {
-    /// A Wall that connects a space with the exterior.
-    #[default]
+
+    /// A Wall that connects a space with the exterior.    
     ExteriorWall,
 
     /// A Wall connecting two spaces
@@ -72,14 +69,11 @@ pub enum SurfaceType {
     Ceiling,
 
     /// A surfaces at the top of a building
-    Roof,
+    Roof,    
 
-    /// Other categories that might be useful (again, these labels are
-    /// used based on conventions.)
-    Custom {
-        /// The name of the custom type
-        name: String,
-    },
+    /// Other kind of surface
+    #[default]
+    Other,
 }
 
 /// A fixed (i.e., not movable) surface in the building (or surroundings). This can be of
@@ -478,9 +472,7 @@ mod testing {
         // Hardcode a reference... too verbose
         // Deserialize from hardcoded string and check they are the same
         let hardcoded_ref: SurfaceType = json5::from_str(
-            "{
-            type: 'ExteriorWall',            
-        }",
+            "'ExteriorWall'",
         )
         .map_err(|e| e.to_string())?;
         assert_eq!(SurfaceType::ExteriorWall, hardcoded_ref);
@@ -496,18 +488,7 @@ mod testing {
             format!("{:?}", from_json_file)
         );
 
-        // Read json file (used in DOC), Deserialize, and compare
-        let filename = "./tests/scanner/surface_type_2";
-        let json_file = format!("{}.json", filename);
-        let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
-        let from_json_file: SurfaceType =
-            serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
-        if let SurfaceType::Custom { name } = from_json_file {
-            assert_eq!(name, "My Custom Category");
-        } else {
-            panic!("Not a custom category!")
-        }
-
+        
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
         let from_serialized: SurfaceType =

@@ -96,7 +96,7 @@ Construction {
     name: "R13WALL",
     materials: [
         "R13LAYER"
-    ]
+    ] 
 }
 
 Construction {
