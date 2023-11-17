@@ -82,9 +82,7 @@ Surface {
         type: "Space",
         space: "Bedroom"
     },
-    category:{
-        type: "ExteriorWall"
-    }   
+    category: "ExteriorWall"
 }
 HVAC {
     type: "ElectricHeater",
