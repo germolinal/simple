@@ -48,6 +48,8 @@ pub enum SpacePurpose {
     Garage,
     /// Hallway
     Hallway,
+    /// Laundry
+    Laundry,
     /// Other
     #[default]
     Other,
@@ -65,8 +67,8 @@ impl std::fmt::Display for SpacePurpose {
             Self::Garage => "Garage",
             Self::Hallway => "Hallway",
             Self::Other => "Other",
-            Self::Storage => "Storage"
-            
+            Self::Storage => "Storage",
+            Self::Laundry => "Laundry",
         };
         write!(f, "{}", s)
     }
@@ -114,7 +116,7 @@ pub struct Space {
 
     /// The purposes in a room. It can have multiple
     /// purposes (e.g., a Living/Dining/Kithen space)
-    #[serde(skip_serializing_if = "Vec::is_empty")]    
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
     pub purposes: Vec<SpacePurpose>,
 

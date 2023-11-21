@@ -4,13 +4,16 @@ use validate::{valid, ScatterValidator, ValidFunc, Validator};
 #[test]
 #[ignore]
 fn apartment_sim() -> Result<(), String> {
-    // cargo test --release --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored    
+    // cargo test --release --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
         std::fs::create_dir(p).map_err(|e| e.to_string())?;
     }
     let target_file = format!("{}/cold_wellington_apartment.html", p);
-    let mut validations = Validator::new("Simulation of an entire apartment in Wellington, New Zealand", &target_file);
+    let mut validations = Validator::new(
+        "Simulation of an entire apartment in Wellington, New Zealand",
+        &target_file,
+    );
 
     let options = SimOptions {
         input_file: "./tests/cold_apartment/cold.spl".into(),
@@ -54,7 +57,12 @@ fn apartment_sim() -> Result<(), String> {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
-            expected: expected[i].iter().skip(skip).take(take).map(|v| *v).collect(),
+            expected: expected[i]
+                .iter()
+                .skip(skip)
+                .take(take)
+                .map(|v| *v)
+                .collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
             found: found[i].iter().skip(skip).take(take).map(|v| *v).collect(),
 
