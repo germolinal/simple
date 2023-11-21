@@ -14,10 +14,10 @@ pub mod storage;
 /// Table specifications
 pub mod table;
 
-use chair::{ChairArmType,ChairLegType,ChairBackType,ChairType};
+use chair::{ChairArmType, ChairBackType, ChairLegType, ChairType};
 use sofa::SofaType;
 use storage::StorageType;
-use table::{TableShape,TableType};
+use table::{TableShape, TableType};
 
 /// An object category
 #[derive(Serialize, Deserialize, Debug, ObjectIO, Clone, Default)]
@@ -99,7 +99,7 @@ pub enum ObjectSpecs {
 
         /// The shape of the table
         #[serde(default)]
-        shape: TableShape
+        shape: TableShape,
     },
 
     /// Television
@@ -158,7 +158,7 @@ mod testing {
     use super::*;
 
     #[test]
-    fn basic() {        
+    fn basic() {
         let input = r#"{
             "name": "3280A239-E0F4-47AC-8C74-370EA25A889E",
             "dimensions": [

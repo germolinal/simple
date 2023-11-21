@@ -25,7 +25,7 @@ use rendering::{DCFactory, Scene, Wavelengths};
 use serde::{Deserialize, Serialize};
 use weather::ReinhartSky;
 
-#[cfg(feature="parallel")]
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
 /// A set of view factors as seen by a `ThermalSurface`.
@@ -124,14 +124,14 @@ impl OpticalInfo {
             false,
         )?;
 
-        #[cfg(not(feature="parallel"))]
+        #[cfg(not(feature = "parallel"))]
         let surf_iter = surfaces.iter();
-        #[cfg(not(feature="parallel"))]
+        #[cfg(not(feature = "parallel"))]
         let fen_iter = fenestrations.iter();
 
-        #[cfg(feature="parallel")]
+        #[cfg(feature = "parallel")]
         let surf_iter = surfaces.par_iter();
-        #[cfg(feature="parallel")]
+        #[cfg(feature = "parallel")]
         let fen_iter = fenestrations.par_iter();
 
         let front_surfaces_view_factors = surf_iter
@@ -142,7 +142,6 @@ impl OpticalInfo {
             .map(|s| s.calc_view_factors(&solar_scene, false).unwrap())
             .collect();
 
-        
         let front_fenestrations_view_factors = fen_iter
             .clone()
             .map(|s| s.calc_view_factors(&solar_scene, true).unwrap())

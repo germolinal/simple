@@ -20,9 +20,9 @@ SOFTWARE.
 use crate::error_msgs::print_warning_no_module;
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
-use crate::{SurfaceTrait, Object};
 use crate::{hvac::*, Boundary, SolarOptions, SurfaceType};
 use crate::{Float, SiteDetails};
+use crate::{Object, SurfaceTrait};
 use crate::{Output, SimulationStateHeader};
 use serde::{self, de::Visitor};
 use serde::{Deserialize, Serialize};
@@ -1301,12 +1301,15 @@ mod testing {
         use crate::boundary::Boundary;
         use crate::building::Building;
         use crate::fenestration::{FenestrationPosition, FenestrationType};
-        use crate::{hvac, Object, ChairArmType, ChairBackType, ChairLegType, ChairType, SofaType, StorageType, TableShape, TableType, SpacePurpose, ObjectSpecs};
         use crate::substance;
         use crate::Output;
         use crate::ShelterClass;
         use crate::SolarOptions;
         use crate::TerrainClass;
+        use crate::{
+            hvac, ChairArmType, ChairBackType, ChairLegType, ChairType, Object, ObjectSpecs,
+            SofaType, SpacePurpose, StorageType, TableShape, TableType,
+        };
 
         let dir = "../docs/ioreference/src";
 
@@ -1434,9 +1437,9 @@ mod testing {
         SiteDetails::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
         SofaType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         SolarOptions::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Space::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;        
+        Space::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         Space::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        SpacePurpose::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;        
+        SpacePurpose::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
         StorageType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         Substance::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;

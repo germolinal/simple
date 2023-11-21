@@ -44,7 +44,6 @@ use crate::simulation_state_element::StateElementField;
 #[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, PartialEq, Eq)]
 #[inline_enum]
 pub enum SurfaceType {
-
     /// A Wall that connects a space with the exterior.    
     ExteriorWall,
 
@@ -69,7 +68,7 @@ pub enum SurfaceType {
     Ceiling,
 
     /// A surfaces at the top of a building
-    Roof,    
+    Roof,
 
     /// Other kind of surface
     #[default]
@@ -471,10 +470,8 @@ mod testing {
     fn serde_surface_type() -> Result<(), String> {
         // Hardcode a reference... too verbose
         // Deserialize from hardcoded string and check they are the same
-        let hardcoded_ref: SurfaceType = json5::from_str(
-            "'ExteriorWall'",
-        )
-        .map_err(|e| e.to_string())?;
+        let hardcoded_ref: SurfaceType =
+            json5::from_str("'ExteriorWall'").map_err(|e| e.to_string())?;
         assert_eq!(SurfaceType::ExteriorWall, hardcoded_ref);
 
         // Read json file (used in DOC), Deserialize, and compare
@@ -488,7 +485,6 @@ mod testing {
             format!("{:?}", from_json_file)
         );
 
-        
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
         let from_serialized: SurfaceType =

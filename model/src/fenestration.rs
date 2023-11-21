@@ -584,10 +584,8 @@ mod testing {
         let hardcoded_ref = FenestrationType::Window;
 
         // Deserialize from hardcoded string and check they are the same
-        let from_hardcoded_json: FenestrationType = json5::from_str(
-            "'Window'",
-        )
-        .map_err(|e| e.to_string())?;
+        let from_hardcoded_json: FenestrationType =
+            json5::from_str("'Window'").map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)

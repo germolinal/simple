@@ -60,21 +60,31 @@ impl Vector3D {
     }
 
     /// Creates a (0,0,1) vector
-    pub const fn z()->Self{
-        Vector3D { x: 0.0, y: 0.0, z: 1.0 }
+    pub const fn z() -> Self {
+        Vector3D {
+            x: 0.0,
+            y: 0.0,
+            z: 1.0,
+        }
     }
 
     /// Creates a (1,0,0) vector
-    pub const fn x()->Self{
-        Vector3D { x: 1.0, y: 0.0, z: 0.0 }
+    pub const fn x() -> Self {
+        Vector3D {
+            x: 1.0,
+            y: 0.0,
+            z: 0.0,
+        }
     }
 
     /// Creates a (0,1,0) vector
-    pub const fn y()->Self{
-        Vector3D { x: 0.0, y: 1.0, z: 0.0 }
+    pub const fn y() -> Self {
+        Vector3D {
+            x: 0.0,
+            y: 1.0,
+            z: 0.0,
+        }
     }
-
-    
 
     /// Returns a new vector, containing the absolute values of each component of `self`
     pub fn abs(&self) -> Self {

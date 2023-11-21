@@ -78,6 +78,3 @@ pub use weather::{
     CurrentWeather, EPWWeather, EPWWeatherLine, Location, Solar, SyntheticWeather, Time, Weather,
     WeatherTrait,
 };
-
-
-
