@@ -1,7 +1,6 @@
 use derive::ObjectIO;
 use serde::{Deserialize, Serialize};
 
-
 /// Shape of a table
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, ObjectIO)]
 #[inline_enum]
@@ -18,7 +17,6 @@ pub enum TableShape {
 
     /// L-Shaped
     LShaped,
-    
 }
 
 /// Type of a table

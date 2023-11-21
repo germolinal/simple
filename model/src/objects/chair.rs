@@ -1,7 +1,6 @@
 use derive::ObjectIO;
 use serde::{Deserialize, Serialize};
 
-
 /// Type of chair
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, ObjectIO)]
 #[inline_enum]
@@ -17,9 +16,8 @@ pub enum ChairType {
     Office,
 
     /// Stool
-    Stool,    
+    Stool,
 }
-
 
 /// Types of armchair
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, Default, ObjectIO)]
@@ -27,7 +25,7 @@ pub enum ChairType {
 pub enum ChairArmType {
     /// Has arms
     Existing,
-    
+
     /// Does not have arms
     #[default]
     Missing,
@@ -39,7 +37,7 @@ pub enum ChairArmType {
 pub enum ChairBackType {
     /// Has arms
     Existing,
-    
+
     /// Does not have arms
     #[default]
     Missing,
@@ -62,4 +60,3 @@ pub enum ChairLegType {
     #[default]
     Other,
 }
-

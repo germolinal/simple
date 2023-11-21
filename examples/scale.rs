@@ -1,6 +1,6 @@
 use air::Float;
 use geometry::{Loop3D, Point3D, Polygon3D};
-use model::{substance, Construction, Material, SolarOptions,  Surface};
+use model::{substance, Construction, Material, SolarOptions, Surface};
 use simple::{run_simulation::*, Model};
 
 fn main() -> Result<(), String> {
@@ -8,8 +8,7 @@ fn main() -> Result<(), String> {
 
     // time cargo run  --release --example scale
 
-
-    const N:usize=600;
+    const N: usize = 600;
     let mut options = SimOptions::default();
     options.output = Some("./tests/cold_apartment/check.csv".into());
     options.weather_file = "./tests/wellington.epw".into();
@@ -29,7 +28,7 @@ fn main() -> Result<(), String> {
     let mat = simple_model.add_material(mat);
     let mut solar_options = SolarOptions::new();
     solar_options
-        .set_optical_data_path(format!("./remove_{}.json",N))
+        .set_optical_data_path(format!("./remove_{}.json", N))
         .set_solar_ambient_divitions(1)
         .set_n_solar_irradiance_points(1);
 
@@ -74,13 +73,7 @@ fn main() -> Result<(), String> {
     let res = &options.output.clone().ok_or("No output")?;
     let out = std::fs::File::create(res).map_err(|e| e.to_string())?;
 
-    run(
-        &simple_model,
-        &mut state_header,        
-        &options,
-        out,
-        controller,
-    )?;
+    run(&simple_model, &mut state_header, &options, out, controller)?;
 
     Ok(())
 }

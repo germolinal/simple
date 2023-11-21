@@ -139,10 +139,8 @@ mod testing {
         // Hardcode a reference
         let hardcoded_ref = ShelterClass::Urban;
         // Deserialize from hardcoded string and check they are the same
-        let from_hardcoded_json: ShelterClass = json5::from_str(
-            "'Urban'",
-        )
-        .map_err(|e| e.to_string())?;
+        let from_hardcoded_json: ShelterClass =
+            json5::from_str("'Urban'").map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)

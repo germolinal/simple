@@ -42,10 +42,14 @@ pub enum SpacePurpose {
     LivingRoom,
     /// Office
     Office,
+    /// Storage
+    Storage,
     /// Garage
     Garage,
     /// Hallway
     Hallway,
+    /// Laundry
+    Laundry,
     /// Other
     #[default]
     Other,
@@ -54,15 +58,17 @@ pub enum SpacePurpose {
 impl std::fmt::Display for SpacePurpose {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            SpacePurpose::Bathroom => "Bathroom",
-            SpacePurpose::Bedroom => "Bedroom",
-            SpacePurpose::DiningRoom => "Dining Room",
-            SpacePurpose::Kitchen => "Kitchen",
-            SpacePurpose::LivingRoom => "Living Room",
-            SpacePurpose::Office => "Office",
-            SpacePurpose::Garage => "Garage",
-            SpacePurpose::Hallway => "Hallway",
-            SpacePurpose::Other => "Other",
+            Self::Bathroom => "Bathroom",
+            Self::Bedroom => "Bedroom",
+            Self::DiningRoom => "Dining Room",
+            Self::Kitchen => "Kitchen",
+            Self::LivingRoom => "Living Room",
+            Self::Office => "Office",
+            Self::Garage => "Garage",
+            Self::Hallway => "Hallway",
+            Self::Other => "Other",
+            Self::Storage => "Storage",
+            Self::Laundry => "Laundry",
         };
         write!(f, "{}", s)
     }
@@ -110,7 +116,7 @@ pub struct Space {
 
     /// The purposes in a room. It can have multiple
     /// purposes (e.g., a Living/Dining/Kithen space)
-    #[serde(skip_serializing_if = "Vec::is_empty")]    
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
     pub purposes: Vec<SpacePurpose>,
 

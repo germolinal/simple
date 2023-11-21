@@ -84,14 +84,17 @@ pub struct EnumObject {
 }
 
 impl EnumObject {
-    pub fn new(ident: syn::Ident, stru: syn::DataEnum, docs: String, attributes: Vec<String>) -> Self {
+    pub fn new(
+        ident: syn::Ident,
+        stru: syn::DataEnum,
+        docs: String,
+        attributes: Vec<String>,
+    ) -> Self {
         let variants: Vec<Variant> = stru
             .variants
             .iter()
             .map(|x| Variant::new(x.clone()))
             .collect();
-        
-        
 
         Self {
             variants,
@@ -116,7 +119,7 @@ impl EnumObject {
 
             writeln!(ret, "{}\n\n", &variant.data().docs).map_err(|e| e.to_string())?;
             match variant {
-                Variant::Unnamed(s) => {                    
+                Variant::Unnamed(s) => {
                     let v_ident = &s.ident;
                     write!(ret, "```rs\n{} {{\n\t{} : ", &self.ident, v_ident)
                         .map_err(|e| e.to_string())?;
@@ -134,8 +137,8 @@ impl EnumObject {
                     }
                     ret += "\n}\n```\n\n";
                 }
-                Variant::Named(s) => {                    
-                    let v_ident = &s.ident;                    
+                Variant::Named(s) => {
+                    let v_ident = &s.ident;
                     write!(ret, "##### Full Specification\n```json\n{} {{\n\ttype : \"{}\", // this should not change\n", &self.ident, v_ident).unwrap();
                     let mut i = 0;
 
@@ -157,16 +160,16 @@ impl EnumObject {
                     }
                     ret += "}\n```\n\n";
                 }
-                Variant::Unit(s) => {                    
-                    let v_ident = &s.ident;                    
-                    if self.attributes.contains(&"inline_enum".to_string()){
+                Variant::Unit(s) => {
+                    let v_ident = &s.ident;
+                    if self.attributes.contains(&"inline_enum".to_string()) {
                         writeln!(
                             ret,
                             "##### Full Specification\n```json\n\"{}\"\n```\n",
                             v_ident
                         )
                         .map_err(|e| e.to_string())?;
-                    }else{
+                    } else {
                         writeln!(
                             ret,
                             "##### Full Specification\n```json\n{{\n\ttype: \"{}\"\n}}\n```\n\n",

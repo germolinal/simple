@@ -96,39 +96,37 @@ impl IdealHeaterCooler {
 }
 
 impl super::SmallHVAC for IdealHeaterCooler {
-        
-    fn heating_setpoint(&self)->Result<Float,String>{
+    fn heating_setpoint(&self) -> Result<Float, String> {
         match self.heating_setpoint() {
-            Ok(v)=>Ok(*v),
-            Err(e)=>Err(e)
+            Ok(v) => Ok(*v),
+            Err(e) => Err(e),
         }
     }
 
-    fn cooling_setpoint(&self)->Result<Float,String>{
+    fn cooling_setpoint(&self) -> Result<Float, String> {
         match self.cooling_setpoint() {
-            Ok(v)=>Ok(*v),
-            Err(e)=>Err(e)
+            Ok(v) => Ok(*v),
+            Err(e) => Err(e),
         }
     }
 
-    fn max_heating_power(&self)->Result<Float,String>{
+    fn max_heating_power(&self) -> Result<Float, String> {
         match self.max_heating_power() {
-            Ok(v)=>Ok(*v),
-            Err(e)=>Err(e)
+            Ok(v) => Ok(*v),
+            Err(e) => Err(e),
         }
     }
 
-    fn max_cooling_power(&self)->Result<Float,String>{
+    fn max_cooling_power(&self) -> Result<Float, String> {
         match self.max_cooling_power() {
-            Ok(v)=>Ok(*v),
-            Err(e)=>Err(e)
+            Ok(v) => Ok(*v),
+            Err(e) => Err(e),
         }
     }
 
-    fn target_space(&self)->Result<&String,String>{
+    fn target_space(&self) -> Result<&String, String> {
         self.target_space()
     }
-    
 }
 
 #[cfg(test)]

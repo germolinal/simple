@@ -317,7 +317,7 @@ impl SimulationModel for SolarModel {
     type OptionType = SolarOptions;
     type AllocType = SolarModelMemory;
 
-    fn allocate_memory(&self, _state:&SimulationState) -> Result<Self::AllocType, String> {
+    fn allocate_memory(&self, _state: &SimulationState) -> Result<Self::AllocType, String> {
         Ok(())
     }
 

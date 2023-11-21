@@ -60,19 +60,18 @@ pub struct ChunkMemory {
     pub q: Matrix,
     /// memory for a matrix
     pub k1: Matrix,
-    
+
     /// memory for a matrix
     pub k2: Matrix,
     /// memory for a matrix
     pub k3: Matrix,
     /// memory for a matrix
     pub k4: Matrix,
-    
 }
 
 impl ChunkMemory {
     /// Allocates memory for running a simulation of a chunk.
-    /// 
+    ///
     /// This means allocating matrices
     pub fn new(ini: usize, fin: usize) -> Self {
         let n = fin - ini - 1;
@@ -166,7 +165,6 @@ fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
 /// * $`k_3 = \Delta t \times f(t+\frac{\Delta t}{2}, T+\frac{k_2}{2})`$
 /// * $`k_4 = \Delta t \times f(t+\delta t, T+k_3 )`$
 pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
-    
     #[cfg(debug_assertions)]
     {
         let (krows, kcols) = memory.k.size();
@@ -194,7 +192,6 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
         );
     }
 
-
     // I am not sure why I need to clean... I thought this was not necessary.
     memory.k1 *= 0.0;
     memory.k2 *= 0.0;
@@ -208,7 +205,7 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
 
     // returning "temperatures + k1" is Euler... continuing is
     // Runge–Kutta 4th order
-    /* 
+    /*
     memory.temps += &memory.k1;
     return Ok(());
     */
@@ -405,7 +402,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let back_glazing = Glazing::get_back_glazing_system(construction, model)?;
         // These two are the absorbtion of each glazing layer. We need the absorption of each node
         let front_alphas_prev = Glazing::alphas(&front_glazing);
-        
+
         if front_alphas_prev.len() != 1 && front_alphas_prev.len() != construction.materials.len() {
             eprintln!("Construction '{}' might to have a mixture of transparent and opaque layers. This is not currently supported.", construction.name());
         }
@@ -906,7 +903,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         wind_speed: Float,
         dt: Float,
         memory: &mut SurfaceMemory,
-    ) -> Result<(), String> {        
+    ) -> Result<(), String> {
         // Calculate and set Front and Back Solar Irradiance
         let mut solar_front = self.parent.front_solar_irradiance(state);
         if solar_front.is_nan() || solar_front < 0.0 {
@@ -922,7 +919,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         /////////////////////
         let mut solar_radiation = &self.front_alphas * solar_front;
         solar_radiation += &(&self.back_alphas * solar_back);
-        
+
         /////////////////////
         // 2nd: Calculate the temperature in all no-mass nodes.
         // Also, the heat flow into
@@ -1121,7 +1118,8 @@ mod testing {
         let v = crate::SIGMA * (t_environment + 273.15 as Float).powi(4);
 
         let mut memory = ts.allocate_memory();
-        ts.parent.get_node_temperatures(&state, &mut memory.temperatures)?;
+        ts.parent
+            .get_node_temperatures(&state, &mut memory.temperatures)?;
         let surfaces = vec![ts];
         let mut alloc = vec![memory];
 
@@ -1495,7 +1493,8 @@ mod testing {
         let mut state = state_header.take_values().ok_or("Could not take values")?;
 
         let mut memory = ts.allocate_memory();
-        ts.parent.get_node_temperatures(&state, &mut memory.temperatures)?;
+        ts.parent
+            .get_node_temperatures(&state, &mut memory.temperatures)?;
         let surfaces = vec![ts];
         let mut alloc = vec![memory];
 
@@ -1617,7 +1616,4 @@ mod testing {
 
         Ok(())
     }
-
-
-    
 }

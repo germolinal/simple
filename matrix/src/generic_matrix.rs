@@ -185,7 +185,6 @@ impl<T: Numberish> GenericMatrix<T> {
             into.data.iter_mut(),
         )
         .for_each(|((x, y), res)| *res = *x + *y);
-        
 
         // return
         Ok(())

@@ -124,10 +124,7 @@ mod testing {
         );
 
         // Deserialize from hardcoded string and check they are the same
-        let json5_heater: GasSpecification = json5::from_str(
-            "'Air'",
-        )
-        .map_err(|e| e.to_string())?;
+        let json5_heater: GasSpecification = json5::from_str("'Air'").map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", json5_heater));
 
         // Read json file (used in DOC), Deserialize, and compare

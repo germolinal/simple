@@ -5,7 +5,7 @@ pub fn get_docs(attrs: &[syn::Attribute]) -> Result<String, String> {
 
     for at in attrs {
         if let Some(segment) = at.path.segments.iter().next() {
-            let segment_ident = format!("{}", segment.ident);            
+            let segment_ident = format!("{}", segment.ident);
             if "doc" == segment_ident {
                 let mut doc = format!("{}", at.tokens.clone());
                 // Get rid of the annoying '=' and '"'
