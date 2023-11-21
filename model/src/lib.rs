@@ -195,7 +195,7 @@ pub use infiltration::Infiltration;
 
 /// A collection of elements heating and cooling systems
 pub mod hvac;
-pub use hvac::{HVAC, SmallHVAC};
+pub use hvac::{SmallHVAC, HVAC};
 
 /// For setting options in simulations
 pub mod simulation_options;
@@ -211,11 +211,4 @@ pub use surface_trait::{get_orientation, Orientation, SurfaceTrait};
 
 /// Appliances, furniture, etc.
 pub mod objects;
-pub use objects::{
-    Object, 
-    ObjectSpecs,
-    chair::*,
-    table::*,
-    sofa::*,
-    storage::*,
-};
+pub use objects::{chair::*, sofa::*, storage::*, table::*, Object, ObjectSpecs};

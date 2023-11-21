@@ -17,27 +17,24 @@
 use crate::simulation_state_behaviour::*;
 use std::collections::HashMap;
 
-fn get_attributes(ast: &DeriveInput)->Vec<String>{
-    let allowed_attributes = vec![
-        "inline_enum".to_string()
-    ];
+fn get_attributes(ast: &DeriveInput) -> Vec<String> {
+    let allowed_attributes = vec!["inline_enum".to_string()];
 
-    ast
-    .attrs
-    .iter()
-    .filter_map(|a| {
-        if let Some(seg) = a.path.segments.iter().next() {
-            let ident = format!("{}", seg.ident);            
-            if allowed_attributes.contains(&ident) {
-                Some(ident)
+    ast.attrs
+        .iter()
+        .filter_map(|a| {
+            if let Some(seg) = a.path.segments.iter().next() {
+                let ident = format!("{}", seg.ident);
+                if allowed_attributes.contains(&ident) {
+                    Some(ident)
+                } else {
+                    None
+                }
             } else {
                 None
             }
-        } else {
-            None
-        }
-    })
-    .collect()
+        })
+        .collect()
 }
 
 fn object_location(typename: String) -> Option<&'static str> {
@@ -131,8 +128,6 @@ pub fn derive_simulation_state_behaviour(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(ObjectIO, attributes(inline_enum))]
 pub fn derive_input_output(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-
-    
 
     let attributes = get_attributes(&ast);
     let docs = get_docs(&ast.attrs).expect("Could not generate docs");

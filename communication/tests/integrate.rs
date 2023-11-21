@@ -93,7 +93,7 @@ impl SimulationModel for ModelB {
         todo!()
     }
 
-    fn allocate_memory(&self,_state:&SimulationState) -> Result<Self::AllocType, String> {
+    fn allocate_memory(&self, _state: &SimulationState) -> Result<Self::AllocType, String> {
         Ok(())
     }
 }
