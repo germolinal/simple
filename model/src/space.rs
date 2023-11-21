@@ -42,6 +42,8 @@ pub enum SpacePurpose {
     LivingRoom,
     /// Office
     Office,
+    /// Storage
+    Storage,
     /// Garage
     Garage,
     /// Hallway
@@ -54,15 +56,17 @@ pub enum SpacePurpose {
 impl std::fmt::Display for SpacePurpose {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            SpacePurpose::Bathroom => "Bathroom",
-            SpacePurpose::Bedroom => "Bedroom",
-            SpacePurpose::DiningRoom => "Dining Room",
-            SpacePurpose::Kitchen => "Kitchen",
-            SpacePurpose::LivingRoom => "Living Room",
-            SpacePurpose::Office => "Office",
-            SpacePurpose::Garage => "Garage",
-            SpacePurpose::Hallway => "Hallway",
-            SpacePurpose::Other => "Other",
+            Self::Bathroom => "Bathroom",
+            Self::Bedroom => "Bedroom",
+            Self::DiningRoom => "Dining Room",
+            Self::Kitchen => "Kitchen",
+            Self::LivingRoom => "Living Room",
+            Self::Office => "Office",
+            Self::Garage => "Garage",
+            Self::Hallway => "Hallway",
+            Self::Other => "Other",
+            Self::Storage => "Storage"
+            
         };
         write!(f, "{}", s)
     }
