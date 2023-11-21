@@ -57,39 +57,31 @@ pub enum HVAC {
     ElectricHeater(Arc<ElectricHeater>),
 }
 
-
-
-
 /// A trait containing basic functions for single-room HVAC systems
 pub trait SmallHVAC {
-    
     /// Retrieves the heating setpoint, in C
-    fn heating_setpoint(&self)->Result<Float,String>{
+    fn heating_setpoint(&self) -> Result<Float, String> {
         Err("This kind of device cannot heat".to_string())
     }
 
     /// Retrieves the cooling setpoint, in C
-    fn cooling_setpoint(&self)->Result<Float,String>{
+    fn cooling_setpoint(&self) -> Result<Float, String> {
         Err("This kind of device cannot cool".to_string())
     }
 
     /// Retrieves the max heating power, in W
-    fn max_heating_power(&self)->Result<Float,String>{
+    fn max_heating_power(&self) -> Result<Float, String> {
         Err("This kind of device cannot heat".to_string())
     }
 
     /// Retrieves the max cooling power, in W
-    fn max_cooling_power(&self)->Result<Float,String>{
+    fn max_cooling_power(&self) -> Result<Float, String> {
         Err("This kind of device cannot cool".to_string())
     }
 
     /// Retrieves the space being heated/cooled by this device
-    fn target_space(&self)->Result<&String,String>;
-    
+    fn target_space(&self) -> Result<&String, String>;
 }
-
-
-
 
 /***********/
 /* TESTING */

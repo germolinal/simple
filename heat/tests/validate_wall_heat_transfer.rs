@@ -611,11 +611,11 @@ fn march_model(
     // let main_dt = 60. * 60. / n as Float;
     let mut thermal_model =
         ThermalModel::new(&META_OPTIONS, (), &simple_model, &mut state_header, n)?;
-        // in model like these—i.e., a single surface—EnergyPlus assumes Zero IR radation
-        thermal_model.surfaces[0].back_emissivity = 0.0;
-        
-        let mut state = state_header.take_values().ok_or("Could not find state")?;
-        let mut memory = thermal_model.allocate_memory(&state)?;
+    // in model like these—i.e., a single surface—EnergyPlus assumes Zero IR radation
+    thermal_model.surfaces[0].back_emissivity = 0.0;
+
+    let mut state = state_header.take_values().ok_or("Could not find state")?;
+    let mut memory = thermal_model.allocate_memory(&state)?;
 
     let path_string = format!("./tests/{}/eplusout.csv", dir);
     let path = path_string.as_str();
