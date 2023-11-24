@@ -23,7 +23,7 @@ fn get_attributes(ast: &DeriveInput) -> Vec<String> {
     ast.attrs
         .iter()
         .filter_map(|a| {
-            if let Some(seg) = a.path.segments.iter().next() {
+            if let Some(seg) = a.path().segments.iter().next() {
                 let ident = format!("{}", seg.ident);
                 if allowed_attributes.contains(&ident) {
                     Some(ident)

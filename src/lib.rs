@@ -79,10 +79,6 @@ pub use weather::{
     WeatherTrait,
 };
 
-
-
-
-
 #[cfg(test)]
 mod tests {
 
@@ -90,15 +86,22 @@ mod tests {
 
     #[test]
     fn display() -> Result<(), String> {
-        let (model, _) = Model::from_file("./tests/cold_apartment/cold.spl")?;
+        let meta_options = MetaOptions::default();
 
-        // let flnm = "./filename.spl";
-        // model.print_to_file(flnm)?;
-        // let _ = Model::from_file(flnm)?;
+        let (model, mut state) = Model::from_file("./tests/cold_apartment/cold.spl")?;
+        let _ = MultiphysicsModel::new(&meta_options, (), &model, &mut state, 2)?;
 
+        let flnm = "./filename.spl";
+        model.print_to_file(flnm)?;
+        let (model, mut state) = Model::from_file(flnm)?;
+        let _ = MultiphysicsModel::new(&meta_options, (), &model, &mut state, 2)?;
+
+        
+
+        
         let string = format!("{}", model);
-        let _ = Model::from_bytes(string.as_bytes())?;
-
+        let (model, mut state) = Model::from_bytes(string.as_bytes())?;
+        let _ = MultiphysicsModel::new(&meta_options, (), &model, &mut state, 2)?;
 
         Ok(())
     }

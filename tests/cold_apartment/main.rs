@@ -42,17 +42,21 @@ fn apartment_sim() -> Result<(), String> {
 
     fn process_space(i: usize) -> ValidFunc {
         // Load produced data
-        let found = validate::from_csv::<simple::Float>(
+        let mut found = validate::from_csv::<simple::Float>(
             "./tests/cold_apartment/check.csv",
             &[1, 2, 3, 4, 5, 6, 7, 8],
         );
-        let expected = validate::from_csv::<simple::Float>(
+        let mut expected = validate::from_csv::<simple::Float>(
             "tests/cold_apartment/eplusout.csv",
             &[1, 2, 3, 4, 5, 6, 7, 8],
         );
 
-        let skip = 100;
-        let take = 8760 * 4 - 120;
+        expected[i].pop();
+        found[i].pop();
+
+
+        let skip = 2000; // This is warmup period
+        // let take = expected[0].len() - skip - 1000;
         Box::new(ScatterValidator {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
@@ -60,11 +64,15 @@ fn apartment_sim() -> Result<(), String> {
             expected: expected[i]
                 .iter()
                 .skip(skip)
-                .take(take)
+                // .take(take)
                 .map(|v| *v)
                 .collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[i].iter().skip(skip).take(take).map(|v| *v).collect(),
+            found: found[i].iter()
+                .skip(skip)
+                // .take(take)
+                .map(|v| *v)
+                .collect(),
 
             // allowed_r2: Some(0.93),
             // allowed_intersect_delta: Some(0.8),
