@@ -60,6 +60,71 @@ pub enum Field {
 }
 
 impl Field {
+    pub fn gen_display(&self) -> TokenStream2 {
+        match self.data().ident.clone() {
+            Some(fname) => {
+                let fname_str = format!("\t{}: ", &fname);
+                match self {
+                    Field::State(_d) => {
+                        quote!() // do not return anything
+                    }
+                    Field::Option(v) => {
+                        let child = v.child.clone().expect("Option has no child");
+                        
+                        let printst = match *child {
+                            Field::String(_) =>{
+                                quote!(write!(f,"{}\"{}\",\n", #fname_str,x)?;)
+                            },
+                            _ => {
+                                quote!(write!(f,"{}{},\n", #fname_str,x)?;)
+                            }
+                        };
+                                                    
+                        quote!(
+                            // Print only if it is there.
+                            if let Some(x) = &self.#fname {
+                                #printst
+                            }
+                        )
+                    }
+                    Field::Vec(_) => {
+                        quote!(
+                            if !&self.#fname.is_empty(){
+                                write!(f,"{} [\n", #fname_str)?;
+                                for x in &self.#fname {
+                                    let j = json5::to_string(x).unwrap();
+                                    write!(f,"\t\t{},\n", j)?;
+                                }
+                                write!(f,"\t],\n")?;
+                            }
+                        )
+                    }
+                    Field::String(_) => {
+                        quote!(
+                            write!(f,"{}\"{}\",\n", #fname_str,&self.#fname)?;
+                        )
+                    }
+                    Field::Float(_) | Field::Int(_) | Field::Bool(_) | Field::Rc(_) => {
+                        quote!(
+                            write!(f,"{}{},\n", #fname_str, &self.#fname)?;
+                        )
+                    }
+                    Field::Object(_) => {
+                        quote!(
+                            let j = json5::to_string(&self.#fname).expect("could not serialize");
+                            // write!(f,"{}{},\n", #fname_str, &self.#fname)?;
+                            write!(f,"{}{},\n", #fname_str, j)?;
+                        )
+                    }
+                }
+            }
+            None => {
+                
+                quote!()
+            }
+        }
+    }
+
     /// Creates a new Field object, with no ident and no attributes.
     ///
     /// This method is meant to be used for nested typs. E.g. the `usize` in `Vec<usize>`

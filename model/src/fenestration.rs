@@ -175,7 +175,7 @@ pub struct Fenestration {
     /// serializing a Model or by another kind of machine—and therefore
     /// the convenience of not having to write down the vertices around
     /// holes is not much needed.
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     parent_surface: Option<String>,
 
     #[physical("front_temperature")]
@@ -589,7 +589,7 @@ mod testing {
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
-        );
+        );        
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/fenestration_type";
@@ -644,7 +644,8 @@ mod testing {
                 0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}
                 5.548000,0,0.5000,  // X,Y,Z ==> Vertex 3 {m}
                 5.548000,0,2.5000,   // X,Y,Z ==> Vertex 4 {m}
-            ]
+            ],
+            parent_surface: 'some surface'
         }",
         )
         .map_err(|e| e.to_string())?;
@@ -656,6 +657,14 @@ mod testing {
         } else {
             assert!(false, "Incorrect fenestration operat")
         }
+        
+        if let Some(parent) = &hardcoded_ref.parent_surface {
+            assert_eq!(parent, "some surface")
+        }else{
+            panic!("Expecting parent surface")
+        }
+
+        println!("=====\n{}\n=====\n", &hardcoded_ref);
 
         if let Some(FenestrationPosition::Fixed { fraction }) = &hardcoded_ref.operation {
             assert!(fraction.is_none())
@@ -673,6 +682,7 @@ mod testing {
         let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
         let from_json_file: Fenestration =
             serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
+                
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
@@ -682,6 +692,7 @@ mod testing {
         let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
         let from_serialized: Fenestration =
             serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
+        
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)

@@ -212,3 +212,6 @@ pub use surface_trait::{get_orientation, Orientation, SurfaceTrait};
 /// Appliances, furniture, etc.
 pub mod objects;
 pub use objects::{chair::*, sofa::*, storage::*, table::*, Object, ObjectSpecs};
+
+
+

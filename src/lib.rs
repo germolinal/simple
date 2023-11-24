@@ -78,3 +78,28 @@ pub use weather::{
     CurrentWeather, EPWWeather, EPWWeatherLine, Location, Solar, SyntheticWeather, Time, Weather,
     WeatherTrait,
 };
+
+
+
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn display() -> Result<(), String> {
+        let (model, _) = Model::from_file("./tests/cold_apartment/cold.spl")?;
+
+        // let flnm = "./filename.spl";
+        // model.print_to_file(flnm)?;
+        // let _ = Model::from_file(flnm)?;
+
+        let string = format!("{}", model);
+        let _ = Model::from_bytes(string.as_bytes())?;
+
+
+        Ok(())
+    }
+}
