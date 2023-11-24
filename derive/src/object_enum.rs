@@ -104,6 +104,17 @@ impl EnumObject {
         }
     }
 
+    pub fn gen_display(&self) -> TokenStream2 {
+        let ret = quote!(
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let j = json5::to_string(&self).unwrap();
+                write!(f, "{}", j)
+            }
+        );
+
+        ret
+    }
+
     pub fn gen_docs(&self) -> Result<String, String> {
         let mut ret = String::new();
 

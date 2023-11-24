@@ -135,9 +135,6 @@ pub fn derive_input_output(input: TokenStream) -> TokenStream {
     let object_name = &ast.ident;
     let name_str = format!("{}", object_name);
 
-    // From Bytes
-    // let from_bytes = obj.gen_from_bytes();
-
     // New
     let new = obj.gen_new().expect("Could not generate New");
 
@@ -152,12 +149,20 @@ pub fn derive_input_output(input: TokenStream) -> TokenStream {
     // docs
     let docs = obj.gen_docs();
 
+    let display = obj.gen_display();
+
     // return
     TokenStream::from(quote!(
+
+        impl std::fmt::Display for #object_name{
+            #display
+        }
+
+
         impl #object_name {
 
 
-            // #from_bytes
+
 
             # docs
 

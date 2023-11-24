@@ -40,6 +40,38 @@ impl StructObject {
         false
     }
 
+    pub fn gen_display(&self) -> TokenStream2 {
+        let mut content = quote!();
+
+        for f in self.fields.iter() {
+            
+
+            let this_content = f.gen_display();
+            content = quote!(
+                #content
+
+                #this_content
+            )
+        }
+
+        let ret = quote!(
+            // fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            //     let j = json5::to_string(&self).unwrap();
+            //     write!(f, "{} {}\n\n", #i, j)
+            // }
+
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{{\n")?;
+                #content;
+                write!(f, "}}\n\n")?;
+
+                Ok(())
+            }
+        );
+
+        ret
+    }
+
     pub fn gen_docs(&self) -> Result<String, String> {
         let mut ret = String::new();
 
