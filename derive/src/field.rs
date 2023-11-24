@@ -1,6 +1,7 @@
 use crate::common_path::*;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
+use syn::{Meta, MetaList, MetaNameValue};
 
 pub const STATE_ELEMENT_TYPE: &str = "StateElementField";
 
@@ -15,18 +16,28 @@ impl Attribute {
         if let syn::AttrStyle::Inner(_) = &a.style {
             panic!("Expecing Outer style attribute")
         }
-        let name = a.path.segments[0].ident.clone();
+        let name = a.path().segments[0].ident.clone();
         let mut value: Option<String> = None;
-        a.tokens.clone().into_iter().for_each(|token| {
-            if let proc_macro2::TokenTree::Group(g) = token {
-                g.stream().into_iter().for_each(|literal| {
-                    if let proc_macro2::TokenTree::Literal(lit) = literal {
-                        value = Some(format!("{}", lit));
-                    }
-                })
-            }
-        });
-        // return
+
+        
+        if name != "doc" {
+            value = match &a.meta {
+                Meta::Path(_) => {
+                    // dbg!(&name, "Path!");
+                    // p.segments.clone()
+                    None
+                }
+                Meta::NameValue(MetaNameValue { .. }) => {
+                    unreachable!(
+                        "I do not think we support attributes of this kind... please report this"
+                    );
+                }
+                Meta::List(MetaList {
+                    path: _, tokens, ..
+                }) => Some(format!("{}", tokens)),
+            };
+        }
+        
         Self {
             name: format!("{}", name),
             value,
@@ -60,71 +71,7 @@ pub enum Field {
 }
 
 impl Field {
-    pub fn gen_display(&self) -> TokenStream2 {
-        match self.data().ident.clone() {
-            Some(fname) => {
-                let fname_str = format!("\t{}: ", &fname);
-                match self {
-                    Field::State(_d) => {
-                        quote!() // do not return anything
-                    }
-                    Field::Option(v) => {
-                        let child = v.child.clone().expect("Option has no child");
-                        
-                        let printst = match *child {
-                            Field::String(_) =>{
-                                quote!(write!(f,"{}\"{}\",\n", #fname_str,x)?;)
-                            },
-                            _ => {
-                                quote!(write!(f,"{}{},\n", #fname_str,x)?;)
-                            }
-                        };
-                                                    
-                        quote!(
-                            // Print only if it is there.
-                            if let Some(x) = &self.#fname {
-                                #printst
-                            }
-                        )
-                    }
-                    Field::Vec(_) => {
-                        quote!(
-                            if !&self.#fname.is_empty(){
-                                write!(f,"{} [\n", #fname_str)?;
-                                for x in &self.#fname {
-                                    let j = json5::to_string(x).unwrap();
-                                    write!(f,"\t\t{},\n", j)?;
-                                }
-                                write!(f,"\t],\n")?;
-                            }
-                        )
-                    }
-                    Field::String(_) => {
-                        quote!(
-                            write!(f,"{}\"{}\",\n", #fname_str,&self.#fname)?;
-                        )
-                    }
-                    Field::Float(_) | Field::Int(_) | Field::Bool(_) | Field::Rc(_) => {
-                        quote!(
-                            write!(f,"{}{},\n", #fname_str, &self.#fname)?;
-                        )
-                    }
-                    Field::Object(_) => {
-                        quote!(
-                            let j = json5::to_string(&self.#fname).expect("could not serialize");
-                            // write!(f,"{}{},\n", #fname_str, &self.#fname)?;
-                            write!(f,"{}{},\n", #fname_str, j)?;
-                        )
-                    }
-                }
-            }
-            None => {
-                
-                quote!()
-            }
-        }
-    }
-
+    
     /// Creates a new Field object, with no ident and no attributes.
     ///
     /// This method is meant to be used for nested typs. E.g. the `usize` in `Vec<usize>`
@@ -181,6 +128,9 @@ impl Field {
         let ident = field.ident.clone();
 
         if let syn::Type::Path(t) = &field.ty {
+            // field.attrs.iter().for_each(|a|{
+            //     dbg!(a);
+            // });
             let attributes: Vec<Attribute> = field.attrs.iter().map(Attribute::new).collect();
 
             let mut api_alias: Option<String> = None;

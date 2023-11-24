@@ -175,7 +175,7 @@ pub struct Fenestration {
     /// serializing a Model or by another kind of machine—and therefore
     /// the convenience of not having to write down the vertices around
     /// holes is not much needed.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing)]
     parent_surface: Option<String>,
 
     #[physical("front_temperature")]
@@ -645,7 +645,6 @@ mod testing {
                 5.548000,0,0.5000,  // X,Y,Z ==> Vertex 3 {m}
                 5.548000,0,2.5000,   // X,Y,Z ==> Vertex 4 {m}
             ],
-            parent_surface: 'some surface'
         }",
         )
         .map_err(|e| e.to_string())?;
@@ -658,11 +657,7 @@ mod testing {
             assert!(false, "Incorrect fenestration operat")
         }
         
-        if let Some(parent) = &hardcoded_ref.parent_surface {
-            assert_eq!(parent, "some surface")
-        }else{
-            panic!("Expecting parent surface")
-        }
+        
 
         println!("=====\n{}\n=====\n", &hardcoded_ref);
 

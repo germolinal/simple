@@ -58,11 +58,12 @@ fn get_simple_results(
     max_depth: usize,
     with_glass: bool,
 ) -> Result<(Vec<Float>, Vec<Float>), String> {
-    let mut scene = if with_glass {
-        Scene::from_radiance(format!("./tests/dc/{dir}/scene.rad")).expect("Could not read file")
+    let scene_path = if with_glass {
+        format!("./tests/dc/{dir}/scene.rad")
     } else {
-        Scene::from_radiance(format!("./tests/dc/{dir}/room.rad")).expect("Could not read file")
-    };
+        format!("./tests/dc/{dir}/room.rad")
+    };    
+    let mut scene = Scene::from_radiance(scene_path).expect("Could not read file");
     scene.build_accelerator();
 
     let n_ambient_samples = if max_depth > 0 { 9020 } else { 100020 };
@@ -74,7 +75,7 @@ fn get_simple_results(
         ..DCFactory::default()
     };
 
-    let rays = load_rays("./tests/points.pts")?;
+    let rays = load_rays("./tests/dc/points.pts")?;
     let found_matrix = integrator.calc_dc(&rays, &scene);
     let found = flatten_matrix(&found_matrix)?;
 
@@ -153,7 +154,7 @@ fn validate_dc() -> Result<(), String> {
     // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture
     let mut validator = Validator::new(
         "Validate Daylight Coefficients",
-        "../docs/validation/daylight_coefficient.html",
+        "./docs/validation/daylight_coefficient.html",
     );
 
     room(&mut validator)?;

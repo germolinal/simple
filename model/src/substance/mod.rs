@@ -69,6 +69,13 @@ pub enum Substance {
     Gas(Arc<Gas>),
 }
 
+impl std::fmt::Display for Substance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {        
+        let j = json5::to_string(&self).unwrap();
+        write!(f, "{}\n\n", j)
+    }
+}
+
 /***********/
 /* TESTING */
 /***********/

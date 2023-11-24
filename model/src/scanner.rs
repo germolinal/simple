@@ -215,7 +215,7 @@ impl<'a> SimpleScanner<'a> {
 
     /// Parses a whole [`Model`] from a text file
     pub(crate) fn parse_model(&mut self) -> Result<(Model, SimulationStateHeader), String> {
-        let mut data = HashMap::<String, Vec<&str>>::new();
+        let mut data = HashMap::<String, Vec<(&str, usize)>>::new();
 
         loop {
             self.skip_white_space()?;
@@ -248,9 +248,9 @@ impl<'a> SimpleScanner<'a> {
                 .expect("Could not scan")
                 .to_string();
             if let Some(v) = data.get_mut(&key) {
-                v.push(obj_str);
+                v.push((obj_str, self.line));
             } else {
-                data.insert(key, vec![obj_str]);
+                data.insert(key, vec![(obj_str, self.line)]);
             }
         }
         // Now, build the model
@@ -280,13 +280,13 @@ impl<'a> SimpleScanner<'a> {
                 continue
             }
 
-            for obj_str in data.get(ident).unwrap().into_iter() {
+            for (obj_str, ln) in data.get(ident).unwrap().into_iter() {
                 match ident.as_bytes() {
                     b"Building" => {
                         let s: crate::Building = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -296,7 +296,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Construction = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -306,7 +306,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Fenestration = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -316,7 +316,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::HVAC = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -326,7 +326,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Luminaire = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -336,7 +336,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Material = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -346,7 +346,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Object = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -356,7 +356,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Output = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -366,7 +366,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::SiteDetails = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -376,7 +376,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::SolarOptions = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -386,7 +386,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Space = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -396,7 +396,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Surface = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -406,7 +406,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Substance = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), self.line);
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
                                 return Err(errmsg);
                             }
                         };

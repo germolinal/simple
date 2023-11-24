@@ -128,11 +128,15 @@ impl std::fmt::Display for Model {
         }
 
         for b in self.outputs.iter() {
-            write!(f, "Output {}", b)?;
+            write!(f, "Output {}\n\n", b)?;
         }
 
         if let Some(s) = self.site_details.as_ref() {
             write!(f, "SiteDetails {}", s)?;
+        }
+
+        for b in self.substances.iter() {
+            write!(f, "Substance {}", b)?;
         }
 
         for b in self.spaces.iter() {
@@ -920,7 +924,7 @@ impl Model {
             0.,
         )?;
         add.set_open_fraction_index(state_index)?;
-
+        
         // check the parent surface
         let mut parent: Option<Arc<Surface>> = None;
         if let Ok(parent_name) = add.parent_surface() {

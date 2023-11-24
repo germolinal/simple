@@ -8,13 +8,11 @@ SiteDetails {
 
 
 // ANCHOR: building
-// Building {
-//     name: "Art Deco Building", 
-//     n_storeys: 2,
-//     shelter_class: {
-//         type: "Urban"
-//     }, 
-// }
+Building {
+    name: "Art Deco Building", 
+    n_storeys: 2,
+    shelter_class: "Urban", 
+}
 // ANCHOR_END: building
 
 SolarOptions {
@@ -116,7 +114,11 @@ Space {
     //   type : "EffectiveAirLeakageArea",
     //   area: 0.0496, // this is roughly 22cm x 22cm
     // },
-    // building: "Art Deco Building"
+    building: "Art Deco Building",
+    storey: 0,
+    purposes: [
+      "Bedroom"
+    ]
 }
 // ANCHOR_END: kids_bedroom
 
@@ -224,6 +226,20 @@ Surface {
   category: "InteriorWall"
 }
 
+Fenestration {
+    name: "Kids door",
+    parent_surface: "kids - Hallway",
+    construction: "interior wall",
+    vertices: [ 
+      2.98, 2.50, 0.01, 
+      2.98, 2.50, 1.9,  
+      2.98, 3.40, 1.9, 
+      2.98, 3.40, 0.01, 
+  ],
+  category: "Door"
+
+}
+
 Surface {
   name: "kids - common area",
   construction: "interior wall", 
@@ -275,6 +291,17 @@ Surface {
   category: "ExteriorFloor"
 }
 
+Object {
+  name: "kid bed",
+  location: [1.05, 1.9, 0],
+  dimensions: [0.9, 1.7, 0.7],
+  front: [1,0,0],
+  specifications: {
+    type: "Bed"
+  }
+
+}
+
 
 /* BATHROOM */
 
@@ -286,7 +313,11 @@ Space {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm
   // },
-  // building: "Art Deco Building"
+  building: "Art Deco Building",
+  storey: 0,  
+  purposes: [
+    "Bathroom"
+  ]
 }
 Luminaire {
   name: "Bathroom light",
@@ -365,6 +396,21 @@ Surface {
   category: "InteriorWall"
 }
 
+
+Fenestration {
+    name: "Bathroom door",
+    parent_surface: "Bathroom - Hallway",
+    construction: "interior wall",
+    vertices: [ 
+      1.92, 5.65, 0.01, 
+      1.92, 5.65, 1.9,  
+      1.92, 4.81, 1.9, 
+      1.92, 4.81, 0.01, 
+  ],
+  category: "Door"
+
+}
+
 Surface {
   name: "Bathroom - Storage",
   construction: "interior wall", 
@@ -404,7 +450,7 @@ Surface {
 }
 
 Surface {
-  name: "Bathroom - floor",
+  name: "Bathroom floor",
   construction: "interior wall", 
   back_boundary: { type: "Adiabatic" },
   front_boundary: {
@@ -420,6 +466,36 @@ Surface {
   category: "ExteriorFloor"
 }
 
+Object {
+    name: "Toilet",
+    dimensions: [0.5, 0.71, 0.724],
+    front: [1,0,0],
+    location: [0.4, 5.3, 0.0],
+    specifications:{
+        type:"Toilet"
+    }
+}
+
+Object {
+    name: "Sink",
+    dimensions: [0.6, 0.4, 0.25],
+    front: [0,-1,0],
+    location: [1.4, 5.5, 0.8],
+    specifications:{
+        type:"Sink"
+    }
+}
+
+Object {
+    name: "Sink",
+    dimensions: [1.8, 0.75, 0.4],
+    front: [0,1,0],
+    location: [0.95, 4.2, 0.0],
+    specifications:{
+        type:"Bathtub"
+    }
+}
+
 
 /* STORAGE */
 
@@ -431,7 +507,11 @@ Space {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm
   // },
-  // building: "Art Deco Building"
+  building: "Art Deco Building",
+  storey: 0,  
+  purposes: [
+    "Storage"
+  ]
 }
 
 
@@ -456,6 +536,8 @@ Surface {
 }
 
 
+
+
 Surface {
   name: "Storage - Hallway door",
   construction: "interior wall", 
@@ -476,6 +558,19 @@ Surface {
   category: "InteriorWall"
 }
 
+Fenestration {
+  name: "Storage door",
+  parent_surface: "Storage - Hallway door",
+  construction: "interior wall",
+  vertices: [ 
+      1.96, 4.80, 0.01, 
+      1.96, 4.80, 1.9,  
+      2.86, 4.80, 1.9, 
+      2.86, 4.80, 0.01, 
+  ],
+  category: "Door"
+
+}
 
 Surface {
   name: "Storage - ceiling",
@@ -517,12 +612,16 @@ Surface {
 
 Space {
   name: "Kitchen",
-  volume: 16.092, 
+  volume: 15.39, 
   // infiltration: {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm
   // },
-  // building: "Art Deco Building"
+  building: "Art Deco Building",
+  storey: 0,  
+  purposes: [
+    "Kitchen"
+  ]
 }
 
 Luminaire {
@@ -548,6 +647,20 @@ Surface {
   category: "ExteriorWall"
 }
 
+Fenestration {
+  name: "Kitchen door",
+  parent_surface: "Kitchen - exterior west",
+  construction: "interior wall",
+  vertices: [ 
+      0, 6.2, 0.01, 
+      0, 6.2, 1.9,  
+      0, 7.1, 1.9, 
+      0, 7.1, 0.01, 
+  ],
+  category: "Door"
+
+}
+
 
 Surface {
   name: "Kitchen - exterior north",
@@ -564,6 +677,9 @@ Surface {
   ],
   category: "ExteriorWall"
 }
+
+
+
 
 Fenestration {
     name: "Kitchen - window",
@@ -596,6 +712,20 @@ Surface {
       2.98, 6.03, 0, 
   ],
   category: "InteriorWall"
+}
+
+Fenestration {
+  name: "Kitchen to Laundry",
+  parent_surface: "Kitchen - laundry",
+  construction: "interior wall",
+  vertices: [ 
+      2.98, 7.03, 0.01, 
+      2.98, 7.03, 1.9,  
+      2.98, 6.13, 1.9, 
+      2.98, 6.13, 0.01, 
+  ],
+  category: "Opening"
+
 }
 
 Surface {
@@ -654,6 +784,65 @@ Surface {
   category: "ExteriorFloor"
 }
 
+Object {
+    name: "Kitchen bench",
+    dimensions: [2.82, 0.5, 0.9],
+    front: [0,-1,0],
+    location: [1.56, 7.32, 0.0],
+    specifications:{
+        type:"Storage"
+    }
+}
+
+Object {
+    name: "Kitchen cabinet",
+    dimensions: [1., 0.5, 1.],
+    front: [0,-1,0],
+    location: [2.44, 7.32, 1.7],
+    specifications:{
+        type:"Storage"
+    }
+}
+
+Object {
+    name: "Fridge",
+    dimensions: [0.7, 0.6, 2.1],
+    front: [0,1,0],
+    location: [1.66, 6.12, 0.0],
+    specifications:{
+        type:"Refrigerator"
+    }
+}
+
+Object {
+    name: "Oven",
+    dimensions: [0.7, 0.7, 0.9],
+    front: [0,1,0],
+    location: [0.95, 6.17, 0.0],
+    specifications:{
+        type:"Oven"
+    }
+}
+
+Object {
+    name: "Hot water cylinder",
+    dimensions: [0.47, 0.47, 2.2],
+    front: [0,1,0],
+    location: [0.34, 6., 0.0],
+    specifications:{
+        type:"Storage"
+    }
+}
+
+Object {
+    name: "Stove",
+    dimensions: [0.7, 0.7, 0.9],
+    front: [0,1,0],
+    location: [0.95, 6.17, 0.9],
+    specifications:{
+        type:"Stove"
+    }
+}
 
 /*
 Opening {
@@ -668,15 +857,19 @@ Opening {
 
 /* LAUNDRY */
 
-
+ 
 Space {
   name: "Laundry",
-  volume: 3.84,
+  volume: 4.59,
   // infiltration: {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm
   // },
-  // building: "Art Deco Building"
+  building: "Art Deco Building",
+  storey: 0,  
+  purposes: [
+    "Laundry"
+  ]
 }
 
 Luminaire {
@@ -724,7 +917,7 @@ Surface {
   },
   front_boundary: {
     type: "Space",
-    space: "Livingroom"
+    space: "Living room"
   },
   vertices: [ 
       4.02, 7.67, 0, 
@@ -787,44 +980,67 @@ Surface {
       4.02, 7.67, 0, 
       2.98, 7.67, 0,  
   ],
-  category: "InteriorWall"
+  category: "ExteriorFloor"
 }
 
+Object {
+    name: "Washing machine",
+    dimensions: [0.6, 0.6, 0.7],
+    front: [-1,0,0],
+    location: [3.64, 6.33, 0],
+    specifications:{
+        type:"WasherDryer"
+    }
+}
+Object {
+    name: "Drying machine",
+    dimensions: [0.6, 0.6, 0.74],
+    front: [-1,0,0],
+    location: [3.64, 7., 0],
+    specifications:{
+        type:"WasherDryer"
+    }
+}
 
 /* LIVINGROOM */
 
 
 Space {
-  name: "Livingroom",
-  volume: 50.66, 
+  name: "Living room",
+  volume: 50.3, 
   // infiltration: {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm
   // },
-  // building: "Art Deco Building"
+  building: "Art Deco Building",
+  storey: 0,  
+  purposes: [
+    "LivingRoom",
+    "DiningRoom"
+  ]
 }
 
 Luminaire {
-  name: "Livingroom light",
+  name: "Living room light",
   "max_power": 35,
-  target_space: "Livingroom",
+  target_space: "Living room",
 }
 
 HVAC {
   type: "ElectricHeater",
-  name: "Livingroom heater",
-  target_space: "Livingroom",
+  name: "Living room heater",
+  target_space: "Living room",
   max_heating_power: 2300,
   heating_setpoint: 19.,
 }
 
 
 Surface {
-  name: "Livingroom - exterior north",
+  name: "Living room - exterior north",
   construction: "exterior wall", 
   back_boundary: {
     type: "Space",
-    space: "Livingroom"
+    space: "Living room"
   },
   vertices: [ 
       4.02, 7.67, 0, 
@@ -837,7 +1053,7 @@ Surface {
 
 Fenestration {
     name: "Living - window north",
-    parent_surface: "Livingroom - exterior north",
+    parent_surface: "Living room - exterior north",
     construction: "Window",
     vertices: [
         7.90, 7.67, 0.70, 
@@ -849,11 +1065,11 @@ Fenestration {
 
 
 Surface {
-  name: "Livingroom - exterior east",
+  name: "Living room - exterior east",
   construction: "exterior wall", 
   back_boundary: {
     type: "Space",
-    space: "Livingroom"
+    space: "Living room"
   },
   vertices: [ 
       8.77, 7.67, 0, 
@@ -865,8 +1081,8 @@ Surface {
 }
 
 Fenestration {
-    name: "Livingroom - east 1",
-    parent_surface: "Livingroom - exterior east",
+    name: "Living room - east 1",
+    parent_surface: "Living room - exterior east",
     construction: "Window",
     vertices: [
         8.77, 7.35, 0.7, 
@@ -877,8 +1093,8 @@ Fenestration {
 }
 
 Fenestration {
-    name: "Livingroom - east 2",
-    parent_surface: "Livingroom - exterior east",
+    name: "Living room - east 2",
+    parent_surface: "Living room - exterior east",
     construction: "Window",
     vertices: [
         8.77, 6.4, 0.3, 
@@ -910,7 +1126,7 @@ Output {
 
 
 Output {
-    SpaceDryBulbTemperature : "Livingroom"
+    SpaceDryBulbTemperature : "Living room"
 }
 
 Output {
@@ -924,8 +1140,8 @@ Output {
 
 
 Fenestration {
-    name: "Livingroom - east 3",
-    parent_surface: "Livingroom - exterior east",
+    name: "Living room - east 3",
+    parent_surface: "Living room - exterior east",
     construction: "Window",
     vertices: [
         8.77, 5.1, 0.7, 
@@ -937,11 +1153,11 @@ Fenestration {
 
 
 Surface {
-  name: "Livingroom - main bedroom",
+  name: "Living room - main bedroom",
   construction: "interior wall", 
   front_boundary: {
     type: "Space",
-    space: "Livingroom"
+    space: "Living room"
   },
   back_boundary: {
     type: "Space",
@@ -956,12 +1172,14 @@ Surface {
   category: "InteriorWall"
 }
 
+
+
 Surface {
-  name: "Livingroom - Hallway",
+  name: "Living room - Hallway",
   construction: "interior wall", 
   front_boundary: {
     type: "Space",
-    space: "Livingroom"
+    space: "Living room"
   },
   back_boundary: {
     type: "Space",
@@ -976,14 +1194,27 @@ Surface {
   category: "InteriorWall"
 }
 
+Fenestration {
+  name: "Living room door",
+  parent_surface: "Living room - Hallway",
+  construction: "interior wall",
+  vertices: [ 
+      4.02, 5.7, 0.01, 
+      4.02, 5.7, 1.9,  
+      4.02, 4.8, 1.9, 
+      4.02, 4.8, 0.01, 
+  ],
+  category: "Door"
+
+}
 
 Surface {
-  name: "Livingroom - ceiling",
+  name: "Living room - ceiling",
   construction: "interior wall", 
   front_boundary: { type: "Adiabatic" },
   back_boundary: {
     type: "Space",
-    space: "Livingroom"
+    space: "Living room"
   },
   vertices: [ 
       4.02, 3.74, 2.7,  
@@ -995,12 +1226,12 @@ Surface {
 }
 
 Surface {
-  name: "Livingroom - floor",
+  name: "Living room - floor",
   construction: "interior wall", 
   back_boundary: { type: "Adiabatic" },
   front_boundary: {
     type: "Space",
-    space: "Livingroom"
+    space: "Living room"
   },
   vertices: [ 
       4.02, 3.74, 0,  
@@ -1011,18 +1242,114 @@ Surface {
   category: "ExteriorFloor"
 }
 
+Object {
+  name: "Dinner table",
+  location: [5.2, 6.4, 0],
+  dimensions: [1.1, 1.1, 0.68],
+  front: [1,0,0],
+  specifications: {
+    type: "Table",
+    shape: "Circular"
+  }
+}
+
+Object {
+  name: "chair 1",
+  location: [4.7, 6.4, 0],
+  dimensions: [0.43, 0.52, 0.86],
+  front: [1,0,0],
+  specifications: {
+    type: "Chair"
+  }
+}
+
+Object {
+  name: "chair 2",
+  location: [5.2, 6.94, 0],
+  dimensions: [0.43, 0.52, 0.86],
+  front: [0,-1,0],
+  specifications: {
+    type: "Chair"
+  }
+}
+
+Object {
+  name: "chair 3",
+  location: [5.8, 6.4, 0],
+  dimensions: [0.43, 0.52, 0.86],
+  front: [-1,0,0],
+  specifications: {
+    type: "Chair"
+  }
+}
+
+Object {
+  name: "chair 4",
+  location: [5.2, 5.8, 0],
+  dimensions: [0.43, 0.52, 0.86],
+  front: [0,1,0],
+  specifications: {
+    type: "Chair"
+  }
+}
+
+Object {
+  name: "Living room sofa",
+  location: [7.2, 4.1, 0],
+  dimensions: [2.3, 0.52, 0.86],
+  front: [0,1,0],
+  specifications: {
+    type: "Sofa"
+  }
+}
+Object {
+  name: "Living room sofa",
+  location: [8.1, 7.5, 0],
+  dimensions: [1, 0.25, 0.6],
+  front: [0,-1,0],
+  specifications: {
+    type: "Storage",
+    subtype: "Shelf"
+  }
+}
+
+Object {
+  name: "Living Armchair 1",
+  location: [7.999, 6.3, 0],
+  dimensions: [0.7, 0.62, 0.86],
+  front: [-0.2,-1,0],
+  specifications: {
+    type: "Sofa",
+    subtype: "SingleSeat"
+  }
+}
+
+Object {
+  name: "Living Armchair 2",
+  location: [6.8, 6.3, 0],
+  dimensions: [0.7, 0.62, 0.86],
+  front: [0.2,-1,0],
+  specifications: {
+    type: "Sofa",
+    subtype: "SingleSeat"
+  }
+}
 
 /* MAIN BEDROOM */
 
 
 Space {
   name: "Main Bedroom",
-  volume: 48.654, 
+  volume: 48.0, 
   // infiltration: {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm
   // },
-  // building: "Art Deco Building"
+  building: "Art Deco Building",
+  storey: 0,
+  purposes: [
+    "Bedroom"
+  ]
 }
 
 Luminaire {
@@ -1089,6 +1416,21 @@ Surface {
   category: "ExteriorWall"
 }
 
+
+Fenestration {
+  name: "Main bedroom door",
+  parent_surface: "Main Bedroom - Hallway",
+  construction: "interior wall",
+  vertices: [ 
+      4.02, 2.5, 0.01, 
+      4.02, 2.5, 1.9,  
+      4.02, 3.4, 1.9, 
+      4.02, 3.4, 0.01, 
+  ],
+  category: "Door"
+
+}
+
 Surface {
   name: "Main Bedroom - common area",
   construction: "interior wall", 
@@ -1107,7 +1449,7 @@ Surface {
 }
 
 Surface {
-  name: "Livingroom - common area small",
+  name: "Living room - common area small",
   construction: "interior wall", 
   back_boundary: { type: "Adiabatic" },
   front_boundary: {
@@ -1158,16 +1500,55 @@ Surface {
   category: "ExteriorFloor"
 }
 
+Object {
+  name: "Main Sofa",
+  location: [8.1, 3.1, 0],
+  dimensions: [0.7, 0.7, 0.7],
+  front: [-1,-1,0],
+  specifications: {
+    type: "Sofa"
+  }
+
+}
+
+Object {
+  name: "Main bed",
+  location: [6.395, 1.03, 0],
+  dimensions: [1.6, 1.9, 0.7],
+  front: [0,1,0],
+  specifications: {
+    type: "Bed"
+  }
+
+}
+
+Object {
+  name: "Main wardrobe",
+  location: [4.35, 1.06, 0],
+  dimensions: [2.01, 0.7, 2.3],
+  front: [1,0,0],
+  specifications: {
+    type: "Storage"
+  }
+
+}
+
+
+
 
 /* Hallway */
 Space {
   name: "Hallway",
-  volume: 19.68,
+  volume: 15.93,
   // infiltration: {
   //     type : "EffectiveAirLeakageArea",
   //     area: 0.0496, // this is roughly 22cm x 22cm
   // },
-  // building: "Art Deco Building"
+  building: "Art Deco Building",
+  storey: 0,
+  purposes: [
+    "Hallway"
+  ]
 }
 
 Luminaire {
@@ -1194,6 +1575,18 @@ Surface {
   category: "ExteriorWall"
 }
 
+Fenestration {
+  name: "Main entrance",
+  construction:"exterior wall",
+  parent_surface: "Hallway - common area small",
+  vertices: [
+    3.05, 1.35, 0.01, 
+    3.05, 1.35, 1.9,  
+    3.95, 1.35, 1.9, 
+    3.95, 1.35, 0.01, 
+  ],
+  category:"Door"
+}
 
 Surface {
   name: "Hallway - ceiling",
@@ -1236,3 +1629,4 @@ Surface {
   ],
   category: "ExteriorFloor"
 }
+
