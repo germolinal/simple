@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::control_trait::SimpleControl;
 use crate::Float;
 use crate::RhaiControlScript;
-use calendar::{Date, Period};
+use calendar::Period;
 use clap::Parser;
 use communication::{MetaOptions, SimulationModel};
 use model::{Model, SimulationStateHeader};
@@ -28,6 +28,7 @@ use serde_json;
 use std::borrow::Borrow;
 
 use crate::multiphysics_model::MultiphysicsModel;
+use std::fs::{self};
 use weather::{EPWWeather, Weather};
 
 /// The options we can pass to the simulation
@@ -81,33 +82,43 @@ fn pre_process(
     options: &SimOptions,
     state_header: &mut SimulationStateHeader,
 ) -> Result<PreProcessData, String> {
-    // Check consistency with dates and create Period
-    // if options.start == options.end || options.start.is_later(options.end) {
-    //     return Err(format!("Time period inconsistency... Start = {} | End = {}", options.start, options.end));
-    // }
-    let start = Date {
-        day: 1,
-        month: 1,
-        hour: 0.0,
-    };
-
-    // let mut end = start.clone();
-    // end.add_hours(72.0);// simulate one week
-
-    let end = Date {
-        day: 31,
-        month: 12,
-        hour: 23.99999,
-    };
-
     if options.n == 0 {
         return Err("Parameter 'n' should be larger than 0".to_string());
     }
     let dt = 60. * 60. / options.n as Float;
-    let sim_period = Period::new(start, end, dt);
 
     // Load weather
-    let weather: Weather = EPWWeather::from_file(options.weather_file.to_string())?.into();
+    let weather: Weather = if options.weather_file.ends_with(".epw") {
+        EPWWeather::from_file(options.weather_file.to_string())?.into()
+    } else if options.weather_file.ends_with(".sw") {
+        let s = match fs::read_to_string(&options.weather_file) {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(format!(
+                    "Could not read JSON file '{}'",
+                    options.weather_file
+                ))
+            }
+        };
+        serde_json::from_str(&s).map_err(|e| format!("{}", e))?
+    } else {
+        return Err(format!(
+            "Unsupported weather format in file '{}'",
+            options.weather_file
+        ));
+    };
+
+    // Check consistency with dates and create Period
+    // if options.start == options.end || options.start.is_later(options.end) {
+    //     return Err(format!("Time period inconsistency... Start = {} | End = {}", options.start, options.end));
+    // }
+    let start = weather.data[0].date;
+
+    // let mut end = start.clone();
+    // end.add_hours(72.0);// simulate one week
+
+    let end = weather.data[weather.data.len() - 1].date;
+    let sim_period = Period::new(start, end, dt);
 
     let meta_options = MetaOptions {
         latitude: weather.location.latitude,
