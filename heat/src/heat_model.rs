@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::discretization::Discretization;
 use crate::Float;
 use calendar::Date;
-use model::SurfaceTrait;
+use model::{SurfaceTrait, FenestrationType};
 
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use geometry::Vector3D;
@@ -331,6 +331,9 @@ impl SimulationModel for ThermalModel {
 
         let mut fenestrations = Vec::with_capacity(model.fenestrations.len());
         for (i, surf) in model.fenestrations.iter().enumerate() {
+            if let FenestrationType::Opening = surf.category {                
+                continue;
+            }
             let construction = model.get_construction(&surf.construction)?;
 
             let normal = surf.vertices.normal();
