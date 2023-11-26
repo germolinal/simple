@@ -20,8 +20,10 @@ SOFTWARE.
 use crate::{solar_surface::SolarSurface, Float};
 use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
-use matrix::Matrix;
-use model::{print_warning, Boundary, Model, SimulationState, SimulationStateHeader, SolarOptions};
+use model::{
+    print_warning, Boundary, FenestrationType, Model, SimulationState, SimulationStateHeader,
+    SolarOptions,
+};
 use std::borrow::Borrow;
 use std::fs::File;
 use std::io::Write;
@@ -80,9 +82,8 @@ impl SolarModel {
             None => weather_data.derive_horizontal_ir(),
         };
 
-        let iter = model.surfaces.iter().enumerate();
-
-        for (index, surface) in iter {
+        // surfaces are never skipped
+        for (index, surface) in model.surfaces.iter().enumerate() {
             // Deal with front
             match &surface.front_boundary {
                 Boundary::Space { .. } => {
@@ -129,8 +130,13 @@ impl SolarModel {
             }
         }
 
-        let iter = model.fenestrations.iter().enumerate();
-        for (index, surface) in iter {
+        // some fenestrations (i.e., Opening) will be skipped
+        let mut index = 0;
+        for surface in model.fenestrations.iter() {
+            if let FenestrationType::Opening = surface.category {
+                continue;
+            }
+
             // Deal with front
             match &surface.front_boundary {
                 Boundary::Space { .. } => {
@@ -169,6 +175,7 @@ impl SolarModel {
                     surface.set_back_ir_irradiance(state, ground_other + sky)?;
                 }
             }
+            index += 1;
         }
 
         Ok(())
@@ -185,121 +192,109 @@ impl SolarModel {
         let diffuse_horizontal_irrad = weather_data.diffuse_horizontal_radiation;
 
         let is_day = direct_normal_irrad + diffuse_horizontal_irrad >= 1e-4;
-        let vec = if is_day {
-            // Build sky vector
-            let albedo = 0.2;
-            let add_sky = true;
-            let add_sun = true;
-            let units = SkyUnits::Solar;
-            PerezSky::gen_sky_vec(
-                self.solar_sky_discretization,
-                &self.solar,
-                date,
-                weather_data,
-                units,
-                albedo,
-                add_sky,
-                add_sun,
-            )?
-        } else {
-            Matrix::empty()
-        };
+        if !is_day {
+            for s in model.surfaces.iter() {
+                s.set_front_incident_solar_irradiance(state, 0.0)?;
+                s.set_back_incident_solar_irradiance(state, 0.0)?;
+            }
+            for s in model.fenestrations.iter() {
+                if let FenestrationType::Opening = s.category {
+                    continue;
+                }
+                s.set_front_incident_solar_irradiance(state, 0.0)?;
+                s.set_back_incident_solar_irradiance(state, 0.0)?;
+            }
+            return Ok(());
+        }
+
+        let vec = PerezSky::gen_sky_vec(
+            self.solar_sky_discretization,
+            &self.solar,
+            date,
+            weather_data,
+            SkyUnits::Solar,
+            0.2,  // albedo
+            true, // add sky
+            true, // add sun
+        )?;
 
         // Process Solar Irradiance in Surfaces
         if !self.optical_info.front_surfaces_dc.is_empty() {
-            if is_day {
-                let solar_irradiance = &self.optical_info.front_surfaces_dc * &vec;
-                let mut i = 0;
-                for s in model.surfaces.iter() {
-                    if !SolarSurface::boundary_receives_sun(&s.front_boundary) {
-                        continue;
-                    }
-                    // Average of the period
-                    let mut v = solar_irradiance.get(i, 0)?;
-                    if v < 0.0 {
-                        v = 0.0
-                    }
-                    let old_v = s.front_incident_solar_irradiance(state).ok_or(
-                        "Could not get previous front incident solar irradiance (surface)",
-                    )?;
-                    s.set_front_incident_solar_irradiance(state, (v + old_v) / 2.)?;
-                    i += 1;
+            let solar_irradiance = &self.optical_info.front_surfaces_dc * &vec;
+            let mut i = 0;
+            for s in model.surfaces.iter() {
+                if !SolarSurface::boundary_receives_sun(&s.front_boundary) {
+                    continue;
                 }
-            } else {
-                for s in model.surfaces.iter() {
-                    s.set_front_incident_solar_irradiance(state, 0.0)?;
+                // Average of the period
+                let mut v = solar_irradiance.get(i, 0)?;
+                if v < 0.0 {
+                    v = 0.0
                 }
+                let old_v = s
+                    .front_incident_solar_irradiance(state)
+                    .ok_or("Could not get previous front incident solar irradiance (surface)")?;
+                s.set_front_incident_solar_irradiance(state, (v + old_v) / 2.)?;
+                i += 1;
             }
         }
         if !self.optical_info.back_surfaces_dc.is_empty() {
-            if is_day {
-                let solar_irradiance = &self.optical_info.back_surfaces_dc * &vec;
-                let mut i = 0;
-                for s in model.surfaces.iter() {
-                    if !SolarSurface::boundary_receives_sun(&s.back_boundary) {
-                        continue;
-                    }
-                    // Average of the period
-                    let mut v = solar_irradiance.get(i, 0)?;
-                    if v < 0.0 {
-                        v = 0.0
-                    }
-                    let old_v = s
-                        .back_incident_solar_irradiance(state)
-                        .ok_or("Could not get previous back incident solar irradiance (surface)")?;
-                    s.set_back_incident_solar_irradiance(state, (v + old_v) / 2.)?;
-                    i += 1;
+            let solar_irradiance = &self.optical_info.back_surfaces_dc * &vec;
+            let mut i = 0;
+            for s in model.surfaces.iter() {
+                if !SolarSurface::boundary_receives_sun(&s.back_boundary) {
+                    continue;
                 }
-            } else {
-                for s in model.surfaces.iter() {
-                    s.set_front_incident_solar_irradiance(state, 0.0)?;
+                // Average of the period
+                let mut v = solar_irradiance.get(i, 0)?;
+                if v < 0.0 {
+                    v = 0.0
                 }
+                let old_v = s
+                    .back_incident_solar_irradiance(state)
+                    .ok_or("Could not get previous back incident solar irradiance (surface)")?;
+                s.set_back_incident_solar_irradiance(state, (v + old_v) / 2.)?;
+                i += 1;
             }
         }
 
         // Process Solar Irradiance in Fenestration
         if !self.optical_info.front_fenestrations_dc.is_empty() {
-            if is_day {
-                let solar_irradiance = &self.optical_info.front_fenestrations_dc * &vec;
-                let mut i = 0;
-                for s in model.fenestrations.iter() {
-                    if !SolarSurface::boundary_receives_sun(&s.front_boundary) {
-                        continue;
-                    }
-                    // Average of the period
-                    let v = solar_irradiance.get(i, 0)?;
-                    let old_v = s.front_incident_solar_irradiance(state).ok_or(
-                        "Could not get previous front incident solar irradiance (fenestration)",
-                    )?;
-                    s.set_front_incident_solar_irradiance(state, (v + old_v) / 2.)?;
-                    i += 1;
+            let solar_irradiance = &self.optical_info.front_fenestrations_dc * &vec;
+            let mut i = 0;
+            for s in model.fenestrations.iter() {
+                if let FenestrationType::Opening = s.category{
+                    continue;
                 }
-            } else {
-                for s in model.fenestrations.iter() {
-                    s.set_front_incident_solar_irradiance(state, 0.0)?;
+                if !SolarSurface::boundary_receives_sun(&s.front_boundary) {
+                    continue;
                 }
+                // Average of the period
+                let v = solar_irradiance.get(i, 0)?;
+                let old_v = s.front_incident_solar_irradiance(state).ok_or(
+                    "Could not get previous front incident solar irradiance (fenestration)",
+                )?;
+                s.set_front_incident_solar_irradiance(state, (v + old_v) / 2.)?;
+                i += 1;
             }
         }
         if !self.optical_info.back_fenestrations_dc.is_empty() {
-            if is_day {
-                let solar_irradiance = &self.optical_info.back_fenestrations_dc * &vec;
-                let mut i = 0;
-                for s in model.fenestrations.iter() {
-                    if !SolarSurface::boundary_receives_sun(&s.back_boundary) {
-                        continue;
-                    }
-                    // Average of the period
-                    let v = solar_irradiance.get(i, 0)?;
-                    let old_v = s.back_incident_solar_irradiance(state).ok_or(
-                        "Could not get previous front incident solar irradiance (fenestration)",
-                    )?;
-                    s.set_back_incident_solar_irradiance(state, (v + old_v) / 2.)?;
-                    i += 1;
+            let solar_irradiance = &self.optical_info.back_fenestrations_dc * &vec;
+            let mut i = 0;
+            for s in model.fenestrations.iter() {
+                if let FenestrationType::Opening = s.category{
+                    continue;
                 }
-            } else {
-                for s in model.fenestrations.iter() {
-                    s.set_front_incident_solar_irradiance(state, 0.0)?;
+                if !SolarSurface::boundary_receives_sun(&s.back_boundary) {
+                    continue;
                 }
+                // Average of the period
+                let v = solar_irradiance.get(i, 0)?;
+                let old_v = s.back_incident_solar_irradiance(state).ok_or(
+                    "Could not get previous front incident solar irradiance (fenestration)",
+                )?;
+                s.set_back_incident_solar_irradiance(state, (v + old_v) / 2.)?;
+                i += 1;
             }
         }
         Ok(())
