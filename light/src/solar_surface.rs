@@ -25,7 +25,7 @@ use crate::Float;
 use matrix::Matrix;
 use rendering::{colour_matrix::*, DCFactory, Ray, Scene};
 
-use model::{Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface};
+use model::{Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface, FenestrationType};
 
 use geometry::{Point3D, Polygon3D, Ray3D, Triangulation3D, Vector3D};
 use rendering::primitive_samplers::sample_triangle_surface;
@@ -55,8 +55,8 @@ fn get_sampler(triangles_areas: Vec<Float>) -> impl Fn(&mut RandGen) -> usize {
 /// It contains the normal of the original Surface and the points
 /// randomly sampled in each surface.
 pub struct SolarSurface {
-    points: Vec<Point3D>,
-    pub normal: Vector3D,
+    points: Vec<Point3D>,    
+    pub normal: Vector3D,    
     pub receives_sun_front: bool,
     pub receives_sun_back: bool,
 }
@@ -161,6 +161,9 @@ impl SolarSurface {
     ) -> Result<Vec<SolarSurface>, String> {
         let mut ret: Vec<SolarSurface> = Vec::with_capacity(list.len());
         for (i, s) in list.iter().enumerate() {
+            if let FenestrationType::Opening = s.category {
+                continue;
+            }
             if s.front_incident_solar_irradiance_index().is_none() {
                 let i = state.push(
                     SimulationStateElement::FenestrationFrontSolarIrradiance(i),
@@ -193,7 +196,7 @@ impl SolarSurface {
             let receives_sun_front = Self::boundary_receives_sun(&s.front_boundary);
             let receives_sun_back = Self::boundary_receives_sun(&s.back_boundary);
 
-            ret.push(SolarSurface::new(
+            ret.push(SolarSurface::new(                
                 n_rays,
                 &s.vertices,
                 receives_sun_front,
@@ -239,7 +242,7 @@ impl SolarSurface {
             let receives_sun_back = Self::boundary_receives_sun(&s.back_boundary);
 
             // create
-            ret.push(SolarSurface::new(
+            ret.push(SolarSurface::new(                
                 n_rays,
                 &s.vertices,
                 receives_sun_front,
