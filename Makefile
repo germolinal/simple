@@ -21,4 +21,4 @@ v_walls:
 
 # DOCUMENTATION
 documentation:
-	RUSTDOCFLAGS="--html-in-header $(shell pwd)/katex.html" cargo doc  --document-private-items --workspace
+	RUSTDOCFLAGS="--html-in-header $(shell pwd)/katex.html" cargo doc --document-private-items --workspace
