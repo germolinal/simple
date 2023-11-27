@@ -88,7 +88,7 @@ fn pre_process(
     let dt = 60. * 60. / options.n as Float;
 
     // Load weather
-    let weather: Weather = if options.weather_file.ends_with(".epw") {
+    let mut weather: Weather = if options.weather_file.ends_with(".epw") {
         EPWWeather::from_file(options.weather_file.to_string())?.into()
     } else if options.weather_file.ends_with(".sw") {
         let s = match fs::read_to_string(&options.weather_file) {
@@ -119,6 +119,8 @@ fn pre_process(
 
     let end = weather.data[weather.data.len() - 1].date;
     let sim_period = Period::new(start, end, dt);
+
+    weather.sort_data();
 
     let meta_options = MetaOptions {
         latitude: weather.location.latitude,

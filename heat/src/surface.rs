@@ -796,7 +796,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
         let mut temp_k = memory.k.clone();
         let mut temps = memory.q.clone();
-
+        
         loop {
             // Update convection coefficients
             let (front_env, back_env, front_hs, back_hs) =
@@ -826,7 +826,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             temp_k.copy_from(&memory.k);
             temps.copy_from(&memory.q);
 
-            temp_k.mut_n_diag_gaussian(&mut temps, 3)?; // and just like that, q is the new temperatures
+            temp_k.mut_n_diag_gaussian(&mut temps, 3)?; // and just like that, temps is the new temperatures
 
             let mut err = 0.0;
             for (local_i, i) in (ini..fin).enumerate() {
@@ -842,21 +842,23 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 break;
             }
 
-            assert!(
-                !err.is_nan(),
-                // "Error is NaN... \nfront_env = {:?}| back_env = {:?} \nfront_hc = {} | back_hs = {}. \nError = {}\ntemps={}\nq={}\nsolar_front={}, solar_back={}\nfront_alphas={}\nback_alphas={}\n",
-                // front_env,
-                // back_env,
-                // front_hs,
-                // back_hs,
-                // err / ((fin - ini) as Float),
-                // temps,
-                // q,
-                // solar_front,
-                // solar_back,
-                // self.front_alphas,
-                // self.back_alphas,
-            );
+            if err.is_nan() {
+                assert!(
+                    !err.is_nan(),
+                    // "Error is NaN... \nfront_env = {:?}| back_env = {:?} \nfront_hc = {} | back_hs = {}. \nError = {}\ntemps={}\nq={}\nsolar_front={}, solar_back={}\nfront_alphas={}\nback_alphas={}\n",
+                    // front_env,
+                    // back_env,
+                    // front_hs,
+                    // back_hs,
+                    // err / ((fin - ini) as Float),
+                    // temps,
+                    // q,
+                    // solar_front,
+                    // solar_back,
+                    // self.front_alphas,
+                    // self.back_alphas,
+                );
+            }
 
             // if count > 10000 {
             //     eprintln!("Err is {}", err / ((fin - ini) as Float))
@@ -880,10 +882,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
 
             if err / ((fin - ini) as Float) < max_allowed_error {
-                // #[cfg(debug_assertions)]
-                // if count > 100 {
-                //     dbg!("Breaking after {} iterations... because GOOD!", count);
-                // }
+                #[cfg(debug_assertions)]
+                eprintln!(
+                    "Breaking after {} iterations... because err = {}",
+                    count,
+                    err / ((fin - ini) as Float)
+                );
                 break;
             }
             old_err = err;
