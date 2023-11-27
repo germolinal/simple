@@ -1,6 +1,9 @@
 use crate::{Float, Scene};
 use geometry::{intersection::IntersectionInfo, Point3D, Ray3D, Vector3D};
 
+#[cfg(doc)]
+use super::Triangle;
+
 /// Tests the intersection between a `Ray3D` and a
 /// [`Triangle`]. Returns the the point of intersection, and the `u`
 /// and `v` baricentric coordinates of the intersection point.
