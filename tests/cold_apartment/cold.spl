@@ -717,7 +717,7 @@ Surface {
 Fenestration {
   name: "Kitchen to Laundry",
   parent_surface: "Kitchen - laundry",
-  construction: "interior wall",
+  construction: "void",
   vertices: [ 
       2.98, 7.03, 0.01, 
       2.98, 7.03, 1.9,  

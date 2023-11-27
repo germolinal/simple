@@ -4,7 +4,7 @@ use validate::{valid, ScatterValidator, ValidFunc, Validator};
 #[test]
 #[ignore]
 fn apartment_sim() -> Result<(), String> {
-    // cargo test --release --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
+    // cargo test --features parallel --release --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
     let p = "./docs/validation";
     if !std::path::Path::new(&p).exists() {
         std::fs::create_dir(p).map_err(|e| e.to_string())?;
