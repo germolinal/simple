@@ -19,6 +19,7 @@ tests/*/*
 !tests/**/**/*.spl
 !tests/**/**/*.rs
 !tests/**/**/*.rad
+!tests/**/**/*.sw
 
 # MODEL
 #######
