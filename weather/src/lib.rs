@@ -135,6 +135,11 @@ impl Weather {
         }
     }
 
+    /// Sorts the data by date
+    pub fn sort_data(&mut self) {
+        self.data.sort_by(|a, b| a.date.cmp(&b.date));
+    }
+
     /// Calculates the solar data (direct_normal, diffuse_horizontal, global_horizontal)
     /// from an array of [`CurrentWeather`].
     pub fn fill_solar_radiation_data(&mut self) -> Result<(), String> {
@@ -357,5 +362,46 @@ mod tests {
         };
 
         one.interpolate(&other, 0.5);
+    }
+
+    #[test]
+    fn test_sort_data() {
+        let w = Weather {
+            location: Location::default(),
+            data: vec![
+                CurrentWeather {
+                    date: Date {
+                        month: 12,
+                        day: 1,
+                        hour: 0.0,
+                    },
+                    ..CurrentWeather::default()
+                },
+                CurrentWeather {
+                    date: Date {
+                        month: 1,
+                        day: 1,
+                        hour: 0.0,
+                    },
+                    ..CurrentWeather::default()
+                },
+                CurrentWeather {
+                    date: Date {
+                        month: 10,
+                        day: 1,
+                        hour: 0.0,
+                    },
+                    ..CurrentWeather::default()
+                },
+            ],
+        };
+
+        let mut wclone = w.clone();
+
+        wclone.sort_data();
+
+        assert_eq!(w.data[0].date, wclone.data[2].date);
+        assert_eq!(w.data[1].date, wclone.data[0].date);
+        assert_eq!(w.data[2].date, wclone.data[1].date);
     }
 }
