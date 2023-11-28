@@ -791,56 +791,99 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         memory: &mut ChunkMemory,
         state: &SimulationState,
     ) -> Result<(), String> {
-        let mut old_err = 99999.;
+        let mut min_error = Float::MAX;
+        let mut old_err = Float::MAX;
+
         let mut count = 0;
+        let mut residuals = memory.q.clone();
+        let (nrows, _) = residuals.size();
+        let mut jacobian = memory.k.clone();
 
-        let mut temp_k = memory.k.clone();
-        let mut temps = memory.q.clone();
-        
-        loop {
-            // Update convection coefficients
-            let (front_env, back_env, front_hs, back_hs) =
-                self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
+        for j in 0..nrows {
+            let v = global_temperatures.get(j + ini, 0)?;
+            memory.temps.set(j, 0, v)?;
+        }
+        // // initial guess
+        // let (front_env, back_env, front_hs, back_hs) =
+        //             self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
 
-            // Calculate q based on heat transfer (convection, IR radiation)
-            self.discretization.get_k_q(
-                ini,
-                fin,
-                global_temperatures,
-                &front_env,
-                front_hs,
-                front_rad_hs,
-                &back_env,
-                back_hs,
-                back_rad_hs,
-                memory,
-            )?;
+        // self.discretization.get_k_q(
+        //     ini,
+        //     fin,
+        //     global_temperatures,
+        //     &front_env,
+        //     front_hs,
+        //     front_rad_hs,
+        //     &back_env,
+        //     back_hs,
+        //     back_rad_hs,
+        //     memory,
+        // )?;
 
-            // add solar gains
-            for (local_i, i) in (ini..fin).enumerate() {
-                let v = solar_radiation.get(i, 0)?;
-                memory.q.add_to_element(local_i, 0, v)?;
-            }
-            memory.q *= -1.;
+        // // add solar gains
+        // for (local_i, i) in (ini..fin).enumerate() {
+        //     let v = solar_radiation.get(i, 0)?;
+        //     memory.q.add_to_element(local_i, 0, v)?;
+        // }
 
-            temp_k.copy_from(&memory.k);
-            temps.copy_from(&memory.q);
+        // memory.k.mut_n_diag_gaussian(&mut memory.q, 3)?;
+        // memory.temps.copy_from(&memory.q);
 
-            temp_k.mut_n_diag_gaussian(&mut temps, 3)?; // and just like that, temps is the new temperatures
+        //     for (local_i, i) in (ini..fin).enumerate() {
+        //         let local_temp = memory.temps.get(local_i, 0)?;
+        //         global_temperatures.set(i, 0, local_temp)?;
+        //         // global_temperatures.add_to_element(i, 0, local_temp)?;
+        //         // global_temperatures.scale_element(i, 0, 0.5)?;
+        //     }
 
-            let mut err = 0.0;
-            for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = temps.get(local_i, 0)?;
-                let global_temp = global_temperatures.get(i, 0)?;
-                err += (local_temp - global_temp).abs();
-            }
-            if err > old_err {
-                #[cfg(debug_assertions)]
-                if count > 100 {
-                    eprintln!("Breaking after {} iterations... because BAD!", count);
+        let calc_residual =
+            move |memory: &mut ChunkMemory, residuals: &mut Matrix, global_temperatures: &Matrix| -> Result<Float, String> {
+                // Update convection coefficients
+                let (front_env, back_env, front_hs, back_hs) =
+                    self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
+
+                self.discretization.get_k_q(
+                    ini,
+                    fin,
+                    global_temperatures,
+                    &front_env,
+                    front_hs,
+                    front_rad_hs,
+                    &back_env,
+                    back_hs,
+                    back_rad_hs,
+                    memory,
+                )?;
+
+                // add solar gains
+                for (local_i, i) in (ini..fin).enumerate() {
+                    let v = solar_radiation.get(i, 0)?;
+                    memory.q.add_to_element(local_i, 0, v)?;
                 }
-                break;
-            }
+                memory.q *= -1.;
+
+                memory.k.prod_into(&memory.temps, residuals).unwrap();
+                *residuals -= &memory.q;
+
+                // Calculate error
+                let mut err = 0.0;
+                for j in 0..nrows {
+                    err += residuals.get(j, 0).unwrap();
+                }
+                // Ok(err.abs()/nrows as Floats)
+                Ok(err / nrows as Float)
+            };
+
+        loop {
+            let err = calc_residual(memory, &mut residuals, global_temperatures)?;
+
+            // if err > old_err {
+            //     #[cfg(debug_assertions)]
+            //     if count > 100 {
+            //         eprintln!("Breaking after {} iterations... because BAD!", count);
+            //     }
+            //     break;
+            // }
 
             if err.is_nan() {
                 assert!(
@@ -860,39 +903,160 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 );
             }
 
-            // if count > 10000 {
-            //     eprintln!("Err is {}", err / ((fin - ini) as Float))
-            // }
-            assert!(
-                count < 99199000,
-                "Excessive number of iterations... \n====\t\tfront_env = {:?}\n\tback_env = {:?}\n\tfront_hc = {}\n\tback_hs = {}.\n\tError = {}\n====\n",
-                front_env,
-                back_env,
-                front_hs,
-                back_hs,
-                err / ((fin - ini) as Float),
-            );
-            for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = temps.get(local_i, 0)?;
-                // temperatures.set(i, 0, local_temp)?;
-                global_temperatures.add_to_element(i, 0, local_temp)?;
-                global_temperatures.scale_element(i, 0, 0.5)?;
-            }
-
-            let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
-
-            if err / ((fin - ini) as Float) < max_allowed_error {
-                #[cfg(debug_assertions)]
-                eprintln!(
-                    "Breaking after {} iterations... because err = {}",
-                    count,
-                    err / ((fin - ini) as Float)
-                );
+            if err.abs() < 0.1 {
                 break;
             }
+
+            let prev_residuals = residuals.clone();
+            // Calculate derivatives
+            for j in 0..nrows {
+                const DELTA: Float = 0.01;
+                // increase
+                memory.temps.add_to_element(j, 0, DELTA)?;
+                // calculate change
+                calc_residual(memory, &mut residuals, global_temperatures)?;
+                
+
+                for k in 0..nrows {
+                    let delta_t = residuals.get(k,0)? - prev_residuals.get(k,0)?;                    
+                    // jacobian.set(j, k, delta_t/DELTA)?;                    
+                    jacobian.set(k, j, delta_t/DELTA)?;                    
+                }
+                // go back
+                memory.temps.add_to_element(j, 0, -DELTA)?;
+                calc_residual(memory, &mut residuals, global_temperatures)?;
+
+            }
+            // update guess.
+            let mut delta = memory.temps.clone();
+            jacobian.gauss_seidel(&prev_residuals, &mut delta, 9999, 0.001)?;
+            // jacobian.mut_n_diag_gaussian(&mut delta, 3)?;
+            // temps_clone *= 0.5;            
+            // delta *= 0.1;
+            memory.temps -= &delta;
+
+            if err.abs() < min_error {
+                min_error = err.abs();
+            }
             old_err = err;
+
             count += 1;
+            if count > 20000 {
+                eprintln!("{}",&memory.temps);
+                panic!("Too many iterations... did not converge... min_error is {}", min_error);
+            }
         }
+
+        // let mut old_err = 99999.;
+        // let mut count = 0;
+
+        // let mut temp_k = memory.k.clone();
+        // let mut temps = memory.q.clone();
+
+        // loop {
+        //     // Update convection coefficients
+        //     let (front_env, back_env, front_hs, back_hs) =
+        //         self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
+
+        //     // Calculate q based on heat transfer (convection, IR radiation)
+        //     self.discretization.get_k_q(
+        //         ini,
+        //         fin,
+        //         global_temperatures,
+        //         &front_env,
+        //         front_hs,
+        //         front_rad_hs,
+        //         &back_env,
+        //         back_hs,
+        //         back_rad_hs,
+        //         memory,
+        //     )?;
+
+        //     // add solar gains
+        //     for (local_i, i) in (ini..fin).enumerate() {
+        //         let v = solar_radiation.get(i, 0)?;
+        //         memory.q.add_to_element(local_i, 0, v)?;
+        //     }
+        //     memory.q *= -1.;
+
+        //     temp_k.copy_from(&memory.k);
+        //     temps.copy_from(&memory.q);
+
+        //     temp_k.mut_n_diag_gaussian(&mut temps, 3)?; // and just like that, temps is the new temperatures
+
+        //     let mut err = 0.0;
+        //     for (local_i, i) in (ini..fin).enumerate() {
+        //         let local_temp = temps.get(local_i, 0)?;
+        //         let global_temp = global_temperatures.get(i, 0)?;
+        //         err += (local_temp - global_temp).abs();
+        //     }
+        //     if err > old_err {
+        //         #[cfg(debug_assertions)]
+        //         if count > 100 {
+        //             eprintln!("Breaking after {} iterations... because BAD!", count);
+        //         }
+        //         break;
+        //     }
+
+        //     if err.is_nan() {
+        //         assert!(
+        //             !err.is_nan(),
+        //             // "Error is NaN... \nfront_env = {:?}| back_env = {:?} \nfront_hc = {} | back_hs = {}. \nError = {}\ntemps={}\nq={}\nsolar_front={}, solar_back={}\nfront_alphas={}\nback_alphas={}\n",
+        //             // front_env,
+        //             // back_env,
+        //             // front_hs,
+        //             // back_hs,
+        //             // err / ((fin - ini) as Float),
+        //             // temps,
+        //             // q,
+        //             // solar_front,
+        //             // solar_back,
+        //             // self.front_alphas,
+        //             // self.back_alphas,
+        //         );
+        //     }
+
+        //     // if count > 10000 {
+        //     //     eprintln!("Err is {}", err / ((fin - ini) as Float))
+        //     // }
+        //     assert!(
+        //         count < 99199000,
+        //         "Excessive number of iterations... \n====\t\tfront_env = {:?}\n\tback_env = {:?}\n\tfront_hc = {}\n\tback_hs = {}.\n\tError = {}\n====\n",
+        //         front_env,
+        //         back_env,
+        //         front_hs,
+        //         back_hs,
+        //         err / ((fin - ini) as Float),
+        //     );
+        //     for (local_i, i) in (ini..fin).enumerate() {
+        //         let local_temp = temps.get(local_i, 0)?;
+        //         // temperatures.set(i, 0, local_temp)?;
+        //         global_temperatures.add_to_element(i, 0, local_temp)?;
+        //         global_temperatures.scale_element(i, 0, 0.5)?;
+        //     }
+
+        //     let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
+
+        //     if err / ((fin - ini) as Float) < max_allowed_error {
+        //         #[cfg(debug_assertions)]
+        //         eprintln!(
+        //             "Breaking after {} iterations... because err = {}",
+        //             count,
+        //             err / ((fin - ini) as Float)
+        //         );
+        //         break;
+        //     }
+        //     old_err = err;
+        //     count += 1;
+        // }
+
+            for (local_i, i) in (ini..fin).enumerate() {
+                let local_temp = memory.temps.get(local_i, 0)?;
+                global_temperatures.set(i, 0, local_temp)?;
+                // global_temperatures.add_to_element(i, 0, local_temp)?;
+                // global_temperatures.scale_element(i, 0, 0.5)?;
+            }
+
         Ok(())
     }
 
