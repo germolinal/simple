@@ -836,46 +836,75 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         //         // global_temperatures.scale_element(i, 0, 0.5)?;
         //     }
 
-        let calc_residual =
-            move |memory: &mut ChunkMemory, residuals: &mut Matrix, global_temperatures: &Matrix| -> Result<Float, String> {
-                // Update convection coefficients
-                let (front_env, back_env, front_hs, back_hs) =
-                    self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
+        let calc_residual = move |memory: &mut ChunkMemory,
+                                  residuals: &mut Matrix,
+                                  global_temperatures: &Matrix|
+              -> Result<Float, String> {
 
-                self.discretization.get_k_q(
-                    ini,
-                    fin,
-                    global_temperatures,
-                    &front_env,
-                    front_hs,
-                    front_rad_hs,
-                    &back_env,
-                    back_hs,
-                    back_rad_hs,
-                    memory,
-                )?;
+                
+            // Update convection coefficients
+            let (front_env, back_env, front_hs, back_hs) =
+                self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
 
-                // add solar gains
-                for (local_i, i) in (ini..fin).enumerate() {
-                    let v = solar_radiation.get(i, 0)?;
-                    memory.q.add_to_element(local_i, 0, v)?;
-                }
-                memory.q *= -1.;
+            let front_rad_hs = 4.
+                * self.front_emissivity
+                * crate::SIGMA
+                * (273.15 + (front_env.rad_temperature + front_env.surface_temperature) / 2.)
+                    .powi(3);
+            let back_rad_hs = 4.
+                * self.back_emissivity
+                * crate::SIGMA
+                * (273.15 + (back_env.rad_temperature + back_env.surface_temperature) / 2.).powi(3);
 
-                memory.k.prod_into(&memory.temps, residuals).unwrap();
-                *residuals -= &memory.q;
+            self.discretization.get_k_q(
+                ini,
+                fin,
+                global_temperatures,
+                &front_env,
+                front_hs,
+                front_rad_hs,
+                &back_env,
+                back_hs,
+                back_rad_hs,
+                memory,
+            )?;
 
-                // Calculate error
-                let mut err = 0.0;
-                for j in 0..nrows {
-                    err += residuals.get(j, 0).unwrap();
-                }
-                // Ok(err.abs()/nrows as Floats)
-                Ok(err / nrows as Float)
-            };
+            // add solar gains
+            for (local_i, i) in (ini..fin).enumerate() {
+                let v = solar_radiation.get(i, 0)?;
+                memory.q.add_to_element(local_i, 0, v)?;
+            }
+            memory.q *= -1.;
+
+            memory.k.prod_into(&memory.temps, residuals).unwrap();
+            *residuals -= &memory.q;
+
+            // Calculate error
+            // let mut err = Float::MIN;
+            // for j in 0..nrows {
+            //     let aux = residuals.get(j, 0).unwrap();
+            //     if aux > err {
+            //         err = aux;
+            //     }
+            // }
+
+            let mut err = 0.0;
+            for j in 0..nrows {
+                let aux = residuals.get(j, 0).unwrap();
+                err += aux;            
+            }
+            err /= nrows as Float;
+
+            
+
+
+            // Ok(err.abs()/nrows as Floats)
+            Ok(err)
+        };
 
         loop {
             let err = calc_residual(memory, &mut residuals, global_temperatures)?;
+            let prev_temps = memory.temps.clone();
 
             // if err > old_err {
             //     #[cfg(debug_assertions)]
@@ -903,9 +932,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 );
             }
 
-            if err.abs() < 0.1 {
-                break;
-            }
+            
 
             let prev_residuals = residuals.clone();
             // Calculate derivatives
@@ -915,25 +942,37 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 memory.temps.add_to_element(j, 0, DELTA)?;
                 // calculate change
                 calc_residual(memory, &mut residuals, global_temperatures)?;
-                
 
                 for k in 0..nrows {
-                    let delta_t = residuals.get(k,0)? - prev_residuals.get(k,0)?;                    
-                    // jacobian.set(j, k, delta_t/DELTA)?;                    
-                    jacobian.set(k, j, delta_t/DELTA)?;                    
+                    let delta_t = residuals.get(k, 0)? - prev_residuals.get(k, 0)?;
+                    // jacobian.set(j, k, delta_t/DELTA)?;
+                    jacobian.set(k, j, delta_t / DELTA)?;
                 }
                 // go back
                 memory.temps.add_to_element(j, 0, -DELTA)?;
                 calc_residual(memory, &mut residuals, global_temperatures)?;
-
             }
             // update guess.
-            let mut delta = memory.temps.clone();
-            jacobian.gauss_seidel(&prev_residuals, &mut delta, 9999, 0.001)?;
-            // jacobian.mut_n_diag_gaussian(&mut delta, 3)?;
-            // temps_clone *= 0.5;            
+            // let mut delta = memory.temps.clone();
+            // jacobian.gauss_seidel(&prev_residuals, &mut delta, 9999, 0.001)?;
+            let mut delta = prev_residuals;
+            jacobian.mut_n_diag_gaussian(&mut delta, 3)?;
+            // temps_clone *= 0.5;
             // delta *= 0.1;
             memory.temps -= &delta;
+
+            let mut err = 0.0;
+            for j in 0..nrows {
+                let aux = memory.temps.get(j, 0).unwrap() - prev_temps.get(j, 0).unwrap();
+                err += aux.abs();            
+            }
+            err /= nrows as Float;
+
+            let threshold = if count < 100 { 0.02 } else { 0.2 };
+            if err.abs() < threshold {                
+                break;
+            }
+            
 
             if err.abs() < min_error {
                 min_error = err.abs();
@@ -941,9 +980,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             old_err = err;
 
             count += 1;
-            if count > 20000 {
-                eprintln!("{}",&memory.temps);
-                panic!("Too many iterations... did not converge... min_error is {}", min_error);
+            if count > 600 {
+                eprintln!("{}", &memory.temps);
+                panic!(
+                    "Too many iterations... did not converge... min_error is {}",
+                    min_error
+                );
             }
         }
 
@@ -1050,12 +1092,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         //     count += 1;
         // }
 
-            for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = memory.temps.get(local_i, 0)?;
-                global_temperatures.set(i, 0, local_temp)?;
-                // global_temperatures.add_to_element(i, 0, local_temp)?;
-                // global_temperatures.scale_element(i, 0, 0.5)?;
-            }
+        for (local_i, i) in (ini..fin).enumerate() {
+            let local_temp = memory.temps.get(local_i, 0)?;
+            global_temperatures.set(i, 0, local_temp)?;
+            // global_temperatures.add_to_element(i, 0, local_temp)?;
+            // global_temperatures.scale_element(i, 0, 0.5)?;
+        }
 
         Ok(())
     }

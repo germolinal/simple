@@ -654,6 +654,7 @@ impl Discretization {
 
             let front_q = front_env.air_temperature * front_hs  // convection
                 + front_rad_hs * (front_env.rad_temperature - ts);
+            
 
             (front_hs, front_q)
         } else {
@@ -674,7 +675,7 @@ impl Discretization {
             // Solar radiation is added later because it also depends
             // on the solar absorption of different layers.
             let back_q = back_env.air_temperature * back_hs  // convection
-                + back_rad_hs * (back_env.rad_temperature - ts);
+                + back_rad_hs * (back_env.rad_temperature - ts);            
 
             (back_hs, back_q)
         } else {
