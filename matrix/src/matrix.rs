@@ -155,6 +155,7 @@ impl Matrix {
             return Err(format!("Gauss-Seidel algorithm (for solving Ax=b) requires A to have the same number of columns as b has rows... found {} and {}, respectively", self.ncols, x.nrows));
         }
 
+        let mut max_err = -Float::MAX;
         let (n, ..) = self.size();
         let zeroes = vec![0.0; n];
         let mut new_x = x.clone();
@@ -180,7 +181,7 @@ impl Matrix {
             }
 
             // Check convergence
-            let mut max_err = -Float::MAX;
+            max_err = -Float::MAX;
             for i in 0..n {
                 let err = (x.data[i] - new_x.data[i]).abs();
                 if err > max_err {
@@ -195,8 +196,10 @@ impl Matrix {
         }
 
         Err(format!(
-            "Gauss-Seidel algorithm did not converge after {} iterations",
-            max_iter
+            "Gauss-Seidel algorithm did not converge after {} iterations. Expecting error {}... found {}",
+            max_iter,
+            conv_check,
+            max_err,
         ))
     }
 }
