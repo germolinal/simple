@@ -763,6 +763,10 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         // let mut local_temps = Matrix::new(0.0, fin - ini, 1);
         for (local_i, global_i) in (ini..fin).enumerate() {
             let v = global_temperatures.get(global_i, 0)?;
+            #[cfg(debug_assertions)]
+            if v.is_nan() {
+                dbg!(v);
+            }
             memory.temps.set(local_i, 0, v)?;
         }
 
@@ -770,11 +774,20 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
         for (local_i, global_i) in (ini..fin).enumerate() {
             let v = memory.temps.get(local_i, 0)?;
+            #[cfg(debug_assertions)]
+            if v.is_nan() {
+                dbg!(v);
+            }
             global_temperatures.set(global_i, 0, v)?;
         }
         Ok(())
     }
 
+    /*
+    /// This was meant an experimental alternative to the
+    /// `march_nomass()` method in this same file...but it wasn't better than
+    /// that.
+    #[allow(dead_code)]
     #[allow(clippy::too_many_arguments)]
     fn march_nomass_newton_ralphson(
         &self,
@@ -782,8 +795,8 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         solar_radiation: &Matrix,
         t_front: Float,
         t_back: Float,
-        front_rad_hs: Float,
-        back_rad_hs: Float,
+        _front_rad_hs: Float,
+        _back_rad_hs: Float,
         wind_direction: Float,
         wind_speed: Float,
         ini: usize,
@@ -981,6 +994,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
         Ok(())
     }
+    */
 
     #[allow(clippy::too_many_arguments)]
     fn march_nomass(
@@ -1103,6 +1117,11 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         Ok(())
     }
 
+    /*
+    /// This was meant an experimental alternative to the
+    /// `march_nomass()` method in this same file...but it wasn't better than
+    /// that.
+    #[allow(dead_code)]
     #[allow(clippy::too_many_arguments)]
     fn march_nomass_virtual_mass(
         &self,
@@ -1192,6 +1211,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         // }
         Ok(())
     }
+    */
 
     /// Marches one timestep. Returns front and back heat flow    
     #[allow(clippy::too_many_arguments)]
@@ -1918,5 +1938,3 @@ mod testing {
         Ok(())
     }
 }
-
- 
