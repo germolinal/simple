@@ -1,9 +1,18 @@
-VALIDATION_FEATURES=--features parallel # --release
+VALIDATION_FEATURES=--features parallel --release
 
 
-# VALIDATION
-validate: v_box v_cold v_versailles v_walls
-	echo "Done!"
+pre_commit: #test validate
+	cargo fmt
+	cargo clippy
+
+
+validate: 
+	cargo test $(VALIDATION_FEATURES) --workspace 
+	cargo test $(VALIDATION_FEATURES) -p simple -- --ignored 
+
+test:
+	cargo test --features parallel  --workspace 
+	cargo test --release --features parallel  -p simple -- --ignored 
 
 v_box: 
 	cargo test $(VALIDATION_FEATURES) --package simple --test box -- box_sim --exact --nocapture
@@ -17,6 +26,8 @@ v_versailles:
 v_walls: 
 	cargo test $(VALIDATION_FEATURES) --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture
 
+neighbours:
+	cargo test --features parallel --release --package simple --test neighbours -- neighbours_sim --exact --nocapture --ignored
 
 
 # DOCUMENTATION
