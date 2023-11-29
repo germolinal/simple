@@ -39,7 +39,7 @@ impl StructObject {
         }
         false
     }
-    
+
     pub fn gen_display(&self) -> TokenStream2 {
         let ret = quote!(
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
