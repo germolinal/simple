@@ -108,15 +108,7 @@ fn pre_process(
         ));
     };
 
-    // Check consistency with dates and create Period
-    // if options.start == options.end || options.start.is_later(options.end) {
-    //     return Err(format!("Time period inconsistency... Start = {} | End = {}", options.start, options.end));
-    // }
     let start = weather.data[0].date;
-
-    // let mut end = start.clone();
-    // end.add_hours(72.0);// simulate one week
-
     let end = weather.data[weather.data.len() - 1].date;
     let sim_period = Period::new(start, end, dt);
 
