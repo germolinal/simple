@@ -82,10 +82,17 @@ fn pre_process(
     options: &SimOptions,
     state_header: &mut SimulationStateHeader,
 ) -> Result<PreProcessData, String> {
-    if options.n == 0 {
+    const MAX_N: usize = 60;
+    let n = if options.n > MAX_N {
+        eprintln!("The maximum allowed value for -n param is {}... n has been automatically limited to that value", MAX_N);
+        MAX_N
+    } else if options.n == 0 {
         return Err("Parameter 'n' should be larger than 0".to_string());
-    }
-    let dt = 60. * 60. / options.n as Float;
+    } else {
+        options.n
+    };
+
+    let dt = 60. * 60. / n as Float;
 
     // Load weather
     let mut weather: Weather = if options.weather_file.ends_with(".epw") {
@@ -122,7 +129,7 @@ fn pre_process(
     };
 
     // Create physics model
-    let physics_model = MultiphysicsModel::new(&meta_options, (), model, state_header, options.n)?;
+    let physics_model = MultiphysicsModel::new(&meta_options, (), model, state_header, n)?;
 
     // Collect variables we need to report
     let full_header: Vec<String> = state_header
