@@ -1,4 +1,4 @@
-VALIDATION_FEATURES=--features parallel --release
+VALIDATION_FEATURES=--features parallel # --release
 
 
 # VALIDATION
