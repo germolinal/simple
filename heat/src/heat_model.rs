@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::discretization::Discretization;
 use crate::Float;
 use calendar::Date;
-use model::{SurfaceTrait, FenestrationType};
+use model::{FenestrationType, SurfaceTrait};
 
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use geometry::Vector3D;
@@ -283,8 +283,8 @@ impl SimulationModel for ThermalModel {
 
         // choose the smallest timestep in all constructions
 
-        let max_dx = 0.04; // 4cm
-        let min_dt = 60. * 5.0; // 60 seconds
+        let max_dx = 0.05; // m
+        let min_dt = 60.0; // seconds
 
         let mut dt_subdivisions: usize = 1;
         let main_dt = 60. * 60. / n as Float;
@@ -331,7 +331,7 @@ impl SimulationModel for ThermalModel {
 
         let mut fenestrations = Vec::with_capacity(model.fenestrations.len());
         for (i, surf) in model.fenestrations.iter().enumerate() {
-            if let FenestrationType::Opening = surf.category {                
+            if let FenestrationType::Opening = surf.category {
                 continue;
             }
             let construction = model.get_construction(&surf.construction)?;
@@ -343,8 +343,7 @@ impl SimulationModel for ThermalModel {
             let perimeter = surf.vertices.outer().perimeter()?;
             let centroid = surf.vertices.outer().centroid()?;
 
-            #[cfg(debug_assertions)]
-            dbg!("height is 1");
+            // TODO:
             let height = 1.;
 
             let d =
@@ -374,13 +373,7 @@ impl SimulationModel for ThermalModel {
         }
 
         // This is the model's dt now. When marching
-        let mut dt = 60. * 60. / (n as Float * dt_subdivisions as Float);
-
-        // safety.
-        const SAFETY: usize = 5;
-        dt /= SAFETY as Float;
-        dt_subdivisions *= SAFETY;
-
+        let dt = 60. * 60. / (n as Float * dt_subdivisions as Float);
         let mut hvacs: Vec<ThermalHVAC> = Vec::with_capacity(model.hvacs.len());
         for hvac in model.hvacs.iter() {
             let h = ThermalHVAC::from(hvac, model)?;

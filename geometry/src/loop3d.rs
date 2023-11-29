@@ -109,7 +109,7 @@ impl std::iter::IntoIterator for Loop3D {
 
 impl std::fmt::Display for Loop3D {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "\t[\n",)?;
+        writeln!(f, "\t[",)?;
         for p in self.vertices.iter() {
             writeln!(f, "\t\t{},{},{},", p.x, p.y, p.z)?;
         }

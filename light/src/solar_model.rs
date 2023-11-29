@@ -89,11 +89,21 @@ impl SolarModel {
                 Boundary::Space { .. } => {
                     // Zero net IR exchange
                     let temp = surface.first_node_temperature(state).unwrap_or(22.);
-                    surface.set_front_ir_irradiance(state, ir(temp, 1.0))?;
+                    let ir = ir(temp, 1.0);
+                    #[cfg(debug_assertions)]
+                    if ir.is_nan() {
+                        dbg!(ir);
+                    }
+                    surface.set_front_ir_irradiance(state, ir)?;
                 }
                 Boundary::AmbientTemperature { temperature } => {
-                    // It depends on the ambient tempearture
-                    surface.set_front_ir_irradiance(state, ir(*temperature, 1.0))?;
+                    // It depends on the ambient temperature
+                    let ir = ir(*temperature, 1.0);
+                    #[cfg(debug_assertions)]
+                    if ir.is_nan() {
+                        dbg!(ir);
+                    }
+                    surface.set_front_ir_irradiance(state, ir)?;
                 }
                 Boundary::Ground | Boundary::Adiabatic => {
                     // ignore ground and adiabatic
@@ -103,6 +113,10 @@ impl SolarModel {
                     let view_factors = &self.optical_info.front_surfaces_view_factors[index];
                     let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
                     let sky = view_factors.sky * horizontal_ir;
+                    #[cfg(debug_assertions)]
+                    if (ground_other + sky).is_nan() {
+                        dbg!(ground_other + sky);
+                    }
                     surface.set_front_ir_irradiance(state, ground_other + sky)?;
                 }
             }
@@ -112,10 +126,19 @@ impl SolarModel {
                 Boundary::Space { .. } => {
                     // Zero net IR exchange
                     let temp = surface.last_node_temperature(state).unwrap_or(22.);
-                    surface.set_back_ir_irradiance(state, ir(temp, 1.0))?;
+                    let ir = ir(temp, 1.0);
+                    #[cfg(debug_assertions)]
+                    if ir.is_nan() {
+                        dbg!(ir);
+                    }
+                    surface.set_back_ir_irradiance(state, ir)?;
                 }
                 Boundary::AmbientTemperature { temperature } => {
-                    surface.set_back_ir_irradiance(state, ir(*temperature, 1.0))?;
+                    let ir = ir(*temperature, 1.0);
+                    if ir.is_nan() {
+                        dbg!(ir);
+                    }
+                    surface.set_back_ir_irradiance(state, ir)?;
                 }
                 Boundary::Ground | Boundary::Adiabatic => {
                     // ignore ground and adiabatic
@@ -125,6 +148,9 @@ impl SolarModel {
                     let view_factors = &self.optical_info.back_surfaces_view_factors[index];
                     let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
                     let sky = view_factors.sky * horizontal_ir;
+                    if (ground_other + sky).is_nan() {
+                        dbg!(ground_other + sky);
+                    }
                     surface.set_back_ir_irradiance(state, ground_other + sky)?;
                 }
             }
@@ -263,7 +289,7 @@ impl SolarModel {
             let solar_irradiance = &self.optical_info.front_fenestrations_dc * &vec;
             let mut i = 0;
             for s in model.fenestrations.iter() {
-                if let FenestrationType::Opening = s.category{
+                if let FenestrationType::Opening = s.category {
                     continue;
                 }
                 if !SolarSurface::boundary_receives_sun(&s.front_boundary) {
@@ -282,7 +308,7 @@ impl SolarModel {
             let solar_irradiance = &self.optical_info.back_fenestrations_dc * &vec;
             let mut i = 0;
             for s in model.fenestrations.iter() {
-                if let FenestrationType::Opening = s.category{
+                if let FenestrationType::Opening = s.category {
                     continue;
                 }
                 if !SolarSurface::boundary_receives_sun(&s.back_boundary) {

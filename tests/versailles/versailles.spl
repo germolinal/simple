@@ -15,8 +15,7 @@ Construction {
   "name": "default_wall_construction",
   "materials": [
     "plywood",
-    "insulation",
-    "plywood"
+    "insulation",    
   ]
 }
 
@@ -31,8 +30,8 @@ Construction {
   "name": "default_window_construction",
   "materials": [
     "glass_5mm",
-    "Air 12mm",
-    "glass_5mm",
+    // "Air 12mm",
+    // "glass_5mm",
   ]
 }
 
@@ -439,7 +438,7 @@ Fenestration {
 Material {
   "name": "plywood",
   "substance": "timber",
-  "thickness": 0.01
+  "thickness": 0.05
 }
 
 Material {
@@ -1750,7 +1749,7 @@ Space {
   "volume": 38.26229787997189,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.0125
+    "area": 0.125
   },
   "building": "The building",
   "storey": 1,
@@ -1764,7 +1763,7 @@ Space {
   "volume": 27.313746542556675,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.0125
+    "area": 0.125
   },
   "building": "The building",
   "storey": 1,
@@ -1778,7 +1777,7 @@ Space {
   "volume": 21.673712248007348,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.0125
+    "area": 0.125
   },
   "building": "The building",
   "storey": 1,
@@ -1792,7 +1791,7 @@ Space {
   "volume": 10.9557660029705,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.0125
+    "area": 0.125
   },
   "building": "The building",
   "storey": 1,
@@ -1806,7 +1805,7 @@ Space {
   "volume": 6.1923515452950575,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.0125
+    "area": 0.125
   },
   "building": "The building",
   "storey": 0,
@@ -1820,7 +1819,7 @@ Space {
   "volume": 15.06313176980161,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.0125
+    "area": 0.125
   },
   "building": "The building",
   "storey": 0,
@@ -1834,7 +1833,7 @@ Space {
   "volume": 64.81367051460445,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.0125
+    "area": 0.125
   },
   "building": "The building",
   "storey": 0,

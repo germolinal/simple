@@ -41,7 +41,7 @@ Substance {
 Material {
     name: "R31LAYER",
     substance: "R31_substance",
-    thickness: 0.1// so that R-value is 5.456
+    thickness: 0.1, // so that R-value is 5.456
 }
 
 
