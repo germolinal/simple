@@ -57,7 +57,7 @@ pub enum Boundary {
     ///
     /// Border conditions:
     /// * **Solar Radiation**: As calculated by the Solar module
-    /// * **Net Shortwave (IR) Radiation: Zero, for now at least (this is a good assumption if the surfaces inside the `Space` are at similar temperatures)
+    /// * **Net Shortwave (IR) Radiation**: Zero, for now at least (this is a good assumption if the surfaces inside the `Space` are at similar temperatures)
     /// * **Convection Coefficient**: Indoor
     /// * **Wind**: No
     Space {
@@ -76,7 +76,7 @@ pub enum Boundary {
     ///
     /// Border conditions:
     /// * **Solar Radiation**: None
-    /// * **Net Shortwave (IR) Radiation: Calculated based on the set ambient temperature and the surface temperature
+    /// * **Net Shortwave (IR) Radiation**: Calculated based on the set ambient temperature and the surface temperature
     /// * **Convection Coefficient**: Indoor
     /// * **Wind**: No
     AmbientTemperature {
