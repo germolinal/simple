@@ -168,7 +168,7 @@ fn march_with_window() -> Result<(Vec<Float>, Vec<Float>), String> {
     let exp_fn = tester.get_closed_solution();
 
     // March:
-    let n = 80;
+    let n = 400;
     let mut exp = Vec::with_capacity(n);
     let mut found = Vec::with_capacity(n);
     for i in 0..n {
