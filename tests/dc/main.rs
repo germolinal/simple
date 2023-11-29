@@ -62,7 +62,7 @@ fn get_simple_results(
         format!("./tests/dc/{dir}/scene.rad")
     } else {
         format!("./tests/dc/{dir}/room.rad")
-    };    
+    };
     let mut scene = Scene::from_radiance(scene_path).expect("Could not read file");
     scene.build_accelerator();
 

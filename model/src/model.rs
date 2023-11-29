@@ -324,14 +324,11 @@ impl Model {
 
     /// Prints the model into a file called `filename`.
     pub fn print_to_file(&self, filename: &str) -> Result<(), String> {
-        
         let mut file = File::create(filename).map_err(|e| format!("{}", e))?;
         file.write_all(self.to_string().as_bytes())
             .map_err(|e| format!("{}", e))?;
         Ok(())
     }
-
-
 
     /// Adds an element and default value to the model's [`SimulationStateHeader`]. Returns an error
     /// if the state has been taken already
@@ -924,7 +921,7 @@ impl Model {
             0.,
         )?;
         add.set_open_fraction_index(state_index)?;
-        
+
         // check the parent surface
         let mut parent: Option<Arc<Surface>> = None;
         if let Ok(parent_name) = add.parent_surface() {

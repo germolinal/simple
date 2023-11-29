@@ -19,7 +19,6 @@ impl Attribute {
         let name = a.path().segments[0].ident.clone();
         let mut value: Option<String> = None;
 
-        
         if name != "doc" {
             value = match &a.meta {
                 Meta::Path(_) => {
@@ -37,7 +36,7 @@ impl Attribute {
                 }) => Some(format!("{}", tokens)),
             };
         }
-        
+
         Self {
             name: format!("{}", name),
             value,
@@ -71,7 +70,6 @@ pub enum Field {
 }
 
 impl Field {
-    
     /// Creates a new Field object, with no ident and no attributes.
     ///
     /// This method is meant to be used for nested typs. E.g. the `usize` in `Vec<usize>`

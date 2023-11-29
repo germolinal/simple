@@ -17,12 +17,12 @@ fn versailles_sim() -> Result<(), String> {
 
     let options = SimOptions {
         input_file: "./tests/versailles/versailles.spl".into(),
-        // weather_file: "./tests/versailles/api_weather.sw".into(),
-        weather_file: "./tests/wellington.epw".into(),
+        weather_file: "./tests/versailles/api_weather.sw".into(),
+        // weather_file: "./tests/wellington.epw".into(),
         output: Some("./tests/versailles/check.csv".into()),
         control_file: None,
         research_mode: false,
-        n: 4,
+        n: 6,
     };
 
     // Create model
@@ -55,9 +55,8 @@ fn versailles_sim() -> Result<(), String> {
         expected[i].pop();
         found[i].pop();
 
-
         let skip = 2000; // This is warmup period
-        // let take = expected[0].len() - skip - 1000;
+                         // let take = expected[0].len() - skip - 1000;
         Box::new(ScatterValidator {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
@@ -69,7 +68,8 @@ fn versailles_sim() -> Result<(), String> {
                 .map(|v| *v)
                 .collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[i].iter()
+            found: found[i]
+                .iter()
                 .skip(skip)
                 // .take(take)
                 .map(|v| *v)

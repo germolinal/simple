@@ -257,16 +257,14 @@ impl<'a> SimpleScanner<'a> {
         let mut model = Model::default();
         let read_order = vec![
             // Order matters with these ones
-            "Substance", 
-            "Material", 
-            "Construction", 
-            
+            "Substance",
+            "Material",
+            "Construction",
             "Surface",
             "Fenestration",
-
             "Space",
             // These are independent
-            "Building", 
+            "Building",
             "HVAC",
             "Luminaire",
             "Object",
@@ -276,11 +274,11 @@ impl<'a> SimpleScanner<'a> {
         ];
 
         for ident in read_order {
-            if data.get(ident).is_none(){
-                continue
+            if data.get(ident).is_none() {
+                continue;
             }
 
-            for (obj_str, ln) in data.get(ident).unwrap().into_iter() {
+            for (obj_str, ln) in data.get(ident).unwrap().iter() {
                 match ident.as_bytes() {
                     b"Building" => {
                         let s: crate::Building = match json5::from_str(obj_str) {

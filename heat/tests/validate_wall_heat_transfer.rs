@@ -168,7 +168,7 @@ fn march_with_window() -> Result<(Vec<Float>, Vec<Float>), String> {
     let exp_fn = tester.get_closed_solution();
 
     // March:
-    let n = 80;
+    let n = 400;
     let mut exp = Vec::with_capacity(n);
     let mut found = Vec::with_capacity(n);
     for i in 0..n {
@@ -735,7 +735,7 @@ fn march_simple_model(
 fn theoretical(validations: &mut Validator) -> Result<(), String> {
     const EXPECTED_LEGEND: &'static str = "Theoretical Solution";
 
-    #[valid("Nomass Wall - Walls only")]
+    #[valid("No-mass Wall - Walls only")]
     fn nomass_wallonly() -> Result<ValidFunc, String> {
         let (expected, found) = very_simple_march()?;
         let v = get_validator(expected, found, EXPECTED_LEGEND);
@@ -743,28 +743,28 @@ fn theoretical(validations: &mut Validator) -> Result<(), String> {
         Ok(v)
     }
 
-    #[valid("Nomass Wall - Walls and Fenestration")]
+    #[valid("No-mass Wall - Walls and Fenestration")]
     fn nomass_wall_and_window() -> Result<ValidFunc, String> {
         let (expected, found) = march_with_window()?;
         let v = get_validator(expected, found, EXPECTED_LEGEND);
         Ok(v)
     }
 
-    #[valid("Nomass Wall - Walls and Fenestration, with Luminaire on")]
+    #[valid("No-mass Wall - Walls and Fenestration, with Luminaire on")]
     fn window_and_luminaire() -> Result<ValidFunc, String> {
         let (expected, found) = march_with_window_and_luminaire()?;
         let v = get_validator(expected, found, EXPECTED_LEGEND);
         Ok(v)
     }
 
-    #[valid("Nomass Wall - Walls and Window and heater")]
+    #[valid("No-mass Wall - Walls and Window and heater")]
     fn nomass_wall_and_window_and_heater() -> Result<ValidFunc, String> {
         let (expected, found) = march_with_window_and_heater()?;
         let v = get_validator(expected, found, EXPECTED_LEGEND);
         Ok(v)
     }
 
-    #[valid("Nomass Wall - Walls and Fenestration, with heater on and infiltration")]
+    #[valid("No-mass Wall - Walls and Fenestration, with heater on and infiltration")]
     fn window_heater_and_infiltration() -> Result<ValidFunc, String> {
         let (expected, found) = march_with_window_heater_and_infiltration()?;
         let v = get_validator(expected, found, EXPECTED_LEGEND);
