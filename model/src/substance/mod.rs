@@ -70,7 +70,7 @@ pub enum Substance {
 }
 
 impl std::fmt::Display for Substance {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {        
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let j = serde_json::to_string_pretty(&self).unwrap();
         write!(f, "{}\n\n", j)
     }

@@ -58,7 +58,7 @@ pub enum HVAC {
 }
 
 impl std::fmt::Display for HVAC {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {        
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let j = json5::to_string(&self).unwrap();
         write!(f, "{}\n\n", j)
     }
