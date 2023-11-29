@@ -88,7 +88,7 @@ mod tests {
     fn display() -> Result<(), String> {
         let meta_options = MetaOptions::default();
 
-        let (model, mut state) = Model::from_file("./tests/cold_apartment/cold.spl")?;
+        let (model, mut state) = Model::from_file("./tests/box/box.spl")?;
         let _ = MultiphysicsModel::new(&meta_options, (), &model, &mut state, 2)?;
 
         let string = format!("{}", model);
