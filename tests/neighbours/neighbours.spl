@@ -1,0 +1,7033 @@
+SolarOptions {
+    n_solar_irradiance_points: 100,
+    solar_ambient_divitions: 3000,
+    solar_sky_discretization: 4,
+    optical_data_path: "./tests/neighbours/optical_data.json"
+}
+
+Building {
+  "name": "The building",
+  "n_storeys": 2,
+  "shelter_class": "Urban"
+}
+
+Construction {
+  "name": "default_wall_construction",
+  "materials": [
+    "wall_material"
+  ]
+}
+
+Construction {
+  "name": "default_door_construction",
+  "materials": [
+    "door_material"
+  ]
+}
+
+Construction {
+  "name": "default_window_construction",
+  "materials": [
+    "glass_5mm"
+  ]
+}
+
+Construction {
+  "name": "default_roof_construction",
+  "materials": [
+    "roof_material"
+  ]
+}
+
+Construction {
+  "name": "default_floor_construction",
+  "materials": [
+    "floor_material"
+  ]
+}
+
+Fenestration {
+  "name": "5C9DFF80-B162-4B6B-B7F6-120EF15F2EDE_0",
+  "vertices": [
+    0.06567045900432333,
+    11.788013599202367,
+    3.17846863792561,
+    0.8262241733038262,
+    12.12482055795903,
+    3.17846863792561,
+    0.8262241733038262,
+    12.12482055795903,
+    4.44265556207439,
+    0.06567045900432333,
+    11.788013599202367,
+    4.44265556207439
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "C30080BD-FE68-468B-9C39-D6355A896CCE_0",
+  "vertices": [
+    0.9484150775533876,
+    9.617288072693018,
+    3.1912200846880703,
+    0.03061784584050109,
+    11.68979322601085,
+    3.1912200846880703,
+    0.03061784584050109,
+    11.68979322601085,
+    4.49745881531193,
+    0.9484150775533876,
+    9.617288072693018,
+    4.49745881531193
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "C35D249D-75F4-4433-BB4D-58ECF3325FE4_0",
+  "vertices": [
+    2.8389336247945214,
+    5.348252063194687,
+    2.795306140118153,
+    1.7137108805353225,
+    7.889150919203826,
+    2.795306140118153,
+    1.7137108805353225,
+    7.889150919203826,
+    4.465911139881847,
+    2.8389336247945214,
+    5.348252063194687,
+    4.465911139881847
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "6B646F2D-4346-4FD8-8679-15A9C3D48074_0",
+  "vertices": [
+    7.349938725453999,
+    13.068409883332247,
+    3.19057988,
+    7.626478778140978,
+    12.443946613108409,
+    3.19057988,
+    7.626478778140978,
+    12.443946613108409,
+    4.30230218,
+    7.349938725453999,
+    13.068409883332247,
+    4.30230218
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "616863B6-3658-4861-B32E-F7AA885473B1_0",
+  "vertices": [
+    3.4290312031088233,
+    14.695634158974016,
+    3.62553035,
+    5.382560988949856,
+    15.56074378386139,
+    3.62553035,
+    5.382560988949856,
+    15.56074378386139,
+    4.25914065,
+    3.4290312031088233,
+    14.695634158974016,
+    4.25914065
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "F27A5B40-3351-43D7-98C9-79EFDEF36B72_0",
+  "vertices": [
+    12.719099962679312,
+    5.012025759536227,
+    3.207689200621635,
+    13.302525658605848,
+    3.694575151459336,
+    3.207689200621635,
+    13.302525658605848,
+    3.694575151459336,
+    4.595256639378365,
+    12.719099962679312,
+    5.012025759536227,
+    4.595256639378365
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "C66E1349-25DB-47D3-9DB4-558852642358_0",
+  "vertices": [
+    13.29525630923622,
+    2.6340066976567744,
+    3.6248723524123383,
+    11.254734339837205,
+    1.7303732208380929,
+    3.6248723524123383,
+    11.254734339837205,
+    1.7303732208380929,
+    4.538616927587661,
+    13.29525630923622,
+    2.6340066976567744,
+    4.538616927587661
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "274C3C79-5969-4949-8DA2-A754006FC201_0",
+  "vertices": [
+    10.35758077707395,
+    7.448772756320814,
+    3.61472480188753,
+    10.948360050109514,
+    6.114717035679486,
+    3.61472480188753,
+    10.948360050109514,
+    6.114717035679485,
+    4.45247531811247,
+    10.35758077707395,
+    7.448772756320814,
+    4.45247531811247
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "6E61D730-B42F-4F6B-808E-B19403198E93_0",
+  "vertices": [
+    7.1756472528090205,
+    0.39465247976069406,
+    3.22013605,
+    5.9387246378721965,
+    3.187783795757394,
+    3.22013605,
+    5.9387246378721965,
+    3.187783795757394,
+    4.54057815,
+    7.1756472528090205,
+    0.39465247976069406,
+    4.54057815
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "EBB23D3C-A868-4C37-9071-7045A56BCF2C_0",
+  "vertices": [
+    9.74847552424115,
+    8.82529394421148,
+    3.65301621,
+    10.021165646143626,
+    8.208509029591088,
+    3.65301621,
+    10.021165646143626,
+    8.208509029591088,
+    4.47249751,
+    9.74847552424115,
+    8.82529394421148,
+    4.47249751
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "4D6C96CB-2F03-4E3F-A0B2-A47C9C312FF4_0",
+  "vertices": [
+    0.8556692414660372,
+    9.965424731393476,
+    0.80783285,
+    0.30522366851259886,
+    11.234193732026355,
+    0.80783285,
+    0.30522366851259886,
+    11.234193732026355,
+    1.9563427500000004,
+    0.8556692414660372,
+    9.965424731393476,
+    1.9563427500000004
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "62FAACA3-783D-4165-98BC-06068CF1A1BE_0",
+  "vertices": [
+    2.995580906362531,
+    5.032956400320682,
+    0.5803676499999999,
+    1.7448086403584613,
+    7.915969987814377,
+    0.5803676499999999,
+    1.7448086403584613,
+    7.915969987814377,
+    2.1646747499999996,
+    2.995580906362531,
+    5.032956400320682,
+    2.1646747499999996
+  ],
+  "construction": "default_window_construction",
+  "category": "Window",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "D317600E-0EBF-469E-BFA4-6D4A378AA388_0",
+  "vertices": [
+    9.263364260936347,
+    5.280348801881129,
+    2.38638152,
+    8.950736589491829,
+    5.986302328886185,
+    2.38638152,
+    8.950736589491829,
+    5.986302328886185,
+    4.3485349200000005,
+    9.263364260936347,
+    5.280348801881129,
+    4.3485349200000005
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  }
+}
+
+Fenestration {
+  "name": "B4AEE524-F132-411E-97C1-27D86B9E3C4A_0",
+  "vertices": [
+    2.7673345406773837,
+    12.984430427918404,
+    2.3863815368643975,
+    3.553866082784769,
+    13.332741522431126,
+    2.3863815368643975,
+    3.553866082784769,
+    13.332741522431126,
+    4.281861323135603,
+    2.7673345406773837,
+    12.984430427918404,
+    4.281861323135603
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "CFF74749-74FE-487C-A5B6-77BDEDF81BA6_0",
+  "vertices": [
+    1.6775529569665903,
+    9.139219793500535,
+    2.38638149,
+    2.366367946972996,
+    9.44425757789944,
+    2.38638149,
+    2.366367946972996,
+    9.44425757789944,
+    4.31809969,
+    1.6775529569665903,
+    9.139219793500535,
+    4.31809969
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  }
+}
+
+Fenestration {
+  "name": "AB2C675E-A09E-410E-9FF9-2E573D2E4EC6_0",
+  "vertices": [
+    7.748255402085086,
+    6.564314193473798,
+    2.38638153,
+    7.479530483966684,
+    7.171129959959398,
+    2.38638153,
+    7.479530483966684,
+    7.171129959959398,
+    4.35122213,
+    7.748255402085086,
+    6.564314193473798,
+    4.35122213
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "F89B33DF-313D-4FA3-BF50-B5639717C0BB_0",
+  "vertices": [
+    7.335834902363892,
+    7.495613246070115,
+    2.386381603411275,
+    7.09910778082187,
+    8.030173832086032,
+    2.386381603411275,
+    7.09910778082187,
+    8.030173832086032,
+    4.254606916588725,
+    7.335834902363892,
+    7.495613246070115,
+    4.254606916588725
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "3CB5B531-9BE8-41CC-9589-CCC919E77FDA_0",
+  "vertices": [
+    6.574989871447686,
+    9.213700142681445,
+    2.38638149,
+    6.2991540506080455,
+    9.836573251059288,
+    2.38638149,
+    6.2991540506080455,
+    9.836573251059288,
+    4.32487279,
+    6.574989871447686,
+    9.213700142681445,
+    4.32487279
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "3BD0FF86-F441-4007-9C2E-C4E34EA15A60_0",
+  "vertices": [
+    6.033223831256577,
+    10.437078224760109,
+    2.386381579658105,
+    5.778847024955053,
+    11.011494091263438,
+    2.386381579658105,
+    5.778847024955053,
+    11.011494091263438,
+    4.374984960341895,
+    6.033223831256577,
+    10.437078224760109,
+    4.374984960341895
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "E4FC07A3-C804-4E2D-934D-3BCA579636C1_0",
+  "vertices": [
+    7.031525923117236,
+    11.850526306295404,
+    2.38638144,
+    7.3484286936606065,
+    11.134918902617644,
+    2.38638144,
+    7.3484286936606065,
+    11.134918902617644,
+    4.36401104,
+    7.031525923117236,
+    11.850526306295404,
+    4.36401104
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "25BA8420-35A4-401C-B58C-8168118D01F2_0",
+  "vertices": [
+    5.823825742859357,
+    4.200247095938904,
+    2.38638144,
+    5.5175344151839685,
+    4.89189322988811,
+    2.38638144,
+    5.5175344151839685,
+    4.89189322988811,
+    4.36401104,
+    5.823825742859357,
+    4.200247095938904,
+    4.36401104
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "480BFB92-7442-49DC-A6B8-ED336C6433B4_0",
+  "vertices": [
+    7.310454128897711,
+    9.69027128016454,
+    2.38638148,
+    7.534409779978267,
+    9.184550589982162,
+    2.38638148,
+    7.534409779978267,
+    9.184550589982162,
+    4.28550228,
+    7.310454128897711,
+    9.69027128016454,
+    4.28550228
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  }
+}
+
+Fenestration {
+  "name": "551F1F4A-0A14-4ED6-A405-A95B97905B9E_0",
+  "vertices": [
+    9.956425769544971,
+    1.3971815221526764,
+    2.3863814999999997,
+    9.685626973980211,
+    1.989681411939678,
+    2.3863814999999997,
+    9.685626973980211,
+    1.989681411939678,
+    4.2871819,
+    9.956425769544971,
+    1.3971815221526764,
+    4.2871819
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  }
+}
+
+Fenestration {
+  "name": "6E42CC15-321D-43D4-8F38-3BAA782AE37F_0",
+  "vertices": [
+    9.44417288263062,
+    2.5274414560007195,
+    2.386381569294412,
+    9.195681451563736,
+    3.0885674104988876,
+    2.386381569294412,
+    9.195681451563736,
+    3.0885674104988876,
+    4.362861850705588,
+    9.44417288263062,
+    2.5274414560007195,
+    4.362861850705588
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  }
+}
+
+Fenestration {
+  "name": "CFE7F0E3-9497-4AA2-8C3B-AE6E7FF6DF87_0",
+  "vertices": [
+    2.2981113651182796,
+    9.189990187757282,
+    0.029999901378920057,
+    3.013694088704141,
+    9.500439990819952,
+    0.029999901378920057,
+    3.013694088704141,
+    9.500439990819952,
+    2.00242169862108,
+    2.2981113651182796,
+    9.189990187757282,
+    2.00242169862108
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  }
+}
+
+Fenestration {
+  "name": "79A0C93D-0539-4CEF-9146-E78C1E14D802_0",
+  "vertices": [
+    1.1941926717132856,
+    9.185133172355092,
+    0.0300000499999995,
+    0.8730692934102855,
+    9.92531786597205,
+    0.0300000499999995,
+    0.8730692934102855,
+    9.92531786597205,
+    1.94943695,
+    1.1941926717132856,
+    9.185133172355092,
+    1.94943695
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  }
+}
+
+Fenestration {
+  "name": "856EFDBD-15AF-4ED6-9081-C840EC7555B6_0",
+  "vertices": [
+    5.629753230850891,
+    12.769172420496886,
+    0.029999900000000412,
+    6.152596826660358,
+    11.552799082156508,
+    0.029999900000000412,
+    6.152596826660358,
+    11.552799082156508,
+    2.0662369000000003,
+    5.629753230850891,
+    12.769172420496886,
+    2.0662369000000003
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  }
+}
+
+Fenestration {
+  "name": "44B4D2F3-DEE2-4BB4-9D89-C727EBFBB6B9_0",
+  "vertices": [
+    3.547377715229997,
+    9.015114246232931,
+    0.03000005000000039,
+    5.029281194470581,
+    9.658026175199725,
+    0.03000005000000039,
+    5.029281194470581,
+    9.658026175199725,
+    2.0508787500000003,
+    3.547377715229997,
+    9.015114246232931,
+    2.0508787500000003
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  }
+}
+
+Fenestration {
+  "name": "5DDFDE58-A443-4B2C-80DA-B89B96FA91B6_0",
+  "vertices": [
+    2.4310433040492767,
+    9.472898690410034,
+    2.3863815,
+    3.0379275662364273,
+    9.74165391991282,
+    2.3863815,
+    3.0379275662364273,
+    9.74165391991282,
+    4.3092398,
+    2.4310433040492767,
+    9.472898690410034,
+    4.3092398
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  }
+}
+
+Fenestration {
+  "name": "7CA37CCF-D069-4162-A712-6AB075634B71_0",
+  "vertices": [
+    5.614274784838635,
+    5.468358566385669,
+    2.386381557653895,
+    6.231126330304495,
+    5.74152777956671,
+    2.386381557653895,
+    6.231126330304495,
+    5.7415277795667095,
+    4.308177942346105,
+    5.614274784838635,
+    5.468358566385669,
+    4.308177942346105
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "living room"
+  }
+}
+
+Fenestration {
+  "name": "E070C8F0-8890-4216-B79B-9C75E5977EB3_0",
+  "vertices": [
+    8.72609159302372,
+    4.040780563396433,
+    2.38638158825388,
+    8.451576514266684,
+    4.660670932897249,
+    2.38638158825388,
+    8.451576514266684,
+    4.660670932897249,
+    4.3281774717461206,
+    8.72609159302372,
+    4.040780563396433,
+    4.3281774717461206
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  }
+}
+
+Fenestration {
+  "name": "00B7F491-BF9F-4FD2-AA73-D7DF99818BA5_0",
+  "vertices": [
+    9.88035667348145,
+    3.88710050828319,
+    2.3863815400000004,
+    9.60857027833439,
+    4.500829175868864,
+    2.3863815400000004,
+    9.60857027833439,
+    4.500829175868864,
+    4.33805884,
+    9.88035667348145,
+    3.88710050828319,
+    4.33805884
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  }
+}
+
+Fenestration {
+  "name": "0E44E51C-4425-46F2-8465-D02EAC2B8F76_0",
+  "vertices": [
+    11.434107932833047,
+    5.482184900944044,
+    2.38638147,
+    12.090442992882394,
+    5.772839203771534,
+    2.38638147,
+    12.090442992882394,
+    5.772839203771534,
+    4.37205347,
+    11.434107932833047,
+    5.482184900944044,
+    4.37205347
+  ],
+  "construction": "default_door_construction",
+  "category": "Door",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  }
+}
+
+Fenestration {
+  "name": "4351124C-13CB-423F-91CA-49ED8E8C07A0_0",
+  "vertices": [
+    4.3382833840862824,
+    12.525444453841668,
+    2.38638160705913,
+    4.037908072145848,
+    13.203730883591335,
+    2.38638160705913,
+    4.037908072145848,
+    13.203730883591335,
+    4.28835249294087,
+    4.338283384086283,
+    12.525444453841668,
+    4.28835249294087
+  ],
+  "construction": "void",
+  "category": "Opening",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  }
+}
+
+Fenestration {
+  "name": "79175318-7F02-4F5E-A5E8-C608BF34097C_0",
+  "vertices": [
+    5.6221581258130975,
+    11.38738718949619,
+    2.38638151,
+    6.41723067402082,
+    11.739480524368544,
+    2.38638151,
+    6.41723067402082,
+    11.739480524368544,
+    4.30283491,
+    5.6221581258130975,
+    11.38738718949619,
+    4.30283491
+  ],
+  "construction": "void",
+  "category": "Opening",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  }
+}
+
+Fenestration {
+  "name": "644A6FAE-D6F5-42BD-8744-ED9D9764D97D_0",
+  "vertices": [
+    5.17753654741648,
+    13.789156128923556,
+    0.029999900000000412,
+    5.533885192294211,
+    12.9864067482338,
+    0.029999900000000412,
+    5.533885192294211,
+    12.9864067482338,
+    2.0372571,
+    5.17753654741648,
+    13.789156128923556,
+    2.0372571
+  ],
+  "construction": "void",
+  "category": "Opening",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  }
+}
+
+Material {
+  "name": "wall_material",
+  "substance": "timber",
+  "thickness": 0.1
+}
+
+Material {
+  "name": "door_material",
+  "substance": "timber",
+  "thickness": 0.08
+}
+
+Material {
+  "name": "glass_5mm",
+  "substance": "glass",
+  "thickness": 0.005
+}
+
+Material {
+  "name": "roof_material",
+  "substance": "timber",
+  "thickness": 0.15
+}
+
+Material {
+  "name": "floor_material",
+  "substance": "timber",
+  "thickness": 0.15
+}
+
+Object {
+  "name": "B51BC5EB-A496-49E2-BC76-C13E37EFC79E",
+  "dimensions": {
+    "x": 0.4391778,
+    "y": 0.4749953,
+    "z": 0.82922065
+  },
+  "location": {
+    "x": 5.103724696898225,
+    "y": 11.446327884956094,
+    "z": 2.3563815750000003
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.9143536272614464,
+    "y": 0.4049164657931773,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "EC1844C1-7729-43FC-BD11-BB529EA19019",
+  "dimensions": {
+    "x": 1.7057084,
+    "y": 0.598996,
+    "z": 0.9124726
+  },
+  "location": {
+    "x": 6.176106150780215,
+    "y": 14.979420840862277,
+    "z": 2.35638156
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9143537770794684,
+    "y": -0.4049163592353979,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "364C9865-3595-4A88-9FB0-9B7701483589",
+  "dimensions": {
+    "x": 0.8371775,
+    "y": 0.585446,
+    "z": 0.050000012
+  },
+  "location": {
+    "x": 6.3580584675729135,
+    "y": 14.585281972018096,
+    "z": 3.268854104
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.914353692457918,
+    "y": -0.40491630595131767,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Stove"
+  }
+}
+
+Object {
+  "name": "62ECF34F-2F41-4866-8666-FBD156DE375C",
+  "dimensions": {
+    "x": 1.2342535,
+    "y": 0.6576603,
+    "z": 0.9124726
+  },
+  "location": {
+    "x": 5.096465128801168,
+    "y": 15.074416702419864,
+    "z": 2.35638156
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.40491630595131767,
+    "y": -0.914353692457918,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "9009F0B2-8A98-4237-A373-C8732BCABE33",
+  "dimensions": {
+    "x": 0.6724368,
+    "y": 0.44027787,
+    "z": 2.0490937
+  },
+  "location": {
+    "x": 4.179834318736573,
+    "y": 13.649503495601373,
+    "z": 2.3563814800000005
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.9143536338454296,
+    "y": 0.4049163990350231,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "76261653-81F3-42D3-9B61-3B29C71B1F92",
+  "dimensions": {
+    "x": 0.81471694,
+    "y": 0.59616303,
+    "z": 0.5037514
+  },
+  "location": {
+    "x": 6.801816458849674,
+    "y": 13.569984365353983,
+    "z": 2.35638144
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0000001
+  },
+  "front": {
+    "x": -0.9143539416271392,
+    "y": -0.4049162855871528,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "845EF3B1-EA10-4B0E-BBBB-DCBC78B9F2BC",
+  "dimensions": {
+    "x": 0.44061604,
+    "y": 0.3164,
+    "z": 1.1688552
+  },
+  "location": {
+    "x": 5.090084660073784,
+    "y": 11.441074178121118,
+    "z": 3.5786123000000005
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.9999999
+  },
+  "front": {
+    "x": 0.9143534420227406,
+    "y": 0.4049167036726043,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "106E2212-40B9-4B83-9591-F03894977E26",
+  "dimensions": {
+    "x": 0.86129403,
+    "y": 0.30233595,
+    "z": 0.6317365
+  },
+  "location": {
+    "x": 4.8120353835965055,
+    "y": 12.05157764681406,
+    "z": 4.11573105
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": 0.914353729123796,
+    "y": 0.4049164353947933,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "9D21D9AE-4419-4CB7-91CE-6736194ABF55",
+  "dimensions": {
+    "x": 0.6205109,
+    "y": 0.43788058,
+    "z": 0.7496288
+  },
+  "location": {
+    "x": 7.164974208849565,
+    "y": 12.94537882387975,
+    "z": 2.3563814
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9143537610942444,
+    "y": -0.4049163846218631,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Table",
+    "subtype": "Other",
+    "shape": "Other"
+  }
+}
+
+Object {
+  "name": "BECE78B3-92DC-4D72-BA42-111FCEB6A8B4",
+  "dimensions": {
+    "x": 0.5959669,
+    "y": 0.6748915,
+    "z": 0.8885468
+  },
+  "location": {
+    "x": 4.2450771975491275,
+    "y": 14.687961682865634,
+    "z": 2.3563816000000006
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.40491633039869673,
+    "y": -0.9143537125159752,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Dishwasher"
+  }
+}
+
+Object {
+  "name": "24D2566A-AADD-412B-AAFF-D47666E796F4",
+  "dimensions": {
+    "x": 0.6137892,
+    "y": 0.5970281,
+    "z": 0.77368164
+  },
+  "location": {
+    "x": 6.824642957832198,
+    "y": 13.517371207405688,
+    "z": 3.1668744900000005
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.91435368243408,
+    "y": -0.4049161341970668,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Oven"
+  }
+}
+
+Object {
+  "name": "BF986AF5-CB1F-429B-88E5-0AAA66CA54D1",
+  "dimensions": {
+    "x": 0.6428421,
+    "y": 0.58349127,
+    "z": 0.7968073
+  },
+  "location": {
+    "x": 6.845034012129686,
+    "y": 13.488041947723922,
+    "z": 3.97434195
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.9999999
+  },
+  "front": {
+    "x": -0.91435368712951,
+    "y": -0.4049163144134727,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "052E2E97-5CDE-48FE-95E9-A10CA414ACB7",
+  "dimensions": {
+    "x": 0.885879,
+    "y": 0.30786678,
+    "z": 1.0876465
+  },
+  "location": {
+    "x": 6.969251623038904,
+    "y": 12.20066086835554,
+    "z": 3.5990788499999997
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.4049167484945296,
+    "y": 0.914353531972699,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "D148E229-565F-41B1-BA25-6D54DE62D5F2",
+  "dimensions": {
+    "x": 1.4208301,
+    "y": 0.4228215,
+    "z": 0.7496288
+  },
+  "location": {
+    "x": 6.935950854845467,
+    "y": 12.24877472559207,
+    "z": 2.3563814
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.4049162373149913,
+    "y": 0.9143537711284634,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Table",
+    "subtype": "Other",
+    "shape": "Other"
+  }
+}
+
+Object {
+  "name": "A816C31D-71EE-4E6B-BF7E-F1507CB44870",
+  "dimensions": {
+    "x": 1.5894886,
+    "y": 0.43079305,
+    "z": 1.2567663
+  },
+  "location": {
+    "x": 6.229475353385965,
+    "y": 15.066608145346978,
+    "z": 3.51438295
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9143537723840384,
+    "y": -0.4049161790189922,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "B230F569-C7A9-48FD-A5B3-D8A7E6E3E292",
+  "dimensions": {
+    "x": 0.4437298,
+    "y": 0.41355816,
+    "z": 1.1766055
+  },
+  "location": {
+    "x": 6.6570356888912725,
+    "y": 14.122403644200975,
+    "z": 3.5945437499999997
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9143538516771808,
+    "y": -0.4049162407652274,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "38E8363D-00B7-4907-B480-AF3CE5FBEA83",
+  "dimensions": {
+    "x": 0.6550491,
+    "y": 0.58321697,
+    "z": 1.6052282
+  },
+  "location": {
+    "x": 4.9810703196389134,
+    "y": 12.01671313676069,
+    "z": 2.3563815000000004
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.9143537557658362,
+    "y": 0.40491639308401806,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Refrigerator"
+  }
+}
+
+Object {
+  "name": "A92A56B8-5AEE-4FDC-B23B-A9DECA784FCB",
+  "dimensions": {
+    "x": 0.5857664,
+    "y": 0.6301896,
+    "z": 0.90418816
+  },
+  "location": {
+    "x": 6.449496343254808,
+    "y": 4.349840135183264,
+    "z": 2.35638152
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.3199688368421656,
+    "y": 0.947428101444584,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "0FF42781-7A41-498F-BC80-618765B0A798",
+  "dimensions": {
+    "x": 0.36427724,
+    "y": 0.6455274,
+    "z": 0.8402957
+  },
+  "location": {
+    "x": 9.517192356561049,
+    "y": 8.372252384370597,
+    "z": 2.35638155
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9146004604944956,
+    "y": -0.4043588806628496,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Toilet"
+  }
+}
+
+Object {
+  "name": "71053648-55A3-4DF8-8636-9E3D3E842C7E",
+  "dimensions": {
+    "x": 1.6616981,
+    "y": 0.5154044,
+    "z": 0.5115415
+  },
+  "location": {
+    "x": 9.363056827937791,
+    "y": 7.41956752408606,
+    "z": 2.35638145
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": 0.40491610034844666,
+    "y": -0.9143537037477124,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Bathtub"
+  }
+}
+
+Object {
+  "name": "F8A8AA7D-F32F-4E91-A5CA-D4AB38E55DCF",
+  "dimensions": {
+    "x": 0.579122,
+    "y": 0.43642077,
+    "z": 0.3
+  },
+  "location": {
+    "x": 10.429127409922556,
+    "y": 6.660431001278707,
+    "z": 2.9797122500000004
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0000001
+  },
+  "front": {
+    "x": -0.9143536968368589,
+    "y": -0.404916580507004,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Sink"
+  }
+}
+
+Object {
+  "name": "03B35180-E129-4B2B-8C4E-AAF245970F39",
+  "dimensions": {
+    "x": 0.8571974,
+    "y": 0.46004185,
+    "z": 0.72012246
+  },
+  "location": {
+    "x": 10.637399115031869,
+    "y": 5.429300948805501,
+    "z": 2.35638144
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0000001
+  },
+  "front": {
+    "x": -0.40491687292608625,
+    "y": 0.9143536545157024,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "05238180-C137-47B1-B132-BC8BF2A908FD",
+  "dimensions": {
+    "x": 0.9460003,
+    "y": 0.6179393,
+    "z": 0.7962673
+  },
+  "location": {
+    "x": 13.168999116870555,
+    "y": 3.095399934813189,
+    "z": 2.3563813500000004
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9143537128220828,
+    "y": -0.4049165551205389,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Table",
+    "subtype": "Other",
+    "shape": "Other"
+  }
+}
+
+Object {
+  "name": "8C2FFBC9-1964-4CF4-920E-44002B8E604B",
+  "dimensions": {
+    "x": 0.8364454,
+    "y": 0.20519407,
+    "z": 0.7376143
+  },
+  "location": {
+    "x": 10.28773244234154,
+    "y": 3.4505997036901785,
+    "z": 2.3563814500000007
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": 0.914353520693286,
+    "y": 0.40491663503627806,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "601498DF-2E8E-4E72-AA10-9B65B930BE19",
+  "dimensions": {
+    "x": 0.70119166,
+    "y": 0.76003456,
+    "z": 0.839486
+  },
+  "location": {
+    "x": 11.055563867017012,
+    "y": 4.850566860814469,
+    "z": 2.35638156
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": 0.4049163119023226,
+    "y": -0.9143535705375114,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Sofa",
+    "subtype": "Other"
+  }
+}
+
+Object {
+  "name": "6E0998AB-936F-4509-8A06-75B6E2C32FC7",
+  "dimensions": {
+    "x": 0.6075928,
+    "y": 0.4568344,
+    "z": 0.5780169
+  },
+  "location": {
+    "x": 12.475742576897408,
+    "y": 2.520902812747064,
+    "z": 2.3563814500000007
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.40491526133952305,
+    "y": 0.914354172964108,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "246A2E49-085F-4894-9AEC-94F0B05B673A",
+  "dimensions": {
+    "x": 0.33777335,
+    "y": 0.31397235,
+    "z": 0.64140606
+  },
+  "location": {
+    "x": 9.398207085762914,
+    "y": 1.0790803959959678,
+    "z": 2.3563814700000005
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0000001
+  },
+  "front": {
+    "x": -0.40511176725776143,
+    "y": 0.914267367214314,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "4D23544A-08C5-45F5-8228-939237042FAE",
+  "dimensions": {
+    "x": 1.6543164,
+    "y": 2.188406,
+    "z": 0.71657836
+  },
+  "location": {
+    "x": 8.032911746363796,
+    "y": 1.4994105996038538,
+    "z": 2.35638156
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.4049164573310223,
+    "y": 0.9143536325898546,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Bed"
+  }
+}
+
+Object {
+  "name": "F6B68C7E-25CE-4FFF-87D8-4FCADC1EA2C1",
+  "dimensions": {
+    "x": 1.465601,
+    "y": 0.44597325,
+    "z": 0.74345684
+  },
+  "location": {
+    "x": 6.724627978580944,
+    "y": 3.8070899296953193,
+    "z": 2.3563814800000005
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.40491668580920825,
+    "y": -0.9143534887228376,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "5E8DCB41-0C6D-4B68-9B15-B6C85D9CAE2D",
+  "dimensions": {
+    "x": 0.36793563,
+    "y": 0.406665,
+    "z": 0.6188475
+  },
+  "location": {
+    "x": 7.464125899892486,
+    "y": 0.272832614747875,
+    "z": 2.3563814500000007
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.4049160060091662,
+    "y": 0.9143537040642012,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "14DB15FB-004D-43CB-8001-463A803173C8",
+  "dimensions": {
+    "x": 0.9111171,
+    "y": 0.4148871,
+    "z": 0.36659646
+  },
+  "location": {
+    "x": 3.931035637903888,
+    "y": 4.998187244077439,
+    "z": 2.3563816200000005
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.4049164573310223,
+    "y": 0.9143536325898546,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "B29506AC-8F6A-4392-83B9-20133C1204D2",
+  "dimensions": {
+    "x": 1.1635935,
+    "y": 0.08000004,
+    "z": 0.6540527
+  },
+  "location": {
+    "x": 5.946600908334645,
+    "y": 8.399558177310595,
+    "z": 3.61920605
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.9143537977705036,
+    "y": -0.40491619500421616,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Television"
+  }
+}
+
+Object {
+  "name": "0EE72090-2520-4BE0-95FC-F446E4B7DFA4",
+  "dimensions": {
+    "x": 1.7895696,
+    "y": 0.55080056,
+    "z": 1.0768971
+  },
+  "location": {
+    "x": 6.073159887529782,
+    "y": 8.335021884065593,
+    "z": 2.35638155
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.9143536385408596,
+    "y": -0.4049165792514289,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Fireplace"
+  }
+}
+
+Object {
+  "name": "66D38265-5364-432C-B321-0F0B831E44D8",
+  "dimensions": {
+    "x": 2.7961311,
+    "y": 1.0283395,
+    "z": 0.82680213
+  },
+  "location": {
+    "x": 2.961986922461793,
+    "y": 6.897186609315375,
+    "z": 2.3563815350000006
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.91435374510902,
+    "y": 0.4049164100083281,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Sofa",
+    "subtype": "Other"
+  }
+}
+
+Object {
+  "name": "21B7A25B-C052-4B99-9FAB-17A5E2FFEC98",
+  "dimensions": {
+    "x": 0.8374338,
+    "y": 0.38832498,
+    "z": 0.46559548
+  },
+  "location": {
+    "x": 3.790731113335895,
+    "y": 9.767583936900778,
+    "z": 2.3563816200000005
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.4049163181801979,
+    "y": -0.9143538620175078,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "4C170FB7-72C1-4EFE-9218-8A5CB86CBE26",
+  "dimensions": {
+    "x": 0.6449884,
+    "y": 1.1347847,
+    "z": 0.82680213
+  },
+  "location": {
+    "x": 4.079522391290547,
+    "y": 6.471405703869548,
+    "z": 2.3563815350000006
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.40491664820424433,
+    "y": 0.9143536542095946,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Sofa",
+    "subtype": "Other"
+  }
+}
+
+Object {
+  "name": "1DDFCFD9-B209-46D1-8516-3768E97A0BBD",
+  "dimensions": {
+    "x": 0.73995674,
+    "y": 0.42116678,
+    "z": 0.5988718
+  },
+  "location": {
+    "x": 1.65287641558346,
+    "y": 8.546590337116122,
+    "z": 2.3563814500000007
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.914353729123796,
+    "y": 0.4049164353947933,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "782D81A4-0D30-41E2-ACE4-7C28C32012F2",
+  "dimensions": {
+    "x": 0.55739236,
+    "y": 0.5840041,
+    "z": 0.8649975
+  },
+  "location": {
+    "x": 6.338339992268001,
+    "y": 7.187189900531475,
+    "z": 2.35638145
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9013773477719648,
+    "y": -0.43303456185009515,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "70C0D86F-48C7-4D29-AF9C-740604BDE764",
+  "dimensions": {
+    "x": 0.46950224,
+    "y": 0.5194286,
+    "z": 0.7819289
+  },
+  "location": {
+    "x": 0.9409674045294274,
+    "y": 10.761051833971855,
+    "z": 2.35638155
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": 0.9922617097738168,
+    "y": 0.12416317809230965,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "835005C2-DB81-49D9-A4E6-6D05B5CDAABD",
+  "dimensions": {
+    "x": 0.40749016,
+    "y": 0.4975782,
+    "z": 0.8949766
+  },
+  "location": {
+    "x": 1.7138148012857606,
+    "y": 11.406464964769588,
+    "z": 2.3563815000000004
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.917876586329705,
+    "y": -0.3968658762782738,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "72A9FE05-BEE3-4348-80D0-1A62E462D735",
+  "dimensions": {
+    "x": 0.46937987,
+    "y": 0.5542193,
+    "z": 0.9981406
+  },
+  "location": {
+    "x": 2.047591222361688,
+    "y": 10.785682396388212,
+    "z": 2.3563813700000003
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9556810423663784,
+    "y": -0.2944039467655006,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "34DD1079-BEE5-4077-BF03-A28227C8E315",
+  "dimensions": {
+    "x": 1.6875193,
+    "y": 0.95314515,
+    "z": 0.7698686
+  },
+  "location": {
+    "x": 1.5108894766074772,
+    "y": 10.883951218491914,
+    "z": 2.3563814
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.9143538090499164,
+    "y": 0.40491630846246773,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Table",
+    "subtype": "Other",
+    "shape": "Other"
+  }
+}
+
+Object {
+  "name": "A5E002EE-0AD9-4486-811D-A0DEDEF25D9E",
+  "dimensions": {
+    "x": 0.4354448,
+    "y": 0.48683602,
+    "z": 0.8861966
+  },
+  "location": {
+    "x": 1.880417819825917,
+    "y": 10.221746651879574,
+    "z": 2.3563815000000004
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.38754681061602086,
+    "y": 0.9218500285755692,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "D47B6B55-917F-4B35-BC88-0DFDBD87BF3D",
+  "dimensions": {
+    "x": 0.4261666,
+    "y": 0.51588863,
+    "z": 0.85885274
+  },
+  "location": {
+    "x": 1.0579932118687498,
+    "y": 11.714596766314372,
+    "z": 2.35638156
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.4220574400496352,
+    "y": -0.9065690848372608,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "EEFC2787-44F6-48E9-AF43-884475EAF0EC",
+  "dimensions": {
+    "x": 1.77643,
+    "y": 0.89352995,
+    "z": 0.48368979
+  },
+  "location": {
+    "x": 1.130830186985066,
+    "y": 11.562876445503791,
+    "z": 0.3014937050000004
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.3980003413525446,
+    "y": -0.9173853175223706,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Table",
+    "subtype": "Other",
+    "shape": "Other"
+  }
+}
+
+Object {
+  "name": "BF9778E1-CAA0-4971-ADCA-454EBEE48B43",
+  "dimensions": {
+    "x": 0.7639351,
+    "y": 0.83400416,
+    "z": 0.833164
+  },
+  "location": {
+    "x": 3.446694197237487,
+    "y": 10.22972979887484,
+    "z": -1.9999999967268425e-7
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9173853335075948,
+    "y": -0.3980003159660795,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Stairs"
+  }
+}
+
+Object {
+  "name": "4C61B585-D3B9-4630-AFBC-6E7FA7AA91E3",
+  "dimensions": {
+    "x": 1.0354277,
+    "y": 0.4650193,
+    "z": 1.6059957
+  },
+  "location": {
+    "x": 6.30168651720669,
+    "y": 12.567671129428067,
+    "z": 0.30149345000000016
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.9173852294505842,
+    "y": -0.3980003686171817,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "8AB4A7A9-27D2-4052-B307-1A5119923D66",
+  "dimensions": {
+    "x": 0.842549,
+    "y": 0.8520707,
+    "z": 0.7033689
+  },
+  "location": {
+    "x": 4.191201748331039,
+    "y": 11.624445750471947,
+    "z": 1.63223165
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.49381619407157507,
+    "y": -0.869566415912899,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Stairs"
+  }
+}
+
+Object {
+  "name": "3175AB43-C08F-4C93-A7E9-52C3861CE151",
+  "dimensions": {
+    "x": 1.5361525,
+    "y": 2.1429105,
+    "z": 0.55062366
+  },
+  "location": {
+    "x": 4.874388604434463,
+    "y": 7.4863930772363805,
+    "z": -2.999999981767587e-8
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.9173853021701248,
+    "y": -0.3980001780604489,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Bed"
+  }
+}
+
+Object {
+  "name": "86EC0112-6E99-4DE6-83DC-EBB8FD99D185",
+  "dimensions": {
+    "x": 0.6568108,
+    "y": 0.8494292,
+    "z": 1.1001446
+  },
+  "location": {
+    "x": 3.490453572996505,
+    "y": 5.17323272372669,
+    "z": -9.999999983634213e-8
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.10268742212651116,
+    "y": 0.9947136336472444,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+Object {
+  "name": "B78E1279-3C17-40F7-86B9-DB5C84451E0E",
+  "dimensions": {
+    "x": 1.6184602,
+    "y": 0.59474576,
+    "z": 2.2877028
+  },
+  "location": {
+    "x": 4.203909488594812,
+    "y": 9.690694654631525,
+    "z": 2.0000000011677346e-7
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": 0.3980003733229928,
+    "y": -0.9173853682953008,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Storage",
+    "subtype": "Cabinet"
+  }
+}
+
+Object {
+  "name": "D87D5ECA-5790-4413-B632-096AA4F0338A",
+  "dimensions": {
+    "x": 0.4581492,
+    "y": 0.4487509,
+    "z": 0.4940622
+  },
+  "location": {
+    "x": 6.055005361908887,
+    "y": 6.734564948223381,
+    "z": 4.000000002335469e-7
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 0.99999994
+  },
+  "front": {
+    "x": -0.39800049179316327,
+    "y": 0.9173852936975884,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Table",
+    "subtype": "Other",
+    "shape": "Other"
+  }
+}
+
+Object {
+  "name": "BCD8A879-94A0-4666-B303-1CDB451FB61F",
+  "dimensions": {
+    "x": 1.1056044,
+    "y": 0.67416775,
+    "z": 0.8141439
+  },
+  "location": {
+    "x": 6.052795228700255,
+    "y": 6.073330018409779,
+    "z": -1.4999999997655777e-7
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.3980008048928996,
+    "y": 0.9173850965464913,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Table",
+    "subtype": "Other",
+    "shape": "Other"
+  }
+}
+
+Object {
+  "name": "BC355829-99D4-48ED-9705-52A884B3F59C",
+  "dimensions": {
+    "x": 0.4026043,
+    "y": 0.5056294,
+    "z": 0.86889386
+  },
+  "location": {
+    "x": 5.1015094845854385,
+    "y": 9.003079272014492,
+    "z": -1.2999999965401798e-7
+  },
+  "up": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 1.0
+  },
+  "front": {
+    "x": -0.930279561836476,
+    "y": -0.3668513014312008,
+    "z": 0.0
+  },
+  "specifications": {
+    "type": "Chair",
+    "subtype": "Other",
+    "arms": "Missing",
+    "back": "Missing",
+    "legs": "Other"
+  }
+}
+
+SiteDetails {
+  "altitude": 235.83370971679688,
+  "latitude": -41.29233034371888,
+  "longitude": 174.74651079692754,
+  "standard_meridian": 180.0
+}
+
+Substance {
+  "type": "Normal",
+  "name": "timber",
+  "thermal_conductivity": 0.143,
+  "specific_heat_capacity": 900.0,
+  "density": 800.0
+}
+
+Substance {
+  "type": "Normal",
+  "name": "glass",
+  "thermal_conductivity": 1.0,
+  "specific_heat_capacity": 800.0,
+  "density": 2520.0,
+  "front_solar_absorbtance": 0.09,
+  "back_solar_absorbtance": 0.09,
+  "solar_transmittance": 0.63,
+  "front_visible_reflectance": 0.1,
+  "visible_transmissivity": 0.81
+}
+
+Space {
+  "name": "Kitchen",
+  "volume": 27.73259701858227,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "Kitchen"
+  ]
+}
+
+Space {
+  "name": "Hallway",
+  "volume": 41.157185015420104,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "Other"
+  ]
+}
+
+Space {
+  "name": "Visitors Bathroom",
+  "volume": 3.898978624371934,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "Bathroom"
+  ]
+}
+
+Space {
+  "name": "Bathroom",
+  "volume": 12.59888231844096,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "Bathroom"
+  ]
+}
+
+Space {
+  "name": "kids bedroom",
+  "volume": 26.14679258546073,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "Bedroom"
+  ]
+}
+
+Space {
+  "name": "main bedroom",
+  "volume": 33.55757568229365,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "Bedroom"
+  ]
+}
+
+Space {
+  "name": "living room",
+  "volume": 50.2133351279895,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "LivingRoom"
+  ]
+}
+
+Space {
+  "name": "dining room",
+  "volume": 30.98162167375762,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 1,
+  "purposes": [
+    "DiningRoom"
+  ]
+}
+
+Space {
+  "name": "downstairs entrance",
+  "volume": 45.212573881193,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 0,
+  "purposes": [
+    "Other"
+  ]
+}
+
+Space {
+  "name": "downstairs bedroom",
+  "volume": 41.42256075603283,
+  "infiltration": {
+    "type": "EffectiveAirLeakageArea",
+    "area": 0.0125
+  },
+  "building": "The building",
+  "storey": 0,
+  "purposes": [
+    "Bedroom"
+  ]
+}
+
+Surface {
+  "name": "CA3FAA5C-2387-43D7-956F-461701402B92_0.0",
+  "vertices": [
+    1.2449610047739863,
+    8.947648918069408,
+    4.777958963352675,
+    1.244961004773987,
+    8.947648918069408,
+    2.3563816086473253,
+    1.8074923069377746e-7,
+    11.7589318837575,
+    2.3563816086473253,
+    1.8074923069377746e-7,
+    11.7589318837575,
+    4.777958963352675,
+    0.03061784584050109,
+    11.68979322601085,
+    4.49745881531193,
+    0.03061784584050109,
+    11.68979322601085,
+    3.1912200846880703,
+    0.9484150775533876,
+    9.617288072693018,
+    3.1912200846880703,
+    0.9484150775533876,
+    9.617288072693018,
+    4.49745881531193,
+    0.03061784584050109,
+    11.68979322601085,
+    4.49745881531193,
+    1.8074923069377746e-7,
+    11.7589318837575,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "CA3FAA5C-2387-43D7-956F-461701402B92_0.1",
+  "vertices": [
+    3.2495031493332727,
+    4.421132841213852,
+    4.777958963352675,
+    2.8389336247945214,
+    5.348252063194687,
+    4.465911139881847,
+    1.7137108805353225,
+    7.889150919203826,
+    4.465911139881847,
+    1.7137108805353225,
+    7.889150919203826,
+    2.795306140118153,
+    2.8389336247945214,
+    5.348252063194687,
+    2.795306140118153,
+    2.8389336247945214,
+    5.348252063194687,
+    4.465911139881847,
+    3.2495031493332727,
+    4.421132841213852,
+    4.777958963352675,
+    3.2495031493332727,
+    4.421132841213852,
+    2.3563816086473253,
+    1.244961004773987,
+    8.947648918069408,
+    2.3563816086473253,
+    1.2449610047739863,
+    8.947648918069408,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "133A2C57-D930-42B6-8473-2A7625773051_0.0",
+  "vertices": [
+    5.155742100285166,
+    10.679515991160736,
+    2.3563816086473253,
+    5.155742100285166,
+    10.679515991160736,
+    4.777958963352675,
+    1.2449607280466737,
+    8.947648795522277,
+    4.777958963352675,
+    1.2449607280466737,
+    8.947648795522277,
+    2.3563816086473253,
+    1.6775529569665903,
+    9.139219793500535,
+    2.38638149,
+    1.6775529569665903,
+    9.139219793500535,
+    4.31809969,
+    2.366367946972996,
+    9.44425757789944,
+    4.31809969,
+    2.366367946972996,
+    9.44425757789944,
+    2.38638149,
+    2.4310433040492767,
+    9.472898690410034,
+    2.3863815,
+    2.4310433040492767,
+    9.472898690410034,
+    4.3092398,
+    3.0379275662364273,
+    9.74165391991282,
+    4.3092398,
+    3.0379275662364273,
+    9.74165391991282,
+    2.3863815,
+    2.4310433040492767,
+    9.472898690410034,
+    2.3863815,
+    2.366367946972996,
+    9.44425757789944,
+    2.38638149,
+    1.6775529569665903,
+    9.139219793500535,
+    2.38638149,
+    1.2449607280466737,
+    8.947648795522277,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "7DD6EFF3-A020-4F96-A14B-D462043F5899_0.0",
+  "vertices": [
+    3.9107813741546846,
+    13.490799463060307,
+    4.777958963352675,
+    3.9107813741546846,
+    13.490799463060307,
+    2.3563816086473253,
+    3.3857207916078016,
+    14.67645438801842,
+    2.3563816086473253,
+    3.3857207916078016,
+    14.67645438801842,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "7DD6EFF3-A020-4F96-A14B-D462043F5899_0.1",
+  "vertices": [
+    4.970134646374488,
+    11.098642317335608,
+    4.777958963352675,
+    4.970134646374488,
+    11.098642317335608,
+    2.3563816086473253,
+    3.9107813741546846,
+    13.490799463060307,
+    2.3563816086473253,
+    4.037908072145848,
+    13.203730883591335,
+    2.38638160705913,
+    4.3382833840862824,
+    12.525444453841668,
+    2.38638160705913,
+    4.338283384086283,
+    12.525444453841668,
+    4.28835249294087,
+    4.037908072145848,
+    13.203730883591335,
+    4.28835249294087,
+    4.037908072145848,
+    13.203730883591335,
+    2.38638160705913,
+    3.9107813741546846,
+    13.490799463060307,
+    2.3563816086473253,
+    3.9107813741546846,
+    13.490799463060307,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "7DD6EFF3-A020-4F96-A14B-D462043F5899_0.2",
+  "vertices": [
+    5.155742198988134,
+    10.679516379908872,
+    4.777958963352675,
+    5.155742198988134,
+    10.679516379908872,
+    2.3563816086473253,
+    4.970134646374488,
+    11.098642317335608,
+    2.3563816086473253,
+    4.970134646374488,
+    11.098642317335608,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Outdoor"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "23D26F16-4567-4361-9FEC-FB58035C3895_0.0",
+  "vertices": [
+    9.18104743018807,
+    3.121612933144526,
+    4.777958963352675,
+    9.579093158815514,
+    2.2227739331394236,
+    4.777958963352675,
+    9.579093158815514,
+    2.2227739331394236,
+    2.3563816086473253,
+    9.18104743018807,
+    3.121612933144526,
+    2.3563816086473253,
+    9.195681451563736,
+    3.0885674104988876,
+    2.386381569294412,
+    9.44417288263062,
+    2.5274414560007195,
+    2.386381569294412,
+    9.44417288263062,
+    2.5274414560007195,
+    4.362861850705588,
+    9.195681451563736,
+    3.0885674104988876,
+    4.362861850705588,
+    9.195681451563736,
+    3.0885674104988876,
+    2.386381569294412,
+    9.18104743018807,
+    3.121612933144526,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "6287AC73-C5FD-47B0-927A-442070D88D8E_0.0",
+  "vertices": [
+    7.16028431625732,
+    6.1529998013397895,
+    2.3563816086473253,
+    7.16028431625732,
+    6.1529998013397895,
+    4.777958963352675,
+    5.155742321469065,
+    10.679516089110766,
+    4.777958963352675,
+    5.155742321469065,
+    10.679516089110768,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "7D605F5C-7A9B-4BF5-A53C-B833E91A609F_0.0",
+  "vertices": [
+    7.160284194177663,
+    6.153000077011504,
+    2.3563816086473253,
+    7.160284194177663,
+    6.153000077011504,
+    4.777958963352675,
+    7.804136638323655,
+    6.438126485245144,
+    4.777958963352675,
+    7.804136638323655,
+    6.438126485245144,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Outdoor"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "7D605F5C-7A9B-4BF5-A53C-B833E91A609F_0.1",
+  "vertices": [
+    3.249503149333278,
+    4.421132841213854,
+    2.3563816086473253,
+    3.249503149333277,
+    4.421132841213854,
+    4.777958963352675,
+    5.319967158353929,
+    5.338026100898711,
+    4.777958963352675,
+    5.31996715835393,
+    5.338026100898711,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "7D605F5C-7A9B-4BF5-A53C-B833E91A609F_0.2",
+  "vertices": [
+    7.160284194177663,
+    6.153000077011504,
+    4.777958963352675,
+    7.160284194177663,
+    6.153000077011504,
+    2.3563816086473253,
+    5.31996715835393,
+    5.338026100898711,
+    2.3563816086473253,
+    5.614274784838635,
+    5.468358566385669,
+    2.386381557653895,
+    6.231126330304495,
+    5.74152777956671,
+    2.386381557653895,
+    6.231126330304495,
+    5.7415277795667095,
+    4.308177942346105,
+    5.614274784838635,
+    5.468358566385669,
+    4.308177942346105,
+    5.614274784838635,
+    5.468358566385669,
+    2.386381557653895,
+    5.31996715835393,
+    5.338026100898711,
+    2.3563816086473253,
+    5.319967158353929,
+    5.338026100898711,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "C0F2C45D-6908-4DF1-9381-59378FDABB73_0.0",
+  "vertices": [
+    7.689033045530062,
+    12.30269093742166,
+    2.3563816086473253,
+    6.971920984711241,
+    11.985121958917674,
+    2.3563816086473253,
+    6.971920984711241,
+    11.985121958917674,
+    4.777958963352675,
+    7.689033045530062,
+    12.30269093742166,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "C0F2C45D-6908-4DF1-9381-59378FDABB73_0.1",
+  "vertices": [
+    6.971920984711241,
+    11.985121958917674,
+    2.3563816086473253,
+    5.613987291055207,
+    11.383768782012393,
+    2.3563816086473253,
+    5.6221581258130975,
+    11.38738718949619,
+    2.38638151,
+    6.41723067402082,
+    11.739480524368544,
+    2.38638151,
+    6.41723067402082,
+    11.739480524368544,
+    4.30283491,
+    5.6221581258130975,
+    11.38738718949619,
+    4.30283491,
+    5.6221581258130975,
+    11.38738718949619,
+    2.38638151,
+    5.613987291055207,
+    11.383768782012393,
+    2.3563816086473253,
+    5.613987291055207,
+    11.383768782012393,
+    4.777958963352675,
+    6.971920984711241,
+    11.985121958917674,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "C0F2C45D-6908-4DF1-9381-59378FDABB73_0.2",
+  "vertices": [
+    5.613987291055207,
+    11.383768782012393,
+    2.3563816086473253,
+    4.970134818314005,
+    11.098642393478052,
+    2.3563816086473253,
+    4.970134818314005,
+    11.098642393478052,
+    4.777958963352675,
+    5.613987291055207,
+    11.383768782012393,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "D389BD1D-E406-4641-A30F-CE3E60B2A9FA_0.0",
+  "vertices": [
+    11.002795545590558,
+    5.991794352724838,
+    2.3563816086473253,
+    12.074952837690006,
+    6.466593200485836,
+    2.3563816086473253,
+    12.074952837690006,
+    6.466593200485836,
+    4.777958963352675,
+    11.002795545590558,
+    5.991794352724838,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "0E13705B-168D-477F-B254-775A2CC65FAA_0.0",
+  "vertices": [
+    9.284728303455054,
+    5.2321062309406035,
+    2.3563816086473253,
+    9.284728303455054,
+    5.2321062309406035,
+    4.777958963352675,
+    9.938795297126273,
+    5.5217578007809776,
+    4.777958963352675,
+    9.938795297126273,
+    5.5217578007809776,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "E6FCDB81-4E7D-4F4D-91CF-30EBAADE58A5_0.0",
+  "vertices": [
+    8.376259063424882,
+    4.8307464375120155,
+    2.3563816086473253,
+    8.376259063424882,
+    4.8307464375120155,
+    4.777958963352675,
+    6.008881508069282,
+    3.7823668198502567,
+    4.777958963352675,
+    6.008881508069282,
+    3.7823668198502567,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "E6FCDB81-4E7D-4F4D-91CF-30EBAADE58A5_0.1",
+  "vertices": [
+    5.730090818283249,
+    3.6589059565399946,
+    4.777958963352675,
+    5.730090818283249,
+    3.6589059565399946,
+    2.3563816086473253,
+    6.008881508069282,
+    3.7823668198502567,
+    2.3563816086473253,
+    6.008881508069282,
+    3.7823668198502567,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "9CBE3147-D58D-4898-BB5C-E9EAC5A2077F_0.0",
+  "vertices": [
+    9.947442116304268,
+    3.735613419494255,
+    2.3563816086473253,
+    9.947442116304268,
+    3.735613419494255,
+    4.777958963352675,
+    9.039324974564922,
+    3.333459284351651,
+    4.777958963352675,
+    9.039324974564922,
+    3.333459284351651,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "B82A474E-707C-4A23-BAC9-F89A45EF6A9A_0.0",
+  "vertices": [
+    8.37625974013837,
+    4.830745899836792,
+    2.3563816086473253,
+    8.451576514266684,
+    4.660670932897249,
+    2.38638158825388,
+    8.72609159302372,
+    4.040780563396433,
+    2.38638158825388,
+    8.72609159302372,
+    4.040780563396433,
+    4.3281774717461206,
+    8.451576514266684,
+    4.660670932897249,
+    4.3281774717461206,
+    8.451576514266684,
+    4.660670932897249,
+    2.38638158825388,
+    8.37625974013837,
+    4.830745899836792,
+    2.3563816086473253,
+    8.37625974013837,
+    4.830745899836792,
+    4.777958963352675,
+    9.039324815616837,
+    3.333459643276665,
+    4.777958963352675,
+    9.039324815616837,
+    3.333459643276665,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.0",
+  "vertices": [
+    9.284728234116349,
+    5.2321062002343375,
+    2.3563816086473253,
+    9.263364260936347,
+    5.280348801881129,
+    2.38638152,
+    8.950736589491829,
+    5.986302328886185,
+    2.38638152,
+    8.950736589491829,
+    5.986302328886185,
+    4.3485349200000005,
+    9.263364260936347,
+    5.280348801881129,
+    4.3485349200000005,
+    9.263364260936347,
+    5.280348801881129,
+    2.38638152,
+    9.284728234116349,
+    5.2321062002343375,
+    2.3563816086473253,
+    9.284728234116349,
+    5.232106200234336,
+    4.777958963352675,
+    8.321624709773833,
+    7.406917939512057,
+    4.777958963352675,
+    8.321624709773833,
+    7.406917939512057,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.1",
+  "vertices": [
+    8.321624709773833,
+    7.406917939512057,
+    4.777958963352675,
+    7.997052332678383,
+    8.139844149531221,
+    4.777958963352675,
+    7.997052332678383,
+    8.139844149531221,
+    2.3563816086473253,
+    8.321624709773833,
+    7.406917939512057,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.2",
+  "vertices": [
+    7.997052332678383,
+    8.139844149531221,
+    4.777958963352675,
+    7.565577018826887,
+    9.114170952471104,
+    4.777958963352675,
+    7.565577018826887,
+    9.114170952471104,
+    2.3563816086473253,
+    7.997052332678383,
+    8.139844149531221,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.3",
+  "vertices": [
+    7.565577018826887,
+    9.114170952471104,
+    4.777958963352675,
+    7.285340332697149,
+    9.746981464910355,
+    4.777958963352675,
+    7.285340332697149,
+    9.746981464910355,
+    2.3563816086473253,
+    7.310454128897711,
+    9.69027128016454,
+    2.38638148,
+    7.310454128897711,
+    9.69027128016454,
+    4.28550228,
+    7.534409779978267,
+    9.184550589982162,
+    4.28550228,
+    7.534409779978267,
+    9.184550589982162,
+    2.38638148,
+    7.310454128897711,
+    9.69027128016454,
+    2.38638148,
+    7.285340332697149,
+    9.746981464910355,
+    2.3563816086473253,
+    7.565577018826887,
+    9.114170952471104,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.4",
+  "vertices": [
+    9.947441939670384,
+    3.735613341272904,
+    2.3563816086473253,
+    9.947441939670384,
+    3.735613341272904,
+    4.777958963352675,
+    9.54454712856054,
+    4.645401689824473,
+    4.777958963352675,
+    9.54454712856054,
+    4.645401689824473,
+    2.3563816086473253,
+    9.60857027833439,
+    4.500829175868864,
+    2.3863815400000004,
+    9.60857027833439,
+    4.500829175868864,
+    4.33805884,
+    9.88035667348145,
+    3.88710050828319,
+    4.33805884,
+    9.88035667348145,
+    3.88710050828319,
+    2.3863815400000004,
+    9.60857027833439,
+    4.500829175868864,
+    2.3863815400000004,
+    9.54454712856054,
+    4.645401689824473,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.5",
+  "vertices": [
+    9.284728234116349,
+    5.232106200234336,
+    4.777958963352675,
+    9.284728234116349,
+    5.2321062002343375,
+    2.3563816086473253,
+    9.54454712856054,
+    4.645401689824473,
+    2.3563816086473253,
+    9.54454712856054,
+    4.645401689824473,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.6",
+  "vertices": [
+    10.447158014361095,
+    2.6071901156543884,
+    4.777958963352675,
+    10.447158014361095,
+    2.6071901156543884,
+    2.3563816086473253,
+    10.90419606887757,
+    1.5751393535749596,
+    2.3563816086473253,
+    10.90419606887757,
+    1.5751393535749596,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2AE737FA-B897-4CEC-AC3C-93E169090645_0.7",
+  "vertices": [
+    9.947441939670384,
+    3.735613341272904,
+    4.777958963352675,
+    9.947441939670384,
+    3.735613341272904,
+    2.3563816086473253,
+    10.447158014361095,
+    2.6071901156543884,
+    2.3563816086473253,
+    10.447158014361095,
+    2.6071901156543884,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "0A798782-EB5C-4FF0-809A-0F87BC3E6206_0.0",
+  "vertices": [
+    11.00279566411257,
+    5.991794405211662,
+    2.3563816086473253,
+    11.002795664112568,
+    5.991794405211662,
+    4.777958963352675,
+    10.948360050109514,
+    6.114717035679485,
+    4.45247531811247,
+    10.948360050109514,
+    6.114717035679486,
+    3.61472480188753,
+    10.35758077707395,
+    7.448772756320814,
+    3.61472480188753,
+    10.35758077707395,
+    7.448772756320814,
+    4.45247531811247,
+    10.948360050109514,
+    6.114717035679485,
+    4.45247531811247,
+    11.002795664112568,
+    5.991794405211662,
+    4.777958963352675,
+    10.039267022552789,
+    8.167566228874161,
+    4.777958963352675,
+    10.039267022552789,
+    8.167566228874161,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "0A798782-EB5C-4FF0-809A-0F87BC3E6206_0.1",
+  "vertices": [
+    11.002795664112568,
+    5.991794405211662,
+    4.777958963352675,
+    11.00279566411257,
+    5.991794405211662,
+    2.3563816086473253,
+    11.262188727790694,
+    5.406051444534622,
+    2.3563816086473253,
+    11.262188727790694,
+    5.406051444534622,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "735447B7-BD1F-4D7D-8208-E35066B19187_0.0",
+  "vertices": [
+    10.039266922297102,
+    8.167566607515251,
+    2.3563816086473253,
+    10.039266922297102,
+    8.167566607515251,
+    4.777958963352675,
+    10.021165646143626,
+    8.208509029591088,
+    4.47249751,
+    10.021165646143626,
+    8.208509029591088,
+    3.65301621,
+    9.74847552424115,
+    8.82529394421148,
+    3.65301621,
+    9.74847552424115,
+    8.82529394421148,
+    4.47249751,
+    10.021165646143626,
+    8.208509029591088,
+    4.47249751,
+    10.039266922297102,
+    8.167566607515251,
+    4.777958963352675,
+    9.715141720289749,
+    8.900690101874615,
+    4.777958963352675,
+    9.715141720289749,
+    8.900690101874615,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "C6388883-B44D-4A4D-846A-C69A2268033D_0.0",
+  "vertices": [
+    10.198614566568295,
+    4.935052083280986,
+    4.777958963352675,
+    10.198614566568295,
+    4.935052083280986,
+    2.3563816086473253,
+    11.262189097840912,
+    5.406050582138821,
+    2.3563816086473253,
+    11.262189097840912,
+    5.406050582138821,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "C6388883-B44D-4A4D-846A-C69A2268033D_0.1",
+  "vertices": [
+    9.54454713344776,
+    4.64540169198875,
+    4.777958963352675,
+    9.54454713344776,
+    4.64540169198875,
+    2.3563816086473253,
+    10.198614566568295,
+    4.935052083280986,
+    2.3563816086473253,
+    10.198614566568295,
+    4.935052083280986,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "A8F10335-9B6A-42DD-8A82-DC7198105211_0.0",
+  "vertices": [
+    10.039266861617524,
+    8.167566403985271,
+    2.3563816086473253,
+    10.039266861617524,
+    8.167566403985271,
+    4.777958963352675,
+    8.32162472928019,
+    7.40691794815034,
+    4.777958963352675,
+    8.32162472928019,
+    7.40691794815034,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "D78CC686-84D1-4E34-83AF-CD881F7DF411_0.0",
+  "vertices": [
+    3.4539019111434754e-7,
+    11.75893195666782,
+    2.3563816086473253,
+    3.910781489727398,
+    13.490799514241033,
+    2.3563816086473253,
+    3.553866082784769,
+    13.332741522431126,
+    2.3863815368643975,
+    2.7673345406773837,
+    12.984430427918404,
+    2.3863815368643975,
+    2.7673345406773837,
+    12.984430427918404,
+    4.281861323135603,
+    3.553866082784769,
+    13.332741522431126,
+    4.281861323135603,
+    3.553866082784769,
+    13.332741522431126,
+    2.3863815368643975,
+    3.910781489727398,
+    13.490799514241033,
+    2.3563816086473253,
+    3.910781489727398,
+    13.490799514241033,
+    4.777958963352675,
+    3.4539019111434754e-7,
+    11.75893195666782,
+    4.777958963352675,
+    0.06567045900432333,
+    11.788013599202367,
+    4.44265556207439,
+    0.8262241733038262,
+    12.12482055795903,
+    4.44265556207439,
+    0.8262241733038262,
+    12.12482055795903,
+    3.17846863792561,
+    0.06567045900432333,
+    11.788013599202367,
+    3.17846863792561,
+    0.06567045900432333,
+    11.788013599202367,
+    4.44265556207439,
+    3.4539019111434754e-7,
+    11.75893195666782,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "FEF80F9C-B3F2-4D14-BD0E-8D6C7AF4E4BB_0.0",
+  "vertices": [
+    7.689032895771388,
+    12.302691310370513,
+    2.3563816086473253,
+    7.689032895771388,
+    12.302691310370513,
+    4.777958963352675,
+    7.626478778140978,
+    12.443946613108409,
+    4.30230218,
+    7.626478778140978,
+    12.443946613108409,
+    3.19057988,
+    7.349938725453999,
+    13.068409883332247,
+    3.19057988,
+    7.349938725453999,
+    13.068409883332247,
+    4.30230218,
+    7.626478778140978,
+    12.443946613108409,
+    4.30230218,
+    7.689032895771388,
+    12.302691310370513,
+    4.777958963352675,
+    6.104619158024262,
+    15.880502822473892,
+    4.777958963352675,
+    6.104619158024262,
+    15.880502822473892,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "82219374-E584-46CE-AC0A-75426EE5B01B_0.0",
+  "vertices": [
+    6.104619001207626,
+    15.880503093731503,
+    2.3563816086473253,
+    6.104619001207626,
+    15.880503093731503,
+    4.777958963352675,
+    3.3857207916078016,
+    14.67645438801842,
+    4.777958963352675,
+    3.4290312031088233,
+    14.695634158974016,
+    4.25914065,
+    5.382560988949856,
+    15.56074378386139,
+    4.25914065,
+    5.382560988949856,
+    15.56074378386139,
+    3.62553035,
+    3.4290312031088233,
+    14.695634158974016,
+    3.62553035,
+    3.4290312031088233,
+    14.695634158974016,
+    4.25914065,
+    3.3857207916078016,
+    14.67645438801842,
+    4.777958963352675,
+    3.3857207916078016,
+    14.67645438801842,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "E622B5EF-85A0-4F24-B08D-14313A8B0A36_0.0",
+  "vertices": [
+    6.008881701930948,
+    3.7823663820854048,
+    2.3563816086473253,
+    5.823825742859357,
+    4.200247095938904,
+    2.38638144,
+    5.823825742859357,
+    4.200247095938904,
+    4.36401104,
+    5.5175344151839685,
+    4.89189322988811,
+    4.36401104,
+    5.5175344151839685,
+    4.89189322988811,
+    2.38638144,
+    5.823825742859357,
+    4.200247095938904,
+    2.38638144,
+    6.008881701930948,
+    3.7823663820854048,
+    2.3563816086473253,
+    5.319967115047765,
+    5.338026198689651,
+    2.3563816086473253,
+    5.319967115047765,
+    5.338026198689651,
+    4.777958963352675,
+    6.008881701930948,
+    3.7823663820854048,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "82B94C45-6019-40DF-BBBA-11F6F7CB8E10_0.0",
+  "vertices": [
+    7.457001412120411,
+    10.889747675385903,
+    2.3563816086473253,
+    7.457001412120411,
+    10.889747675385903,
+    4.777958963352675,
+    6.971920997503829,
+    11.985121930030347,
+    4.777958963352675,
+    6.971920997503829,
+    11.985121930030347,
+    2.3563816086473253,
+    7.031525923117236,
+    11.850526306295404,
+    2.38638144,
+    7.031525923117236,
+    11.850526306295404,
+    4.36401104,
+    7.3484286936606065,
+    11.134918902617644,
+    4.36401104,
+    7.3484286936606065,
+    11.134918902617644,
+    2.38638144,
+    7.031525923117236,
+    11.850526306295404,
+    2.38638144,
+    6.971920997503829,
+    11.985121930030347,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "6521864B-C989-45DF-A21B-F5F5EA369A39_0.0",
+  "vertices": [
+    7.97039729220351,
+    9.293443485513713,
+    4.777958963352675,
+    7.690160474130138,
+    9.926254566499116,
+    4.777958963352675,
+    7.690160474130138,
+    9.926254566499116,
+    2.3563816086473253,
+    7.97039729220351,
+    9.293443485513713,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "8D1562FE-CD00-4CBA-B573-6C08E4D5A594_0.0",
+  "vertices": [
+    7.565577016312699,
+    9.114170951357709,
+    2.3563816086473253,
+    7.565577016312699,
+    9.114170951357709,
+    4.777958963352675,
+    7.970397259596513,
+    9.29344347107389,
+    4.777958963352675,
+    7.970397259596513,
+    9.29344347107389,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "93A0630E-742A-4A3B-810B-CB74F267952E_0.0",
+  "vertices": [
+    7.690160291656925,
+    9.92625486123036,
+    2.3563816086473253,
+    7.690160291656925,
+    9.92625486123036,
+    4.777958963352675,
+    7.285339974445117,
+    9.7469822800281,
+    4.777958963352675,
+    7.285339974445117,
+    9.7469822800281,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "5CAFCB91-FE0A-4840-BD8A-2BD9E650213F_0.0",
+  "vertices": [
+    7.28533997510716,
+    9.746982280205389,
+    2.3563816086473253,
+    7.28533997510716,
+    9.746982280205389,
+    4.777958963352675,
+    6.8209412431870735,
+    10.79922252311944,
+    4.777958963352675,
+    6.8209412431870735,
+    10.79922252311944,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "F2AB6462-4035-4BEC-A2C9-260F2E539741_0.0",
+  "vertices": [
+    5.6139876473855,
+    11.383767977372242,
+    2.3563816086473253,
+    5.778847024955053,
+    11.011494091263438,
+    2.386381579658105,
+    6.033223831256577,
+    10.437078224760109,
+    2.386381579658105,
+    6.2991540506080455,
+    9.836573251059288,
+    2.38638149,
+    6.574989871447686,
+    9.213700142681445,
+    2.38638149,
+    6.574989871447686,
+    9.213700142681445,
+    4.32487279,
+    6.2991540506080455,
+    9.836573251059288,
+    4.32487279,
+    6.2991540506080455,
+    9.836573251059288,
+    2.38638149,
+    6.033223831256577,
+    10.437078224760109,
+    2.386381579658105,
+    6.033223831256577,
+    10.437078224760109,
+    4.374984960341895,
+    5.778847024955053,
+    11.011494091263438,
+    4.374984960341895,
+    5.778847024955053,
+    11.011494091263438,
+    2.386381579658105,
+    5.6139876473855,
+    11.383767977372242,
+    2.3563816086473253,
+    5.6139876473855,
+    11.383767977372242,
+    4.777958963352675,
+    7.80413684400648,
+    6.43812663986215,
+    4.777958963352675,
+    7.80413684400648,
+    6.43812663986215,
+    2.3563816086473253,
+    7.748255402085086,
+    6.564314193473798,
+    2.38638153,
+    7.748255402085086,
+    6.564314193473798,
+    4.35122213,
+    7.479530483966684,
+    7.171129959959398,
+    4.35122213,
+    7.479530483966684,
+    7.171129959959398,
+    2.38638153,
+    7.335834902363892,
+    7.495613246070115,
+    2.386381603411275,
+    7.335834902363892,
+    7.495613246070115,
+    4.254606916588725,
+    7.09910778082187,
+    8.030173832086032,
+    4.254606916588725,
+    7.09910778082187,
+    8.030173832086032,
+    2.386381603411275,
+    7.335834902363892,
+    7.495613246070115,
+    2.386381603411275,
+    7.479530483966684,
+    7.171129959959398,
+    2.38638153,
+    7.748255402085086,
+    6.564314193473798,
+    2.38638153,
+    7.80413684400648,
+    6.43812663986215,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "07FF77F8-7BB9-41A7-AEDD-13B4F9FEC029_0.0",
+  "vertices": [
+    13.693995172469643,
+    2.81058640587559,
+    2.3563816086473253,
+    13.693995172469643,
+    2.81058640587559,
+    4.777958963352675,
+    12.334345866461442,
+    5.880850224350565,
+    4.777958963352675,
+    12.719099962679312,
+    5.012025759536227,
+    4.595256639378365,
+    13.302525658605848,
+    3.694575151459336,
+    4.595256639378365,
+    13.302525658605848,
+    3.694575151459336,
+    3.207689200621635,
+    12.719099962679312,
+    5.012025759536227,
+    3.207689200621635,
+    12.719099962679312,
+    5.012025759536227,
+    4.595256639378365,
+    12.334345866461442,
+    5.880850224350565,
+    4.777958963352675,
+    12.33434586646144,
+    5.880850224350565,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "07FF77F8-7BB9-41A7-AEDD-13B4F9FEC029_0.1",
+  "vertices": [
+    12.074952837690027,
+    6.466593200485841,
+    4.777958963352675,
+    12.074952837690027,
+    6.46659320048584,
+    2.3563816086473253,
+    12.33434586646144,
+    5.880850224350565,
+    2.3563816086473253,
+    12.334345866461442,
+    5.880850224350565,
+    4.777958963352675
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "022133DC-211F-4A7E-8BCF-DD81D3153E6E_0.0",
+  "vertices": [
+    10.904196068877642,
+    1.5751393535749578,
+    2.3563816086473253,
+    10.904196068877642,
+    1.5751393535749578,
+    4.777958963352675,
+    11.254734339837205,
+    1.7303732208380929,
+    4.538616927587661,
+    11.254734339837205,
+    1.7303732208380929,
+    3.6248723524123383,
+    13.29525630923622,
+    2.6340066976567744,
+    3.6248723524123383,
+    13.29525630923622,
+    2.6340066976567744,
+    4.538616927587661,
+    11.254734339837205,
+    1.7303732208380929,
+    4.538616927587661,
+    10.904196068877642,
+    1.5751393535749578,
+    4.777958963352675,
+    13.693995351851406,
+    2.810586000808229,
+    4.777958963352675,
+    13.693995351851406,
+    2.810586000808229,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "4F2BDF22-9447-4EC3-B0D5-19C6A3AAE67F_0.0",
+  "vertices": [
+    12.334346115883928,
+    5.88085033480593,
+    2.3563816086473253,
+    12.334346115883928,
+    5.88085033480593,
+    4.777958963352675,
+    11.262188756866973,
+    5.406051457410889,
+    4.777958963352675,
+    11.262188756866973,
+    5.406051457410889,
+    2.3563816086473253,
+    11.434107932833047,
+    5.482184900944044,
+    2.38638147,
+    11.434107932833047,
+    5.482184900944044,
+    4.37205347,
+    12.090442992882394,
+    5.772839203771534,
+    4.37205347,
+    12.090442992882394,
+    5.772839203771534,
+    2.38638147,
+    11.434107932833047,
+    5.482184900944044,
+    2.38638147,
+    11.262188756866973,
+    5.406051457410889,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "A40F7A94-7DB2-425D-86F8-C1ADB50F9641_0.0",
+  "vertices": [
+    9.938795297124129,
+    5.521757800780279,
+    2.3563816086473253,
+    9.938795297124129,
+    5.521757800780279,
+    4.777958963352675,
+    10.198614278670505,
+    4.935052733390828,
+    4.777958963352675,
+    10.198614278670505,
+    4.935052733390828,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "77FC110C-DBA1-445E-9221-5D16D0550CCE_0.0",
+  "vertices": [
+    5.730090822177712,
+    3.658905947745789,
+    2.3563816086473253,
+    5.730090822177712,
+    3.658905947745789,
+    4.777958963352675,
+    7.350416611387313,
+    6.538284633705871e-7,
+    4.777958963352675,
+    7.1756472528090205,
+    0.39465247976069406,
+    4.54057815,
+    5.9387246378721965,
+    3.187783795757394,
+    4.54057815,
+    5.9387246378721965,
+    3.187783795757394,
+    3.22013605,
+    7.1756472528090205,
+    0.39465247976069406,
+    3.22013605,
+    7.1756472528090205,
+    0.39465247976069406,
+    4.54057815,
+    7.350416611387313,
+    6.538284633705871e-7,
+    4.777958963352675,
+    7.350416611387313,
+    6.538284633705871e-7,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "CA615340-63F2-4533-832A-F58F862366D5_0.0",
+  "vertices": [
+    10.048580087584956,
+    1.1955505342249886,
+    4.777958963352675,
+    10.904195944697202,
+    1.5751392982396233,
+    4.777958963352675,
+    10.904195944697202,
+    1.5751392982396233,
+    2.3563816086473253,
+    10.048580087584956,
+    1.1955505342249886,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "4479E884-FA2E-4FDE-BC62-6090A974B40C_0.0",
+  "vertices": [
+    7.350416611242471,
+    6.537816368279437e-7,
+    2.3563816086473253,
+    7.350416611242471,
+    6.537816368279437e-7,
+    4.777958963352675,
+    10.048579925570708,
+    1.19555056418789,
+    4.777958963352675,
+    10.048579925570708,
+    1.19555056418789,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "0C0EC351-F85D-4DE0-94D5-255192C1CCC0_0.0",
+  "vertices": [
+    9.181047231935908,
+    3.1216136170445754,
+    2.3563816086473253,
+    9.181047231935908,
+    3.1216136170445754,
+    4.777958963352675,
+    9.039325006543606,
+    3.333459117849584,
+    4.777958963352675,
+    9.039325006543606,
+    3.333459117849584,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "690E5B11-F209-47A5-8855-ED7B5AA04615_0.0",
+  "vertices": [
+    9.57909424147024,
+    2.2227722559571923,
+    2.3563816086473253,
+    9.57909424147024,
+    2.2227722559571923,
+    4.777958963352675,
+    10.447158057602714,
+    2.607190134803703,
+    4.777958963352675,
+    10.447158057602714,
+    2.607190134803703,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "F3F7C2D4-C247-4706-AF38-FE267A60DEC8_0.0",
+  "vertices": [
+    9.579094119244516,
+    2.2227722000946013,
+    2.3563816086473253,
+    9.579094119244516,
+    2.2227722000946013,
+    4.777958963352675,
+    10.048579786008728,
+    1.1955512139959072,
+    4.777958963352675,
+    10.048579786008728,
+    1.1955512139959072,
+    2.3563816086473253,
+    9.956425769544971,
+    1.3971815221526764,
+    2.3863814999999997,
+    9.956425769544971,
+    1.3971815221526764,
+    4.2871819,
+    9.685626973980211,
+    1.989681411939678,
+    4.2871819,
+    9.685626973980211,
+    1.989681411939678,
+    2.3863814999999997,
+    9.956425769544971,
+    1.3971815221526764,
+    2.3863814999999997,
+    10.048579786008728,
+    1.1955512139959072,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "AD71E7DA-2643-43D3-A751-9298FFCDA08D_0.0",
+  "vertices": [
+    9.715141677462778,
+    8.900690198583483,
+    2.3563816086473253,
+    9.715141677462778,
+    8.900690198583483,
+    4.777958963352675,
+    7.997052132373551,
+    8.139844060827318,
+    4.777958963352675,
+    7.997052132373551,
+    8.139844060827318,
+    2.3563816086473253
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "0D6D4767-7623-4D48-9494-7BFCA5C2BAFF_0.0",
+  "vertices": [
+    1.3672847157965975,
+    8.786158540565863,
+    2.3563815000000004,
+    3.1355357689532113,
+    9.55330002277908,
+    2.3563815000000004,
+    3.1355357689532113,
+    9.55330002277908,
+    1.0000000028043132e-7,
+    3.013694088704141,
+    9.500439990819952,
+    0.029999901378920057,
+    3.013694088704141,
+    9.500439990819952,
+    2.00242169862108,
+    2.2981113651182796,
+    9.189990187757282,
+    2.00242169862108,
+    2.2981113651182796,
+    9.189990187757282,
+    0.029999901378920057,
+    3.013694088704141,
+    9.500439990819952,
+    0.029999901378920057,
+    3.1355357689532113,
+    9.55330002277908,
+    1.0000000028043132e-7,
+    1.3672847157965975,
+    8.786158540565863,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "795E8B2E-02BB-4441-9AF4-51C7E7F7BC26_0.0",
+  "vertices": [
+    3.1355359805222625,
+    9.553300096200807,
+    1.0000000028043132e-7,
+    3.396077052054531,
+    8.949473667968071,
+    1.0000000028043132e-7,
+    3.396077052054531,
+    8.949473667968071,
+    2.3563815000000004,
+    3.1355359805222625,
+    9.553300096200807,
+    2.3563815000000004
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "20DD75EF-8C27-4A4F-A834-C14777563DD1_0.0",
+  "vertices": [
+    0.13818201439330302,
+    11.619222303377825,
+    1.0000000028043132e-7,
+    0.13818201439330302,
+    11.619222303377825,
+    2.3563815000000004,
+    1.3672846862150996,
+    8.786158608750826,
+    2.3563815000000004,
+    1.3672846862150996,
+    8.786158608750826,
+    1.0000000028043132e-7,
+    1.1941926717132856,
+    9.185133172355092,
+    0.0300000499999995,
+    1.1941926717132856,
+    9.185133172355092,
+    1.94943695,
+    0.8730692934102855,
+    9.92531786597205,
+    1.94943695,
+    0.8556692414660372,
+    9.965424731393476,
+    1.9563427500000004,
+    0.30522366851259886,
+    11.234193732026355,
+    1.9563427500000004,
+    0.30522366851259886,
+    11.234193732026355,
+    0.80783285,
+    0.8556692414660372,
+    9.965424731393476,
+    0.80783285,
+    0.8556692414660372,
+    9.965424731393476,
+    1.9563427500000004,
+    0.8730692934102855,
+    9.92531786597205,
+    1.94943695,
+    0.8730692934102855,
+    9.92531786597205,
+    0.0300000499999995,
+    1.1941926717132856,
+    9.185133172355092,
+    0.0300000499999995,
+    1.3672846862150996,
+    8.786158608750826,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "FE4E4FBB-6705-4188-AEE0-6526F49CB176_0.0",
+  "vertices": [
+    3.1355359713049644,
+    9.553300117557544,
+    1.0000000028043132e-7,
+    3.135535971304965,
+    9.553300117557544,
+    2.3563815000000004,
+    5.208869018650202,
+    10.448124409971914,
+    2.3563815000000004,
+    5.208869018650202,
+    10.448124409971914,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "A057421F-77E1-4671-BE77-B03A9B5AF33E_0.0",
+  "vertices": [
+    4.829857961456739,
+    11.32174024210003,
+    2.3563815000000004,
+    5.208869202232419,
+    10.44812456593272,
+    2.3563815000000004,
+    5.208869202232419,
+    10.44812456593272,
+    1.0000000028043132e-7,
+    4.829857961456739,
+    11.32174024210003,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "EE208F39-B077-4C3D-A1A1-8ABBAF9630A3_0.0",
+  "vertices": [
+    4.829857870311403,
+    11.321740202557349,
+    1.0000000028043132e-7,
+    3.224111206300602,
+    10.625099545141207,
+    1.0000000028043132e-7,
+    3.224111206300602,
+    10.625099545141207,
+    2.3563815000000004,
+    4.829857870311403,
+    11.321740202557349,
+    2.3563815000000004
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "877F1305-5670-4193-ABA6-E98DB4F63D7E_0.0",
+  "vertices": [
+    5.171450553994245,
+    13.802866094134922,
+    2.3563815000000004,
+    0.13818199568570844,
+    11.619222346498567,
+    2.3563815000000004,
+    0.13818199568570844,
+    11.619222346498567,
+    1.0000000028043132e-7,
+    5.171450553994245,
+    13.802866094134922,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "79C49A64-F551-476E-A50E-661063E2F5A0_0.0",
+  "vertices": [
+    5.884959283295987,
+    14.112416297291029,
+    1.0000000028043132e-7,
+    5.884959283295987,
+    14.112416297291029,
+    2.3563815000000004,
+    5.17145073633686,
+    13.802866140544324,
+    2.3563815000000004,
+    5.17145073633686,
+    13.802866140544324,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "0D9B05C1-5019-49BF-BF19-D5610954FAC1_0.0",
+  "vertices": [
+    7.119269660029172,
+    11.267348654623902,
+    1.0000000028043132e-7,
+    7.119269660029172,
+    11.267348654623902,
+    2.3563815000000004,
+    6.295666048642062,
+    13.165743048253011,
+    2.3563815000000004,
+    6.295666048642061,
+    13.165743048253011,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "CE2C1E32-6D7D-4041-BC50-B7D3A23D5140_0.0",
+  "vertices": [
+    6.295665983809789,
+    13.165743257235304,
+    1.0000000028043132e-7,
+    6.295665983809789,
+    13.165743257235304,
+    2.3563815000000004,
+    5.884959339200478,
+    14.112416301023432,
+    2.3563815000000004,
+    5.884959339200478,
+    14.112416301023432,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "6A2AA50D-F27D-435A-9C3E-5EA41615F672_0.0",
+  "vertices": [
+    6.2956660631397074,
+    13.165743054099218,
+    1.0000000028043132e-7,
+    6.2956660631397074,
+    13.165743054099218,
+    2.3563815000000004,
+    5.612510875590619,
+    12.809286056665332,
+    2.3563815000000004,
+    5.612510875590619,
+    12.809286056665332,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "7E4968DE-5083-4E85-88F1-1048DA08BD41_0.0",
+  "vertices": [
+    7.119269708513018,
+    11.26734851639966,
+    1.0000000028043132e-7,
+    6.407943801572875,
+    10.958745340241236,
+    1.0000000028043132e-7,
+    6.407943801572875,
+    10.958745340241236,
+    2.3563815000000004,
+    7.119269708513018,
+    11.26734851639966,
+    2.3563815000000004
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "B99CFCEF-0279-4199-8CC8-BCEE043F6FF7_0.0",
+  "vertices": [
+    5.208869227820759,
+    10.448124505844458,
+    1.0000000028043132e-7,
+    5.208869227820759,
+    10.448124505844458,
+    2.3563815000000004,
+    6.407943716078555,
+    10.958745429302343,
+    2.3563815000000004,
+    6.407943716078555,
+    10.958745429302343,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "7F15D613-9F90-4D60-8BF0-C133D38F8EC2_0.0",
+  "vertices": [
+    6.4079437158899,
+    10.958745429063365,
+    1.0000000028043132e-7,
+    6.4079437158899,
+    10.958745429063365,
+    2.3563815000000004,
+    5.612510864937439,
+    12.80928604980234,
+    2.3563815000000004,
+    5.612510864937439,
+    12.80928604980234,
+    1.0000000028043132e-7,
+    5.629753230850891,
+    12.769172420496886,
+    0.029999900000000412,
+    5.629753230850891,
+    12.769172420496886,
+    2.0662369000000003,
+    6.152596826660358,
+    11.552799082156508,
+    2.0662369000000003,
+    6.152596826660358,
+    11.552799082156508,
+    0.029999900000000412,
+    5.629753230850891,
+    12.769172420496886,
+    0.029999900000000412,
+    5.612510864937439,
+    12.80928604980234,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "51983054-6CD0-40A5-AF53-59A86F5D4D1D_0.0",
+  "vertices": [
+    5.612510826279556,
+    12.809286167321444,
+    1.0000000028043132e-7,
+    5.612510826279556,
+    12.809286167321444,
+    2.3563815000000004,
+    5.17145056613219,
+    13.802866066584548,
+    2.3563815000000004,
+    5.17145056613219,
+    13.802866066584548,
+    1.0000000028043132e-7,
+    5.17753654741648,
+    13.789156128923556,
+    0.029999900000000412,
+    5.17753654741648,
+    13.789156128923556,
+    2.0372571,
+    5.533885192294211,
+    12.9864067482338,
+    2.0372571,
+    5.533885192294211,
+    12.9864067482338,
+    0.029999900000000412,
+    5.17753654741648,
+    13.789156128923556,
+    0.029999900000000412,
+    5.17145056613219,
+    13.802866066584548,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "D5D27B27-864B-42DE-9289-6F9FE21BED72_0.0",
+  "vertices": [
+    1.3672843935629682,
+    8.786158400767395,
+    1.0000000028043132e-7,
+    1.3672843935629682,
+    8.786158400767395,
+    2.3563815000000004,
+    3.234155391724654,
+    4.483045356061824,
+    2.3563815000000004,
+    2.995580906362531,
+    5.032956400320682,
+    2.1646747499999996,
+    1.7448086403584613,
+    7.915969987814377,
+    2.1646747499999996,
+    1.7448086403584613,
+    7.915969987814377,
+    0.5803676499999999,
+    2.995580906362531,
+    5.032956400320682,
+    0.5803676499999999,
+    2.995580906362531,
+    5.032956400320682,
+    2.1646747499999996,
+    3.234155391724654,
+    4.483045356061824,
+    2.3563815000000004,
+    3.234155391724654,
+    4.483045356061824,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "EF6117D7-4797-492D-91A5-758176AB631C_0.0",
+  "vertices": [
+    6.694087305234225,
+    5.984109612123347,
+    1.0000000028043132e-7,
+    3.234155945465973,
+    4.483045596298043,
+    1.0000000028043132e-7,
+    3.234155945465973,
+    4.483045596298043,
+    2.3563815000000004,
+    6.694087305234225,
+    5.984109612123347,
+    2.3563815000000004
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "1C7FD3DC-5609-44E9-BC96-03A27A132DE6_0.0",
+  "vertices": [
+    6.694087240026249,
+    5.984109762426813,
+    1.0000000028043132e-7,
+    6.694087240026249,
+    5.984109762426813,
+    2.3563815000000004,
+    5.088955903504104,
+    9.683915242831103,
+    2.3563815000000004,
+    5.088955903504104,
+    9.683915242831103,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "22FCFD6D-5758-461C-ABA4-FCCDE54AF52A_0.0",
+  "vertices": [
+    5.08895571764236,
+    9.683915545609478,
+    1.0000000028043132e-7,
+    5.08895571764236,
+    9.683915545609478,
+    2.3563815000000004,
+    4.832869206165208,
+    10.274191019993124,
+    2.3563815000000004,
+    4.832869206165208,
+    10.274191019993124,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "2BA85922-471D-460F-9846-B896CED722E3_0.0",
+  "vertices": [
+    5.088955738654862,
+    9.683915497175938,
+    1.0000000028043132e-7,
+    5.029281194470581,
+    9.658026175199725,
+    0.03000005000000039,
+    3.547377715229997,
+    9.015114246232931,
+    0.03000005000000039,
+    3.547377715229997,
+    9.015114246232931,
+    2.0508787500000003,
+    5.029281194470581,
+    9.658026175199725,
+    2.0508787500000003,
+    5.029281194470581,
+    9.658026175199725,
+    0.03000005000000039,
+    5.088955738654862,
+    9.683915497175938,
+    1.0000000028043132e-7,
+    5.088955738654862,
+    9.683915497175938,
+    2.3563815000000004,
+    3.396077051687848,
+    8.949473667872397,
+    2.3563815000000004,
+    3.396077051687848,
+    8.949473667872397,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "category": "InteriorWall"
+}
+
+Surface {
+  "name": "E865ED71-38D4-40A6-A5FD-D317A06DABBF_0.0",
+  "vertices": [
+    4.832869205365998,
+    10.274191020660608,
+    1.0000000028043132e-7,
+    4.832869205365998,
+    10.274191020660608,
+    2.3563815000000004,
+    3.135535932899373,
+    9.553300208328627,
+    2.3563815000000004,
+    3.1355359328993733,
+    9.553300208328627,
+    1.0000000028043132e-7
+  ],
+  "construction": "default_wall_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorWall"
+}
+
+Surface {
+  "name": "70531493-0D56-43E4-A04E-67BF1F309B18_0.0",
+  "vertices": [
+    4.970134818314005,
+    11.098642393478052,
+    2.3563815000000004,
+    7.689033045530062,
+    12.30269093742166,
+    2.3563815000000004,
+    6.104619031883477,
+    15.880503107316134,
+    2.3563815000000004,
+    3.385720791607807,
+    14.67645438801842,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorFloor"
+}
+
+Surface {
+  "name": "3BAA794A-8EE1-428A-8101-8E389418B7F3_0.0",
+  "vertices": [
+    7.45700141212042,
+    10.889747675385884,
+    2.3563815000000004,
+    6.971920997503829,
+    11.985121930030347,
+    2.3563815000000004,
+    5.6139876473855,
+    11.383767977372242,
+    2.3563815000000004,
+    7.804136638323655,
+    6.438126485245143,
+    2.3563815000000004,
+    5.3199671583539,
+    5.3380261008986984,
+    2.3563815000000004,
+    6.008881508069395,
+    3.7823668198503064,
+    2.3563815000000004,
+    8.376259063424882,
+    4.8307464375120155,
+    2.3563815000000004,
+    9.074052707830042,
+    3.3488382491291997,
+    2.3563815000000004,
+    9.947441939670345,
+    3.735613341273,
+    2.3563815000000004,
+    7.997052332678402,
+    8.139844149531177,
+    2.3563815000000004,
+    8.604085427869427,
+    8.408665287105979,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorFloor"
+}
+
+Surface {
+  "name": "886EEE6A-C58E-4148-9306-1075E6E2101A_0.0",
+  "vertices": [
+    8.604085443553709,
+    8.408665253181702,
+    2.3563815000000004,
+    8.940513320797356,
+    7.680989451152004,
+    2.3563815000000004,
+    10.039266865913008,
+    8.167566582586971,
+    2.3563815000000004,
+    9.715141720289749,
+    8.900690101874615,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "4BC796AE-E3AD-4BD1-828F-302DB8EBC93D_0.0",
+  "vertices": [
+    10.039266865913008,
+    8.167566582586971,
+    2.3563815000000004,
+    8.940513320797356,
+    7.680989451152004,
+    2.3563815000000004,
+    10.20803442739663,
+    4.939407970476369,
+    2.3563815000000004,
+    11.262188977560484,
+    5.406050880522249,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "4BC796AE-E3AD-4BD1-828F-302DB8EBC93D_0.1",
+  "vertices": [
+    8.940513320797356,
+    7.680989451152004,
+    2.3563815000000004,
+    8.321624729280188,
+    7.406917948150342,
+    2.3563815000000004,
+    9.284728303455054,
+    5.2321062309406035,
+    2.3563815000000004,
+    9.938795391615024,
+    5.521757842625032,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "F6BBBE4A-472B-4C94-8499-31DEE99795EB_0.0",
+  "vertices": [
+    11.002795664112575,
+    5.991794405211649,
+    2.3563815000000004,
+    11.262188727790694,
+    5.406051444534621,
+    2.3563815000000004,
+    12.334345866461437,
+    5.880850224350578,
+    2.3563815000000004,
+    12.074952837690027,
+    6.466593200485845,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "F6BBBE4A-472B-4C94-8499-31DEE99795EB_0.1",
+  "vertices": [
+    13.693995172469643,
+    2.81058640587559,
+    2.3563815000000004,
+    12.334345866461437,
+    5.880850224350578,
+    2.3563815000000004,
+    9.54454713344776,
+    4.64540169198875,
+    2.3563815000000004,
+    10.904196186493015,
+    1.5751390879841392,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "C6CBC3A6-2601-47B0-9B43-3A3AAD0432BC_0.0",
+  "vertices": [
+    10.904196186493014,
+    1.575139087984141,
+    2.3563815000000004,
+    9.947441939670345,
+    3.735613341273,
+    2.3563815000000004,
+    9.074052707830042,
+    3.3488382491291997,
+    2.3563815000000004,
+    8.376259063424882,
+    4.8307464375120155,
+    2.3563815000000004,
+    5.730090675310354,
+    3.658905893225265,
+    2.3563815000000004,
+    7.3504169009316,
+    0.0,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "EC5AF6BC-230C-4EE5-A411-713AD03B87B2_0.0",
+  "vertices": [
+    3.249503149333261,
+    4.421132841213847,
+    2.3563815000000004,
+    7.160284194177654,
+    6.153000077011501,
+    2.3563815000000004,
+    5.155742100285166,
+    10.679515991160736,
+    2.3563815000000004,
+    1.2449607280466737,
+    8.947648795522277,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "category": "InteriorFloor"
+}
+
+Surface {
+  "name": "F834E282-4ED5-49D6-B2CC-0B59C48F319F_0.0",
+  "vertices": [
+    1.807492324701343e-7,
+    11.758931883757494,
+    2.3563815000000004,
+    1.2449610047739943,
+    8.94764891806939,
+    2.3563815000000004,
+    5.155742326733934,
+    10.67951609144228,
+    2.3563815000000004,
+    3.9107813741546873,
+    13.490799463060302,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "category": "InteriorFloor"
+}
+
+Surface {
+  "name": "EEC0692E-1670-4EE9-9C04-6FBB1345533B_0.0",
+  "vertices": [
+    5.884959283295987,
+    14.112416297291029,
+    0.0,
+    0.13818201439330302,
+    11.619222303377825,
+    0.0,
+    1.3672845772610582,
+    8.786158480463335,
+    0.0,
+    3.1355357973751916,
+    9.553300035109729,
+    0.0,
+    5.208869018650184,
+    10.448124409971904,
+    0.0,
+    6.407943784438344,
+    10.958745332807553,
+    0.0,
+    7.119269660029172,
+    11.267348654623902,
+    0.0
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs entrance"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "327AF61C-C7AA-4649-8F57-8569A80C28CE_0.0",
+  "vertices": [
+    4.832869181639517,
+    10.274191076524469,
+    0.0,
+    1.3672845772610582,
+    8.786158480463333,
+    0.0,
+    3.2341555610605495,
+    4.483044965744817,
+    0.0,
+    6.694087365209109,
+    5.984109638142979,
+    0.0
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "downstairs bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "ceiling_0.1.0.0",
+  "vertices": [
+    7.689033045530062,
+    12.30269093742166,
+    4.777958963352675,
+    4.970134818314005,
+    11.098642393478052,
+    4.777958963352675,
+    3.385720742749915,
+    14.676454498345866,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_0.1.1.0",
+  "vertices": [
+    7.689033045530062,
+    12.30269093742166,
+    4.777958963352675,
+    3.3857207427499154,
+    14.676454498345867,
+    4.777958963352675,
+    6.104619158024262,
+    15.880502822473892,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Kitchen"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.0.0",
+  "vertices": [
+    9.947442116304266,
+    3.735613419494255,
+    4.777958963352675,
+    9.074052707830042,
+    3.3488382491291997,
+    4.777958963352675,
+    8.37626643143132,
+    4.830730790036345,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.1.0",
+  "vertices": [
+    6.008881508069395,
+    3.7823668198503064,
+    4.777958963352675,
+    5.319967115047765,
+    5.338026198689651,
+    4.777958963352675,
+    8.376259063424882,
+    4.8307464375120155,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.2.0",
+  "vertices": [
+    8.376259063424882,
+    4.8307464375120155,
+    4.777958963352675,
+    5.319967115047763,
+    5.338026198689651,
+    4.777958963352675,
+    7.804136638323655,
+    6.438126485245144,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.3.0",
+  "vertices": [
+    7.8041364978546675,
+    6.4381274215178985,
+    4.777958963352675,
+    5.6139876473855,
+    11.383767977372242,
+    4.777958963352675,
+    6.971920997503829,
+    11.985121930030347,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.4.0",
+  "vertices": [
+    7.319170346345476,
+    9.670588939119806,
+    4.777958963352675,
+    7.601846647690628,
+    9.032269461469957,
+    4.777958963352675,
+    7.804136638323655,
+    6.438126485245143,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.4.1",
+  "vertices": [
+    7.306315444333887,
+    9.756271158251378,
+    4.777958963352675,
+    7.5374090385320205,
+    9.858609759773524,
+    4.777958963352675,
+    7.594462512375674,
+    9.126962741660622,
+    4.777958963352675,
+    7.565577018826887,
+    9.114170952471104,
+    4.777958963352675,
+    7.319170346345476,
+    9.670588939119806,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.4.2",
+  "vertices": [
+    7.5374090385320205,
+    9.858609759773524,
+    4.777958963352675,
+    7.306315444333887,
+    9.756271158251378,
+    4.777958963352675,
+    6.971920997503829,
+    11.985121930030347,
+    4.777958963352675,
+    7.457001412120411,
+    10.889747675385903,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.4.3",
+  "vertices": [
+    7.601846647690628,
+    9.032269461469957,
+    4.777958963352675,
+    7.565577018826887,
+    9.114170952471104,
+    4.777958963352675,
+    7.594462512375674,
+    9.126962741660622,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.5.0",
+  "vertices": [
+    7.601846647690628,
+    9.032269461469957,
+    4.777958963352675,
+    8.972821352961947,
+    5.936432233668538,
+    4.777958963352675,
+    7.804136638323655,
+    6.438126485245144,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.5.1",
+  "vertices": [
+    9.93879539161502,
+    5.521757842625034,
+    4.777958963352675,
+    8.972821352961947,
+    5.936432233668538,
+    4.777958963352675,
+    8.321624729280192,
+    7.4069179481503395,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.5.2",
+  "vertices": [
+    8.32162472928019,
+    7.40691794815034,
+    4.777958963352675,
+    8.940513345230272,
+    7.680989398304891,
+    4.777958963352675,
+    9.93879539161502,
+    5.521757842625036,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.5.3",
+  "vertices": [
+    7.997052332678408,
+    8.139844149531168,
+    4.777958963352675,
+    7.601846647690628,
+    9.032269461469957,
+    4.777958963352675,
+    7.457001412120411,
+    10.889747675385903,
+    4.777958963352675,
+    8.604085443553716,
+    8.408665253181688,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.5.4",
+  "vertices": [
+    7.997052370528754,
+    8.139844064060213,
+    4.777958963352675,
+    8.604085427869427,
+    8.408665287105979,
+    4.777958963352675,
+    8.723808956898159,
+    8.149709591396155,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.6.0",
+  "vertices": [
+    8.972821274392082,
+    5.936432267397095,
+    4.777958963352675,
+    9.284728173720271,
+    5.23210633661645,
+    4.777958963352675,
+    7.804136638323655,
+    6.438126485245144,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.7.0",
+  "vertices": [
+    9.284728173720271,
+    5.23210633661645,
+    4.777958963352675,
+    9.947441637890778,
+    3.735614022730107,
+    4.777958963352675,
+    7.804136638323654,
+    6.438126485245145,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_1.1.8.0",
+  "vertices": [
+    7.804136638323655,
+    6.438126485245143,
+    4.777958963352675,
+    9.94744211630427,
+    3.7356134194942534,
+    4.777958963352675,
+    8.37625906342488,
+    4.830746437512017,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_2.1.0.0",
+  "vertices": [
+    8.940513320797358,
+    7.680989451152003,
+    4.777958963352675,
+    8.723808956898159,
+    8.149709591396155,
+    4.777958963352675,
+    10.039266865913008,
+    8.167566582586971,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_2.1.1.0",
+  "vertices": [
+    8.723808956898159,
+    8.149709591396155,
+    4.777958963352675,
+    8.604085443553716,
+    8.408665253181688,
+    4.777958963352675,
+    9.715141720289749,
+    8.900690101874615,
+    4.777958963352675,
+    10.039266865913008,
+    8.167566582586971,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_2.1.1.1",
+  "vertices": [
+    8.604085443553716,
+    8.408665253181688,
+    4.777958963352675,
+    8.723808956898159,
+    8.149709591396155,
+    4.777958963352675,
+    7.99705213237355,
+    8.139844060827318,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_3.1.0.0",
+  "vertices": [
+    11.262188977560484,
+    5.406050880522249,
+    4.777958963352675,
+    10.198614278670505,
+    4.935052733390828,
+    4.777958963352675,
+    9.938795391615024,
+    5.521757842625032,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_3.1.1.0",
+  "vertices": [
+    8.972821352961947,
+    5.936432233668538,
+    4.777958963352675,
+    9.938795391615024,
+    5.521757842625032,
+    4.777958963352675,
+    9.284728303455054,
+    5.2321062309406035,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_3.1.1.1",
+  "vertices": [
+    8.32162472928019,
+    7.406917948150341,
+    4.777958963352675,
+    9.938795391615024,
+    5.521757842625031,
+    4.777958963352675,
+    8.972821352961947,
+    5.936432233668538,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Hallway"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_3.1.2.0",
+  "vertices": [
+    9.938795391615024,
+    5.52175784262503,
+    4.777958963352675,
+    8.940513345230272,
+    7.680989398304891,
+    4.777958963352675,
+    10.039266859088285,
+    8.16756640286521,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_3.1.2.1",
+  "vertices": [
+    8.32162472928019,
+    7.40691794815034,
+    4.777958963352675,
+    8.940513345230272,
+    7.680989398304891,
+    4.777958963352675,
+    9.93879539161502,
+    5.5217578426250356,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_3.1.3.0",
+  "vertices": [
+    9.938795391615024,
+    5.521757842625032,
+    4.777958963352675,
+    10.039266865913008,
+    8.167566582586971,
+    4.777958963352675,
+    11.262188977560484,
+    5.406050880522249,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_4.1.0.0",
+  "vertices": [
+    13.693995172469643,
+    2.81058640587559,
+    4.777958963352675,
+    10.904196186493014,
+    1.575139087984141,
+    4.777958963352675,
+    9.54454713344776,
+    4.645401691988749,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_4.1.1.0",
+  "vertices": [
+    13.693995172469643,
+    2.81058640587559,
+    4.777958963352675,
+    9.54454713344776,
+    4.64540169198875,
+    4.777958963352675,
+    11.262189210418422,
+    5.406050631993191,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_4.1.2.0",
+  "vertices": [
+    11.262188977560484,
+    5.4060508805222485,
+    4.777958963352675,
+    11.433963037168027,
+    5.4821207347108745,
+    4.777958963352675,
+    13.693995172469636,
+    2.8105864058755987,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_4.1.2.1",
+  "vertices": [
+    11.433963037168027,
+    5.4821207347108745,
+    4.777958963352675,
+    11.262188727790694,
+    5.406051444534621,
+    4.777958963352675,
+    11.002795843090258,
+    5.991794001056983,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_4.1.3.0",
+  "vertices": [
+    11.433963037168024,
+    5.4821207347108745,
+    4.777958963352675,
+    12.334345955400655,
+    5.8808502637368125,
+    4.777958963352675,
+    13.693995172469643,
+    2.81058640587559,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_4.1.3.1",
+  "vertices": [
+    12.074952837690027,
+    6.466593200485845,
+    4.777958963352675,
+    12.334345866461437,
+    5.880850224350578,
+    4.777958963352675,
+    11.433963037168024,
+    5.4821207347108745,
+    4.777958963352675,
+    11.002795545590558,
+    5.991794352724838,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "kids bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_5.1.0.0",
+  "vertices": [
+    10.04844539112291,
+    1.1958452660978356,
+    4.777958963352675,
+    9.642937003259776,
+    2.0830858264390812,
+    4.777958963352675,
+    10.904196186493015,
+    1.575139087984141,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_5.1.0.1",
+  "vertices": [
+    7.350416900931599,
+    0.0,
+    4.777958963352675,
+    5.730090883441281,
+    3.6589058094047258,
+    4.777958963352675,
+    9.642937003259776,
+    2.0830858264390812,
+    4.777958963352675,
+    10.04844539112291,
+    1.1958452660978356,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_5.1.1.0",
+  "vertices": [
+    5.730090675310353,
+    3.658905893225265,
+    4.777958963352675,
+    8.376259063424882,
+    4.8307464375120155,
+    4.777958963352675,
+    9.18104715123508,
+    3.1216135630566413,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_5.1.2.0",
+  "vertices": [
+    9.947441960358072,
+    3.735613294557446,
+    4.777958963352675,
+    10.447158014361106,
+    2.607190115654367,
+    4.777958963352675,
+    9.983182797590754,
+    2.4017209262313273,
+    4.777958963352675,
+    9.18104715123508,
+    3.1216135630566413,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_5.1.2.1",
+  "vertices": [
+    9.983182797590754,
+    2.4017209262313273,
+    4.777958963352675,
+    10.447158016003916,
+    2.6071901163818776,
+    4.777958963352675,
+    10.904196186493014,
+    1.575139087984141,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_5.1.3.0",
+  "vertices": [
+    10.904196186493015,
+    1.575139087984141,
+    4.777958963352675,
+    5.730090675310354,
+    3.658905893225265,
+    4.777958963352675,
+    9.18104715123508,
+    3.1216135630566413,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "main bedroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_6.1.0.0",
+  "vertices": [
+    3.2495031493332736,
+    4.421132841213852,
+    4.777958963352675,
+    1.24496114661562,
+    8.947648597772606,
+    4.777958963352675,
+    7.160283956005141,
+    6.1529999715381525,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_6.1.1.0",
+  "vertices": [
+    1.244960728046672,
+    8.947648795522277,
+    4.777958963352675,
+    5.155742100285167,
+    10.679515991160736,
+    4.777958963352675,
+    7.1602843162573215,
+    6.152999801339788,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "living room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_7.1.0.0",
+  "vertices": [
+    5.155742100285166,
+    10.679515991160736,
+    4.777958963352675,
+    1.2449607280466737,
+    8.947648795522277,
+    4.777958963352675,
+    0.0,
+    11.758932291912698,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "ceiling_7.1.1.0",
+  "vertices": [
+    7.485345312474578e-7,
+    11.758932135198036,
+    4.777958963352675,
+    3.910781489727398,
+    13.490799514241033,
+    4.777958963352675,
+    5.155742100285166,
+    10.679515991160736,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "dining room"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
+Surface {
+  "name": "886EEE6A-C58E-4148-9306-1075E6E2101A_0_inter_3BAA794A-8EE1-428A-8101-8E389418B7F3_0.0",
+  "vertices": [
+    8.940513320797356,
+    7.680989451152004,
+    2.3563815000000004,
+    8.604085443553709,
+    8.408665253181702,
+    2.3563815000000004,
+    7.997052332678398,
+    8.13984414953119,
+    2.3563815000000004,
+    8.321624709773833,
+    7.4069179395120575,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "4BC796AE-E3AD-4BD1-828F-302DB8EBC93D_0_inter_3BAA794A-8EE1-428A-8101-8E389418B7F3_0.0",
+  "vertices": [
+    9.938795391615024,
+    5.521757842625032,
+    2.3563815000000004,
+    8.940513320797356,
+    7.680989451152004,
+    2.3563815000000004,
+    8.321624729280188,
+    7.406917948150342,
+    2.3563815000000004,
+    9.284728303455054,
+    5.2321062309406035,
+    2.3563815000000004
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "ExteriorFloor"
+}
+
+Surface {
+  "name": "ceiling_2.1.0_inter_ceiling_1.1.5.0",
+  "vertices": [
+    8.723808956898159,
+    8.149709591396155,
+    4.777958963352675,
+    8.940513320797358,
+    7.680989451152003,
+    4.777958963352675,
+    8.321624709773834,
+    7.406917939512055,
+    4.777958963352675,
+    7.9970523705287535,
+    8.139844064060213,
+    4.777958963352675
+  ],
+  "construction": "default_floor_construction",
+  "front_boundary": {
+    "type": "Space",
+    "space": "Visitors Bathroom"
+  },
+  "back_boundary": {
+    "type": "Outdoor"
+  },
+  "category": "Roof"
+}
+
