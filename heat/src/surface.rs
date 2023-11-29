@@ -882,12 +882,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
 
             if err / ((fin - ini) as Float) < max_allowed_error {
-                #[cfg(debug_assertions)]
-                eprintln!(
-                    "Breaking after {} iterations... because err = {}",
-                    count,
-                    err / ((fin - ini) as Float)
-                );
+                // #[cfg(debug_assertions)]
+                // eprintln!(
+                //     "Breaking after {} iterations... because err = {}",
+                //     count,
+                //     err / ((fin - ini) as Float)
+                // );
                 break;
             }
             old_err = err;
