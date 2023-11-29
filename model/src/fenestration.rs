@@ -589,7 +589,7 @@ mod testing {
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_hardcoded_json)
-        );        
+        );
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/fenestration_type";
@@ -656,8 +656,6 @@ mod testing {
         } else {
             assert!(false, "Incorrect fenestration operat")
         }
-        
-        
 
         println!("=====\n{}\n=====\n", &hardcoded_ref);
 
@@ -677,7 +675,7 @@ mod testing {
         let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
         let from_json_file: Fenestration =
             serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
-                
+
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
@@ -687,7 +685,7 @@ mod testing {
         let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
         let from_serialized: Fenestration =
             serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
-        
+
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)

@@ -54,9 +54,8 @@ fn apartment_sim() -> Result<(), String> {
         expected[i].pop();
         found[i].pop();
 
-
         let skip = 2000; // This is warmup period
-        // let take = expected[0].len() - skip - 1000;
+                         // let take = expected[0].len() - skip - 1000;
         Box::new(ScatterValidator {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
@@ -68,7 +67,8 @@ fn apartment_sim() -> Result<(), String> {
                 .map(|v| *v)
                 .collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[i].iter()
+            found: found[i]
+                .iter()
                 .skip(skip)
                 // .take(take)
                 .map(|v| *v)
