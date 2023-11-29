@@ -14,16 +14,16 @@ test:
 	cargo test --features parallel  --workspace 
 	cargo test --release --features parallel  -p simple -- --ignored 
 
-v_box: 
+box: 
 	cargo test $(VALIDATION_FEATURES) --package simple --test box -- box_sim --exact --nocapture
 
-v_cold:
+cold:
 	cargo test $(VALIDATION_FEATURES) --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
 
-v_versailles:
+versailles:
 	cargo test $(VALIDATION_FEATURES) --package simple --test versailles -- versailles_sim --exact --nocapture --ignored
 
-v_walls: 
+walls: 
 	cargo test $(VALIDATION_FEATURES) --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture
 
 neighbours:
