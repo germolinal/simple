@@ -343,8 +343,7 @@ impl SimulationModel for ThermalModel {
             let perimeter = surf.vertices.outer().perimeter()?;
             let centroid = surf.vertices.outer().centroid()?;
 
-            #[cfg(debug_assertions)]
-            dbg!("height is 1");
+            // TODO: 
             let height = 1.;
 
             let d =
@@ -375,9 +374,10 @@ impl SimulationModel for ThermalModel {
 
         // This is the model's dt now. When marching
         let mut dt = 60. * 60. / (n as Float * dt_subdivisions as Float);
+        eprintln!("Main N = {} | Heat model N = {} | dt = {}", n, dt_subdivisions, dt);
 
         // safety.
-        const SAFETY: usize = 5;
+        const SAFETY: usize = 2;
         dt /= SAFETY as Float;
         dt_subdivisions *= SAFETY;
 

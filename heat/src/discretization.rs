@@ -447,11 +447,11 @@ impl Discretization {
                 let c_coef = -2. * dt * k / (rho * cp);
                 let disc = b_coef * b_coef - 4. * a_coef * c_coef;
                 // this should never happen...?
-                debug_assert!(disc >= 0.);
+                assert!(disc >= 0.);
 
                 // One solution is apparently always negative...
                 // i.e. it is meaningless
-                debug_assert!((-b_coef - disc.sqrt()) / (2. * a_coef) < 0.);
+                assert!((-b_coef - disc.sqrt()) / (2. * a_coef) < 0.);
 
                 // The positive solution is the one we care about
                 let min_dx = (-b_coef + disc.sqrt()) / (2. * a_coef);
