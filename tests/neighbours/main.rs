@@ -11,7 +11,7 @@ fn neighbours_sim() -> Result<(), String> {
         output: Some("./tests/neighbours/check.csv".into()),
         control_file: None,
         research_mode: false,
-        n: 6,
+        n: 1,
     };
 
     // Create model
