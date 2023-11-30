@@ -96,14 +96,25 @@ impl std::iter::IntoIterator for Loop3D {
     }
 }
 
+// impl std::fmt::Display for Loop3D {
+//     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+//         let n = self.vertices.len();
+//         for p in self.vertices.iter().take(n - 1) {
+//             writeln!(f, "{},{},{},", p.x, p.y, p.z)?;
+//         }
+//         let p = self.vertices.last().unwrap();
+//         write!(f, "{},{},{}", p.x, p.y, p.z)
+//     }
+// }
+
 impl std::fmt::Display for Loop3D {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let n = self.vertices.len();
-        for p in self.vertices.iter().take(n - 1) {
-            writeln!(f, "{},{},{},", p.x, p.y, p.z)?;
+        writeln!(f, "\t[",)?;
+        for p in self.vertices.iter() {
+            writeln!(f, "\t\t{},{},{},", p.x, p.y, p.z)?;
         }
-        let p = self.vertices.last().unwrap();
-        write!(f, "{},{},{}", p.x, p.y, p.z)
+        write!(f, "\t]")?;
+        Ok(())
     }
 }
 

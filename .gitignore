@@ -13,11 +13,14 @@ docs/validation/*.html
 #######
 # Validations
 tests/*/*
-!tests/*/*.csv
+!tests/dc/*
 !tests/**/**/*.idf
 !tests/**/**/*.epw
 !tests/**/**/*.spl
 !tests/**/**/*.rs
+!tests/**/**/*.rad
+!tests/**/**/*.sw
+!tests/**/**/*.csv
 
 # MODEL
 #######

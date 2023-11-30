@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use std::fmt::Display;
+use std::{collections::HashMap, fmt::Display};
 
 use crate::{Model, SimulationStateHeader};
 
@@ -215,7 +215,7 @@ impl<'a> SimpleScanner<'a> {
 
     /// Parses a whole [`Model`] from a text file
     pub(crate) fn parse_model(&mut self) -> Result<(Model, SimulationStateHeader), String> {
-        let mut model = Model::default();
+        let mut data = HashMap::<String, Vec<(&str, usize)>>::new();
 
         loop {
             self.skip_white_space()?;
@@ -243,148 +243,180 @@ impl<'a> SimpleScanner<'a> {
                 Err(e) => return Err(format!("{}", e)),
             };
 
-            // match identifier and object
-            match ident {
-                b"Building" => {
-                    let s: crate::Building = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_building(s);
-                }
-                b"Construction" => {
-                    let s: crate::Construction = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_construction(s);
-                }
-                b"Fenestration" => {
-                    let s: crate::Fenestration = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_fenestration(s)?;
-                }
-                b"HVAC" => {
-                    let s: crate::HVAC = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_hvac(s)?;
-                }
-                b"Luminaire" => {
-                    let s: crate::Luminaire = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_luminaire(s)?;
-                }
-                b"Material" => {
-                    let s: crate::Material = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_material(s);
-                }
-                b"Object" => {
-                    let s: crate::Object = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.objects.push(s);
-                }
-                b"Output" => {
-                    let s: crate::Output = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.outputs.push(s);
-                }
-                b"SiteDetails" => {
-                    let s: crate::SiteDetails = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.site_details = Some(s);
-                }
-                b"SolarOptions" => {
-                    let s: crate::SolarOptions = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.solar_options = Some(s);
-                }
-                b"Space" => {
-                    let s: crate::Space = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_space(s);
-                }
-                b"Surface" => {
-                    let s: crate::Surface = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_surface(s);
-                }
-                b"Substance" => {
-                    let s: crate::Substance = match json5::from_str(obj_str) {
-                        Ok(s) => s,
-                        Err(e) => {
-                            let errmsg = Self::make_error_msg(format!("{}", e), self.line);
-                            return Err(errmsg);
-                        }
-                    };
-                    model.add_substance(s);
-                }
-                _ => {
-                    let ident_str = match std::str::from_utf8(ident) {
-                        Ok(v) => v,
-                        Err(e) => return Err(format!("stringitying incorrect identifier {}", e)),
-                    };
-                    let errmsg = Self::make_error_msg(
-                        format!("unknown identifier {}", ident_str),
-                        self.line,
-                    );
-                    return Err(errmsg);
+            // Store.
+            let key = std::str::from_utf8(ident)
+                .expect("Could not scan")
+                .to_string();
+            if let Some(v) = data.get_mut(&key) {
+                v.push((obj_str, self.line));
+            } else {
+                data.insert(key, vec![(obj_str, self.line)]);
+            }
+        }
+        // Now, build the model
+        let mut model = Model::default();
+        let read_order = vec![
+            // Order matters with these ones
+            "Substance",
+            "Material",
+            "Construction",
+            "Surface",
+            "Fenestration",
+            "Space",
+            // These are independent
+            "Building",
+            "HVAC",
+            "Luminaire",
+            "Object",
+            "Output",
+            "SiteDetails",
+            "SolarOptions",
+        ];
+
+        for ident in read_order {
+            if data.get(ident).is_none() {
+                continue;
+            }
+
+            for (obj_str, ln) in data.get(ident).unwrap().iter() {
+                match ident.as_bytes() {
+                    b"Building" => {
+                        let s: crate::Building = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_building(s);
+                    }
+                    b"Construction" => {
+                        let s: crate::Construction = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_construction(s);
+                    }
+                    b"Fenestration" => {
+                        let s: crate::Fenestration = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_fenestration(s)?;
+                    }
+                    b"HVAC" => {
+                        let s: crate::HVAC = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_hvac(s)?;
+                    }
+                    b"Luminaire" => {
+                        let s: crate::Luminaire = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_luminaire(s)?;
+                    }
+                    b"Material" => {
+                        let s: crate::Material = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_material(s);
+                    }
+                    b"Object" => {
+                        let s: crate::Object = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.objects.push(s);
+                    }
+                    b"Output" => {
+                        let s: crate::Output = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.outputs.push(s);
+                    }
+                    b"SiteDetails" => {
+                        let s: crate::SiteDetails = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.site_details = Some(s);
+                    }
+                    b"SolarOptions" => {
+                        let s: crate::SolarOptions = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.solar_options = Some(s);
+                    }
+                    b"Space" => {
+                        let s: crate::Space = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_space(s);
+                    }
+                    b"Surface" => {
+                        let s: crate::Surface = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_surface(s);
+                    }
+                    b"Substance" => {
+                        let s: crate::Substance = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        model.add_substance(s);
+                    }
+                    _ => {
+                        let errmsg = Self::make_error_msg(
+                            format!("unknown identifier {}", ident),
+                            self.line,
+                        );
+                        return Err(errmsg);
+                    }
                 }
             }
         }

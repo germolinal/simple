@@ -310,18 +310,11 @@ impl Discretization {
         r
     }
 
-    /// Given a Maximum element thickness ($`\Delta x_{max}`$) and a minimum timestep ($`\Delta t_{min}`$), this function
-    /// will find an arguibly good (i.e., stable and accurate) combination of $`\Delta t`$ and number of elements in each
-    /// layer of the construction.
+    /// Identifies the minimum thickness (`dx`) that a finite element in a
+    /// material can have in order to not diverge when simulated using a time
+    /// difference `dt`.
     ///
-    /// This function recursively increases the model's timestep subdivisions (`n`) in order to reduce $`\Delta t`$ to numbers
-    /// that respect the restrictions of (1) stability, (2) $`\Delta x_{max}`$, and (3) $`\Delta t_{min}`$. In other words,
-    /// it searches (by testing $`\Delta t_{model}/1`$, $`\Delta t_{model}/2`$, $`\Delta t_{model}/3`$, ... $`\Delta t_{model}/n`$)
-    /// for the minimum `n` that respects this restrictions
-    ///
-    /// # The math behind it
-    ///
-    /// > *I am not sure how correct this is... seems to work, but there is room for improvements and optimizations, surely*
+    /// # The math
     ///
     /// The first thing to know is that the walls in this module march
     /// through time using a 4th order [Runga-Kutte](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods)
@@ -331,7 +324,7 @@ impl Discretization {
     /// to be a conservative restriction for the RK4. Hence, this function uses the
     /// Euler method restrictions.
     ///
-    /// We are solving the following equation:
+    /// Now, when we march forward, we solve the following equation:
     ///
     /// ```math
     /// \dot{T} = \overline{C}^{-1} \overline{K}  T + \overline{C}^{-1} q
@@ -352,9 +345,9 @@ impl Discretization {
     /// ```
     ///
     /// However, finding the eigenvalues for $`\overline{K}^{\star}`$ is far from trivial. So there is
-    /// yet another heuristic I am using: I am treating the case of a wall with 1 layer that is subdivided
-    /// into a single element as the limit case. I am not sure if this is correct, but most of the instabilities
-    /// I identified through Trial and Error corresponded to this case.
+    /// a heuristic I am using: I am calculating for each layer individually. I am not sure if this is
+    /// correct, but most of the instabilities I identified through Trial and Error corresponded to
+    /// this case.
     ///
     /// For this limit case:
     /// * $`R = \frac{\Delta x}{\lambda}`$
@@ -369,7 +362,7 @@ impl Discretization {
     /// \end{bmatrix}   
     ///```
     /// Note that, in that equation, $`R_{si} = R_{so}`$. The reason for this is that, at the point of using this method,
-    /// we do not not know waht the values of $`R_{si}`$ and $`R_{so}`$ will be. TO overcome this, I use a
+    /// we do not not know want the values of $`R_{si}`$ and $`R_{so}`$ will be. To overcome this, I use a
     /// value low enough to cover most general cases (`0.05`).
     ///
     /// Then, it can be found that the eigenvalues of this case—which we are treating as the limit case—are:
@@ -391,14 +384,84 @@ impl Discretization {
     ///
     /// ```math
     /// 0 = {\Delta x}^2 - \left( \frac{\Delta t}{\rho c_p R_s} \right) \Delta x - \frac{2 \Delta t \lambda}{\rho c_p}
-    /// ```
+    /// ```    
+    fn min_dx(dt: Float, k: Float, rho: Float, cp: Float) -> Float {
+        let a_coef = 1.;
+        let b_coef = -dt / (rho * cp * MAX_RS);
+        let c_coef = -2. * dt * k / (rho * cp);
+        let disc = b_coef * b_coef - 4. * a_coef * c_coef;
+
+        // this should never happen...?
+        assert!(disc >= 0.);
+
+        // One solution is apparently always negative...
+        // i.e. it is meaningless
+        assert!((-b_coef - disc.sqrt()) / (2. * a_coef) < 0.);
+
+        // The positive solution is the one we care about
+        (-b_coef + disc.sqrt()) / (2. * a_coef)
+    }
+
+    /// Returns `Option<(nsegments, n_time_subd)>`. Returns `None` if the substance
+    /// is a Gas or if the element is so thin that the `min_dx` cannot be satisfied.
+    fn nsegments(
+        model_dt: Float,
+        max_dx: Float,
+        min_dt: Float,
+        thickness: Float,
+        substance: &Substance,
+    ) -> Option<(usize, usize)> {
+        // Calculate the minimum_dx
+        let (k, rho, cp) = match substance {
+            Substance::Normal(s) => {
+                let k = s.thermal_conductivity().expect("Trying to discretize a construction that contains a Normal Substance without a 'thermal conductivity'");
+                let rho = s.density().expect("Trying to discretize a construction that contains a Normal Substance without a 'density'");
+                let cp = s.specific_heat_capacity().expect( "Trying to discretize a construction that contains a Normal Substance without a 'specific heat capacity'");
+                (*k, *rho, *cp)
+            }
+            Substance::Gas(_) => {
+                // These never have any
+                return None;
+            }
+        };
+        
+
+        // Let's start by using the maximum number of segments possible
+        // We know that this is at least 1, because thickness >= max_dx
+        let n_segments = (thickness / max_dx).ceil();
+        let dx = thickness / n_segments;
+
+        // find the n that satisfies this condition
+        let mut n = 1;
+        loop {
+            let dt = model_dt / n as Float;
+            if dt < min_dt {
+                return None;
+            }
+            // The minimum thickness for this element to not diverge with
+            // this particular `dt`... we use a safety multiplier to
+            // ensure covergence
+            const SAFETY : Float = 2.0;
+            let min_dx = SAFETY * Discretization::min_dx(dt, k, rho, cp);
+            if dx >= min_dx {
+                return Some((n_segments as usize, n));
+            }
+            // Let's not stretch this too much.
+            if n > 12 {
+                return None
+            }
+            n += 1;
+        }
+    }
+
+    /// Given a Maximum element thickness ($`\Delta x_{max}`$) and a minimum timestep ($`\Delta t_{min}`$), this function
+    /// will find an arguibly good (i.e., stable and accurate) combination of $`\Delta t`$ and number of elements in each
+    /// layer of the construction.
     ///
-    /// So, this method will identify a combination of $`\Delta t`$ and $`\Delta x`$ that
-    /// allows complying with this
-    ///
-    /// All that said, the value for $`\Delta t`$ actually used by the final model is
-    /// actually half of what these equations use. This is because what we are using
-    /// is a heuristic and I want to be safe... ish
+    /// This function recursively increases the model's timestep subdivisions (`n`) in order to reduce $`\Delta t`$ to numbers
+    /// that respect the restrictions of (1) stability, (2) $`\Delta x_{max}`$, and (3) $`\Delta t_{min}`$. In other words,
+    /// it searches (by testing $`\Delta t_{model}/1`$, $`\Delta t_{model}/2`$, $`\Delta t_{model}/3`$, ... $`\Delta t_{model}/n`$)
+    /// for the minimum `n` that respects this restrictions            
     pub fn discretize_construction(
         construction: &Arc<Construction>,
         model: &Model,
@@ -406,133 +469,88 @@ impl Discretization {
         max_dx: Float,
         min_dt: Float,
     ) -> Result<(usize, Vec<usize>), String> {
-        // I could only think of how to make this recursively... so I did this.
-        fn aux(
-            construction: &Arc<Construction>,
-            model: &Model,
-            main_dt: Float,
-            n: usize,
-            max_dx: Float,
-            min_dt: Float,
-        ) -> Result<(usize, Vec<usize>), String> {
-            let dt = main_dt / (n as Float);
+        let n_layers = construction.materials.len();
+        let mut n_elements: Vec<usize> = Vec::with_capacity(n_layers);
+        let mut n = 0;
 
-            // So, for each layer
-            let n_layers = construction.materials.len();
-            let mut n_elements: Vec<usize> = Vec::with_capacity(n_layers);
+        for n_layer in 0..n_layers {
+            let mat_name = &construction.materials[n_layer];
+            let material = model.get_material(mat_name)?;
+            let sub_name = &material.substance;
+            let substance = model.get_substance(sub_name)?;
+            let thickness = material.thickness;
+            
+            if let Some((elements, nsubs)) =
+                Discretization::nsegments(model_dt, max_dx, min_dt, thickness, &substance)
+            {
+                n_elements.push(elements);
+                if nsubs > n {
+                    n = nsubs;
+                }
+            } else {
+                n_elements.push(0);
+            }
+        }
 
-            for n_layer in 0..n_layers {
+        // Check stability requirements...
+        // stability is assured by (alpha * dt / dx^2 <= 1/2 )
+        #[cfg(debug_assertions)]
+        {
+            for (n_layer, nelements) in n_elements.iter().enumerate() {
+                if *nelements == 0 {
+                    // This is all right.
+                    continue;
+                }
                 let mat_name = &construction.materials[n_layer];
                 let material = model.get_material(mat_name)?;
                 let sub_name = &material.substance;
                 let substance = model.get_substance(sub_name)?;
 
-                // Calculate the minimum_dx
+                // Calculate the optimum_dx
                 let thickness = material.thickness;
                 let (k, rho, cp) = match substance {
                     Substance::Normal(s) => {
-                        let k = s.thermal_conductivity().map_err(|_x| "Trying to discretize a construction that contains a Normal Substance without a 'thermal conductivity'")?;
-                        let rho = s.density().map_err(|_x| "Trying to discretize a construction that contains a Normal Substance without a 'density'")?;
-                        let cp = s.specific_heat_capacity().map_err(|_x| "Trying to discretize a construction that contains a Normal Substance without a 'specific heat capacity'")?;
+                        let k = s.thermal_conductivity()?;
+                        let rho = s.density()?;
+                        let cp = s.specific_heat_capacity()?;
                         (*k, *rho, *cp)
                     }
-                    Substance::Gas(_) => {
-                        n_elements.push(0);
-                        continue;
-                    }
+                    Substance::Gas(_) => continue,
                 };
+                let dt = model_dt / n as Float;
+                let dx = thickness / *nelements as Float;
 
-                let a_coef = 1.;
-                let b_coef = -dt / (rho * cp * MAX_RS);
-                let c_coef = -2. * dt * k / (rho * cp);
-                let disc = b_coef * b_coef - 4. * a_coef * c_coef;
-                // this should never happen...?
-                debug_assert!(disc >= 0.);
-
-                // One solution is apparently always negative...
-                // i.e. it is meaningless
-                debug_assert!((-b_coef - disc.sqrt()) / (2. * a_coef) < 0.);
-
-                // The positive solution is the one we care about
-                let min_dx = (-b_coef + disc.sqrt()) / (2. * a_coef);
-
-                if min_dx > thickness {
-                    // This means that this layer cannot comply with the
-                    // given timestep because its thickness leads to a dx that
-                    // does not ensure convergence...
-                    // check if there is room for reducing dt (hence reducing min_dx)
-                    // let next_dt = main_dt / ((n + 1) as Float);
-                    // if next_dt > min_dt {
-                    //     // If there is room for that, do it.
-                    //     return aux(construction, model, main_dt, n + 1, max_dx, min_dt);
-                    // } else {
-                    // otherwise, mark this layer as no-mass
-                    n_elements.push(0);
-                    // }
-                } else {
-                    // subdivide the layer, making all the elements of equal thickness
-                    let m = (thickness / min_dx).floor();
-                    // this case belongs to the other branch of this if/else
-                    debug_assert!(m as usize != 0);
-                    let dx = thickness / m;
-                    if dx > max_dx {
-                        // If the found dx is larger than the max allowed d_x, try to change timestep
-                        // check if there is room for reducing dt...
-                        let next_dt = main_dt / ((n + 1) as Float);
-                        if next_dt > min_dt {
-                            // If there is room for that, do it.
-                            return aux(construction, model, main_dt, n + 1, max_dx, min_dt);
-                        } else {
-                            // otherwise, mark this layer as no-mass
-                            n_elements.push(0);
-                        }
-                    } else {
-                        // "dx" is smaller than max_dx, and thus this works
-                        // fine.
-                        n_elements.push(m as usize)
-                    }
-                }
+                // assert!(alpha * dt / dx / dx <= 0.5);
+                let lambda1 = -dt / (MAX_RS * rho * cp * dx);
+                let r = dx / k;
+                let lambda2 = lambda1 - 2. * dt / (r * rho * cp * dx);
+                assert!(
+                    lambda1 >= -2.,
+                    "[mat {}] lambda1={}... supposed to be >= -2",
+                    mat_name,
+                    lambda1
+                );
+                assert!(
+                    lambda1 <= 0.,
+                    "[mat {}] lambda1={}... supposed to be <= 0.0",
+                    mat_name,
+                    lambda2
+                );
+                assert!(
+                    lambda2 >= -2.,
+                    "[mat {}] lambda2={}... supposed to be > -2",
+                    mat_name,
+                    lambda2
+                );
+                assert!(
+                    lambda2 <= 0.,
+                    "[mat {}] lambda2={}... supposed to be <= 0.0",
+                    mat_name,
+                    lambda2
+                );
             }
-
-            // Check stability requirements...
-            // stability is assured by (alpha * dt / dx^2 <= 1/2 )
-            #[cfg(debug_assertions)]
-            {
-                for (n_layer, _) in n_elements.iter().enumerate() {
-                    let mat_name = &construction.materials[n_layer];
-                    let material = model.get_material(mat_name)?;
-                    let sub_name = &material.substance;
-                    let substance = model.get_substance(sub_name)?;
-
-                    // Calculate the optimum_dx
-                    let thickness = material.thickness;
-                    let (k, rho, cp) = match substance {
-                        Substance::Normal(s) => {
-                            let k = s.thermal_conductivity()?;
-                            let rho = s.density()?;
-                            let cp = s.specific_heat_capacity()?;
-                            (*k, *rho, *cp)
-                        }
-                        Substance::Gas(_) => continue,
-                    };
-                    let dt = main_dt / n as Float;
-                    let dx = thickness / n_elements[n_layer] as Float;
-
-                    // assert!(alpha * dt / dx / dx <= 0.5);
-                    let lambda1 = -dt / (MAX_RS * rho * cp * dx);
-                    let r = dx / k;
-                    let lambda2 = lambda1 - 2. * dt / (r * rho * cp * dx);
-                    assert!(lambda1 >= -2.);
-                    assert!(lambda1 <= 0.);
-                    assert!(lambda2 >= -2.);
-                    assert!(lambda2 <= 0.);
-                }
-            }
-
-            // return
-            Ok((n, n_elements))
         }
-        aux(construction, model, model_dt, 1, max_dx, min_dt)
+        Ok((n, n_elements))
     }
 
     /// Produces $`\overline{K}`$ and $`\vec{q}`$ (as in the equation $`\overline{C} \dot{\vec{T}} =  \overline{K} \vec{T} + \vec{q}`$),
@@ -630,18 +648,35 @@ impl Discretization {
             let (.., uvalue) = &self.segments[global_i];
             let u = uvalue.u_value(t_this, t_next);
 
+            #[cfg(debug_assertions)]
+            if u.is_nan() {
+                dbg!(u);
+            }
             // Top left... should be there
             memory.k.add_to_element(local_i, local_i, -u)?;
             // Bottom right, only if within range.
             if let Ok(old_value) = memory.k.get(local_i + 1, local_i + 1) {
+                #[cfg(debug_assertions)]
+                if old_value.is_nan() {
+                    dbg!(old_value);
+                }
                 memory.k.set(local_i + 1, local_i + 1, old_value - u)?;
             }
             // Top right, only if within range.
             if let Ok(old_value) = memory.k.get(local_i, local_i + 1) {
+                #[cfg(debug_assertions)]
+                if old_value.is_nan() {
+                    dbg!(old_value);
+                }
                 memory.k.set(local_i, local_i + 1, old_value + u)?;
             }
             // Bottom left, only if within range.
             if let Ok(old_value) = memory.k.get(local_i + 1, local_i) {
+                #[cfg(debug_assertions)]
+                if old_value.is_nan() {
+                    dbg!(old_value);
+                }
+
                 memory.k.set(local_i + 1, local_i, old_value + u)?;
             }
         }
@@ -666,6 +701,10 @@ impl Discretization {
         };
 
         memory.q.add_to_element(0, 0, front_q)?;
+        #[cfg(debug_assertions)]
+        if hs_front.is_nan() {
+            dbg!(hs_front);
+        }
         memory.k.add_to_element(0, 0, -hs_front)?;
 
         // Add back border conditions
@@ -686,6 +725,11 @@ impl Discretization {
             (u, u * t_after)
         };
         memory.q.add_to_element(nnodes - 1, 0, back_q)?;
+
+        #[cfg(debug_assertions)]
+        if hs_back.is_nan() {
+            dbg!(hs_back);
+        }
         memory.k.add_to_element(nnodes - 1, nnodes - 1, -hs_back)?;
 
         Ok(())
@@ -1063,10 +1107,8 @@ mod testing {
         Discretization,
         Matrix,
         ConvectionParams,
-        // Float,
         Float,
         ConvectionParams,
-        // Float,
         Float,
     ) {
         let n = 5;

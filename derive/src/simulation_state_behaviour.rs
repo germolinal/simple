@@ -35,7 +35,7 @@ pub fn get_enum_variants(
 pub fn contains_attr(v: &syn::Variant, att: &str) -> bool {
     v.attrs
         .iter()
-        .map(|a| format!("{}", a.path.segments[0].ident))
+        .map(|a| format!("{}", a.path().segments[0].ident))
         .any(|x| x == *att)
 }
 
@@ -50,7 +50,7 @@ pub fn derive_enum_kind(
         let att_names: Vec<String> = v
             .attrs
             .iter()
-            .map(|a| format!("{}", a.path.segments[0].ident))
+            .map(|a| format!("{}", a.path().segments[0].ident))
             .collect();
         let mut n = 0;
         if att_names.contains(&"physical".to_string()) {
@@ -177,7 +177,7 @@ pub fn derive_output(
         // Get all the attributes
         let mut points_to = None;
         for a in v.attrs.iter() {
-            let a_name = a.path.segments[0].ident.to_string();
+            let a_name = a.path().segments[0].ident.to_string();
 
             if a_name == "references" {
                 points_to = Some(crate::field::Attribute::new(a));

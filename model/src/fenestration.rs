@@ -644,7 +644,7 @@ mod testing {
                 0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}
                 5.548000,0,0.5000,  // X,Y,Z ==> Vertex 3 {m}
                 5.548000,0,2.5000,   // X,Y,Z ==> Vertex 4 {m}
-            ]
+            ],
         }",
         )
         .map_err(|e| e.to_string())?;
@@ -656,6 +656,8 @@ mod testing {
         } else {
             assert!(false, "Incorrect fenestration operat")
         }
+
+        println!("=====\n{}\n=====\n", &hardcoded_ref);
 
         if let Some(FenestrationPosition::Fixed { fraction }) = &hardcoded_ref.operation {
             assert!(fraction.is_none())
@@ -673,6 +675,7 @@ mod testing {
         let json_data = fs::read_to_string(json_file).map_err(|e| e.to_string())?;
         let from_json_file: Fenestration =
             serde_json::from_str(&json_data).map_err(|e| e.to_string())?;
+
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_json_file)
@@ -682,6 +685,7 @@ mod testing {
         let rust_json = serde_json::to_string(&hardcoded_ref).map_err(|e| e.to_string())?;
         let from_serialized: Fenestration =
             serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
+
         assert_eq!(
             format!("{:?}", hardcoded_ref),
             format!("{:?}", from_serialized)

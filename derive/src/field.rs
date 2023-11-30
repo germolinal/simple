@@ -1,6 +1,7 @@
 use crate::common_path::*;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
+use syn::{Meta, MetaList, MetaNameValue};
 
 pub const STATE_ELEMENT_TYPE: &str = "StateElementField";
 
@@ -15,18 +16,27 @@ impl Attribute {
         if let syn::AttrStyle::Inner(_) = &a.style {
             panic!("Expecing Outer style attribute")
         }
-        let name = a.path.segments[0].ident.clone();
+        let name = a.path().segments[0].ident.clone();
         let mut value: Option<String> = None;
-        a.tokens.clone().into_iter().for_each(|token| {
-            if let proc_macro2::TokenTree::Group(g) = token {
-                g.stream().into_iter().for_each(|literal| {
-                    if let proc_macro2::TokenTree::Literal(lit) = literal {
-                        value = Some(format!("{}", lit));
-                    }
-                })
-            }
-        });
-        // return
+
+        if name != "doc" {
+            value = match &a.meta {
+                Meta::Path(_) => {
+                    // dbg!(&name, "Path!");
+                    // p.segments.clone()
+                    None
+                }
+                Meta::NameValue(MetaNameValue { .. }) => {
+                    unreachable!(
+                        "I do not think we support attributes of this kind... please report this"
+                    );
+                }
+                Meta::List(MetaList {
+                    path: _, tokens, ..
+                }) => Some(format!("{}", tokens)),
+            };
+        }
+
         Self {
             name: format!("{}", name),
             value,
@@ -116,6 +126,9 @@ impl Field {
         let ident = field.ident.clone();
 
         if let syn::Type::Path(t) = &field.ty {
+            // field.attrs.iter().for_each(|a|{
+            //     dbg!(a);
+            // });
             let attributes: Vec<Attribute> = field.attrs.iter().map(Attribute::new).collect();
 
             let mut api_alias: Option<String> = None;

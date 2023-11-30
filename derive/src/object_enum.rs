@@ -34,7 +34,7 @@ impl Variant {
         let attributes: Vec<String> = variant
             .attrs
             .iter()
-            .map(|a| format!("{}", a.path.segments[0].ident))
+            .map(|a| format!("{}", a.path().segments[0].ident))
             .collect();
 
         let docs = crate::docs::get_docs(&variant.attrs).expect("Could not generate docs");
@@ -102,6 +102,17 @@ impl EnumObject {
             docs,
             attributes,
         }
+    }
+
+    pub fn gen_display(&self) -> TokenStream2 {
+        let ret = quote!(
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let j = serde_json::to_string_pretty(&self).unwrap();
+                write!(f, "{}\n\n", j)
+            }
+        );
+
+        ret
     }
 
     pub fn gen_docs(&self) -> Result<String, String> {
