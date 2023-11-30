@@ -588,7 +588,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 let front_env = ConvectionParams {
                     air_temperature: *temperature,
                     air_speed: 0.0,
-                    rad_temperature: t_front,
+                    rad_temperature: *temperature,
                     surface_temperature: self.parent.front_temperature(state),
                     roughness_index: 1,
                     cos_surface_tilt: self.cos_tilt,
@@ -651,7 +651,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 let back_env = ConvectionParams {
                     air_temperature: *temperature,
                     air_speed: 0.0,
-                    rad_temperature: t_front,
+                    rad_temperature: *temperature,
                     surface_temperature: self.parent.front_temperature(state),
                     roughness_index: 1,
                     cos_surface_tilt: self.cos_tilt,

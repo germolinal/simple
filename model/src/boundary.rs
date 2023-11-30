@@ -76,7 +76,7 @@ pub enum Boundary {
     ///
     /// Border conditions:
     /// * **Solar Radiation**: None
-    /// * **Net Shortwave (IR) Radiation**: Calculated based on the set ambient temperature and the surface temperature
+    /// * **Net Shortwave (IR) Radiation**: The set temperature
     /// * **Convection Coefficient**: Indoor
     /// * **Wind**: No
     AmbientTemperature {

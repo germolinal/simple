@@ -30,22 +30,26 @@ Construction {
   "name": "default_window_construction",
   "materials": [
     "glass_5mm",
-    // "Air 12mm",
-    // "glass_5mm",
+    "Air 12mm",
+    "glass_5mm",
   ]
 }
 
 Construction {
   "name": "default_roof_construction",
   "materials": [
-    "roof_material"
+    // "roof_material"
+    "plywood",
+    "insulation",    
   ]
 }
 
 Construction {
   "name": "default_floor_construction",
   "materials": [
-    "floor_material"
+    // "floor_material"
+    "plywood",
+    "insulation",    
   ]
 }
 
@@ -438,13 +442,13 @@ Fenestration {
 Material {
   "name": "plywood",
   "substance": "timber",
-  "thickness": 0.05
+  "thickness": 0.02
 }
 
 Material {
   "name": "insulation",
   "substance": "insulation",
-  "thickness": 0.05
+  "thickness": 0.04
 }
 
 Material {
@@ -1749,7 +1753,7 @@ Space {
   "volume": 38.26229787997189,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.125
+    "area": 0.0125
   },
   "building": "The building",
   "storey": 1,
@@ -1763,7 +1767,7 @@ Space {
   "volume": 27.313746542556675,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.125
+    "area": 0.0125
   },
   "building": "The building",
   "storey": 1,
@@ -1777,7 +1781,7 @@ Space {
   "volume": 21.673712248007348,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.125
+    "area": 0.0125
   },
   "building": "The building",
   "storey": 1,
@@ -1791,7 +1795,7 @@ Space {
   "volume": 10.9557660029705,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.125
+    "area": 0.0125
   },
   "building": "The building",
   "storey": 1,
@@ -1805,7 +1809,7 @@ Space {
   "volume": 6.1923515452950575,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.125
+    "area": 0.0125
   },
   "building": "The building",
   "storey": 0,
@@ -1819,7 +1823,7 @@ Space {
   "volume": 15.06313176980161,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.125
+    "area": 0.0125
   },
   "building": "The building",
   "storey": 0,
@@ -1833,7 +1837,7 @@ Space {
   "volume": 64.81367051460445,
   "infiltration": {
     "type": "EffectiveAirLeakageArea",
-    "area": 0.125
+    "area": 0.0125
   },
   "building": "The building",
   "storey": 0,
@@ -3377,10 +3381,17 @@ Surface {
     "space": "Downstairs bathroom"
   },
   "back_boundary": {
-    "type": "Outdoor"
+    // "type": "Outdoor"
+    type: "AmbientTemperature",
+    temperature: 14,
   },
   "category": "ExteriorFloor"
 }
+
+Output {
+    SurfaceFrontSolarIrradiance : "FA8EBB8D-C97F-4785-BEEC-76C9200CAC9E_0.0",
+}
+
 
 Surface {
   "name": "137051BF-9985-423E-A1D3-558345B51CC7_0.0",
@@ -3404,9 +3415,15 @@ Surface {
     "space": "Downstairs hall"
   },
   "back_boundary": {
-    "type": "Outdoor"
+    // "type": "Outdoor"
+    type: "AmbientTemperature",
+    temperature: 14,
   },
   "category": "ExteriorFloor"
+}
+
+Output {
+    SurfaceFrontSolarIrradiance : "137051BF-9985-423E-A1D3-558345B51CC7_0.0",
 }
 
 Surface {
@@ -3437,9 +3454,15 @@ Surface {
     "space": "Living room"
   },
   "back_boundary": {
-    "type": "Outdoor"
+    // "type": "Outdoor"
+    type: "AmbientTemperature",
+    temperature: 14,
   },
   "category": "ExteriorFloor"
+}
+
+Output {
+    SurfaceFrontSolarIrradiance : "6B63FAAF-F706-4B44-B484-E2B19DDE5C4C_0.0",
 }
 
 Surface {
@@ -3886,7 +3909,7 @@ HVAC {
   name: "Living room heater",
   target_space: "Living room",    
   heating_setpoint: 18,
-  max_heating_power: 0,
+  max_heating_power: 3700,
 }
 
 Output {
@@ -3901,9 +3924,9 @@ Output {
 //     SurfaceBackSolarIrradiance : "6B63FAAF-F706-4B44-B484-E2B19DDE5C4C_0.0"
 // }
 
-// Output{
-//    SpaceDryBulbTemperature: "Living room"
-// }
+Output{
+   SpaceDryBulbTemperature: "Living room"
+}
 
 
 HVAC {    
