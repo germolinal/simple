@@ -25,7 +25,10 @@ use crate::Float;
 use matrix::Matrix;
 use rendering::{colour_matrix::*, DCFactory, Ray, Scene};
 
-use model::{Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface};
+use model::{
+    Boundary, Fenestration, FenestrationType, SimulationStateElement, SimulationStateHeader,
+    Surface,
+};
 
 use geometry::{Point3D, Polygon3D, Ray3D, Triangulation3D, Vector3D};
 use rendering::primitive_samplers::sample_triangle_surface;
@@ -161,6 +164,9 @@ impl SolarSurface {
     ) -> Result<Vec<SolarSurface>, String> {
         let mut ret: Vec<SolarSurface> = Vec::with_capacity(list.len());
         for (i, s) in list.iter().enumerate() {
+            if let FenestrationType::Opening = s.category {
+                continue;
+            }
             if s.front_incident_solar_irradiance_index().is_none() {
                 let i = state.push(
                     SimulationStateElement::FenestrationFrontSolarIrradiance(i),

@@ -28,7 +28,9 @@ use serde::{self, de::Visitor};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::fs;
+use std::fs::{self, File};
+use std::io::prelude::*;
+
 use std::path::Path;
 use std::sync::Arc;
 
@@ -95,6 +97,59 @@ pub struct Model {
     simulation_state: Option<SimulationStateHeader>,
 }
 
+impl std::fmt::Display for Model {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for b in self.buildings.iter() {
+            write!(f, "Building {}", b)?;
+        }
+
+        for b in self.constructions.iter() {
+            write!(f, "Construction {}", b)?;
+        }
+
+        for b in self.fenestrations.iter() {
+            write!(f, "Fenestration {}", b)?;
+        }
+
+        for b in self.hvacs.iter() {
+            write!(f, "HVAC {}", b)?;
+        }
+
+        for b in self.luminaires.iter() {
+            write!(f, "Luminaire {}", b)?;
+        }
+
+        for b in self.materials.iter() {
+            write!(f, "Material {}", b)?;
+        }
+
+        for b in self.objects.iter() {
+            write!(f, "Object {}", b)?;
+        }
+
+        for b in self.outputs.iter() {
+            write!(f, "Output {}\n\n", b)?;
+        }
+
+        if let Some(s) = self.site_details.as_ref() {
+            write!(f, "SiteDetails {}", s)?;
+        }
+
+        for b in self.substances.iter() {
+            write!(f, "Substance {}", b)?;
+        }
+
+        for b in self.spaces.iter() {
+            write!(f, "Space {}", b)?;
+        }
+
+        for b in self.surfaces.iter() {
+            write!(f, "Surface {}", b)?;
+        }
+
+        Ok(())
+    }
+}
 impl std::default::Default for Model {
     fn default() -> Self {
         Self {
@@ -266,6 +321,15 @@ impl Model {
         }
         None
     }
+
+    /// Prints the model into a file called `filename`.
+    pub fn print_to_file(&self, filename: &str) -> Result<(), String> {
+        let mut file = File::create(filename).map_err(|e| format!("{}", e))?;
+        file.write_all(self.to_string().as_bytes())
+            .map_err(|e| format!("{}", e))?;
+        Ok(())
+    }
+
     /// Adds an element and default value to the model's [`SimulationStateHeader`]. Returns an error
     /// if the state has been taken already
     fn push_to_state(&mut self, e: SimulationStateElement, v: Float) -> Result<usize, String> {

@@ -18,8 +18,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use core::fmt;
-
 use crate::infiltration::Infiltration;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
@@ -55,24 +53,24 @@ pub enum SpacePurpose {
     Other,
 }
 
-impl std::fmt::Display for SpacePurpose {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let s = match self {
-            Self::Bathroom => "Bathroom",
-            Self::Bedroom => "Bedroom",
-            Self::DiningRoom => "Dining Room",
-            Self::Kitchen => "Kitchen",
-            Self::LivingRoom => "Living Room",
-            Self::Office => "Office",
-            Self::Garage => "Garage",
-            Self::Hallway => "Hallway",
-            Self::Other => "Other",
-            Self::Storage => "Storage",
-            Self::Laundry => "Laundry",
-        };
-        write!(f, "{}", s)
-    }
-}
+// impl std::fmt::Display for SpacePurpose {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         let s = match self {
+//             Self::Bathroom => "Bathroom",
+//             Self::Bedroom => "Bedroom",
+//             Self::DiningRoom => "Dining Room",
+//             Self::Kitchen => "Kitchen",
+//             Self::LivingRoom => "Living Room",
+//             Self::Office => "Office",
+//             Self::Garage => "Garage",
+//             Self::Hallway => "Hallway",
+//             Self::Other => "Other",
+//             Self::Storage => "Storage",
+//             Self::Laundry => "Laundry",
+//         };
+//         write!(f, "{}", s)
+//     }
+// }
 
 /// Represents a space with homogeneous temperature within a building. It is often actual room enclosed by walls, but it can also
 /// be more than one room. In this latter case, there will be walls

@@ -60,6 +60,13 @@ impl Object {
         }
     }
 
+    pub fn gen_display(&self) -> TokenStream2 {
+        match self {
+            Self::StructObject(s) => s.gen_display(),
+            Self::Enum(s) => s.gen_display(),
+        }
+    }
+
     pub fn gen_docs(&self) -> TokenStream2 {
         let (ident, docs) = match self {
             Self::StructObject(s) => (

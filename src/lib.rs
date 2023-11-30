@@ -78,3 +78,23 @@ pub use weather::{
     CurrentWeather, EPWWeather, EPWWeatherLine, Location, Solar, SyntheticWeather, Time, Weather,
     WeatherTrait,
 };
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn display() -> Result<(), String> {
+        let meta_options = MetaOptions::default();
+
+        let (model, mut state) = Model::from_file("./tests/box/box.spl")?;
+        let _ = MultiphysicsModel::new(&meta_options, (), &model, &mut state, 2)?;
+
+        let string = format!("{}", model);
+        let (model, mut state) = Model::from_bytes(string.as_bytes())?;
+        let _ = MultiphysicsModel::new(&meta_options, (), &model, &mut state, 2)?;
+
+        Ok(())
+    }
+}
