@@ -371,9 +371,11 @@ impl SimulationModel for ThermalModel {
 
             fenestrations.push(tsurf);
         }
+        
+        dt_subdivisions *= 2;
+        let dt = 60. * 60. / (n as Float *  dt_subdivisions as Float);
 
         // This is the model's dt now. When marching
-        let dt = 60. * 60. / (n as Float * dt_subdivisions as Float);
         let mut hvacs: Vec<ThermalHVAC> = Vec::with_capacity(model.hvacs.len());
         for hvac in model.hvacs.iter() {
             let h = ThermalHVAC::from(hvac, model)?;

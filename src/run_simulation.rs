@@ -116,7 +116,9 @@ fn pre_process(
     };
 
     let start = weather.data[0].date;
-    let end = weather.data[weather.data.len() - 1].date;
+    let mut end = weather.data[weather.data.len() - 1].date;
+    end.hour -= 0.1;
+
     let sim_period = Period::new(start, end, dt);
 
     weather.sort_data();
@@ -217,7 +219,7 @@ where
     /* ************************************ */
     /* SIMULATE THE WHOLE SIMULATION PERIOD */
     /* ************************************ */
-    let mut last_reported_month: u8 = 99;
+    let mut last_reported_month: u8 = u8::MAX;
     for date in pre_process_data.sim_period {
         if date.month != last_reported_month {
             last_reported_month = date.month;
