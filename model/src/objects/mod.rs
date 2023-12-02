@@ -137,6 +137,9 @@ pub struct Object {
     /// The specification of the object
     #[serde(default)]
     pub specifications: ObjectSpecs,
+
+    /// The space in which the object is located
+    pub space: Option<String>,
 }
 
 impl std::default::Default for Object {
@@ -148,6 +151,7 @@ impl std::default::Default for Object {
             up: Vector3D::z(),
             front: Vector3D::y(),
             specifications: ObjectSpecs::default(),
+            space: None,
         }
     }
 }
