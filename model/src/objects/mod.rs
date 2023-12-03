@@ -112,6 +112,7 @@ pub enum ObjectSpecs {
     WasherDryer,
 }
 
+
 /// An object
 #[derive(Serialize, Deserialize, Debug, ObjectIO, Clone)]
 #[serde(deny_unknown_fields)]
@@ -140,6 +141,31 @@ pub struct Object {
 
     /// The space in which the object is located
     pub space: Option<String>,
+}
+
+impl Object {
+    /// Gets the name of the object type
+    pub fn as_str(&self) -> &str {
+        match &self.specifications {
+            ObjectSpecs::Other => "Other",
+            ObjectSpecs::Bathtub => "Bathtub",
+            ObjectSpecs::Bed => "Bed",
+            ObjectSpecs::Chair { .. } => "Chair",
+            ObjectSpecs::Dishwasher => "Dishwasher",
+            ObjectSpecs::Fireplace => "Fireplace",
+            ObjectSpecs::Oven => "Oven",
+            ObjectSpecs::Refrigerator => "Refrigerator",
+            ObjectSpecs::Sink => "Sink",
+            ObjectSpecs::Sofa { .. } => "Sofa",
+            ObjectSpecs::Stairs => "Stairs",
+            ObjectSpecs::Storage { .. } => "Storage",
+            ObjectSpecs::Stove => "Stove",
+            ObjectSpecs::Table { .. } => "Table",
+            ObjectSpecs::Television => "Television",
+            ObjectSpecs::Toilet => "Toilet",
+            ObjectSpecs::WasherDryer => "Washer Dryer",            
+        }
+    }
 }
 
 impl std::default::Default for Object {
