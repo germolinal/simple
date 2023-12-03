@@ -53,9 +53,7 @@ pub enum SpacePurpose {
     Other,
 }
 
-
 impl SpacePurpose {
-
     /// returns the purpose as a str, capitalize (e.g., `LivingRoom` becomes `"Living Room"`)
     pub fn as_str(&self) -> &'static str {
         match self {
@@ -70,10 +68,9 @@ impl SpacePurpose {
             SpacePurpose::Hallway => "Hallway",
             SpacePurpose::Laundry => "Laundry",
             SpacePurpose::Other => "Other",
-        }        
+        }
     }
 }
-
 
 /// Represents a space with homogeneous temperature within a building. It is often actual room enclosed by walls, but it can also
 /// be more than one room. In this latter case, there will be walls
