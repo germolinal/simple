@@ -53,24 +53,27 @@ pub enum SpacePurpose {
     Other,
 }
 
-// impl std::fmt::Display for SpacePurpose {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         let s = match self {
-//             Self::Bathroom => "Bathroom",
-//             Self::Bedroom => "Bedroom",
-//             Self::DiningRoom => "Dining Room",
-//             Self::Kitchen => "Kitchen",
-//             Self::LivingRoom => "Living Room",
-//             Self::Office => "Office",
-//             Self::Garage => "Garage",
-//             Self::Hallway => "Hallway",
-//             Self::Other => "Other",
-//             Self::Storage => "Storage",
-//             Self::Laundry => "Laundry",
-//         };
-//         write!(f, "{}", s)
-//     }
-// }
+
+impl SpacePurpose {
+
+    /// returns the purpose as a str, capitalize (e.g., `LivingRoom` becomes `"Living Room"`)
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SpacePurpose::Bathroom => "Bathroom",
+            SpacePurpose::Bedroom => "Bedroom",
+            SpacePurpose::DiningRoom => "Dining Room",
+            SpacePurpose::Kitchen => "Kitchen",
+            SpacePurpose::LivingRoom => "Living Room",
+            SpacePurpose::Office => "Office",
+            SpacePurpose::Storage => "Storage",
+            SpacePurpose::Garage => "Garage",
+            SpacePurpose::Hallway => "Hallway",
+            SpacePurpose::Laundry => "Laundry",
+            SpacePurpose::Other => "Other",
+        }        
+    }
+}
+
 
 /// Represents a space with homogeneous temperature within a building. It is often actual room enclosed by walls, but it can also
 /// be more than one room. In this latter case, there will be walls
