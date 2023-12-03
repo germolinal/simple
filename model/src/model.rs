@@ -511,7 +511,7 @@ impl Model {
     /// ````
     pub fn add_object(&mut self, add: Object) -> Result<(), String> {
         if let Ok(space_name) = add.space() {
-            if let Err(_) = self.get_space(space_name) {
+            if self.get_space(space_name).is_err() {
                 return Err(format!(
                     "Space called '{}' was not found in the model",
                     space_name
