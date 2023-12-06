@@ -66,6 +66,7 @@ pub use calendar::{Date, Period};
 pub use communication::{MetaOptions, SimulationModel};
 pub use geometry;
 pub use light::OpticalInfo;
+pub use matrix::Matrix;
 pub use model;
 pub use model::{Model, SimulationState, SimulationStateElement, SimulationStateHeader, *};
 pub use polynomial::*;
