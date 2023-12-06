@@ -149,7 +149,7 @@ impl SolarModel {
                     let ground_other = (view_factors.ground + view_factors.air) * ir(db, 1.0);
                     let sky = view_factors.sky * horizontal_ir;
                     if (ground_other + sky).is_nan() {
-                        dbg!(ground_other + sky);
+                        dbg!(ground_other, sky);
                     }
                     surface.set_back_ir_irradiance(state, ground_other + sky)?;
                 }
