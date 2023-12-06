@@ -1112,6 +1112,7 @@ dependencies = [
  "geometry",
  "heat",
  "light",
+ "matrix",
  "model",
  "polynomial",
  "rayon",
