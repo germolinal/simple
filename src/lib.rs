@@ -76,8 +76,8 @@ pub use rendering::{
 };
 pub use schedule::*;
 pub use weather::{
-    CurrentWeather, EPWWeather, EPWWeatherLine, Location, Solar, SyntheticWeather, Time, Weather,
-    WeatherTrait,
+    CurrentWeather, EPWWeather, EPWWeatherLine, Location, PerezSky, SkyUnits, Solar,
+    SyntheticWeather, Time, Weather, WeatherTrait,
 };
 
 #[cfg(test)]
