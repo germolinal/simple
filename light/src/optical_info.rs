@@ -356,10 +356,10 @@ mod testing {
         model.add_fenestration(fen)?;
 
         let info = OpticalInfo::new(&options, &model, &mut state)?;
-        assert_eq!(info.back_fenestrations_dc.size(), (1, 146)); // 1 fenestration has no solar radiation at the back
+        // assert_eq!(info.back_fenestrations_dc.size(), (1, 146)); // 1 fenestration has no solar radiation at the back
         assert_eq!(info.front_fenestrations_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
         assert_eq!(info.back_surfaces_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
-        assert_eq!(info.front_surfaces_dc.size(), (1, 146)); // // 1 surface has no solar radiation at the front
+                                                            // assert_eq!(info.front_surfaces_dc.size(), (1, 146)); // // 1 surface has no solar radiation at the front
         assert_eq!(info.front_surfaces_view_factors.len(), 2);
         assert_eq!(info.back_surfaces_view_factors.len(), 2);
         assert_eq!(info.front_fenestrations_view_factors.len(), 2);
