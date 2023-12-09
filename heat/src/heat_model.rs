@@ -372,7 +372,7 @@ impl SimulationModel for ThermalModel {
             fenestrations.push(tsurf);
         }
 
-        dt_subdivisions *= 2;
+        dt_subdivisions *= 5; // this is needed mostly for the no-mass walls and windows
         let dt = 60. * 60. / (n as Float * dt_subdivisions as Float);
 
         // This is the model's dt now. When marching
