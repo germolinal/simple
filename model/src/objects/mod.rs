@@ -137,6 +137,69 @@ pub struct Object {
     /// The specification of the object
     #[serde(default)]
     pub specifications: ObjectSpecs,
+
+    /// The space in which the object is located
+    pub space: Option<String>,
+}
+
+impl Object {
+    /// Gets the name of the object type
+    pub fn as_str(&self) -> &str {
+        match &self.specifications {
+            ObjectSpecs::Other => "Other",     //0
+            ObjectSpecs::Bathtub => "Bathtub", // 1
+            ObjectSpecs::Bed => {
+                // 2
+                if self.dimensions.x < 1.1 {
+                    "Single Bed" // 2.1
+                } else {
+                    "Double Bed" // 2.2
+                }
+            }
+            ObjectSpecs::Chair { category, .. } => {
+                // 3
+                match category {
+                    ChairType::Other => "Generic Chair", // 3.1
+                    ChairType::Dining => "Dining Chair", // 3.2
+                    ChairType::Office => "Office Chair", // 3.3
+                    ChairType::Stool => "Stool",         // 3.4
+                }
+            }
+            ObjectSpecs::Dishwasher => "Dishwasher",     // 4
+            ObjectSpecs::Fireplace => "Fireplace",       // 5
+            ObjectSpecs::Oven => "Oven",                 // 6
+            ObjectSpecs::Refrigerator => "Refrigerator", // 7
+            ObjectSpecs::Sink => "Sink",                 // 8
+            ObjectSpecs::Sofa { category, .. } => {
+                // 9
+                match category {
+                    SofaType::Other => "Generic Sofa",                 // 9.1
+                    SofaType::Rectangular => "Rectangular Sofa",       // 9.2
+                    SofaType::SingleSeat => "Single Seat Sofa",        // 9.3
+                    SofaType::LShaped => "LShaped Sofa",               // 9.4
+                    SofaType::LShapedExtension => "LShaped Extension", // 9.5
+                }
+            }
+            ObjectSpecs::Stairs => "Stairs", // 10
+            ObjectSpecs::Storage { category, .. } => {
+                match category {
+                    StorageType::Cabinet => "Cabinet", // 11.1
+                    StorageType::Shelf => "Shelf",     // 11.2
+                }
+            }
+            ObjectSpecs::Stove => "Stove", // 12
+            ObjectSpecs::Table { category, .. } => {
+                match category {
+                    TableType::Other => "Generic Table", // 13.1
+                    TableType::Dining => "Dining Table", // 13.2
+                    TableType::Coffee => "Coffee Table", // 13.3
+                }
+            }
+            ObjectSpecs::Television => "Television",    // 14
+            ObjectSpecs::Toilet => "Toilet",            // 15
+            ObjectSpecs::WasherDryer => "Washer Dryer", // 16
+        }
+    }
 }
 
 impl std::default::Default for Object {
@@ -148,6 +211,7 @@ impl std::default::Default for Object {
             up: Vector3D::z(),
             front: Vector3D::y(),
             specifications: ObjectSpecs::default(),
+            space: None,
         }
     }
 }
