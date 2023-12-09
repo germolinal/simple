@@ -480,6 +480,49 @@ impl Model {
         Self::from_bytes(&bytes)
     }
 
+    /// Adds an [`Object`] to the [`Model`]
+    ///
+    /// ```rust
+    ///
+    /// use model::{Model, Object, Space, ObjectSpecs};
+    /// use geometry::{Vector3D, Point3D};
+    ///
+    /// let space = "the space".to_string();
+    /// let mut obj = Object::new(
+    ///     String::default(),
+    ///     Point3D::default(),
+    ///     Point3D::default(),
+    ///     Vector3D::z(),
+    ///     Vector3D::y(),
+    ///     ObjectSpecs::default(),
+    /// );
+    /// obj.set_space(space.clone());
+    ///
+    /// let mut model = Model::default();
+    ///
+    /// // it will fail because the space does not exist
+    /// assert!(model.add_object(obj.clone()).is_err());
+    ///
+    /// let space = Space::new(space);
+    /// model.add_space(space);
+    ///
+    /// // if does nto fail any more
+    /// assert!(model.add_object(obj).is_ok());
+    /// ````
+    pub fn add_object(&mut self, add: Object) -> Result<(), String> {
+        if let Ok(space_name) = add.space() {
+            if self.get_space(space_name).is_err() {
+                return Err(format!(
+                    "Space called '{}' was not found in the model",
+                    space_name
+                ));
+            }
+        }
+
+        self.objects.push(add);
+        Ok(())
+    }
+
     /// Adds a [`Substance`] to the [`Model`]
     ///
     /// ```rust
@@ -1792,6 +1835,7 @@ mod testing {
     use crate::rhai_api::*;
     use crate::simulation_state_element::SimulationStateElement;
     use std::cell::RefCell;
+
     #[test]
     fn test_api() -> Result<(), String> {
         let mut model = Model::default();

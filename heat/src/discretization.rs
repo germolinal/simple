@@ -424,7 +424,6 @@ impl Discretization {
                 return None;
             }
         };
-        
 
         // Let's start by using the maximum number of segments possible
         // We know that this is at least 1, because thickness >= max_dx
@@ -441,14 +440,14 @@ impl Discretization {
             // The minimum thickness for this element to not diverge with
             // this particular `dt`... we use a safety multiplier to
             // ensure covergence
-            const SAFETY : Float = 2.0;
+            const SAFETY: Float = 2.0;
             let min_dx = SAFETY * Discretization::min_dx(dt, k, rho, cp);
             if dx >= min_dx {
                 return Some((n_segments as usize, n));
             }
             // Let's not stretch this too much.
             if n > 12 {
-                return None
+                return None;
             }
             n += 1;
         }
@@ -479,7 +478,7 @@ impl Discretization {
             let sub_name = &material.substance;
             let substance = model.get_substance(sub_name)?;
             let thickness = material.thickness;
-            
+
             if let Some((elements, nsubs)) =
                 Discretization::nsegments(model_dt, max_dx, min_dt, thickness, &substance)
             {

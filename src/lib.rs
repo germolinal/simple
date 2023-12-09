@@ -66,6 +66,7 @@ pub use calendar::{Date, Period};
 pub use communication::{MetaOptions, SimulationModel};
 pub use geometry;
 pub use light::OpticalInfo;
+pub use matrix::Matrix;
 pub use model;
 pub use model::{Model, SimulationState, SimulationStateElement, SimulationStateHeader, *};
 pub use polynomial::*;
@@ -75,8 +76,8 @@ pub use rendering::{
 };
 pub use schedule::*;
 pub use weather::{
-    CurrentWeather, EPWWeather, EPWWeatherLine, Location, Solar, SyntheticWeather, Time, Weather,
-    WeatherTrait,
+    CurrentWeather, EPWWeather, EPWWeatherLine, Location, PerezSky, SkyUnits, Solar,
+    SyntheticWeather, Time, Weather, WeatherTrait,
 };
 
 #[cfg(test)]

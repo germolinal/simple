@@ -31,10 +31,7 @@ lto = true
 codegen-units = 1
 
 [package.metadata.docs.rs]
-rustdoc-args = [
-    "--html-in-header",
-    "./katex.html",
-]
+rustdoc-args = ["--html-in-header", "./katex.html"]
 
 [lib]
 name = "simple"
@@ -87,6 +84,7 @@ calendar = { path = "calendar", features = ["chrono", "serde"] }
 weather = { path = "weather" }
 air = { path = "air" }
 light = { path = "light" }
+matrix = { path = "matrix" }
 heat = { path = "heat" }
 rendering = { path = "rendering" }
 geometry = { path = "geometry" }
@@ -99,12 +97,10 @@ validate = { git = "https://github.com/germolinal/validate" }
 
 [features]
 default = []
-simd = [
-    "light/simd"
-]
+simd = ["light/simd"]
 parallel = [
     "rayon",
-    "heat/parallel", 
+    "heat/parallel",
     "light/parallel",
     #"air_flow/parallel"
 ]
