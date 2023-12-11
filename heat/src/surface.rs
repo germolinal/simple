@@ -1055,8 +1055,9 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 let global_temp = global_temperatures.get(i, 0)?;
                 err += (local_temp - global_temp).abs();
             }
+            err /= (fin - ini) as Float;
             if err > old_err {
-                #[cfg(debug_assertions)]
+                // #[cfg(debug_assertions)]
                 if count > 100 {
                     eprintln!("Breaking after {} iterations... because BAD!", count);
                 }
@@ -1100,7 +1101,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
             let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
 
-            if err / ((fin - ini) as Float) < max_allowed_error {
+            if err  < max_allowed_error {
                 // #[cfg(debug_assertions)]
                 // eprintln!(
                 //     "Breaking after {} iterations... because err = {}",
