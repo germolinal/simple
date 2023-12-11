@@ -424,9 +424,7 @@ impl PerezSky {
         add_sky: bool,
         add_sun: bool,
     ) -> Result<(), String> {
-        // https://github.com/NREL/EnergyPlus/blob/2f8b2517baa1e6e553fe766f4587a0926b4f5032/third_party/ssc/shared/lib_irradproc.cpp
-
-        let r = ReinhartSky::new(mf);
+                let r = ReinhartSky::new(mf);
         let (rows, cols) = vec.size();
         debug_assert_eq!(cols, 1);
         if rows != r.n_bins {
