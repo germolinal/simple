@@ -129,6 +129,10 @@ fn main() {
         std::process::exit(1);
     };
 
+    if let Some(true) = options.check {
+        std::process::exit(0);
+    }
+
     if let Err(e) = choose_controller(model, &mut state_header, &options) {
         simple::error_msgs::print_error("", e);
         // I am not sure what this number should be/

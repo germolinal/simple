@@ -1082,7 +1082,6 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 );
             }
 
-            
             // assert!(
             //     count < 900,
             //     "Excessive number of iterations... \n====\t\tfront_env = {:?}\n\tback_env = {:?}\n\tfront_hc = {}\n\tback_hs = {}.\n\tError = {}\n====\n",
@@ -1101,7 +1100,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
             let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
 
-            if err  < max_allowed_error {
+            if err < max_allowed_error {
                 // #[cfg(debug_assertions)]
                 // eprintln!(
                 //     "Breaking after {} iterations... because err = {}",
@@ -1111,7 +1110,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 break;
             }
             if count > 19000 {
-                break // Sometimes this converges too slowly.
+                break; // Sometimes this converges too slowly.
             }
             old_err = err;
             count += 1;

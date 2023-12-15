@@ -424,7 +424,7 @@ impl PerezSky {
         add_sky: bool,
         add_sun: bool,
     ) -> Result<(), String> {
-                let r = ReinhartSky::new(mf);
+        let r = ReinhartSky::new(mf);
         let (rows, cols) = vec.size();
         debug_assert_eq!(cols, 1);
         if rows != r.n_bins {
