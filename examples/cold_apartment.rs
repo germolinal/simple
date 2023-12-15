@@ -7,11 +7,12 @@ fn main() -> Result<(), String> {
 
     let options = SimOptions {
         input_file: "./tests/cold_apartment/cold.spl".into(),
-        weather_file: "./tests/wellington.epw".into(),
+        weather_file: Some("./tests/wellington.epw".into()),
         output: Some("./tests/cold_apartment/check.csv".into()),
         control_file: None,
         research_mode: false,
         n: 4,
+        .. SimOptions::default()
     };
 
     // Create model

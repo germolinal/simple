@@ -545,7 +545,7 @@ mod testing {
          }",
         )
         .map_err(|e| e.to_string())?;
-        model.add_surface(s);
+        model.add_surface(s)?;
 
         let s: Surface = json5::from_str(
             "{
@@ -560,7 +560,7 @@ mod testing {
          }",
         )
         .map_err(|e| e.to_string())?;
-        model.add_surface(s);
+        model.add_surface(s)?;
 
         let fen: Fenestration = json5::from_str(
             "{

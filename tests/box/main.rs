@@ -22,11 +22,12 @@ fn box_sim() -> Result<(), String> {
     fn series() -> Result<ValidFunc, String> {
         let options = SimOptions {
             input_file: "./tests/box/box.spl".into(),
-            weather_file: "./tests/wellington.epw".into(),
+            weather_file: Some("./tests/wellington.epw".into()),
             output: Some("./tests/box/check.csv".into()),
             control_file: None,
             research_mode: false,
             n: 4,
+            .. SimOptions::default()
         };
 
         // Create model

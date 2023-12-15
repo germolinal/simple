@@ -17,12 +17,13 @@ fn versailles_sim() -> Result<(), String> {
 
     let options = SimOptions {
         input_file: "./tests/versailles/versailles.spl".into(),
-        weather_file: "./tests/versailles/api_weather.sw".into(),
+        weather_file: Some("./tests/versailles/api_weather.sw".into()),
         // weather_file: "./tests/wellington.epw".into(),
         output: Some("./tests/versailles/check.csv".into()),
         control_file: None,
         research_mode: false,
         n: 6,
+        ..SimOptions::default()
     };
 
     // Create model
