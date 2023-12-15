@@ -129,7 +129,11 @@ fn main() {
         std::process::exit(1);
     };
 
-    if let Some(true) = options.check {
+    
+    eprintln!("{}", serde_json::to_string(&model).unwrap());
+
+    // return with no simulation
+    if options.check {
         std::process::exit(0);
     }
 

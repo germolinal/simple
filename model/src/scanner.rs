@@ -257,13 +257,12 @@ impl<'a> SimpleScanner<'a> {
         let mut model = Model::default();
         let read_order = vec![
             // Order matters with these ones
+            "Space",
             "Substance",
             "Material",
             "Construction",
             "Surface",
             "Fenestration",
-            "Space",
-            // These are independent
             "Building",
             "HVAC",
             "Luminaire",
@@ -348,7 +347,7 @@ impl<'a> SimpleScanner<'a> {
                                 return Err(errmsg);
                             }
                         };
-                        model.objects.push(s);
+                        model.add_object(s)?;
                     }
                     b"Output" => {
                         let s: crate::Output = match json5::from_str(obj_str) {
@@ -398,7 +397,7 @@ impl<'a> SimpleScanner<'a> {
                                 return Err(errmsg);
                             }
                         };
-                        model.add_surface(s);
+                        model.add_surface(s)?;
                     }
                     b"Substance" => {
                         let s: crate::Substance = match json5::from_str(obj_str) {

@@ -1404,7 +1404,7 @@ mod testing {
         s.set_precalculated_back_convection_coef(10.0);
         s.set_precalculated_front_convection_coef(10.0);
 
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
 
         // FIRST TEST -- 10 degrees on each side
         let main_dt = 300.0;
@@ -1549,7 +1549,7 @@ mod testing {
         s.set_precalculated_back_convection_coef(10.0);
         s.set_precalculated_front_convection_coef(10.0);
 
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
 
         // FIRST TEST -- 10 degrees on each side
         let main_dt = 300.0;
@@ -1664,7 +1664,7 @@ mod testing {
         let mut s = Surface::new("WALL", p, c.name(), Boundary::Outdoor, Boundary::Outdoor);
         s.set_precalculated_back_convection_coef(10.0);
         s.set_precalculated_front_convection_coef(10.0);
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
         let mut state_header = SimulationStateHeader::new();
 
         /* TEST */
@@ -1780,7 +1780,7 @@ mod testing {
             Boundary::AmbientTemperature { temperature: 30. },
         );
 
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
         let mut state_header = SimulationStateHeader::new();
 
         /* TEST */
