@@ -256,7 +256,6 @@ impl<'a> SimpleScanner<'a> {
         // Now, build the model
         let mut model = Model::default();
         let read_order = vec![
-            // Order matters with these ones
             "Space",
             "Substance",
             "Material",
@@ -307,7 +306,10 @@ impl<'a> SimpleScanner<'a> {
                                 return Err(errmsg);
                             }
                         };
-                        model.add_fenestration(s)?;
+                        if let Err(e) = model.add_fenestration(s){
+                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                            return Err(errmsg);
+                        }
                     }
                     b"HVAC" => {
                         let s: crate::HVAC = match json5::from_str(obj_str) {
@@ -317,7 +319,10 @@ impl<'a> SimpleScanner<'a> {
                                 return Err(errmsg);
                             }
                         };
-                        model.add_hvac(s)?;
+                        if let Err(e) = model.add_hvac(s) {
+                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                            return Err(errmsg);
+                        }
                     }
                     b"Luminaire" => {
                         let s: crate::Luminaire = match json5::from_str(obj_str) {
@@ -327,7 +332,10 @@ impl<'a> SimpleScanner<'a> {
                                 return Err(errmsg);
                             }
                         };
-                        model.add_luminaire(s)?;
+                        if let Err(e) = model.add_luminaire(s){
+                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                            return Err(errmsg);
+                        }
                     }
                     b"Material" => {
                         let s: crate::Material = match json5::from_str(obj_str) {
@@ -347,7 +355,10 @@ impl<'a> SimpleScanner<'a> {
                                 return Err(errmsg);
                             }
                         };
-                        model.add_object(s)?;
+                        if let Err(e) = model.add_object(s){
+                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                            return Err(errmsg);
+                        }
                     }
                     b"Output" => {
                         let s: crate::Output = match json5::from_str(obj_str) {
@@ -379,7 +390,7 @@ impl<'a> SimpleScanner<'a> {
                         };
                         model.solar_options = Some(s);
                     }
-                    b"Space" => {
+                    b"Space" => {                        
                         let s: crate::Space = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
@@ -397,7 +408,10 @@ impl<'a> SimpleScanner<'a> {
                                 return Err(errmsg);
                             }
                         };
-                        model.add_surface(s)?;
+                        if let Err(e) = model.add_surface(s){
+                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                            return Err(errmsg);
+                        }
                     }
                     b"Substance" => {
                         let s: crate::Substance = match json5::from_str(obj_str) {
