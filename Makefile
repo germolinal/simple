@@ -5,7 +5,8 @@ pre_commit: #test validate
 	cargo fmt
 	cargo clippy
 
-
+build:
+	cargo build --features parallel --release
 
 test:
 	cargo test --features parallel  --workspace 
