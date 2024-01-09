@@ -36,10 +36,10 @@ pub enum ChairArmType {
 #[inline_enum]
 pub enum ChairBackType {
     /// Has arms
+    #[default]
     Existing,
 
-    /// Does not have arms
-    #[default]
+    /// Does not have arms    
     Missing,
 }
 
