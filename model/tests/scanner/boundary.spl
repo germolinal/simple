@@ -1,3 +1,6 @@
+Space {
+    name: "Some Space",
+}
 Surface {
     name: "the surface",
     construction:"the construction", 

@@ -356,7 +356,7 @@ mod tests {
             model::Boundary::default(),
             model::Boundary::default(),
         );
-        model.add_surface(s);
+        model.add_surface(s)?;
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
@@ -395,7 +395,7 @@ mod tests {
             model::Boundary::default(),
             model::Boundary::default(),
         );
-        model.add_surface(s);
+        model.add_surface(s)?;
 
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;

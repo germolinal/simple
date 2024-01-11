@@ -233,6 +233,7 @@ impl<'de> Visitor<'de> for SimpleModelVisitor {
                 b"objects" => {
                     let objs: Vec<Object> = map.next_value()?;
                     for o in objs.into_iter() {
+                        // model.add_object(o).map_err(serde::de::Error::custom)?;
                         model.objects.push(o);
                     }
                 }
@@ -257,7 +258,8 @@ impl<'de> Visitor<'de> for SimpleModelVisitor {
                 b"surfaces" => {
                     let objs: Vec<Surface> = map.next_value()?;
                     for o in objs.into_iter() {
-                        model.add_surface(o);
+                        // model.add_surface(o).map_err(serde::de::Error::custom)?;
+                        model.surfaces.push(Arc::new(o));
                     }
                 }
                 b"substances" => {
@@ -722,16 +724,23 @@ impl Model {
     /// model.add_surface(s);
     /// assert_eq!(model.surfaces.len(), 2);
     /// ```
-    pub fn add_surface(&mut self, add: Surface) -> Arc<Surface> {
+    pub fn add_surface(&mut self, add: Surface) -> Result<Arc<Surface>, String> {
         if self.get_surface(add.name()).is_ok() {
             print_warning_no_module(format!(
                 "There is already a Surface called '{}'",
                 add.name()
             ))
         }
+        // Check boundaries.
+        if let Boundary::Space { space } = &add.front_boundary {
+            self.get_space(space)?;
+        }
+        if let Boundary::Space { space } = &add.back_boundary {
+            self.get_space(space)?;
+        }
         let add = Arc::new(add);
         self.surfaces.push(Arc::clone(&add));
-        add
+        Ok(add)
     }
 
     /// Retrieves a reference (`Arc`) to a [`Surface`] based on its name, from the `surfaces`
@@ -874,7 +883,7 @@ impl Model {
     /// that does not exist of it does not fit within it.
     ///
     /// ```rust
-    /// use model::{Model, Fenestration, SurfaceTrait};
+    /// use model::{Space, Model, Fenestration, SurfaceTrait};
     /// use json5;
     ///
     /// let fen  : Fenestration = json5::from_str("{
@@ -912,6 +921,7 @@ impl Model {
     /// use model::Surface;
     ///
     /// let mut model = Model::default();
+    /// model.add_space(Space::new("Space 1"));
     /// let s: Surface = json5::from_str(
     ///     "{
     ///     name: 'the surface',
@@ -1710,6 +1720,11 @@ mod testing {
     #[test]
     fn test_add_fenestration() -> Result<(), String> {
         let mut model = Model::default();
+
+        model.add_space(Space::new("Space 1"));
+        model.add_space(Space::new("Space 2"));
+
+
         let s: Surface = json5::from_str(
             "{
             name: 'the surface',
@@ -1731,7 +1746,7 @@ mod testing {
          }",
         )
         .map_err(|e| e.to_string())?;
-        model.add_surface(s);
+        model.add_surface(s)?;
 
         let fen: Fenestration = json5::from_str(
             "{
@@ -1748,6 +1763,7 @@ mod testing {
         )
         .map_err(|e| e.to_string())?;
 
+        
         model.add_fenestration(fen)?;
 
         let fen = model.fenestrations[0].clone();
@@ -1772,6 +1788,8 @@ mod testing {
     #[test]
     fn test_add_fenestration_cross_boundary() -> Result<(), String> {
         let mut model = Model::default();
+        model.add_space(Space::new("Space 1"));
+        model.add_space(Space::new("Space 2"));
         let s: Surface = json5::from_str(
             "{
             name: 'the surface',
@@ -1793,7 +1811,7 @@ mod testing {
          }",
         )
         .map_err(|e| e.to_string())?;
-        model.add_surface(s);
+        model.add_surface(s)?;
 
         let fen: Fenestration = json5::from_str(
             "{

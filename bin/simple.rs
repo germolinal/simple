@@ -96,10 +96,8 @@ fn main() {
 
     let options = SimOptions::parse();
     // let options = SimOptions {
-    //     input_file: "tests/neighbours/neighbours.json".to_string(),
-    //     weather_file: "tests/wellington.epw".to_string(),
-    //     n: 1,
-    //     output: Some("check.csv".to_string()),
+    //     input_file: "somefile".to_string(),
+    //     check:true,
     //     .. SimOptions::default()
     // };
     let filename = options.input_file.to_string();
@@ -108,7 +106,7 @@ fn main() {
         match Model::from_file(filename) {
             Ok(o) => o,
             Err(e) => {
-                simple::error_msgs::print_error("", e);
+                eprintln!("{}", e);
                 std::process::exit(1);
             }
         }
@@ -128,6 +126,11 @@ fn main() {
         // I am not sure what this number should be/
         std::process::exit(1);
     };
+
+    // return with no simulation
+    if options.check {
+        std::process::exit(0);
+    }
 
     if let Err(e) = choose_controller(model, &mut state_header, &options) {
         simple::error_msgs::print_error("", e);

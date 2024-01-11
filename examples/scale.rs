@@ -11,7 +11,7 @@ fn main() -> Result<(), String> {
     const N: usize = 600;
     let mut options = SimOptions::default();
     options.output = Some("./tests/cold_apartment/check.csv".into());
-    options.weather_file = "./tests/wellington.epw".into();
+    options.weather_file = Some("./tests/wellington.epw".into());
     options.n = 4;
 
     let mut simple_model = Model::default();
@@ -63,7 +63,7 @@ fn main() -> Result<(), String> {
             model::Boundary::Outdoor,
         );
 
-        simple_model.add_surface(s);
+        simple_model.add_surface(s)?;
     }
 
     let mut state_header = simple_model.take_state().unwrap();

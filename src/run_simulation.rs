@@ -31,30 +31,35 @@ use crate::multiphysics_model::MultiphysicsModel;
 use std::fs::{self};
 use weather::{EPWWeather, Weather};
 
-/// The options we can pass to the simulation
-#[derive(Parser, Default)]
+/// SIMPLE aims to be a modern building simulation system. (c) Wise House | Germán Molina
+#[derive(Debug, Parser, Default)]
 #[clap(author, version, about, long_about = None)]
 pub struct SimOptions {
+    /// Does not simulate, just reads the model to see whether
+    /// it can be parsed appropriately    
+    #[arg(long)]
+    pub check: bool,
+
     /// The input simple file
-    #[clap(short = 'i')]
+    #[arg(short, long)]
     pub input_file: String,
 
     /// The EPW weather file
-    #[clap(short = 'w')]
-    pub weather_file: String,
+    #[arg(short, long)]
+    pub weather_file: Option<String>,
 
     /// The control script
-    #[clap(short = 'c')]
+    #[arg(short, long)]
     pub control_file: Option<String>,
 
     /// Specifies the path to which to write the results.
     /// If none is given, STDOUT is used
-    #[clap(short = 'o')]
+    #[arg(short, long)]
     pub output: Option<String>,
 
     /// Enable research mode, allowing some unrealistic
     /// but very powerful functions in the API
-    #[clap(short = 'r')]
+    #[arg(short, long)]
     pub research_mode: bool,
 
     // /// The starting date
@@ -65,7 +70,7 @@ pub struct SimOptions {
     // #[clap(short = 'e')]
     // pub end: Date,
     /// The number of timesteps per hour in the simulation
-    #[clap(short = 'n')]
+    #[arg(short, long, default_value_t = 1)]
     pub n: usize,
 }
 
@@ -95,24 +100,23 @@ fn pre_process(
     let dt = 60. * 60. / n as Float;
 
     // Load weather
-    let mut weather: Weather = if options.weather_file.ends_with(".epw") {
-        EPWWeather::from_file(options.weather_file.to_string())?.into()
-    } else if options.weather_file.ends_with(".sw") {
-        let s = match fs::read_to_string(&options.weather_file) {
-            Ok(v) => v,
-            Err(_) => {
-                return Err(format!(
-                    "Could not read JSON file '{}'",
-                    options.weather_file
-                ))
+    let mut weather: Weather = match &options.weather_file {
+        None => {
+            return Err("No weather file specified".to_string());
+        }
+        Some(file) => {
+            if file.ends_with(".epw") {
+                EPWWeather::from_file(file.to_string())?.into()
+            } else if file.ends_with(".sw") {
+                let s = match fs::read_to_string(file) {
+                    Ok(v) => v,
+                    Err(_) => return Err(format!("Could not read JSON file '{}'", file)),
+                };
+                serde_json::from_str(&s).map_err(|e| format!("{}", e))?
+            } else {
+                return Err(format!("Unsupported weather format in file '{}'", file));
             }
-        };
-        serde_json::from_str(&s).map_err(|e| format!("{}", e))?
-    } else {
-        return Err(format!(
-            "Unsupported weather format in file '{}'",
-            options.weather_file
-        ));
+        }
     };
 
     let start = weather.data[0].date;
