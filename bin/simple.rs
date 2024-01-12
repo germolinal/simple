@@ -87,6 +87,11 @@ fn choose_controller(
     }
 }
 
+fn abort(msg: &str) -> ! {
+    eprintln!("[Error]: {}", msg);
+    std::process::exit(1);
+}
+
 fn main() {
     // cargo instruments --release --template Allocations -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
     // cargo instruments --release --template 'CPU Profiler' --package simple --bin simple -- -i tests/cold_apartment/cold.spl -w tests/wellington.epw -n 1 -o check.csv
@@ -106,26 +111,43 @@ fn main() {
         match Model::from_file(filename) {
             Ok(o) => o,
             Err(e) => {
-                eprintln!("{}", e);
-                std::process::exit(1);
+                abort(&e);
             }
         }
     } else if filename.ends_with(".json") {
         match Model::from_json_file(filename) {
             Ok(o) => o,
             Err(e) => {
-                simple::error_msgs::print_error("", e);
-                std::process::exit(1);
+                abort(&e);
             }
         }
     } else {
-        simple::error_msgs::print_error(
+        let e = format!(
             "Unkown kind of file '{}'... expecting .json or .spl",
-            filename,
+            filename
         );
-        // I am not sure what this number should be/
-        std::process::exit(1);
+        abort(&e);
     };
+
+    if let Some(outfile) = options.translate {
+        if outfile.ends_with(".json") {
+            if let Err(e) = model.print_to_json_file(&outfile) {
+                abort(&e);
+            }
+        } else if outfile.ends_with(".spl") {
+            if let Err(e) = model.print_to_file(&outfile) {
+                abort(&e);
+            };
+        } else {
+            let e = format!(
+                "Cannot translate into file '{}'... only .spl and .json formats are supported",
+                outfile
+            );
+            abort(&e);
+        }
+
+        std::process::exit(0);
+    }
 
     // return with no simulation
     if options.check {
