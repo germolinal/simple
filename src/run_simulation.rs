@@ -40,6 +40,10 @@ pub struct SimOptions {
     #[arg(long)]
     pub check: bool,
 
+    /// Translates the model from .JSON to .SPL, or the other way around.
+    #[arg(short, long)]
+    pub translate: Option<String>,
+
     /// The input simple file
     #[arg(short, long)]
     pub input_file: String,

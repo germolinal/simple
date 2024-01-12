@@ -240,7 +240,7 @@ impl<'a> SimpleScanner<'a> {
             // Make it a string
             let obj_str = match std::str::from_utf8(obj) {
                 Ok(v) => v,
-                Err(e) => return Err(format!("{}", e)),
+                Err(e) => return Err(e.to_string()),
             };
 
             // Store.
@@ -282,7 +282,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Building = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -292,7 +292,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Construction = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -302,12 +302,12 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Fenestration = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
-                        if let Err(e) = model.add_fenestration(s){
-                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                        if let Err(e) = model.add_fenestration(s) {
+                            let errmsg = Self::make_error_msg(e.to_string(), *ln);
                             return Err(errmsg);
                         }
                     }
@@ -315,12 +315,12 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::HVAC = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
                         if let Err(e) = model.add_hvac(s) {
-                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                            let errmsg = Self::make_error_msg(e.to_string(), *ln);
                             return Err(errmsg);
                         }
                     }
@@ -328,12 +328,12 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Luminaire = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
-                        if let Err(e) = model.add_luminaire(s){
-                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                        if let Err(e) = model.add_luminaire(s) {
+                            let errmsg = Self::make_error_msg(e.to_string(), *ln);
                             return Err(errmsg);
                         }
                     }
@@ -341,7 +341,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Material = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -351,12 +351,12 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Object = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
-                        if let Err(e) = model.add_object(s){
-                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                        if let Err(e) = model.add_object(s) {
+                            let errmsg = Self::make_error_msg(e.to_string(), *ln);
                             return Err(errmsg);
                         }
                     }
@@ -364,7 +364,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Output = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -374,7 +374,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::SiteDetails = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -384,17 +384,17 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::SolarOptions = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
                         model.solar_options = Some(s);
                     }
-                    b"Space" => {                        
+                    b"Space" => {
                         let s: crate::Space = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
@@ -404,12 +404,12 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Surface = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };
-                        if let Err(e) = model.add_surface(s){
-                            let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                        if let Err(e) = model.add_surface(s) {
+                            let errmsg = Self::make_error_msg(e.to_string(), *ln);
                             return Err(errmsg);
                         }
                     }
@@ -417,7 +417,7 @@ impl<'a> SimpleScanner<'a> {
                         let s: crate::Substance = match json5::from_str(obj_str) {
                             Ok(s) => s,
                             Err(e) => {
-                                let errmsg = Self::make_error_msg(format!("{}", e), *ln);
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
                                 return Err(errmsg);
                             }
                         };

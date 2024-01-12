@@ -12,7 +12,7 @@ fn neighbours_sim() -> Result<(), String> {
         control_file: None,
         research_mode: false,
         n: 1,
-        .. SimOptions::default()
+        ..SimOptions::default()
     };
 
     // Create model

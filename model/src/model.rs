@@ -332,6 +332,19 @@ impl Model {
         Ok(())
     }
 
+    /// Prints the model into a file called 'filename' in JSON format
+    pub fn print_to_json_file(&self, filename: &str) -> Result<(), String> {
+        let mut file = File::create(filename).map_err(|e| e.to_string())?;
+        // Write a &str in the file (ignoring the result).
+        writeln!(
+            &mut file,
+            "{}",
+            serde_json::to_string(self).map_err(|e| e.to_string())?
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     /// Adds an element and default value to the model's [`SimulationStateHeader`]. Returns an error
     /// if the state has been taken already
     fn push_to_state(&mut self, e: SimulationStateElement, v: Float) -> Result<usize, String> {
@@ -1724,7 +1737,6 @@ mod testing {
         model.add_space(Space::new("Space 1"));
         model.add_space(Space::new("Space 2"));
 
-
         let s: Surface = json5::from_str(
             "{
             name: 'the surface',
@@ -1763,7 +1775,6 @@ mod testing {
         )
         .map_err(|e| e.to_string())?;
 
-        
         model.add_fenestration(fen)?;
 
         let fen = model.fenestrations[0].clone();
