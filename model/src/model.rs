@@ -982,6 +982,11 @@ impl Model {
                 add.name()
             ))
         }
+
+        if self.get_construction(&add.construction).is_err(){
+            return Err(format!("No construction called '{}' exists in this model.", add.construction))
+        }
+        
         // Check the index of this object
         let fen_index = self.fenestrations.len();
 
