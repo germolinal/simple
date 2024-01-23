@@ -344,7 +344,7 @@ pub fn get_single_zone_test_building(
         },
     );
 
-    model.add_surface(surface);
+    model.add_surface(surface)?;
 
     // Add window.
     if let Some(window_polygon) = window_polygon {

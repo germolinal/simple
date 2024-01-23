@@ -1082,7 +1082,6 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 );
             }
 
-            
             // assert!(
             //     count < 900,
             //     "Excessive number of iterations... \n====\t\tfront_env = {:?}\n\tback_env = {:?}\n\tfront_hc = {}\n\tback_hs = {}.\n\tError = {}\n====\n",
@@ -1101,7 +1100,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
             let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
 
-            if err  < max_allowed_error {
+            if err < max_allowed_error {
                 // #[cfg(debug_assertions)]
                 // eprintln!(
                 //     "Breaking after {} iterations... because err = {}",
@@ -1111,7 +1110,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 break;
             }
             if count > 19000 {
-                break // Sometimes this converges too slowly.
+                break; // Sometimes this converges too slowly.
             }
             old_err = err;
             count += 1;
@@ -1405,7 +1404,7 @@ mod testing {
         s.set_precalculated_back_convection_coef(10.0);
         s.set_precalculated_front_convection_coef(10.0);
 
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
 
         // FIRST TEST -- 10 degrees on each side
         let main_dt = 300.0;
@@ -1550,7 +1549,7 @@ mod testing {
         s.set_precalculated_back_convection_coef(10.0);
         s.set_precalculated_front_convection_coef(10.0);
 
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
 
         // FIRST TEST -- 10 degrees on each side
         let main_dt = 300.0;
@@ -1665,7 +1664,7 @@ mod testing {
         let mut s = Surface::new("WALL", p, c.name(), Boundary::Outdoor, Boundary::Outdoor);
         s.set_precalculated_back_convection_coef(10.0);
         s.set_precalculated_front_convection_coef(10.0);
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
         let mut state_header = SimulationStateHeader::new();
 
         /* TEST */
@@ -1781,7 +1780,7 @@ mod testing {
             Boundary::AmbientTemperature { temperature: 30. },
         );
 
-        let surface = model.add_surface(s);
+        let surface = model.add_surface(s)?;
         let mut state_header = SimulationStateHeader::new();
 
         /* TEST */

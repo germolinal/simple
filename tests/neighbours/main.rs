@@ -7,11 +7,12 @@ fn neighbours_sim() -> Result<(), String> {
 
     let options = SimOptions {
         input_file: "./tests/neighbours/neighbours.spl".into(),
-        weather_file: "./tests/wellington.epw".into(),
+        weather_file: Some("./tests/wellington.epw".into()),
         output: Some("./tests/neighbours/check.csv".into()),
         control_file: None,
         research_mode: false,
         n: 1,
+        .. SimOptions::default()
     };
 
     // Create model
