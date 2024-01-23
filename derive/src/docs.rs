@@ -4,7 +4,7 @@ use syn::{Lit, Meta, MetaNameValue}; // import without risk of name clashing
 
 pub fn get_docs(attrs: &[syn::Attribute]) -> Result<String, String> {
     // let mut ret = String::new();
-    let mut ret = "Some documentation".to_string();
+    let mut ret = "".to_string();
 
     for at in attrs {
         if let Some(segment) = at.path().segments.iter().next() {
