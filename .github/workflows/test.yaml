@@ -23,7 +23,7 @@ jobs:
     - name: Run tests default
       run: |
         cargo test --verbose --workspace 
-        cargo test --release --verbose -p simple -- --ignored
+        cargo test --featyres parallel --release --verbose -p simple -- --ignored
   check_float:
     runs-on: ubuntu-latest     
     steps:
