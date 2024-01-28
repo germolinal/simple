@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::error_msgs::print_warning_no_module;
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
-use crate::{hvac::*, Boundary, SolarOptions, SurfaceType};
+use crate::{hvac::*, Boundary, FenestrationType, SolarOptions, SurfaceType};
 use crate::{Float, SiteDetails};
 use crate::{Object, SurfaceTrait};
 use crate::{Output, SimulationStateHeader};
@@ -701,7 +701,7 @@ impl Model {
     /// Adds a [`Surface`] to the [`Model`]
     ///
     /// ```rust
-    /// use model::{Model, Surface};
+    /// use model::{Model, Surface, Construction};
     /// use json5;
     ///
     /// // this is less verbose than creating the whole thing.
@@ -718,8 +718,11 @@ impl Model {
     ///  }").unwrap();
     ///
     /// let mut model = Model::default();
+    /// let c = Construction::new("the construction"); 
+    /// model.add_construction(c); // <-- this should not be empty
     /// assert!(model.surfaces.is_empty());
     /// model.add_surface(s);
+    /// 
     /// assert_eq!(model.surfaces.len(), 1);
     ///
     /// // Adding a new surface with the same name issues a warning, but still works
@@ -744,8 +747,11 @@ impl Model {
                 add.name()
             ))
         }
-        if self.get_construction(&add.construction).is_err(){
-            return Err(format!("No construction called '{}' exists in this model.", add.construction))
+        if self.get_construction(&add.construction).is_err() {
+            return Err(format!(
+                "No construction called '{}' exists in this model.",
+                add.construction
+            ));
         }
 
         // Check boundaries.
@@ -764,8 +770,13 @@ impl Model {
     /// field
     ///
     /// ```rust
-    /// use model::{Model, Surface};
+    /// use model::{Model, Surface, Construction};
     /// use json5;
+    /// 
+    /// let mut model = Model::default();    
+    /// // Add construction
+    /// let c = Construction::new("the construction");    
+    /// model.add_construction(c); // <-- this should not be empty
     ///
     /// // this is less verbose than creating the whole thing.
     /// let s: Surface = json5::from_str(
@@ -780,7 +791,7 @@ impl Model {
     ///     ]
     ///  }").unwrap();
     ///
-    /// let mut model = Model::default();    
+    /// 
     /// model.add_surface(s);
     /// assert!(model.get_surface("the surface").is_ok());
     /// assert!(model.get_surface("nope... I am not here").is_err());
@@ -900,7 +911,7 @@ impl Model {
     /// that does not exist of it does not fit within it.
     ///
     /// ```rust
-    /// use model::{Space, Model, Fenestration, SurfaceTrait};
+    /// use model::{Space, Model, Fenestration, SurfaceTrait, Construction};
     /// use json5;
     ///
     /// let fen  : Fenestration = json5::from_str("{
@@ -915,13 +926,18 @@ impl Model {
     /// }").unwrap();
     ///
     /// let mut model = Model::default();
+    /// 
+    /// // Add construction
+    /// let c = Construction::new("Double Clear Glass");    
+    /// model.add_construction(c); // <-- this should not be empty
+    /// 
     /// assert!(model.fenestrations.is_empty());
     /// model.add_fenestration(fen);
     /// assert_eq!(model.fenestrations.len(), 1);
     ///
     /// // adding a new fenestration with the same name warns the user, but still works.
     /// let fen  : Fenestration = json5::from_str("{
-    ///     name: 'Window 1',
+    ///     name: 'Window 2',
     ///     construction: 'Double Clear Glass',
     ///     vertices: [
     ///         0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
@@ -938,6 +954,13 @@ impl Model {
     /// use model::Surface;
     ///
     /// let mut model = Model::default();
+    /// 
+    /// // Add construction
+    /// let c = Construction::new("Double Clear Glass");    
+    /// model.add_construction(c); // <-- this should not be empty
+    /// let c = Construction::new("the construction");    
+    /// model.add_construction(c); // <-- this should not be empty
+    /// 
     /// model.add_space(Space::new("Space 1"));
     /// let s: Surface = json5::from_str(
     ///     "{
@@ -954,7 +977,7 @@ impl Model {
     ///         0, 1, 0  // ...
     ///     ]
     ///  }").unwrap();
-    /// model.add_surface(s);
+    /// model.add_surface(s).unwrap();
     ///
     /// let fen  : Fenestration = json5::from_str("{
     ///     name: 'Window 1',
@@ -983,10 +1006,14 @@ impl Model {
             ))
         }
 
-        if self.get_construction(&add.construction).is_err(){
-            return Err(format!("No construction called '{}' exists in this model.", add.construction))
+        let c = add.category;
+        if c != FenestrationType::Opening && self.get_construction(&add.construction).is_err() {
+            return Err(format!(
+                "No construction called '{}' exists in this model.",
+                add.construction
+            ));
         }
-        
+
         // Check the index of this object
         let fen_index = self.fenestrations.len();
 
@@ -1055,9 +1082,13 @@ impl Model {
     /// field
     ///
     /// ```rust
-    /// use model::{Model, Fenestration};
+    /// use model::{Model, Fenestration, Construction};
     /// use json5;
     ///
+    /// let mut model = Model::default();
+    /// let c = Construction::new("Double Clear Glass"); 
+    /// model.add_construction(c); // <-- this should not be empty
+    /// 
     /// let fen  : Fenestration = json5::from_str("{
     ///     name: 'Window 1',
     ///     construction: 'Double Clear Glass',
@@ -1077,7 +1108,7 @@ impl Model {
     ///     ]
     /// }").unwrap();
     ///
-    /// let mut model = Model::default();
+    /// 
     /// model.add_fenestration(fen);
     /// assert!(model.get_fenestration("Window 1").is_ok());
     /// assert!(model.get_fenestration("Huge window facing west that creates overheating").is_err());
@@ -1743,6 +1774,12 @@ mod testing {
     fn test_add_fenestration() -> Result<(), String> {
         let mut model = Model::default();
 
+        let construction = Construction::new("the construction");
+        model.add_construction(construction);
+
+        let construction = Construction::new("Double Clear Glass");
+        model.add_construction(construction);
+
         model.add_space(Space::new("Space 1"));
         model.add_space(Space::new("Space 2"));
 
@@ -1808,6 +1845,12 @@ mod testing {
     #[test]
     fn test_add_fenestration_cross_boundary() -> Result<(), String> {
         let mut model = Model::default();
+
+        let construction = Construction::new("the construction");
+        model.add_construction(construction);
+        let construction = Construction::new("Double Clear Glass");
+        model.add_construction(construction);
+
         model.add_space(Space::new("Space 1"));
         model.add_space(Space::new("Space 2"));
         let s: Surface = json5::from_str(

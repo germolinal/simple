@@ -1,9 +1,16 @@
+// Of course, this should NOT be empty
+Construction {
+    name: "the construction",
+    materials: []
+}
+
 Space {
     name: "Some Space",
 }
+
 Surface {
     name: "the surface",
-    construction:"the construction", 
+    construction: "the construction", 
     front_boundary: {
         type: "Space",
         space: "Some Space",

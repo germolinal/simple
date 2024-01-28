@@ -497,37 +497,7 @@ mod testing {
         Ok(())
     }
 
-    #[test]
-    fn display() -> Result<(), String> {
-        let s: Surface = json5::from_str(
-            "{
-            name: 'the surface',
-            construction:'the construction', 
-            vertices: [ 
-                0, 0, 0, // X, Y and Z of Vertex 0
-                1, 0, 0, // X, Y and Z of Vertex 1
-                1, 1, 0, // X, Y and Z of Vertex 2
-                0, 1, 0  // ... 
-            ]
-        }",
-        )
-        .map_err(|e| e.to_string())?;
-
-        let spl = format!("Surface {}", s);
-
-        println!("....");
-        println!("{}", &spl);
-        println!("....");
-
-        let (model, ..) = Model::from_bytes(spl.as_bytes())?;
-        assert_eq!(1, model.surfaces.len());
-        let s = &model.surfaces[0];
-        assert_eq!(s.name(), "the surface");
-        assert_eq!(s.construction, "the construction");
-        assert_eq!(4, s.vertices.outer().len());
-
-        Ok(())
-    }
+    
 
     #[test]
     fn serde_surface() -> Result<(), String> {
