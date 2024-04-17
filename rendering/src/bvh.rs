@@ -484,6 +484,9 @@ impl BoundingVolumeTree {
         scene.cx = ordered_triangles.iter().map(|t| t.cx).collect();
         scene.cy = ordered_triangles.iter().map(|t| t.cy).collect();
         scene.cz = ordered_triangles.iter().map(|t| t.cz).collect();
+        
+        scene.edge1 = ordered_mapping.iter().map(|i| scene.edge1[*i]).collect();
+        scene.edge2 = ordered_mapping.iter().map(|i| scene.edge2[*i]).collect();
 
         scene.front_material_indexes = ordered_front_materials;
         scene.back_material_indexes = ordered_back_materials;
