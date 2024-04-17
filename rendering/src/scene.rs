@@ -369,13 +369,13 @@ impl Scene {
             self.cz.push(*cz);
 
             // Edges
-            let edge1_x = bx - ax;
-            let edge1_y = by - ay;
-            let edge1_z = bz - az;
+            let edge1_x = *bx - *ax;
+            let edge1_y = *by - *ay;
+            let edge1_z = *bz - *az;
 
-            let edge2_x = cx - ax;
-            let edge2_y = cy - ay;
-            let edge2_z = cz - az;
+            let edge2_x = *cx - *ax;
+            let edge2_y = *cy - *ay;
+            let edge2_z = *cz - *az;
 
             let thisedge1 = Vector3D::new(edge1_x, edge1_y, edge1_z);
             let thisedge2 = Vector3D::new(edge2_x, edge2_y, edge2_z);
