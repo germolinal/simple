@@ -86,6 +86,11 @@ pub struct Scene {
     /// and diffuse light)
     pub cz: Vec<Float>,
 
+    /// The vector that goes from point A to B in each triangle
+    pub edge1: Vec<Vector3D>,
+    /// The vector that goes from point B to C in each triangle
+    pub edge2: Vec<Vector3D>,
+
     /// The normal of each vertex of each triangle.
     pub normals: Vec<(Vector3D, Vector3D, Vector3D)>,
 
@@ -291,7 +296,7 @@ impl Scene {
         self.materials.len() - 1
     }
 
-    /// Pushes a [`Primitive`] object into the [`Scene`]   
+    /// Pushes a [`Primitive`] object into the [`Scene`]
     ///
     /// If the [`Primitive`] is made of a light-emmiting [`Material`], then
     /// it will be added twice: One to the normal scene, and then another to
@@ -352,6 +357,7 @@ impl Scene {
         // self.triangles.extend_from_slice(&triangles);
         for t in triangles.iter() {
             let [ax, ay, az, bx, by, bz, cx, cy, cz] = t;
+
             self.ax.push(*ax);
             self.ay.push(*ay);
             self.az.push(*az);
@@ -361,6 +367,20 @@ impl Scene {
             self.cx.push(*cx);
             self.cy.push(*cy);
             self.cz.push(*cz);
+
+            // Edges
+            let edge1_x = bx - ax;
+            let edge1_y = by - ay;
+            let edge1_z = bz - az;
+
+            let edge2_x = cx - ax;
+            let edge2_y = cy - ay;
+            let edge2_z = cz - az;
+
+            let thisedge1 = Vector3D::new(edge1_x, edge1_y, edge1_z);
+            let thisedge2 = Vector3D::new(edge2_x, edge2_y, edge2_z);
+            self.edge1.push(thisedge1);
+            self.edge2.push(thisedge2);
         }
 
         self.normals.extend_from_slice(&normals);

@@ -6,11 +6,6 @@ use geometry::{
 
 mod fallback;
 
-#[cfg(all(target_arch = "aarch64", feature = "simd"))]
-mod neon;
-#[cfg(all(target_arch = "aarch64", feature = "simd"))]
-pub(crate) use neon::LEAF_SIZE;
-#[cfg(not(feature = "simd"))]
 pub(crate) const LEAF_SIZE: usize = 24;
 
 /// The smallest definition of a Triangle I could think of
@@ -86,12 +81,6 @@ pub fn intersect_triangle_slice(
     ini: usize,
     fin: usize,
 ) -> Option<(usize, IntersectionInfo)> {
-    #[cfg(all(target_arch = "aarch64", feature = "simd"))]
-    {
-        return unsafe { neon::intersect_triangle_slice(scene, ray, ini, fin) };
-    }
-
-    #[allow(unused)]
     fallback::intersect_triangle_slice(scene, ray, ini, fin)
 }
 
@@ -103,12 +92,6 @@ pub fn simple_triangle_intersect(
     ini: usize,
     fin: usize,
 ) -> Option<(usize, geometry::Point3D)> {
-    #[cfg(all(target_arch = "aarch64", feature = "simd"))]
-    {
-        return unsafe { neon::simple_intersect_triangle_slice(scene, ray, ini, fin) };
-    }
-
-    #[allow(unused)]
     fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
 

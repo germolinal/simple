@@ -19,17 +19,25 @@ pub(crate) fn baricentric_coordinates(
     cx: Float,
     cy: Float,
     cz: Float,
+    // edge1_x: Float,
+    // edge1_y: Float,
+    // edge1_z: Float,
+    // edge2_x: Float,
+    // edge2_y: Float,
+    // edge2_z: Float,
+    edge1: Vector3D,
+    edge2: Vector3D,
 ) -> Option<(Point3D, Float, Float)> {
-    let edge1_x = bx - ax;
-    let edge1_y = by - ay;
-    let edge1_z = bz - az;
+    // let edge1_x = bx - ax;
+    // let edge1_y = by - ay;
+    // let edge1_z = bz - az;
 
-    let edge2_x = cx - ax;
-    let edge2_y = cy - ay;
-    let edge2_z = cz - az;
+    // let edge2_x = cx - ax;
+    // let edge2_y = cy - ay;
+    // let edge2_z = cz - az;
 
-    let edge1 = Vector3D::new(edge1_x, edge1_y, edge1_z);
-    let edge2 = Vector3D::new(edge2_x, edge2_y, edge2_z);
+    // let edge1 = Vector3D::new(edge1_x, edge1_y, edge1_z);
+    // let edge2 = Vector3D::new(edge2_x, edge2_y, edge2_z);
     const TINY: Float = 1e-5;
     let h = ray.direction.cross(edge2);
     let a = edge1 * h;
@@ -80,15 +88,18 @@ pub(crate) fn intersect_triangle_slice(
         .zip(&scene.cx)
         .zip(&scene.cy)
         .zip(&scene.cz)
+        .zip(&scene.edge1)
+        .zip(&scene.edge2)
         .enumerate()
         .skip(ini)
         .take(fin - ini);
-    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
+    // for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
+    for (i, ((((((((((ax, ay), az), bx), by), bz), cx), cy), cz), edge1), edge2)) in it {
         // Calculate baricentric coordinates
 
-        if let Some((point, u, v)) =
-            baricentric_coordinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
-        {
+        if let Some((point, u, v)) = baricentric_coordinates(
+            ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz, *edge1, *edge2,
+        ) {
             // If hit, check the distance.
             let this_t_squared = (point - ray.origin).length_squared();
             // if the distance is less than the prevous one, update the info
@@ -139,13 +150,15 @@ pub(crate) fn simple_intersect_triangle_slice(
         .zip(&scene.cx)
         .zip(&scene.cy)
         .zip(&scene.cz)
+        .zip(&scene.edge1)
+        .zip(&scene.edge2)
         .enumerate()
         .skip(ini)
         .take(fin - ini);
-    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
-        if let Some((point, ..)) =
-            baricentric_coordinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
-        {
+    for (i, ((((((((((ax, ay), az), bx), by), bz), cx), cy), cz), edge1), edge2)) in it {
+        if let Some((point, ..)) = baricentric_coordinates(
+            ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz, *edge1, *edge2,
+        ) {
             // If hit, check the distance.
             let this_t_squared = (point - ray.origin).length_squared();
             // if the distance is less than the prevous one, update the info
