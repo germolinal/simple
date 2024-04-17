@@ -352,7 +352,7 @@ fn cornell() -> Result<(), String> {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes//images/cornell.hdr"))
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/cornell.hdr"))
 }
 
 #[test]
