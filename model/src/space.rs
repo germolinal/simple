@@ -26,9 +26,9 @@ use derive::{ObjectAPI, ObjectIO};
 use serde::{Deserialize, Serialize};
 
 /// The category of a space.
-#[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, ObjectIO, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 pub enum SpacePurpose {
-    /// Bathroom, toilette, shower, etc.    
+    /// Bathroom, toilette, shower, etc.
     Bathroom,
     /// Bedroom
     Bedroom,
