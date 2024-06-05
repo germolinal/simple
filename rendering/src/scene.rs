@@ -266,7 +266,11 @@ impl Scene {
     /// Casts a [`Ray`] and returns an `Option<usize>` indicating the index
     /// of the first primitive hit by the ray, if any. The `ray` passed will now contain
     /// the Interaction
-    pub fn cast_ray(&self, ray: &mut Ray, node_aux: &mut Vec<usize>) -> Option<usize> {
+    pub fn cast_ray<const N: usize>(
+        &self,
+        ray: &mut Ray,
+        node_aux: &mut [usize; N],
+    ) -> Option<usize> {
         if let Some(accelerator) = &self.accelerator {
             accelerator.intersect(self, ray, node_aux)
         } else {
@@ -275,11 +279,11 @@ impl Scene {
     }
 
     /// Checks whether a [`Ray3D`] can travel a certain distance without hitting any surface
-    pub fn unobstructed_distance(
+    pub fn unobstructed_distance<const N: usize>(
         &self,
         ray: &Ray3D,
         distance_squared: Float,
-        node_aux: &mut Vec<usize>,
+        node_aux: &mut [usize; N],
     ) -> bool {
         if let Some(a) = &self.accelerator {
             a.unobstructed_distance(self, ray, distance_squared, node_aux)

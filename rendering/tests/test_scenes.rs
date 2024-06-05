@@ -317,7 +317,7 @@ fn sponza() -> Result<(), String> {
 #[test]
 #[ignore]
 fn cornell() -> Result<(), String> {
-    // RUSTFLAGS='-C target-feature=+neon' cargo test --features parallel --features float --features simd --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
+    // cargo test --features parallel --features float --features simd --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
 
     let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string())?;
 
@@ -326,8 +326,8 @@ fn cornell() -> Result<(), String> {
     // Create camera
     let film = Film {
         // resolution: (320, 240),
-        resolution: (512, 367),
-        // resolution: (1024, 768),
+        // resolution: (512, 367),
+        resolution: (1024, 768),
         // resolution: (512, 512),
     };
 
@@ -344,9 +344,9 @@ fn cornell() -> Result<(), String> {
     let camera = Pinhole::new(view, film);
 
     let integrator = RayTracer {
-        n_ambient_samples: 120,
-        n_shadow_samples: 1,
-        max_depth: 2,
+        n_ambient_samples: 1120,
+        n_shadow_samples: 5,
+        max_depth: 3,
         // count_specular_bounce: 0.1,
         ..RayTracer::default()
     };
