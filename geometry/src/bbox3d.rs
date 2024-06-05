@@ -109,7 +109,7 @@ impl BBox3D {
         Self { min, max }
     }
 
-    /// Creates a new `BBox3D` that contains two existing `BBox3D`    
+    /// Creates a new `BBox3D` that contains two existing `BBox3D`
     pub fn from_union(bbox1: &Self, bbox2: &Self) -> Self {
         let (min_x, min_y, min_z, ..) = get_mins_maxs(
             bbox1.min.x,
@@ -133,7 +133,7 @@ impl BBox3D {
         Self { min, max }
     }
 
-    /// Creates a new `BBox3D` that contains the intersection of two existing `BBox3D`    
+    /// Creates a new `BBox3D` that contains the intersection of two existing `BBox3D`
     pub fn from_intersection(bbox1: &Self, bbox2: &Self) -> Self {
         let (.., min_x, min_y, min_z) = get_mins_maxs(
             bbox1.min.x,
@@ -224,7 +224,7 @@ impl BBox3D {
     /// of the boundaries of the `BBox3D` in the `X` dimension; `t=[0.2, 5.]` in the `Y`
     /// dimension; and `t=[6., 12.]` in the `Z` dimension. The intersection of these
     /// ranges is `t=[6, 3.]`, which does not make any sense and thus the ray never went
-    /// inside of the `BBox3D`.    
+    /// inside of the `BBox3D`.
     ///
     /// # Example
     ///
@@ -237,23 +237,21 @@ impl BBox3D {
     ///     origin: Point3D::new(0.5, 0.5, 0.5),
     ///     direction: Vector3D::new(0., 0., 1.)
     /// };
-    /// let inv_dir = Vector3D::new(1./ray.direction.x, 1./ray.direction.y, 1./ray.direction.z);    
+    /// let inv_dir = Vector3D::new(1./ray.direction.x, 1./ray.direction.y, 1./ray.direction.z);
     /// assert!(bbox.intersect(&ray, &inv_dir));
     /// ```
     pub fn intersect(&self, ray: &Ray3D, inv_dir: &Vector3D) -> bool {
-        /* THIS REQUIRES SIMD */
-        // let mut mins_maxes = std::simd::Simd::from([self.min.x, self.max.x, self.min.y, self.max.y]);
-        // let aux1 = std::simd::Simd::from([ray.origin.x, ray.origin.x, ray.origin.y, ray.origin.y]);
-        // mins_maxes -= aux1;
-        // let aux2 = std::simd::Simd::from([inv_dir.x, inv_dir.x, inv_dir.y, inv_dir.y]);
-        // mins_maxes *= aux2;
-        // let [mut tx_min, mut tx_max, mut ty_min, mut ty_max] = *mins_maxes.as_array();
-        /* END OF THE SIMD DEPENDENCY */
-
-        /* ELSE, NOT SIMD */
-        let mut tx_min = (self.min.x - ray.origin.x) * inv_dir.x;
-        let mut tx_max = (self.max.x - ray.origin.x) * inv_dir.x;
-        /* END OF NON_SIMD */
+        let Vector3D {
+            x: mut tx_min,
+            y: mut ty_min,
+            z: mut tz_min,
+        } = (self.min - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
+        //.scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
+        let Vector3D {
+            x: mut tx_max,
+            y: mut ty_max,
+            z: mut tz_max,
+        } = (self.max - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
 
         if tx_min > tx_max {
             std::mem::swap(&mut tx_min, &mut tx_max);
@@ -262,11 +260,6 @@ impl BBox3D {
             // We are running away from the box in the X component
             return false;
         }
-
-        /* ALSO NON_SIMD */
-        let mut ty_min = (self.min.y - ray.origin.y) * inv_dir.y;
-        let mut ty_max = (self.max.y - ray.origin.y) * inv_dir.y;
-        /* END OF NON-SIMD */
 
         if ty_min > ty_max {
             std::mem::swap(&mut ty_min, &mut ty_max);
@@ -292,8 +285,8 @@ impl BBox3D {
             tx_max = ty_max;
         }
 
-        let mut tz_min = (self.min.z - ray.origin.z) * inv_dir.z;
-        let mut tz_max = (self.max.z - ray.origin.z) * inv_dir.z;
+        // let mut tz_min = (self.min.z - ray.origin.z) * inv_dir.z;
+        // let mut tz_max = (self.max.z - ray.origin.z) * inv_dir.z;
         if tz_min > tz_max {
             std::mem::swap(&mut tz_min, &mut tz_max);
         }

@@ -198,19 +198,19 @@ impl Point3D {
     /// let up = Vector3D::new(0., 0., 1.);
     /// let right = Vector3D::new(1., 0., 0.);
     ///
-    /// let p = Point3D::new(0., 1., 1.);    
+    /// let p = Point3D::new(0., 1., 1.);
     /// let proj = p.project_into_plane(origin, up);
     /// assert!(proj.compare(Point3D::new(0., 1., 0.)));
     ///
-    /// let p = Point3D::new(0., 1., -1.);    
+    /// let p = Point3D::new(0., 1., -1.);
     /// let proj = p.project_into_plane(origin, up);
     /// assert!(proj.compare(Point3D::new(0., 1., 0.)));
     ///
-    /// let p = Point3D::new(2., 1., 1.);    
+    /// let p = Point3D::new(2., 1., 1.);
     /// let proj = p.project_into_plane(origin, right);
     /// assert!(proj.compare(Point3D::new(0., 1., 1.)));
     ///
-    /// let p = Point3D::new(-2., 1., -1.);    
+    /// let p = Point3D::new(-2., 1., -1.);
     /// let proj = p.project_into_plane(origin, right);
     /// assert!(proj.compare(Point3D::new(0., 1., -1.)));
     ///
@@ -218,6 +218,15 @@ impl Point3D {
     pub fn project_into_plane(self, anchor: Self, normal: Vector3D) -> Self {
         let distance = self.distance_to_plane(anchor, normal);
         self - normal * distance
+    }
+
+    /// Scales each component by its corresponding value
+    pub fn scale_components(&self, x: Float, y: Float, z: Float) -> Self {
+        Self {
+            x: self.x * x,
+            y: self.y * y,
+            z: self.z * z,
+        }
     }
 }
 
@@ -650,5 +659,20 @@ mod testing {
             exp,
             pt.distance_to_line(a, b)
         );
+    }
+
+    #[test]
+    fn test_scale() {
+        let x = 1.2;
+        let y = 5.22;
+        let z = 9.123;
+
+        let (a, b, c) = (2., 3., 5.);
+        let v = Point3D::new(x, y, z);
+        let v = v.scale_components(a, b, c);
+
+        assert_eq!(v.x, x * a);
+        assert_eq!(v.y, y * b);
+        assert_eq!(v.z, z * c);
     }
 } // end of Testing module
