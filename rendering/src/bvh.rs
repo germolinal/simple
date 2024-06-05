@@ -564,7 +564,7 @@ impl BoundingVolumeTree {
     pub fn intersect<const N: usize>(
         &self,
         scene: &Scene,
-        ray: &mut Ray3D,
+        ray: &mut Ray,
         nodes_to_visit: &mut [usize; N], //&mut Vec<usize>,
     ) -> Option<usize> {
         const MIN_T: Float = 0.0000001;
