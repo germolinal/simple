@@ -4,7 +4,7 @@ use rendering::{rand::Rng, Ray, Scene, Spectrum};
 // Reference targets: https://github.com/svenstaro/bvh
 pub fn criterion_benchmark(c: &mut Criterion) {
     // Setup
-    let mut aux: Vec<usize> = vec![0; 10];
+    let mut aux = [0; 32];
     let mut ray = black_box(Ray {
         geometry: geometry::Ray3D {
             direction: geometry::Vector3D::new(0., 1., 2.).get_normalized(),

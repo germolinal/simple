@@ -103,7 +103,7 @@ impl SolarSurface {
         })
     }
 
-    /// Receives sun if the boundary is either Space or Outdoor    
+    /// Receives sun if the boundary is either Space or Outdoor
     pub(crate) fn boundary_receives_sun(boundary: &Boundary) -> bool {
         matches!(boundary, Boundary::Space { .. } | Boundary::Outdoor)
     }
@@ -301,7 +301,7 @@ impl SolarSurface {
         let mut sky = 0.0;
 
         let n_samples = 10000;
-        let mut node_aux = Vec::with_capacity(2);
+        let mut node_aux = [0; 2];
         for r in &rays {
             let mut ray = Ray {
                 geometry: *r,

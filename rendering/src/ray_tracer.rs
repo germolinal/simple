@@ -35,14 +35,14 @@ use rayon::prelude::*;
 
 pub struct RayTracerHelper {
     pub rays: Vec<Ray>,
-    pub nodes: Vec<usize>,
+    pub nodes: [usize; 32],
 }
 
 impl std::default::Default for RayTracerHelper {
     fn default() -> Self {
         Self {
             rays: vec![Ray::default(); 15],
-            nodes: Vec::with_capacity(64),
+            nodes: [0; 32], //Vec::with_capacity(64),
         }
     }
 }
@@ -51,7 +51,7 @@ impl RayTracerHelper {
     pub fn with_capacity(n: usize) -> Self {
         Self {
             rays: vec![Ray::default(); n],
-            nodes: Vec::with_capacity(64),
+            nodes: [0; 32], // Vec::with_capacity(64),
         }
     }
 }
@@ -203,7 +203,7 @@ impl RayTracer {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn sample_light_array(
+    fn sample_light_array<const N: usize>(
         &self,
         scene: &Scene,
         material: &Material,
@@ -211,7 +211,7 @@ impl RayTracer {
         rng: &mut RandGen,
         n_shadow_samples: usize,
         lights: &[Object],
-        node_aux: &mut Vec<usize>,
+        node_aux: &mut [usize; N],
     ) -> Spectrum {
         let (mut intersection_pt, normal, e1, e2) = ray.get_triad();
         intersection_pt += normal * 0.001; // prevent self-shading
@@ -274,14 +274,14 @@ impl RayTracer {
 
     /// Calculates the luminance produced by the direct sources in the
     /// scene
-    fn get_local_illumination(
+    fn get_local_illumination<const N: usize>(
         &self,
         scene: &Scene,
         material: &Material, //&impl Material,
         ray: &Ray,
         rng: &mut RandGen,
         n_shadow_samples: usize,
-        node_aux: &mut Vec<usize>,
+        node_aux: &mut [usize; N],
     ) -> Spectrum {
         let close = self.sample_light_array(
             scene,
@@ -421,11 +421,11 @@ impl RayTracer {
 /// Sends a `shadow_ray` towards a `light`. Returns `None` if the ray misses
 /// the light, returns `Some(Black, 0)` if obstructed; returns `Some(Color, pdf)`
 /// if the light is hit.
-pub fn intersect_light(
+pub fn intersect_light<const N: usize>(
     scene: &Scene,
     light: &Object,
     shadow_ray: &Ray3D,
-    node_aux: &mut Vec<usize>,
+    node_aux: &mut [usize; N],
 ) -> Option<(Spectrum, Float)> {
     let light_direction = shadow_ray.direction;
     let origin = shadow_ray.origin;
