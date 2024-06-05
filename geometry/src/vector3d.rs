@@ -35,7 +35,7 @@ use std::fmt;
 pub struct Vector3D {
     /// the X component
     pub x: Float,
-    /// the Y component    
+    /// the Y component
     pub y: Float,
     /// the Z component
     pub z: Float,
@@ -265,6 +265,15 @@ impl Vector3D {
             *self * v > 0.
         }
     }
+
+    /// Scales each component by its corresponding value
+    pub fn scale_components(&self, x: Float, y: Float, z: Float) -> Self {
+        Self {
+            x: self.x * x,
+            y: self.y * y,
+            z: self.z * z,
+        }
+    }
 }
 
 impl std::ops::Mul<Vector3D> for Vector3D {
@@ -490,6 +499,14 @@ mod testing {
         assert_eq!(v.x, x / s);
         assert_eq!(v.y, y / s);
         assert_eq!(v.z, z / s);
+
+        let (a, b, c) = (2., 3., 5.);
+        let v = Vector3D::new(x, y, z);
+        let v = v.scale_components(a, b, c);
+
+        assert_eq!(v.x, x * a);
+        assert_eq!(v.y, y * b);
+        assert_eq!(v.z, z * c);
     }
 
     #[test]
