@@ -60,8 +60,8 @@ fn load_rays(filename: &str) -> Result<Vec<Ray>, String> {
 }
 
 fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Float>), String> {
-    let mut scene =
-        Scene::from_radiance(format!("./tests/ray_tracer/{dir}/box.rad")).expect("Could not read");
+    let mut scene = Scene::from_radiance(format!("./tests/ray_tracer/{}/box.rad", dir))
+        .expect("Could not read");
     scene.build_accelerator();
 
     let n_ambient_samples = if max_depth > 0 { 60120 } else { 5120 };
