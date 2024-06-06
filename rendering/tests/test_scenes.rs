@@ -247,8 +247,8 @@ fn laptop() -> Result<(), String> {
 
     let integrator = RayTracer {
         n_ambient_samples: 220,
-        n_shadow_samples: 10,
-        max_depth: 3,
+        n_shadow_samples: 1,
+        max_depth: 4,
         ..RayTracer::default()
     };
 
