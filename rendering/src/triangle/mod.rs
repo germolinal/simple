@@ -4,7 +4,8 @@ use geometry::{
     BBox3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
 };
 
-mod fallback;
+pub mod fallback;
+pub use fallback::baricentric_coordinates;
 
 pub(crate) const LEAF_SIZE: usize = 24;
 
@@ -66,7 +67,6 @@ macro_rules! cz {
     }};
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn triangle_area(t: &Triangle) -> Float {
     let ab =
         ((bx![t] - ax![t]).powi(2) + (by![t] - ay![t]).powi(2) + (bz![t] - az![t]).powi(2)).sqrt();
@@ -83,7 +83,6 @@ pub fn triangle_area(t: &Triangle) -> Float {
         .sqrt()
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn triangle_solid_angle_pdf(
     t: &Triangle,
     point: Point3D,
@@ -122,6 +121,15 @@ pub fn intersect_triangle_slice(
     fin: usize,
 ) -> Option<(usize, IntersectionInfo)> {
     fallback::intersect_triangle_slice(scene, ray, ini, fin)
+}
+
+pub fn simple_intersect_triangle_slice(
+    scene: &Scene,
+    ray: &geometry::Ray3D,
+    ini: usize,
+    fin: usize,
+) -> Option<(usize, Point3D)> {
+    fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the `Point3D` of

@@ -11,10 +11,7 @@ use super::Triangle;
 /// [`Triangle`]. Returns the the point of intersection, and the `u`
 /// and `v` baricentric coordinates of the intersection point.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn baricentric_coordinates(
-    ray: &Ray3D,
-    t: &Triangle,
-) -> Option<(Point3D, Float, Float)> {
+pub fn baricentric_coordinates(ray: &Ray3D, t: &Triangle) -> Option<(Point3D, Float, Float)> {
     let edge1_x = bx![t] - ax![t];
     let edge1_y = by![t] - ay![t];
     let edge1_z = bz![t] - az![t];
@@ -56,7 +53,6 @@ pub(crate) fn baricentric_coordinates(
     }
 }
 
-#[inline(always)]
 pub(crate) fn intersect_triangle_slice(
     scene: &Scene,
     ray: &geometry::Ray3D,

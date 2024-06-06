@@ -224,7 +224,23 @@ impl Scene {
         node_aux: &mut [usize; N],
     ) -> Option<usize> {
         if let Some(accelerator) = &self.accelerator {
-            accelerator.intersect(self, ray, node_aux)
+            let aux = accelerator.intersect(self, &ray.geometry, node_aux);
+
+            match aux {
+                Some((i, ..)) => {
+                    // update ray
+                    let t = &self.triangles[i];
+                    let (point, u, v) =
+                        crate::triangle::baricentric_coordinates(&ray.geometry, t).unwrap();
+                    ray.interaction.point = point;
+                    ray.interaction.wo = ray.geometry.direction * -1.;
+                    ray.interaction.geometry_shading =
+                        crate::triangle::new_info(t, point, u, v, ray.geometry.direction);
+                    // return
+                    Some(i)
+                }
+                None => None,
+            }
         } else {
             panic!("Trying to cast_ray() in a scene without an acceleration structure")
         }

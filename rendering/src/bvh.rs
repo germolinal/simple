@@ -24,7 +24,6 @@ Physically Based Rendering: From Theory To Implementation, © 2004-2021 Matt Pha
 https://pbr-book.org/3ed-2018/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies
  */
 
-use crate::ray::Ray;
 use crate::scene::Scene;
 use crate::triangle::*;
 use crate::Float;
@@ -549,9 +548,9 @@ impl BoundingVolumeTree {
     pub fn intersect<const N: usize>(
         &self,
         scene: &Scene,
-        ray: &mut Ray,
+        ray: &Ray3D,
         nodes_to_visit: &mut [usize; N], //&mut Vec<usize>,
-    ) -> Option<usize> {
+    ) -> Option<(usize, Point3D)> {
         const MIN_T: Float = 0.0000001;
 
         if self.nodes.is_empty() {
@@ -559,12 +558,12 @@ impl BoundingVolumeTree {
         }
         let mut stack_size = 0;
 
-        let mut prim_index: Option<usize> = None;
+        let mut prim_index: Option<(usize, Point3D)> = None;
         let mut t_squared = Float::MAX;
 
-        let inv_x = 1. / ray.geometry.direction.x;
-        let inv_y = 1. / ray.geometry.direction.y;
-        let inv_z = 1. / ray.geometry.direction.z;
+        let inv_x = 1. / ray.direction.x;
+        let inv_y = 1. / ray.direction.y;
+        let inv_z = 1. / ray.direction.z;
 
         let inv_dir = Vector3D::new(inv_x, inv_y, inv_z);
         let dir_is_neg = (inv_dir.x < 0., inv_dir.y < 0., inv_dir.z < 0.);
@@ -573,7 +572,7 @@ impl BoundingVolumeTree {
 
         loop {
             let node = &self.nodes[current_node];
-            if node.bounds.intersect(&ray.geometry, &inv_dir) {
+            if node.bounds.intersect(ray, &inv_dir) {
                 if node.is_leaf() {
                     let offset = node.next;
 
@@ -581,18 +580,14 @@ impl BoundingVolumeTree {
                     let ini = offset as usize;
                     let fin = ini + node.n_prims as usize;
 
-                    if let Some((i, intersect_info)) =
-                        intersect_triangle_slice(scene, &ray.geometry, ini, fin)
-                    {
+                    if let Some((i, p)) = simple_intersect_triangle_slice(scene, ray, ini, fin) {
                         // If hit, check the distance.
-                        let this_t_squared =
-                            (intersect_info.p - ray.geometry.origin).length_squared();
+                        let this_t_squared = (p - ray.origin).length_squared();
                         // if the distance is less than the prevous one, update the info
                         if this_t_squared > MIN_T && this_t_squared < t_squared {
                             // If the distance is less than what we had, update return data
                             t_squared = this_t_squared;
-                            prim_index = Some(i);
-                            ray.interaction.geometry_shading = intersect_info;
+                            prim_index = Some((i, p));
                         }
                     }
 
@@ -626,11 +621,11 @@ impl BoundingVolumeTree {
         } // End loop
 
         // return
-        if let Some(_index) = prim_index {
-            let t = t_squared.sqrt();
-            ray.interaction.point = ray.geometry.project(t);
-            ray.interaction.wo = ray.geometry.direction * -1.;
-        }
+        // if let Some(_index, pt) = prim_index {
+        //     let t = t_squared.sqrt();
+        //     // ray.interaction.point = ray.geometry.project(t);
+        //     // ray.interaction.wo = ray.geometry.direction * -1.;
+        // }
         prim_index
     }
 
@@ -722,6 +717,7 @@ mod tests {
     use crate::colour::Spectrum;
     use crate::material::Material;
     use crate::material::Plastic;
+    use crate::Ray;
     use geometry::{Point3D, Ray3D, Sphere3D};
 
     use crate::primitive::Primitive;
@@ -768,10 +764,10 @@ mod tests {
     #[test]
     fn test_empty() {
         let mut scene = Scene::new();
-        let mut ray = Ray::default();
+        let ray = Ray::default();
         let (bvh, _) = BoundingVolumeTree::new(&mut scene);
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &mut ray, &mut aux).is_none());
+        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_none());
     }
 
     /// A simple scene with two 0.5-r-spheres; one at x = -1 and the other
@@ -860,7 +856,7 @@ mod tests {
             assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
 
-        let mut ray = Ray {
+        let ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(-1., -10., 0.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -868,7 +864,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &mut ray, &mut aux).is_some());
+        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
 
         assert!(
             (ray.interaction.point - Point3D::new(-1., -0.5, 0.)).length() < 1e-5,
@@ -876,7 +872,7 @@ mod tests {
             (ray.interaction.point - Point3D::new(-1., -0.5, 0.)).length()
         );
 
-        let mut ray = Ray {
+        let ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(1., -10., 0.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -884,7 +880,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &mut ray, &mut aux).is_some());
+        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
 
         assert!((ray.interaction.point - Point3D::new(1., -0.5, 0.)).length() < 1e-5);
     }
@@ -894,7 +890,7 @@ mod tests {
         let mut scene = get_vertical_scene();
         let (bvh, ..) = BoundingVolumeTree::new(&mut scene);
 
-        let mut ray = Ray {
+        let ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(0., -10., -1.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -902,7 +898,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &mut ray, &mut aux).is_some());
+        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
 
         assert!(
             (ray.interaction.point - Point3D::new(0., -0.5, -1.)).length() < 1e-9,
@@ -910,7 +906,7 @@ mod tests {
             ray.interaction.point
         );
 
-        let mut ray = Ray {
+        let ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(0., -10., 1.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -918,7 +914,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &mut ray, &mut aux).is_some());
+        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
 
         assert!((ray.interaction.point - Point3D::new(0., -0.5, 1.)).length() < 1e-9);
     }
