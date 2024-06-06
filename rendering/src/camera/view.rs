@@ -21,6 +21,7 @@ SOFTWARE.
 use crate::Float;
 use geometry::{Point3D, Vector3D};
 
+#[derive(Debug, Clone)]
 pub struct View {
     pub view_point: Point3D,
     pub view_direction: Vector3D,

@@ -24,6 +24,7 @@ use crate::ray::Ray;
 use crate::Float;
 use geometry::{Ray3D, Vector3D};
 
+#[derive(Debug, Clone)]
 pub struct Pinhole {
     view: View,
     film: Film,
