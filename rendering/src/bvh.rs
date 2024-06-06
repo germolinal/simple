@@ -851,12 +851,13 @@ mod tests {
     fn test_intersect_horizontal() {
         let original_scene = get_horizontal_scene();
         let mut scene = get_horizontal_scene();
-        let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
+        let mapping = scene.build_accelerator();
+        // let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
         for (i, original_i) in mapping.into_iter().enumerate() {
             assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
 
-        let ray = Ray {
+        let mut ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(-1., -10., 0.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -864,7 +865,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
+        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
 
         assert!(
             (ray.interaction.point - Point3D::new(-1., -0.5, 0.)).length() < 1e-5,
@@ -872,7 +873,7 @@ mod tests {
             (ray.interaction.point - Point3D::new(-1., -0.5, 0.)).length()
         );
 
-        let ray = Ray {
+        let mut ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(1., -10., 0.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -880,7 +881,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
+        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
 
         assert!((ray.interaction.point - Point3D::new(1., -0.5, 0.)).length() < 1e-5);
     }
@@ -888,9 +889,10 @@ mod tests {
     #[test]
     fn test_intersect_vertical() {
         let mut scene = get_vertical_scene();
-        let (bvh, ..) = BoundingVolumeTree::new(&mut scene);
+        scene.build_accelerator();
+        // let (bvh, ..) = BoundingVolumeTree::new(&mut scene);
 
-        let ray = Ray {
+        let mut ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(0., -10., -1.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -898,7 +900,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
+        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
 
         assert!(
             (ray.interaction.point - Point3D::new(0., -0.5, -1.)).length() < 1e-9,
@@ -906,7 +908,7 @@ mod tests {
             ray.interaction.point
         );
 
-        let ray = Ray {
+        let mut ray = Ray {
             geometry: Ray3D {
                 origin: Point3D::new(0., -10., 1.),
                 direction: Vector3D::new(0., 1., 0.),
@@ -914,7 +916,7 @@ mod tests {
             ..Ray::default()
         };
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_some());
+        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
 
         assert!((ray.interaction.point - Point3D::new(0., -0.5, 1.)).length() < 1e-9);
     }

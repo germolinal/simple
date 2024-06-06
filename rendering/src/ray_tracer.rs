@@ -17,9 +17,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use std::io::Write;
-use std::sync::atomic::AtomicUsize;
-use std::time::Instant;
 
 use crate::camera::{Camera, CameraSample};
 use crate::colour::Spectrum;
@@ -367,14 +364,7 @@ impl RayTracer {
         #[cfg(feature = "parallel")]
         let i = i.into_par_iter();
 
-        let now = Instant::now();
-        // progress indicators
-        let last_progress = AtomicUsize::new(0);
-        let counter = AtomicUsize::new(0);
-
-        let bar_length = 50;
-        print!("\r[{}] {:.2}%", " ".repeat(bar_length), 0);
-        std::io::stdout().flush().unwrap();
+        let progress = utils::ProgressBar::new(total_pixels);
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
@@ -390,29 +380,13 @@ impl RayTracer {
                 let (v, _) = self.trace_ray(&mut rng, scene, &mut ray, &mut aux);
                 *pixel = v;
 
-                // report
-                let c = counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                let progress = (100. * (c as Float) / total_pixels as Float).round() as usize;
-
-                let lp = last_progress.load(std::sync::atomic::Ordering::Relaxed);
-                let delta = progress - lp;
-                if delta >= 2 {
-                    // Draw progress bar
-                    last_progress.fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
-                    let filled_length =
-                        (bar_length as f64 * (progress as f64 / 100.0)).round() as usize;
-                    let filled = "=".repeat(filled_length);
-                    let empty = " ".repeat(bar_length - filled_length);
-                    print!("\r[{}{}] {:.2}%", filled, empty, progress);
-                    std::io::stdout().flush().unwrap();
-                }
-                //
-
+                progress.tic();
                 pindex += 1;
             }
         });
 
-        println!("\nScene took {} seconds to render", now.elapsed().as_secs());
+        // println!("\nScene took {} seconds to render", now.elapsed().as_secs());
+        progress.done();
 
         // return
         ImageBuffer::from_pixels(width, height, pixels)

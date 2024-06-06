@@ -1,11 +1,8 @@
 use crate::{Float, Scene};
 use geometry::{intersection::IntersectionInfo, Point3D, Ray3D, Vector3D};
 
+use super::Triangle;
 use crate::{ax, ay, az, bx, by, bz, cx, cy, cz};
-
-use super::Triangle;
-#[cfg(doc)]
-use super::Triangle;
 
 /// Tests the intersection between a `Ray3D` and a
 /// [`Triangle`]. Returns the the point of intersection, and the `u`

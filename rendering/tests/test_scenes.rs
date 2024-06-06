@@ -344,9 +344,9 @@ fn cornell() -> Result<(), String> {
     let camera = Pinhole::new(view, film);
 
     let integrator = RayTracer {
-        n_ambient_samples: 120,
+        n_ambient_samples: 1360,
         n_shadow_samples: 1,
-        max_depth: 2,
+        max_depth: 3,
         ..RayTracer::default()
     };
 
