@@ -17,6 +17,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+use std::io::Write;
+use std::sync::atomic::AtomicUsize;
 use std::time::Instant;
 
 use crate::camera::{Camera, CameraSample};
@@ -56,13 +58,13 @@ impl RayTracerHelper {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct RayTracer {
     pub max_depth: usize,
     pub n_shadow_samples: usize,
     pub n_ambient_samples: usize,
 
     pub limit_weight: Float,
-    pub count_specular_bounce: Float,
 }
 
 impl Default for RayTracer {
@@ -73,7 +75,6 @@ impl Default for RayTracer {
             n_ambient_samples: 70,
 
             limit_weight: 1e-3,
-            count_specular_bounce: 0.3,
         }
     }
 }
@@ -137,10 +138,7 @@ impl RayTracer {
 
                     ray.value *= bsdf_value.radiance();
 
-                    let q: Float = rng.gen();
-                    if q < self.count_specular_bounce {
-                        new_ray.depth += 1;
-                    }
+                    new_ray.depth += 1;
 
                     let (li, _light_pdf) = self.trace_ray(rng, scene, &mut new_ray, aux);
                     specular_li += li * *bsdf_value
@@ -371,8 +369,10 @@ impl RayTracer {
 
         let now = Instant::now();
         // progress indicators
-        let last_progress = std::sync::Arc::new(std::sync::Mutex::new(0.0));
-        let counter = std::sync::Arc::new(std::sync::Mutex::new(0));
+        let last_progress = AtomicUsize::new(0);
+        let counter = AtomicUsize::new(0);
+
+        let bar_length = 50;
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
@@ -389,21 +389,29 @@ impl RayTracer {
                 *pixel = v;
 
                 // report
-                let mut c = counter.lock().unwrap();
-                *c += 1;
+                let c = counter.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let progress = (100. * (c as Float) / total_pixels as Float).round() as usize;
 
-                let mut lp = last_progress.lock().unwrap();
-                let progress = (100. * *c as Float / total_pixels as Float).round() as Float;
-                if (*lp - progress.floor()) < 0.1 && (progress - *lp).abs() > 1. {
-                    *lp = progress;
-                    println!("... Done {:.0}%", progress);
+                let lp = last_progress.load(std::sync::atomic::Ordering::Relaxed);
+                let delta = progress - lp;
+                if delta == 2 {
+                    // Draw progress bar
+                    last_progress.fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
+                    let filled_length =
+                        (bar_length as f64 * (progress as f64 / 100.0)).round() as usize;
+                    let filled = "=".repeat(filled_length);
+                    let empty = " ".repeat(bar_length - filled_length);
+                    print!("\r[{}{}] {:.2}%", filled, empty, progress);
+
+                    std::io::stdout().flush().unwrap();
                 }
+                //
 
                 pindex += 1;
             }
         });
 
-        println!("Scene took {} seconds to render", now.elapsed().as_secs());
+        println!("\nScene took {} seconds to render", now.elapsed().as_secs());
 
         // return
         ImageBuffer::from_pixels(width, height, pixels)

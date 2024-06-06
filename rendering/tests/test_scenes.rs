@@ -347,7 +347,6 @@ fn cornell() -> Result<(), String> {
         n_ambient_samples: 120,
         n_shadow_samples: 1,
         max_depth: 2,
-        // count_specular_bounce: 0.1,
         ..RayTracer::default()
     };
 
