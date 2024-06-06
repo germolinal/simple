@@ -106,15 +106,7 @@ impl RayTracer {
             // are visible when viewed directly from the camera
             if material.emits_light() {
                 let light_pdf = crate::triangle::triangle_solid_angle_pdf(
-                    scene.ax[triangle_index],
-                    scene.ay[triangle_index],
-                    scene.az[triangle_index],
-                    scene.bx[triangle_index],
-                    scene.by[triangle_index],
-                    scene.bz[triangle_index],
-                    scene.cx[triangle_index],
-                    scene.cy[triangle_index],
-                    scene.cz[triangle_index],
+                    &scene.triangles[triangle_index],
                     intersection_pt,
                     ray.interaction.geometry_shading.normal,
                     &ray.geometry,

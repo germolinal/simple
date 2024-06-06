@@ -25,6 +25,7 @@ use crate::from_simple_model::SimpleModelReader;
 use crate::material::{Light, Material};
 use crate::primitive::Primitive;
 use crate::ray::Ray;
+use crate::triangle::Triangle;
 use crate::Float;
 use calendar::Date;
 use geometry::{Ray3D, Vector3D};
@@ -40,56 +41,7 @@ pub struct Object {
 
 #[derive(Default)]
 pub struct Scene {
-    /// The x component of the first vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub ax: Vec<Float>,
-    /// The x component of the first vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub ay: Vec<Float>,
-    /// The x component of the first vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub az: Vec<Float>,
-    /// The x component of the second vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub bx: Vec<Float>,
-    /// The y component of the second vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub by: Vec<Float>,
-    /// The z component of the second vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub bz: Vec<Float>,
-    /// The x component of the third vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub cx: Vec<Float>,
-    /// The y component of the third vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub cy: Vec<Float>,
-    /// The z component of the third vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub cz: Vec<Float>,
-
-    /// The vector that goes from point A to B in each triangle
-    pub edge1: Vec<Vector3D>,
-    /// The vector that goes from point B to C in each triangle
-    pub edge2: Vec<Vector3D>,
+    pub triangles: Vec<Triangle>,
 
     /// The normal of each vertex of each triangle.
     pub normals: Vec<(Vector3D, Vector3D, Vector3D)>,
@@ -358,34 +310,7 @@ impl Scene {
         let front = vec![front_material_index; additional];
         let back = vec![back_material_index; additional];
 
-        // self.triangles.extend_from_slice(&triangles);
-        for t in triangles.iter() {
-            let [ax, ay, az, bx, by, bz, cx, cy, cz] = t;
-
-            self.ax.push(*ax);
-            self.ay.push(*ay);
-            self.az.push(*az);
-            self.bx.push(*bx);
-            self.by.push(*by);
-            self.bz.push(*bz);
-            self.cx.push(*cx);
-            self.cy.push(*cy);
-            self.cz.push(*cz);
-
-            // Edges
-            let edge1_x = *bx - *ax;
-            let edge1_y = *by - *ay;
-            let edge1_z = *bz - *az;
-
-            let edge2_x = *cx - *ax;
-            let edge2_y = *cy - *ay;
-            let edge2_z = *cz - *az;
-
-            let thisedge1 = Vector3D::new(edge1_x, edge1_y, edge1_z);
-            let thisedge2 = Vector3D::new(edge2_x, edge2_y, edge2_z);
-            self.edge1.push(thisedge1);
-            self.edge2.push(thisedge2);
-        }
+        self.triangles.extend_from_slice(&triangles);
 
         self.normals.extend_from_slice(&normals);
         self.front_material_indexes.extend_from_slice(&front);
