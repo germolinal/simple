@@ -31,6 +31,8 @@ use crate::Float;
 use geometry::{BBox3D, BBoxAxis, Point3D, Ray3D, Vector3D};
 use std::cmp::Ordering;
 
+use crate::{ax, ay, az, bx, by, bz, cx, cy, cz};
+
 #[derive(Copy, Clone)]
 struct BucketInfo {
     count: usize,
@@ -69,19 +71,7 @@ struct ObjectInfo {
 
 impl ObjectInfo {
     fn new(scene: &Scene, index: usize) -> Self {
-        let tri = [
-            scene.ax[index],
-            scene.ay[index],
-            scene.az[index],
-            scene.bx[index],
-            scene.by[index],
-            scene.bz[index],
-            scene.cx[index],
-            scene.cy[index],
-            scene.cz[index],
-        ];
-
-        let bounds = world_bounds(&tri);
+        let bounds = world_bounds(&scene.triangles[index]);
         let centroid = (bounds.max + bounds.min) * 0.5;
         Self {
             index,
@@ -116,17 +106,24 @@ struct DestructuredTriangle {
 
 impl DestructuredTriangle {
     fn new(scene: &Scene, index: usize) -> Self {
+        let t = scene.triangles[index];
         Self {
-            ax: scene.ax[index],
-            ay: scene.ay[index],
-            az: scene.az[index],
-            bx: scene.bx[index],
-            by: scene.by[index],
-            bz: scene.bz[index],
-            cx: scene.cx[index],
-            cy: scene.cy[index],
-            cz: scene.cz[index],
+            ax: ax![t],
+            ay: ay![t],
+            az: az![t],
+            bx: bx![t],
+            by: by![t],
+            bz: bz![t],
+            cx: cx![t],
+            cy: cy![t],
+            cz: cz![t],
         }
+    }
+
+    fn into_array(&self) -> Triangle {
+        [
+            self.ax, self.ay, self.az, self.bx, self.by, self.bz, self.cx, self.cy, self.cz,
+        ]
     }
 }
 
@@ -434,7 +431,7 @@ pub struct BoundingVolumeTree {
 
 impl BoundingVolumeTree {
     pub fn new(scene: &mut Scene) -> (Self, Vec<usize>) {
-        let n_objects = scene.ax.len(); // should be OK.
+        let n_objects = scene.triangles.len();
         if n_objects == 0 {
             return (Self::default(), Vec::with_capacity(0));
         }
@@ -475,19 +472,7 @@ impl BoundingVolumeTree {
         );
 
         // scene.triangles = ordered_triangles; // Update the Scene with the ordered primitive.
-        scene.ax = ordered_triangles.iter().map(|t| t.ax).collect();
-        scene.ay = ordered_triangles.iter().map(|t| t.ay).collect();
-        scene.az = ordered_triangles.iter().map(|t| t.az).collect();
-        scene.bx = ordered_triangles.iter().map(|t| t.bx).collect();
-        scene.by = ordered_triangles.iter().map(|t| t.by).collect();
-        scene.bz = ordered_triangles.iter().map(|t| t.bz).collect();
-        scene.cx = ordered_triangles.iter().map(|t| t.cx).collect();
-        scene.cy = ordered_triangles.iter().map(|t| t.cy).collect();
-        scene.cz = ordered_triangles.iter().map(|t| t.cz).collect();
-
-        scene.edge1 = ordered_mapping.iter().map(|i| scene.edge1[*i]).collect();
-        scene.edge2 = ordered_mapping.iter().map(|i| scene.edge2[*i]).collect();
-
+        scene.triangles = ordered_triangles.iter().map(|t| t.into_array()).collect();
         scene.front_material_indexes = ordered_front_materials;
         scene.back_material_indexes = ordered_back_materials;
         scene.normals = ordered_normals;
@@ -843,17 +828,7 @@ mod tests {
         let mut scene = get_horizontal_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
         for (i, original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(&scene.ax[i], &original_scene.ax[original_i]);
-            assert_eq!(&scene.ay[i], &original_scene.ay[original_i]);
-            assert_eq!(&scene.az[i], &original_scene.az[original_i]);
-
-            assert_eq!(&scene.bx[i], &original_scene.bx[original_i]);
-            assert_eq!(&scene.by[i], &original_scene.by[original_i]);
-            assert_eq!(&scene.bz[i], &original_scene.bz[original_i]);
-
-            assert_eq!(&scene.cx[i], &original_scene.cx[original_i]);
-            assert_eq!(&scene.cy[i], &original_scene.cy[original_i]);
-            assert_eq!(&scene.cz[i], &original_scene.cz[original_i]);
+            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
 
         let node = &bvh.nodes[0];
@@ -867,17 +842,7 @@ mod tests {
         let mut scene = get_vertical_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
         for (i, original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(&scene.ax[i], &original_scene.ax[original_i]);
-            assert_eq!(&scene.ay[i], &original_scene.ay[original_i]);
-            assert_eq!(&scene.az[i], &original_scene.az[original_i]);
-
-            assert_eq!(&scene.bx[i], &original_scene.bx[original_i]);
-            assert_eq!(&scene.by[i], &original_scene.by[original_i]);
-            assert_eq!(&scene.bz[i], &original_scene.bz[original_i]);
-
-            assert_eq!(&scene.cx[i], &original_scene.cx[original_i]);
-            assert_eq!(&scene.cy[i], &original_scene.cy[original_i]);
-            assert_eq!(&scene.cz[i], &original_scene.cz[original_i]);
+            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
         // assert_eq!(bvh.nodes.len(), 3);
 
@@ -892,17 +857,7 @@ mod tests {
         let mut scene = get_horizontal_scene();
         let (bvh, mapping) = BoundingVolumeTree::new(&mut scene);
         for (i, original_i) in mapping.into_iter().enumerate() {
-            assert_eq!(&scene.ax[i], &original_scene.ax[original_i]);
-            assert_eq!(&scene.ay[i], &original_scene.ay[original_i]);
-            assert_eq!(&scene.az[i], &original_scene.az[original_i]);
-
-            assert_eq!(&scene.bx[i], &original_scene.bx[original_i]);
-            assert_eq!(&scene.by[i], &original_scene.by[original_i]);
-            assert_eq!(&scene.bz[i], &original_scene.bz[original_i]);
-
-            assert_eq!(&scene.cx[i], &original_scene.cx[original_i]);
-            assert_eq!(&scene.cy[i], &original_scene.cy[original_i]);
-            assert_eq!(&scene.cz[i], &original_scene.cz[original_i]);
+            assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
 
         let mut ray = Ray {

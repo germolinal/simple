@@ -465,7 +465,7 @@ impl RadianceReader {
         Ok(())
     }
 
-    /// Consumes a sphere    
+    /// Consumes a sphere
     fn consume_sphere(
         &mut self,
         source: &[u8],
@@ -909,27 +909,10 @@ mod tests {
         scanner.consume_object(src, &mut scene)?; // consume sphere
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
-        assert!(!scene.ax.is_empty());
-        assert!(!scene.ay.is_empty());
-        assert!(!scene.az.is_empty());
+        assert!(!scene.triangles.is_empty());
 
-        assert!(!scene.bx.is_empty());
-        assert!(!scene.by.is_empty());
-        assert!(!scene.bz.is_empty());
+        assert_eq!(scene.normals.len(), scene.triangles.len());
 
-        assert!(!scene.cx.is_empty());
-        assert!(!scene.cy.is_empty());
-        assert!(!scene.cz.is_empty());
-
-        assert_eq!(scene.normals.len(), scene.ax.len());
-        assert_eq!(scene.normals.len(), scene.ay.len());
-        assert_eq!(scene.normals.len(), scene.az.len());
-        assert_eq!(scene.normals.len(), scene.bx.len());
-        assert_eq!(scene.normals.len(), scene.by.len());
-        assert_eq!(scene.normals.len(), scene.bz.len());
-        assert_eq!(scene.normals.len(), scene.cx.len());
-        assert_eq!(scene.normals.len(), scene.cy.len());
-        assert_eq!(scene.normals.len(), scene.cz.len());
         Ok(())
     }
 
@@ -938,7 +921,7 @@ mod tests {
         let src = b"void light red
         0
         0
-        3 0.3 0.05 0.076 
+        3 0.3 0.05 0.076
 
         red source up
         0
@@ -953,17 +936,8 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
 
-        assert!(scene.ax.is_empty());
-        assert!(scene.ay.is_empty());
-        assert!(scene.az.is_empty());
+        assert!(scene.triangles.is_empty());
 
-        assert!(scene.bx.is_empty());
-        assert!(scene.by.is_empty());
-        assert!(scene.bz.is_empty());
-
-        assert!(scene.cx.is_empty());
-        assert!(scene.cy.is_empty());
-        assert!(scene.cz.is_empty());
         assert_eq!(1, scene.distant_lights.len());
 
         assert!(scene.normals.is_empty());
@@ -986,15 +960,15 @@ mod tests {
         let src = b"void glass red
         0
         0
-        3 0.3 0.05 0.076 
+        3 0.3 0.05 0.076
 
         red polygon pol
         0
         0
         9
-            21. 12. 53. 
-            -4. 125. 66. 
-            75. 8.1 9.2 
+            21. 12. 53.
+            -4. 125. 66.
+            75. 8.1 9.2
         ";
 
         let mut scene = Scene::new();
@@ -1004,34 +978,24 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
 
-        assert_eq!(scene.ax.len(), 1);
-        assert_eq!(scene.ay.len(), 1);
-        assert_eq!(scene.az.len(), 1);
-
-        assert_eq!(scene.bx.len(), 1);
-        assert_eq!(scene.by.len(), 1);
-        assert_eq!(scene.bz.len(), 1);
-
-        assert_eq!(scene.cx.len(), 1);
-        assert_eq!(scene.cy.len(), 1);
-        assert_eq!(scene.cz.len(), 1);
+        assert_eq!(scene.triangles.len(), 1);
 
         assert!(scene.distant_lights.is_empty());
         assert_eq!(scene.normals.len(), 1);
 
         let [ax, ay, az, bx, by, bz, cx, cy, cz] = [21., 12., 53., -4., 125., 66., 75., 8.1, 9.2];
 
-        assert_close!(ax, scene.ax[0]);
-        assert_close!(ay, scene.ay[0]);
-        assert_close!(az, scene.az[0]);
+        assert_close!(ax, scene.triangles[0][0]);
+        assert_close!(ay, scene.triangles[0][1]);
+        assert_close!(az, scene.triangles[0][2]);
 
-        assert_close!(bx, scene.bx[0]);
-        assert_close!(by, scene.by[0]);
-        assert_close!(bz, scene.bz[0]);
+        assert_close!(bx, scene.triangles[0][3]);
+        assert_close!(by, scene.triangles[0][4]);
+        assert_close!(bz, scene.triangles[0][5]);
 
-        assert_close!(cx, scene.cx[0]);
-        assert_close!(cy, scene.cy[0]);
-        assert_close!(cz, scene.cz[0]);
+        assert_close!(cx, scene.triangles[0][6]);
+        assert_close!(cy, scene.triangles[0][7]);
+        assert_close!(cz, scene.triangles[0][8]);
 
         Ok(())
     }

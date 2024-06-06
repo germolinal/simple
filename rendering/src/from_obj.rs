@@ -224,7 +224,7 @@ v  12.927240 3.149897 2.049175
 
 g arcs_03
 usemtl sp_00_luk_mali
-f 1 2 3 4 
+f 1 2 3 4
 f 1 2 3
 
 
@@ -239,6 +239,6 @@ f 1 2 3
         // let mut scene = Scene::from_obj("./tests/scenes/sponza.obj".to_string());
         scene.add_from_obj_source(src, gray, gray);
 
-        assert_eq!(3, scene.ax.len());
+        assert_eq!(3, scene.triangles.len());
     }
 }

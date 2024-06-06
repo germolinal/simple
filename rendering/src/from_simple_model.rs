@@ -272,17 +272,7 @@ mod tests {
         let mut reader = SimpleModelReader::default();
         let (mut scene, map) = reader.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         let light_index = scene.push_material(Material::Light(Light(Spectrum::gray(10000.))));
         scene.push_object(
@@ -361,17 +351,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 1);
         let (element_type, index) = map[0];
@@ -400,17 +380,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 3);
 
@@ -447,17 +417,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 5);
 
