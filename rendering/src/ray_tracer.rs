@@ -373,6 +373,8 @@ impl RayTracer {
         let counter = AtomicUsize::new(0);
 
         let bar_length = 50;
+        print!("\r[{}] {:.2}%", " ".repeat(bar_length), 0);
+        std::io::stdout().flush().unwrap();
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
@@ -394,7 +396,7 @@ impl RayTracer {
 
                 let lp = last_progress.load(std::sync::atomic::Ordering::Relaxed);
                 let delta = progress - lp;
-                if delta == 2 {
+                if delta >= 2 {
                     // Draw progress bar
                     last_progress.fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
                     let filled_length =
@@ -402,7 +404,6 @@ impl RayTracer {
                     let filled = "=".repeat(filled_length);
                     let empty = " ".repeat(bar_length - filled_length);
                     print!("\r[{}{}] {:.2}%", filled, empty, progress);
-
                     std::io::stdout().flush().unwrap();
                 }
                 //
