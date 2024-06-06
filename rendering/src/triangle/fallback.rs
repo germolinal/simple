@@ -68,7 +68,7 @@ pub(crate) fn intersect_triangle_slice(
     let mut ret = None;
 
     let it = scene.triangles.iter().enumerate().skip(ini).take(fin - ini);
-    // for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
+
     for (i, triangle) in it {
         // Calculate baricentric coordinates
 
