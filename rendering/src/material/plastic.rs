@@ -62,8 +62,11 @@ impl Plastic {
             rng,
         );
 
-        // let bsdf = Spectrum::gray(direct) + self.colour * diffuse;
-        let bsdf = self.colour * direct + self.colour * diffuse;
+        // (Spectrum::gray(diffuse) * self.colour, weight)
+        let diffuse_component = self.colour * diffuse;
+        let specular_component = Spectrum::gray(direct);
+        let bsdf =
+            diffuse_component * (1.0 - self.specularity) + specular_component * self.specularity;
 
         (bsdf, weight)
     }

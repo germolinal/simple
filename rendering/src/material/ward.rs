@@ -23,7 +23,9 @@ use crate::ray::Ray;
 use crate::{Float, PI};
 use geometry::{Point3D, Vector3D};
 
-use crate::samplers::{local_to_world, sample_cosine_weighted_horizontal_hemisphere};
+use crate::samplers::{
+    local_to_world, sample_cosine_weighted_horizontal_hemisphere,
+};
 
 const LOW_ROUGHNESS: Float = 1e-3;
 
@@ -72,6 +74,7 @@ pub fn sample_ward_anisotropic(
                 1.
             } else {
                 (-xi2.ln() / ((cosp / alpha).powi(2) + (sinp / beta).powi(2))).sqrt()
+                // (alpha.powi(2) * -xi2.ln()).sqrt()
             };
 
             let h = normal + e1 * cosp * d + e2 * sinp * d;
@@ -95,9 +98,11 @@ pub fn sample_ward_anisotropic(
                     ray,
                     v * -1.,
                 );
-                if spec.is_nan() {
-                    panic!("incorrect (i.e., NaN) bsdf when calculating Ward aniso.");
-                }
+                assert!(
+                    !spec.is_nan(),
+                    "incorrect (i.e., NaN) bsdf when calculating Ward aniso."
+                );
+
                 ray.geometry.direction = v; // update ray
                 let weight = 2. / (1. + v_n / l_n); // Eq. 15
                 return (spec, diffuse, weight);
@@ -107,11 +112,11 @@ pub fn sample_ward_anisotropic(
     } else {
         // Probability
 
-        // let local_dir = uniform_sample_hemisphere(rng, e1, e2, normal);
-        // let (x, y, z) = (local_dir.x, local_dir.y, local_dir.z);
-        let local_dir = sample_cosine_weighted_horizontal_hemisphere(rng);
         let diffuse = (1. - specularity) / PI;
 
+        // let new_dir = uniform_sample_hemisphere(rng, e1, e2, normal);
+
+        let local_dir = sample_cosine_weighted_horizontal_hemisphere(rng);
         let (x, y, z) = local_to_world(
             e1,
             e2,
@@ -122,8 +127,9 @@ pub fn sample_ward_anisotropic(
             local_dir.z,
         );
         let new_dir = Vector3D::new(x, y, z).get_normalized();
-        let pdf = normal * new_dir / PI;
-        // let pdf = 1./(2.*PI);
+
+        let pdf = normal * new_dir / PI; // cos(theta)/PI
+                                         // let pdf = 0.5 / PI;
         ray.geometry.direction = new_dir;
         (0.0, diffuse, pdf)
     }
@@ -169,4 +175,50 @@ pub fn evaluate_ward_anisotropic(
     };
 
     (spec, (1. - specularity) / PI)
+}
+
+#[cfg(test)]
+mod tests {
+    use geometry::{Point3D, Ray3D, Vector3D};
+
+    use crate::{material::get_rng, Ray, PI};
+
+    use super::sample_ward_anisotropic;
+
+    // use super::*;
+    #[test]
+    fn test_diffuse_sampling() {
+        let normal = Vector3D::new(0., 0., 1.);
+        let e1 = Vector3D::new(1., 0., 0.);
+        let e2 = Vector3D::new(0., 1., 0.);
+        let intersection_pt = Point3D::new(0., 0., 0.);
+
+        let specularity = 0.0;
+        let alpha = 0.0;
+        let beta = 0.0;
+
+        let mut ray = Ray {
+            geometry: Ray3D {
+                direction: Vector3D::new(0., 0., -1.),
+                origin: Point3D::new(0., 0., 1.),
+            },
+            ..Ray::default()
+        };
+        let mut rng = get_rng();
+
+        for _ in 0..10 {
+            let (direct, diffuse, pdf) = sample_ward_anisotropic(
+                normal,
+                e1,
+                e2,
+                intersection_pt,
+                specularity,
+                alpha,
+                beta,
+                &mut ray,
+                &mut rng,
+            );
+            dbg!(direct, 1.0 / PI, diffuse, pdf, diffuse / pdf);
+        }
+    }
 }
