@@ -22,10 +22,10 @@ use crate::camera::{Camera, CameraSample};
 use crate::colour::Spectrum;
 use crate::image::ImageBuffer;
 use crate::material::Material;
-use crate::rand::*;
 use crate::ray::Ray;
 use crate::scene::{Object, Scene};
 use crate::Float;
+use crate::rand::*;
 use geometry::intersection::SurfaceSide;
 use geometry::Ray3D;
 
@@ -84,7 +84,7 @@ impl RayTracer {
         scene: &Scene,
         ray: &mut Ray,
         aux: &mut RayTracerHelper,
-    ) -> (Spectrum, Float) {
+    ) -> Spectrum {
         if let Some(triangle_index) = scene.cast_ray(ray, &mut aux.nodes) {
             let material = match ray.interaction.geometry_shading.side {
                 SurfaceSide::Front => {
@@ -93,8 +93,7 @@ impl RayTracer {
                 SurfaceSide::Back => &scene.materials[scene.back_material_indexes[triangle_index]],
                 SurfaceSide::NonApplicable => {
                     // Hit parallel to the surface...
-                    // ray.colour = Spectrum::BLACK; // We won't use this, I think
-                    return (Spectrum::BLACK, 0.0);
+                    return Spectrum::BLACK;
                 }
             };
 
@@ -103,19 +102,24 @@ impl RayTracer {
             // for now, emmiting materials don't reflect... but they
             // are visible when viewed directly from the camera
             if material.emits_light() {
-                let light_pdf = crate::triangle::triangle_solid_angle_pdf(
-                    &scene.triangles[triangle_index],
-                    intersection_pt,
-                    ray.interaction.geometry_shading.normal,
-                    &ray.geometry,
-                );
-
-                return (material.colour(), light_pdf);
+                if ray.depth == 0 {
+                    return material.colour();
+                } else {
+                    return Spectrum::BLACK;
+                }
+                // let light_pdf = crate::triangle::triangle_solid_angle_pdf(
+                //     &scene.triangles[triangle_index],
+                //     intersection_pt,
+                //     ray.interaction.geometry_shading.normal,
+                //     &ray.geometry,
+                // );
+                // return (material.colour(), light_pdf);
+                // return (Spectrum::BLACK, light_pdf);
             }
 
             // Limit bounces
             if ray.depth > self.max_depth {
-                return (Spectrum::BLACK, 0.0);
+                return Spectrum::BLACK;
             }
 
             #[cfg(feature = "textures")]
@@ -137,20 +141,13 @@ impl RayTracer {
 
                     new_ray.depth += 1;
 
-                    let (li, _light_pdf) = self.trace_ray(rng, scene, &mut new_ray, aux);
+                    let li = self.trace_ray(rng, scene, &mut new_ray, aux);
                     specular_li += li * *bsdf_value
                 }
 
                 ray.colour *= specular_li;
-                return (specular_li, 0.0);
+                return specular_li
             }
-
-            let n_ambient_samples = ray.get_n_ambient_samples(
-                self.n_ambient_samples,
-                self.max_depth,
-                self.limit_weight,
-                rng,
-            );
 
             // Calculate the number of direct samples
 
@@ -171,20 +168,26 @@ impl RayTracer {
             );
 
             /* INDIRECT */
+            let n_ambient_samples = ray.get_n_ambient_samples(
+                self.n_ambient_samples,
+                self.max_depth,
+                self.limit_weight,
+                rng,
+            );
+
             let global =
                 self.get_global_illumination(scene, n_ambient_samples, material, ray, rng, aux);
 
-            ((local + global), 0.0)
-            // (local,0.0)
+            local + global
         } else {
             // Did not hit... so, let's check the sky
             if let Some(sky) = &scene.sky {
                 let sky_brightness = sky(ray.geometry.direction);
                 let colour = scene.sky_colour.unwrap_or_else(|| Spectrum::gray(1.0));
                 ray.colour *= colour * sky_brightness;
-                (colour * sky_brightness, 1. / 2. / crate::PI)
+                colour * sky_brightness
             } else {
-                (Spectrum::BLACK, 0.0)
+                Spectrum::BLACK
             }
         }
     }
@@ -205,7 +208,6 @@ impl RayTracer {
         let mut local_illum = Spectrum::BLACK;
 
         let n = n_shadow_samples;
-        // let n_ambient_samples = n_ambient_samples as Float;
         let n_shadow_samples = n_shadow_samples as Float;
 
         for light in lights.iter() {
@@ -213,8 +215,12 @@ impl RayTracer {
             let mut i = 0;
             // let mut missed = 0;
             while i < n {
-                let direction = light.primitive.sample_direction(rng, intersection_pt);
-                // let (_,direction) = light.primitive.direction( point);
+                let direction = if n == 1 {
+                    light.primitive.sample_direction(rng, intersection_pt)
+                } else {
+                    let (_, direction) = light.primitive.direction(intersection_pt);
+                    direction
+                };
                 let shadow_ray = Ray3D {
                     origin: intersection_pt,
                     direction,
@@ -229,15 +235,10 @@ impl RayTracer {
                         continue;
                     }
 
-                    // Denominator of the Balance Heuristic... I am assuming that
-                    // when one light has a pdf>0, then all the rest are Zero... is this
-                    // correct?
                     let cos_theta = (normal * direction).abs();
                     let vout = shadow_ray.direction * -1.;
 
                     let mat_bsdf_value = material.eval_bsdf(normal, e1, e2, ray, vout);
-                    // let denominator = light_pdf * n_shadow_samples
-                    // + mat_bsdf_value.radiance() * n_ambient_samples;
                     let fx = light_colour * cos_theta * mat_bsdf_value;
 
                     // Return... light sources have a pdf equal to their 1/Omega (i.e. their size)
@@ -324,28 +325,27 @@ impl RayTracer {
                 "Length is {}",
                 new_ray_dir.length()
             );
+            debug_assert!(
+                (1. - normal.length()).abs() < 1e-2,
+                "normal Length is {}",
+                normal.length()
+            );
 
             let cos_theta = (normal * new_ray_dir).abs();
             let bsdf_rad = bsdf_value.radiance();
             ray.depth += 1;
             ray.value *= bsdf_rad * cos_theta / ray_pdf;
 
-            let (li, light_pdf) = self.trace_ray(rng, scene, ray, aux);
+            let li = self.trace_ray(rng, scene, ray, aux);
 
-            if light_pdf > 0. {
-                // ray hit a light... reset and try again
-                *ray = aux.rays[depth];
-                continue;
-            }
             count += 1;
 
-            global += li * ray.value;
+            global += li * bsdf_value * cos_theta / ray_pdf;
 
-            // restore ray, because it was modified by trace_ray executions
             *ray = aux.rays[depth];
         }
-        // return
-        global / (n_ambient_samples as Float)
+
+        global / (count as Float)
     }
 
     #[allow(clippy::needless_collect)]
@@ -377,7 +377,12 @@ impl RayTracer {
                 let (mut ray, weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
                 ray.value = weight;
 
-                let (v, _) = self.trace_ray(&mut rng, scene, &mut ray, &mut aux);
+                let v = self.trace_ray(&mut rng, scene, &mut ray, &mut aux);
+                // if v.radiance() < 1e-4{
+                //     dbg!(pindex, v);
+                //     let (mut ray, weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
+                //     let (v, _) = self.trace_ray(&mut rng, scene, &mut ray, &mut aux);
+                // }
                 *pixel = v;
 
                 progress.tic();

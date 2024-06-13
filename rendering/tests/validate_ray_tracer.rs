@@ -2,7 +2,7 @@ use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::{Float, Ray, RayTracer, RayTracerHelper, Scene};
 use validate::{valid, SeriesValidator, ValidFunc, Validator};
 
-const MAX_DEPTH: usize = 13;
+const MAX_DEPTH: usize = 11;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
@@ -64,10 +64,10 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
         .expect("Could not read");
     scene.build_accelerator();
 
-    let n_ambient_samples = if max_depth > 0 { 60120 } else { 5120 };
+    let n_ambient_samples = if max_depth > 0 { 49120 } else { 520 };
     let integrator = RayTracer {
         n_ambient_samples,
-        n_shadow_samples: 10,
+        n_shadow_samples: 100,
         max_depth,
         limit_weight: 1e-9,
         ..RayTracer::default()
@@ -77,10 +77,10 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
 
     let mut rays = load_rays("./tests/points.pts")?;
 
-    let found = rays
+    let found: Vec<Float> = rays
         .iter_mut()
         .map(|ray| {
-            let (c, _) = integrator.trace_ray(&mut rng, &scene, ray, &mut aux);
+            let c = integrator.trace_ray(&mut rng, &scene, ray, &mut aux);
             c.radiance()
         })
         .collect();
@@ -90,10 +90,11 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
     } else {
         load_expected_results(format!("./tests/ray_tracer/{dir}/global_results.txt"))?
     };
-    // println!("Exp,Found");
-    // for i in 0..found.len() {
-    //     println!("{},{}", expected[i], found[i]);
-    // }
+    println!("{}", dir);
+    println!("exp,found");
+    for i in 0..expected.len() {
+        println!("{},{}", expected[i], found[i])
+    }
     Ok((expected, found))
 }
 
