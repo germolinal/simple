@@ -46,9 +46,9 @@ cd dc
 for dir in $(ls -d */)
 do
     cd $dir
-    for rad in $(ls | grep .rad)
-    do
-
+    # for rad in $(ls | grep .rad)
+    # do
+        echo $dir
         # Build scene... for SIMPLE to read afterwards
         cat ./room.rad  > ./scene.rad
         cat ./windows.rad >> ./scene.rad
@@ -106,7 +106,7 @@ do
         rm aux_no_glass
         rm $OCTREE_NO_GLASS
         rm $BLACK_OCTREE_NO_GLASS
-    done
+    # done
 
     cd ..
 done
