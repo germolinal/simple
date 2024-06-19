@@ -317,8 +317,9 @@ impl RayTracer {
         let mut count = 0;
         while count < n_ambient_samples {
             // Choose a direction.
-            let (bsdf_value, ray_pdf) =
-                material.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng);
+            let sample = material
+                .sample_bsdf(normal, e1, e2, intersection_pt, ray, rng)
+                .expect("could not sample material");
             let new_ray_dir = ray.geometry.direction;
             debug_assert!(
                 (1. - new_ray_dir.length()).abs() < 1e-2,
@@ -332,15 +333,15 @@ impl RayTracer {
             );
 
             let cos_theta = (normal * new_ray_dir).abs();
-            let bsdf_rad = bsdf_value.radiance();
+            let bsdf_rad = sample.spectrum.radiance();
             ray.depth += 1;
-            ray.value *= bsdf_rad * cos_theta / ray_pdf;
+            ray.value *= bsdf_rad * cos_theta / sample.pdf;
 
             let li = self.trace_ray(rng, scene, ray, aux);
 
             count += 1;
 
-            global += li * bsdf_value * cos_theta / ray_pdf;
+            global += li * sample.spectrum * cos_theta / sample.pdf;
 
             *ray = aux.rays[depth];
         }

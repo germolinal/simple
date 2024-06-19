@@ -312,7 +312,8 @@ impl SolarSurface {
             let e2 = normal.cross(e1);
 
             for _ in 0..n_samples {
-                let dir = rendering::samplers::uniform_sample_hemisphere(&mut rng, e1, e2, normal);
+                let u = rng.gen();
+                let dir = rendering::samplers::uniform_sample_tilted_hemisphere(u, e1, e2, normal);
 
                 if scene.cast_ray(&mut ray, &mut node_aux).is_none() {
                     if dir.z > 0.0 {

@@ -86,7 +86,10 @@ impl DCFactory {
                 let mut rng = get_rng();
                 #[allow(clippy::needless_collect)]
                 let aux_iter: Vec<Vector3D> = (0..self.n_ambient_samples)
-                    .map(|_| sample_cosine_weighted_horizontal_hemisphere(&mut rng))
+                    .map(|_| {
+                        let u = rng.gen();
+                        sample_cosine_weighted_horizontal_hemisphere(u)
+                    })
                     .collect();
 
                 #[cfg(not(feature = "parallel"))]
@@ -238,8 +241,9 @@ impl DCFactory {
             aux.rays[depth] = *ray;
             let (_pt, normal, e1, e2, ..) = ray.get_triad();
             (0..n_ambient_samples).for_each(|_| {
-                let (bsdf_value, weight) =
-                    material.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng);
+                let sample = material
+                    .sample_bsdf(normal, e1, e2, intersection_pt, ray, rng)
+                    .unwrap();
                 let new_ray_dir = ray.geometry.direction;
                 debug_assert!(
                     (1. as Float - new_ray_dir.length()).abs() < 1e-5,
@@ -249,7 +253,7 @@ impl DCFactory {
 
                 // increase depth
                 let cos_theta = (normal * new_ray_dir).abs();
-                ray.colour *= bsdf_value * cos_theta / weight;
+                ray.colour *= sample.spectrum * cos_theta / sample.pdf;
                 ray.depth += 1;
 
                 self.trace_ray(scene, ray, contribution, rng, aux);

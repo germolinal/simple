@@ -18,11 +18,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::colour::Spectrum;
-use crate::rand::*;
-use crate::ray::Ray;
 use crate::Float;
-use geometry::{Point3D, Vector3D};
+use crate::{colour::Spectrum, ray::TransportMode};
+use geometry::Vector3D;
+
+use super::bsdf_sample::BSDFSample;
+use super::mat_trait::TransFlag;
 
 /// Information required for modelling Radiance's Plastic and Plastic
 #[derive(Debug, Clone)]
@@ -43,52 +44,44 @@ impl Plastic {
 
     pub fn sample_bsdf(
         &self,
-        normal: Vector3D,
-        e1: Vector3D,
-        e2: Vector3D,
-        intersection_pt: Point3D,
-        ray: &mut Ray,
-        rng: &mut RandGen,
-    ) -> (Spectrum, Float) {
-        let (direct, diffuse, weight) = crate::material::ward::sample_ward_anisotropic(
-            normal,
-            e1,
-            e2,
-            intersection_pt,
+        wo: Vector3D,
+        uc: Float,
+        u: (Float, Float),
+        transport_mode: TransportMode,
+        trans_flags: TransFlag,
+    ) -> Option<BSDFSample> {
+        let mut ret = crate::material::ward::sample_ward_anisotropic(
             self.specularity,
             self.roughness,
             self.roughness,
-            ray,
-            rng,
+            wo,
+            uc,
+            u,
+            transport_mode,
+            trans_flags,
         );
+        if let Some(sample) = &mut ret {
+            sample.spectrum *= self.colour();
+        }
+        ret
 
-        // (Spectrum::gray(diffuse) * self.colour, weight)
-        let diffuse_component = self.colour * diffuse;
-        let specular_component = Spectrum::gray(direct);
-        let bsdf =
-            diffuse_component * (1.0 - self.specularity) + specular_component * self.specularity;
+        // // (Spectrum::gray(diffuse) * self.colour, weight)
+        // let diffuse_component = self.colour * diffuse;
+        // let specular_component = Spectrum::gray(direct);
+        // let bsdf =
+        //     diffuse_component * (1.0 - self.specularity) + specular_component * self.specularity;
 
-        (bsdf, weight)
+        // (bsdf, weight)
     }
 
-    pub fn eval_bsdf(
-        &self,
-        normal: Vector3D,
-        e1: Vector3D,
-        e2: Vector3D,
-        ray: &Ray,
-        vout: Vector3D,
-    ) -> Spectrum {
-        let vout = vout * -1.;
+    pub fn eval_bsdf(&self, wo: Vector3D, wi: Vector3D, transport_mode: TransportMode) -> Spectrum {
         let (direct, diffuse) = crate::material::ward::evaluate_ward_anisotropic(
-            normal,
-            e1,
-            e2,
             self.specularity,
             self.roughness,
             self.roughness,
-            ray,
-            vout,
+            wo,
+            wi,
+            transport_mode,
         );
 
         // Spectrum::gray(direct) + self.colour * diffuse
@@ -97,73 +90,4 @@ impl Plastic {
 }
 
 #[cfg(test)]
-mod tests {
-
-    use super::*;
-    use crate::colour::Spectrum;
-    use geometry::Ray3D;
-
-    // /// This test was developed by debugging RPICT in Radiance
-    // #[test]
-    // fn test_eval_plastic() {
-    //     let plastic = Plastic {
-    //         colour: Spectrum::<3>::from(0.5),
-    //         specularity: 0.05,
-    //         roughness: 0.1,
-    //     };
-
-    //     let origin = Point3D::new(2., 1., 1.);
-    //     let direction = Vector3D::new(-0.446877862357762, 0.77495819368141017, 0.4469227832418069);
-    //     let normal = Vector3D::new(1., 0., 0.);
-    //     let vout = Vector3D::new(0.446877862357762, 0.77495819368141017, 0.4469227832418069);
-    //     let ray = &Ray {
-    //         geometry: Ray3D { origin, direction },
-    //         .. Ray::default()
-    //     };
-    //     let e1 = Vector3D::new(0., 1., 0.);
-    //     let e2 = Vector3D::new(0., 0., 1.);
-
-    //     // alpha2	double	0.0099999999988358463
-    //     // pdot	double	0.446877862357762
-    //     // rdiff	double	0.95000000000291041
-    //     // rspec	double	0.049999999997089616
-    //     // scolor = [0.5, 0.5, 0.5] in ln 295
-    //     // vrefl	FVECT
-    //     // [0]	double	0.446877862357762
-    //     // [1]	double	0.77495819368141017
-    //     // [2]	double	0.4469227832418069
-    //     // End of source.c / Direct
-    //     // rcol	COLOR
-    //     // [0]	COLORV	0.353318453
-    //     // [1]	COLORV	0.353318453
-    //     // [2]	COLORV	0.353318453
-
-    //     plastic.eval_bsdf(normal, e1, e2, ray, vout);
-    // }
-
-    #[test]
-    fn test_specular_plastic() {
-        let plastic = Plastic {
-            colour: Spectrum([0.2, 0.2, 0.2]),
-            specularity: 0.1,
-            roughness: 0.1,
-        };
-
-        let normal = Vector3D::new(0., 0., 1.);
-        let e1 = Vector3D::new(1., 0., 0.);
-        let e2 = Vector3D::new(0., 1., 0.);
-        let intersection_pt = Point3D::new(0., 0., 0.);
-
-        let mut ray = Ray {
-            geometry: Ray3D {
-                origin: Point3D::new(-1., 0., 1.),
-                direction: Vector3D::new(1., 0., -1.).get_normalized(),
-            },
-            ..Ray::default()
-        };
-
-        let mut rng = crate::rand::get_rng();
-
-        plastic.sample_bsdf(normal, e1, e2, intersection_pt, &mut ray, &mut rng);
-    }
-}
+mod tests {}

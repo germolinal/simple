@@ -17,20 +17,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::colour::Spectrum;
 use crate::rand::*;
 use crate::ray::Ray;
 use crate::Float;
+use crate::{colour::Spectrum, ray::TransportMode};
+use bsdf_sample::BSDFSample;
 use geometry::{Point3D, Vector3D};
 
 mod light;
 pub use light::Light;
 
 mod plastic;
+use mat_trait::TransFlag;
 pub use plastic::Plastic;
 
 mod metal;
 pub use metal::Metal;
+
+mod diffuse;
+pub use diffuse::Diffuse;
 
 mod dielectric;
 pub use dielectric::Dielectric;
@@ -122,18 +127,7 @@ impl Material {
     fn to_local(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
         Vector3D::new(v * e1, v * e2, v * normal)
     }
-    fn to_world(
-        &self,
-        intersection_pt: Point3D,
-        normal: Vector3D,
-        e1: Vector3D,
-        e2: Vector3D,
-        v: Vector3D,
-    ) -> Vector3D {
-        let x = intersection_pt.x + v.x * e1.x + v.y * e2.x + v.z * normal.x;
-        let y = intersection_pt.y + v.x * e1.y + v.y * e2.y + v.z * normal.y;
-        let z = intersection_pt.z + v.x * e1.z + v.y * e2.z + v.z * normal.z;
-        // Vector3D::new(x, y, z).get_normalized()
+    fn to_world(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
         e1 * v.x + e2 * v.y + normal * v.z
     }
 
@@ -147,26 +141,41 @@ impl Material {
         intersection_pt: Point3D,
         ray: &mut Ray,
         rng: &mut RandGen,
-    ) -> (Spectrum, Float) {
+    ) -> Option<BSDFSample> {
         // world to local
         ray.geometry.direction = self.to_local(normal, e1, e2, ray.geometry.direction);
-        let n_normal = Vector3D::new(0., 0., 1.0);
-        let n_e1 = Vector3D::new(1.0, 0., 0.);
-        let n_e2 = Vector3D::new(0.0, 1., 0.);
-        let (v, pdf) = match self {
-            Self::Plastic(m) => m.sample_bsdf(n_normal, n_e1, n_e2, intersection_pt, ray, rng),
-            Self::Metal(m) => m.sample_bsdf(n_normal, n_e1, n_e2, intersection_pt, ray, rng),
+
+        let uc: Float = rng.gen();
+        let u: (Float, Float) = rng.gen();
+        let transport_mode = TransportMode::default();
+        let trans_flags = TransFlag::default();
+
+        let ret = match self {
+            Self::Plastic(m) => {
+                m.sample_bsdf(ray.geometry.direction, uc, u, transport_mode, trans_flags)
+            }
+            Self::Metal(m) => {
+                m.sample_bsdf(ray.geometry.direction, uc, u, transport_mode, trans_flags)
+            }
             Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
             Self::Mirror(_m) => panic!("Trying to sample the BSDF of a Mirror"),
             Self::Dielectric(_m) => panic!("Trying to sample the BSDF of a Dielectric"),
             Self::Glass(_m) => panic!("Trying to sample the BSDF of a Glass"),
         };
 
+        if let Some(sample) = &ret {
+            if sample.is_reflection() {
+                ray.geometry.origin = intersection_pt + normal * 0.00001;
+            } else if sample.is_transmission() {
+                ray.geometry.origin = intersection_pt - normal * 0.00001;
+            }
+            ray.geometry.direction = sample.wi;
+        }
         // local to world
-        ray.geometry.direction =
-            self.to_world(intersection_pt, normal, e1, e2, ray.geometry.direction);
+        ray.geometry.direction = self.to_world(normal, e1, e2, ray.geometry.direction);
 
-        (v, pdf)
+        // (v, pdf)
+        ret
     }
 
     /// Evaluates a BSDF based on an input and outpt directions
@@ -186,8 +195,8 @@ impl Material {
         let e1 = Vector3D::new(1.0, 0., 0.);
         let e2 = Vector3D::new(0.0, 1., 0.);
         match self {
-            Self::Plastic(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
-            Self::Metal(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
+            Self::Plastic(m) => m.eval_bsdf(ray.geometry.direction, vout, TransportMode::default()),
+            Self::Metal(m) => m.eval_bsdf(ray.geometry.direction, vout, TransportMode::default()),
             Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
             Self::Mirror(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
             Self::Dielectric(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
@@ -230,10 +239,12 @@ mod tests {
         for _ in 0..99999 {
             let (normal, e1, e2, mut ray, vout) = get_vectors(&mut rng);
             let old_ray = ray.clone();
-            let (bsdf, pdf) =
+            let sample =
                 material.sample_bsdf(normal, e1, e2, Point3D::new(0., 0., 0.), &mut ray, &mut rng);
-            assert!(pdf.is_finite());
-            assert!(bsdf.radiance().is_finite());
+            let sample = sample.unwrap();
+
+            assert!(sample.pdf.is_finite());
+            assert!(sample.spectrum.radiance().is_finite());
             assert!(old_ray.geometry.direction.length().is_finite());
             let v: Vector3D = old_ray.geometry.origin.into();
             assert!(v.length().is_finite());

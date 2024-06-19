@@ -1,19 +1,29 @@
 use super::bsdf_sample::BSDFSample;
 use super::local_coordinates_utils::abs_cos_theta;
-use crate::samplers::{sample_uniform_hemisphere, uniform_sample_hemisphere};
+use crate::samplers::sample_uniform_hemisphere;
 use crate::Float;
 use crate::PI;
 use crate::{ray::TransportMode, Spectrum};
 use geometry::Vector3D;
 use std::ops::BitAnd;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[repr(u8)]
-pub(crate) enum TransFlag {
+pub enum TransFlag {
+    #[default]
     Unset = 0,
     Reflection = 1 << 0,
     Transmission = 1 << 1,
     All = 1 << 0 | 1 << 1,
+}
+
+impl BitAnd for TransFlag {
+    type Output = bool;
+
+    // rhs is the "right-hand side" of the expression `a & b`
+    fn bitand(self, rhs: Self) -> Self::Output {
+        self as u8 & rhs as u8 > 0
+    }
 }
 
 const UNSET: u8 = 0;
@@ -22,9 +32,10 @@ const TRANSMISSION: u8 = 1 << 1;
 const DIFFUSE: u8 = 1 << 2;
 const GLOSSY: u8 = 1 << 3;
 const SPECULAR: u8 = 1 << 4;
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Default)]
 #[repr(u8)]
 pub enum MatFlag {
+    #[default]
     Unset = UNSET,
     Reflection = REFLECTION,
     Transmission = TRANSMISSION,
@@ -118,7 +129,7 @@ pub trait MaterialTrait: std::fmt::Debug {
         uc.into_iter().zip(u2.into_iter()).for_each(|(a, b)| {
             let wo = sample_uniform_hemisphere(*b);
             if let Some(sample) =
-                self.sample_bsdf(wo, *a, *b, TransportMode::Radiance, TransFlag::All)
+                self.sample_bsdf(wo, *a, *b, TransportMode::default(), TransFlag::default())
             {
                 const UNIFORM_HEMISPHERE_PDF: Float = 0.5 / PI;
                 rho += sample.spectrum * abs_cos_theta(sample.wi) * abs_cos_theta(wo)
@@ -151,8 +162,9 @@ pub trait MaterialTrait: std::fmt::Debug {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::material::get_rng;
+    use crate::material::Diffuse;
     use crate::rand::*;
-    use crate::{material::get_rng, samplers::sample_cosine_weighted_horizontal_hemisphere};
 
     #[test]
     fn test_non_specular() {
@@ -173,43 +185,6 @@ mod tests {
 
     #[test]
     fn test_lambertian_hemispherical_reflectance() {
-        #[derive(Debug)]
-        struct Lambert {
-            rho: Float,
-        }
-        impl MaterialTrait for Lambert {
-            fn flags(&self) -> MatFlag {
-                MatFlag::Diffuse
-            }
-            fn eval_bsdf(
-                &self,
-                _wo: Vector3D,
-                _wi: Vector3D,
-                _transport_mode: TransportMode,
-            ) -> Spectrum {
-                Spectrum::gray(self.rho / PI)
-            }
-
-            fn sample_bsdf(
-                &self,
-                _wo: Vector3D,
-                _uc: Float,
-                _u: (Float, Float),
-                _transport_mode: TransportMode,
-                _trans_flags: TransFlag,
-            ) -> Option<BSDFSample> {
-                let mut rng = crate::rand::get_rng();
-                let wi = sample_cosine_weighted_horizontal_hemisphere(&mut rng);
-                let ret = BSDFSample::new(
-                    Spectrum::gray(self.rho / PI),
-                    wi,
-                    abs_cos_theta(wi) / PI,
-                    MatFlag::Diffuse,
-                );
-                Some(ret)
-            }
-        }
-
         let mut rng = get_rng();
         let n = 500000;
         let mut u: Vec<Float> = Vec::with_capacity(n);
@@ -221,7 +196,7 @@ mod tests {
             u2.push(su2);
         }
 
-        let mat = Lambert { rho: 1.0 };
+        let mat = Diffuse::new(Spectrum::gray(1.0));
 
         let rho = mat.directional_rho(Vector3D::new(1., 0., 0.), &u, &u2);
         assert!(

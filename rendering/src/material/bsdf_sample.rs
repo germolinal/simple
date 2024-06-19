@@ -1,5 +1,5 @@
-use super::mat_trait::MatFlag;
-use crate::{Float, Spectrum};
+use super::{local_coordinates_utils::abs_cos_theta, mat_trait::MatFlag};
+use crate::{samplers::sample_cosine_weighted_horizontal_hemisphere, Float, Spectrum, PI};
 use geometry::Vector3D;
 
 #[derive(Clone, Debug)]
@@ -22,6 +22,17 @@ impl BSDFSample {
             ..Self::default()
         }
     }
+
+    pub fn new_diffuse(f: Spectrum, u: (Float, Float)) -> Self {
+        let mut wi = sample_cosine_weighted_horizontal_hemisphere(u);
+        if wi.z < 0.0 {
+            wi.z *= -1.0;
+        }
+        let pdf = abs_cos_theta(wi) / PI;
+        let s = f / PI;
+        BSDFSample::new(s, wi, pdf, MatFlag::DiffuseReflection)
+    }
+
     pub fn with_eta(f: Spectrum, wi: Vector3D, pdf: Float, flags: MatFlag, eta: Float) -> Self {
         let mut ret = Self::new(f, wi, pdf, flags);
         ret.eta = eta;

@@ -25,8 +25,9 @@ use crate::Float;
 use geometry::intersection::IntersectionInfo;
 use geometry::{Point3D, Ray3D, Transform, Vector3D};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum TransportMode {
+    #[default]
     Radiance,
     Importance,
 }
@@ -103,8 +104,8 @@ impl Ray {
         &mut self,
         max_ambient_samples: usize,
         max_depth: usize,
-        limit_weight: Float,
-        rng: &mut RandGen,
+        _limit_weight: Float,
+        _rng: &mut RandGen,
     ) -> usize {
         if max_depth == 0 || max_ambient_samples == 0 {
             0 // No ambient samples required

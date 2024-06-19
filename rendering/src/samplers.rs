@@ -18,14 +18,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::rand::*;
 use crate::Float;
 use geometry::{Point3D, Vector3D};
 
-pub fn uniform_sample_triangle(rng: &mut RandGen, a: Point3D, b: Point3D, c: Point3D) -> Point3D {
-    let (rand1, rand2): (Float, Float) = rng.gen();
-    // let rand1 : Float = rng.gen();
-    // let rand2 : Float = rng.gen();
+pub fn uniform_sample_triangle(u: (Float, Float), a: Point3D, b: Point3D, c: Point3D) -> Point3D {
+    let (rand1, rand2) = u;
+
     const TINY: Float = 1e-8;
     let rand1 = rand1.clamp(TINY, 1. - TINY);
     let rand2 = rand2.clamp(TINY, 1. - TINY);
@@ -38,15 +36,11 @@ pub fn uniform_sample_triangle(rng: &mut RandGen, a: Point3D, b: Point3D, c: Poi
     a + v1 * u + v2 * v
 }
 
-pub fn uniform_sample_horizontal_disc(rng: &mut RandGen, radius: Float) -> (f32, f32) {
-    // Accurate, non-rejection
-    // sqrt() and cos() and sin() are
-    // much faster in f32... that is why I am doing
-    // this.
-    let (r, theta): (f32, f32) = rng.gen();
+pub fn uniform_sample_horizontal_disc(u: (Float, Float), radius: Float) -> (Float, Float) {
+    let (r, theta) = u;
 
-    let r = radius as f32 * r.sqrt();
-    let theta = 2. * std::f32::consts::PI * theta;
+    let r = radius * r.sqrt();
+    let theta = 2. * crate::PI * theta;
     let (theta_sin, theta_cos) = theta.sin_cos();
 
     let local_x = r * theta_sin;
@@ -72,7 +66,6 @@ pub fn uniform_sample_horizontal_disc(rng: &mut RandGen, radius: Float) -> (f32,
 
 /// Transforms a Point from Local Coordinates (defined by the triad `local_e1`, `local_e2` and `normal`,
 /// centered at `centre`) into world coordinates. For converting a vector, set `centre = Point3D::new(0.0, 0., 0.)`
-
 pub fn local_to_world(
     local_e1: Vector3D,
     local_e2: Vector3D,
@@ -91,23 +84,22 @@ pub fn local_to_world(
     let y = centre.y + x_local * local_e1.y + y_local * local_e2.y + z_local * normal.y;
     let z = centre.z + x_local * local_e1.z + y_local * local_e2.z + z_local * normal.z;
 
+    debug_assert!(
+        (1. - Vector3D::new(x, y, z).length()) < 1e-5,
+        "Expecting a unit vector... found length {:.6}",
+        Vector3D::new(x, y, z).length()
+    );
+
     (x, y, z)
 }
 
 /// Gets a random `Vector3D`, distributed according to `cos(theta)` according
 /// to a normal `Vector3D(0,0,1)`
-pub fn sample_cosine_weighted_horizontal_hemisphere(rng: &mut RandGen) -> Vector3D {
-    let (local_x, local_y) = uniform_sample_horizontal_disc(rng, 1.);
+pub fn sample_cosine_weighted_horizontal_hemisphere(u: (Float, Float)) -> Vector3D {
+    let (local_x, local_y) = uniform_sample_horizontal_disc(u, 1.);
     let aux = (local_x * local_x + local_y * local_y).clamp(0., 1.);
     let local_z = (1. - aux).sqrt();
     Vector3D::new(local_x as Float, local_y as Float, local_z as Float)
-}
-
-/// Samples a hemisphere pointing UP, uniformly and randomly.
-pub fn uniform_upper_hemisphere(rng: &mut RandGen) -> (Float, Float, Float) {
-    let u: (Float, Float) = rng.gen();
-    let v = sample_uniform_hemisphere(u);
-    (v.x, v.y, v.z)
 }
 
 /// Samples a hemisphere looking up
@@ -124,28 +116,18 @@ pub fn sample_uniform_hemisphere(u: (Float, Float)) -> Vector3D {
     Vector3D::new(x, y, z)
 }
 
-/// Samples a hemisphere pointing in N direction
-#[deprecated]
-pub fn uniform_sample_hemisphere(
-    rng: &mut RandGen,
+/// Samples a tilted hemisphere pointing in N direction
+pub fn uniform_sample_tilted_hemisphere(
+    u: (Float, Float),
     e1: Vector3D,
     e2: Vector3D,
     normal: Vector3D,
 ) -> Vector3D {
     // Calculate in
-
-    let (local_x, local_y, local_z) = uniform_upper_hemisphere(rng);
+    let v = sample_uniform_hemisphere(u);
 
     // Take back to world normal
-    let (x, y, z) = local_to_world(
-        e1,
-        e2,
-        normal,
-        Point3D::new(0., 0., 0.),
-        local_x as Float,
-        local_y as Float,
-        local_z as Float,
-    );
+    let (x, y, z) = local_to_world(e1, e2, normal, Point3D::new(0., 0., 0.), v.x, v.y, v.z);
     debug_assert!(
         (Vector3D::new(x, y, z).length() - 1.).abs() < 1e-5,
         "length is {}",
@@ -154,11 +136,11 @@ pub fn uniform_sample_hemisphere(
     Vector3D::new(x, y, z)
 }
 
-pub fn uniform_sample_sphere(rng: &mut RandGen) -> Point3D {
-    const TWO_PI: f32 = 2. * std::f32::consts::PI;
-    const TINY: f32 = 1e-7;
+pub fn uniform_sample_sphere(u: (Float, Float)) -> Point3D {
+    const TWO_PI: Float = 2. * crate::PI;
+    const TINY: Float = 1e-7;
     // Sample a sphere of radius 1 centered at the origin
-    let (rand1, rand2): (f32, f32) = rng.gen();
+    let (rand1, rand2) = u;
     let rand1 = rand1.clamp(TINY, 1. - TINY);
     let rand2 = rand2.clamp(TINY, 1. - TINY);
     let z = 1. - 2. * rand1;
@@ -170,13 +152,13 @@ pub fn uniform_sample_sphere(rng: &mut RandGen) -> Point3D {
     Point3D::new(x, y, z)
 }
 
-pub fn uniform_sample_disc(
-    rng: &mut RandGen,
+pub fn uniform_sample_tilted_disc(
+    u: (Float, Float),
     radius: Float,
     centre: Point3D,
     normal: Vector3D,
 ) -> Point3D {
-    let (x_local, y_local) = uniform_sample_horizontal_disc(rng, radius);
+    let (x_local, y_local) = uniform_sample_horizontal_disc(u, radius);
 
     // Form the basis
     let e2 = normal.get_perpendicular().unwrap();
@@ -196,13 +178,16 @@ pub fn uniform_sample_disc(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rand::get_rng;
+    use rand::*;
 
     #[test]
     fn test_uniform_sample_disc() -> Result<(), String> {
         fn check(radius: Float, centre: Point3D, normal: Vector3D) -> Result<(), String> {
-            let mut rng = get_rng();
+            let mut rng = crate::rand::get_rng();
             let normal = normal.get_normalized();
-            let p = uniform_sample_disc(&mut rng, radius, centre, normal);
+            let u = rng.gen();
+            let p = uniform_sample_tilted_disc(u, radius, centre, normal);
             if ((p - centre) * normal).abs() > 100. * Float::EPSILON {
                 return Err(format!(
                     "Point is not coplanar with circle. ((p-centre)*normal).abs() == {}",
@@ -240,7 +225,8 @@ mod tests {
             let e1 = e2.cross(normal);
 
             let mut rng = get_rng();
-            let dir = uniform_sample_hemisphere(&mut rng, e1, e2, normal);
+            let u = rng.gen();
+            let dir = uniform_sample_tilted_hemisphere(u, e1, e2, normal);
 
             if (1. - dir.length()).abs() > 1e-5 {
                 return Err(format!("Sampled direction (from uniform_sample_hemisphere) was nor normalized... {} (length = {})", dir, dir.length()));
@@ -267,7 +253,8 @@ mod tests {
     fn test_cosine_weighted_sampling() {
         let mut rng = get_rng();
         for _ in 0..99999999 {
-            let a = sample_cosine_weighted_horizontal_hemisphere(&mut rng);
+            let u = rng.gen();
+            let a = sample_cosine_weighted_horizontal_hemisphere(u);
             assert!(a.length().is_finite());
         }
     }
