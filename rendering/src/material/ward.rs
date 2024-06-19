@@ -23,9 +23,7 @@ use crate::ray::Ray;
 use crate::{Float, PI};
 use geometry::{Point3D, Vector3D};
 
-use crate::samplers::{
-    local_to_world, sample_cosine_weighted_horizontal_hemisphere,
-};
+use crate::samplers::{local_to_world, sample_cosine_weighted_horizontal_hemisphere};
 
 const LOW_ROUGHNESS: Float = 1e-3;
 
@@ -113,23 +111,8 @@ pub fn sample_ward_anisotropic(
         // Probability
 
         let diffuse = (1. - specularity) / PI;
-
-        // let new_dir = uniform_sample_hemisphere(rng, e1, e2, normal);
-
-        let local_dir = sample_cosine_weighted_horizontal_hemisphere(rng);
-        let (x, y, z) = local_to_world(
-            e1,
-            e2,
-            normal,
-            Point3D::new(0., 0., 0.),
-            local_dir.x,
-            local_dir.y,
-            local_dir.z,
-        );
-        let new_dir = Vector3D::new(x, y, z).get_normalized();
-
-        let pdf = normal * new_dir / PI; // cos(theta)/PI
-                                         // let pdf = 0.5 / PI;
+        let new_dir = sample_cosine_weighted_horizontal_hemisphere(rng);
+        let pdf = normal * new_dir / PI;
         ray.geometry.direction = new_dir;
         (0.0, diffuse, pdf)
     }

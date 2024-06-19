@@ -63,7 +63,12 @@ impl Metal {
         );
 
         // Plastic differs from Metal in that the direct component is coloured
-        let bsdf = self.colour * direct + self.colour * diffuse;
+        // let bsdf = self.colour * direct + self.colour * diffuse;
+
+        let diffuse_component = self.colour * diffuse;
+        let specular_component = Spectrum::gray(direct);
+        let bsdf =
+            diffuse_component * (1.0 - self.specularity) + specular_component * self.specularity;
 
         (bsdf, weight)
     }

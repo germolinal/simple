@@ -5,6 +5,7 @@ use std::time::Instant;
 const BAR_LENGTH: usize = 50;
 
 pub struct ProgressBar {
+    title: String,
     last_progress: AtomicUsize,
     counter: AtomicUsize,
     total_count: usize,
@@ -12,8 +13,9 @@ pub struct ProgressBar {
 }
 
 impl ProgressBar {
-    pub fn new(total_count: usize) -> Self {
+    pub fn new(title: String, total_count: usize) -> Self {
         let ret = Self {
+            title,
             total_count,
             last_progress: AtomicUsize::new(0),
             counter: AtomicUsize::new(0),
@@ -42,14 +44,14 @@ impl ProgressBar {
         let filled_length = (BAR_LENGTH as f64 * (progress as f64 / 100.0)).round() as usize;
         let filled = "=".repeat(filled_length);
         let empty = " ".repeat(BAR_LENGTH - filled_length);
-        print!("\r[{}{}] {:.2}%", filled, empty, progress);
+        print!(
+            "\r    {} [{}{}] {:.2}%",
+            self.title, filled, empty, progress
+        );
         std::io::stdout().flush().unwrap();
     }
 
     pub fn done(&self) {
-        println!(
-            "\nProcess done after {} seconds",
-            self.start.elapsed().as_secs()
-        );
+        println!("\nDone after {} seconds", self.start.elapsed().as_secs());
     }
 }

@@ -44,6 +44,10 @@ pub use glass::Glass;
 mod specular;
 pub use specular::*;
 
+pub mod bsdf_sample;
+mod local_coordinates_utils;
+
+mod mat_trait;
 mod ward;
 
 #[derive(Clone, Debug)]
@@ -83,12 +87,12 @@ impl Material {
         }
     }
 
-    /// Should this material be tested for direct illumination?    
+    /// Should this material be tested for direct illumination?
     pub fn emits_direct_light(&self) -> bool {
         matches!(self, Self::Light(_))
     }
 
-    /// Should this material emits light    
+    /// Should this material emits light
     pub fn emits_light(&self) -> bool {
         matches!(self, Self::Light(_))
     }
@@ -115,6 +119,24 @@ impl Material {
         }
     }
 
+    fn to_local(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
+        Vector3D::new(v * e1, v * e2, v * normal)
+    }
+    fn to_world(
+        &self,
+        intersection_pt: Point3D,
+        normal: Vector3D,
+        e1: Vector3D,
+        e2: Vector3D,
+        v: Vector3D,
+    ) -> Vector3D {
+        let x = intersection_pt.x + v.x * e1.x + v.y * e2.x + v.z * normal.x;
+        let y = intersection_pt.y + v.x * e1.y + v.y * e2.y + v.z * normal.y;
+        let z = intersection_pt.z + v.x * e1.z + v.y * e2.z + v.z * normal.z;
+        // Vector3D::new(x, y, z).get_normalized()
+        e1 * v.x + e2 * v.y + normal * v.z
+    }
+
     /// Samples the bsdf (returned by modifying the given `Ray`).
     /// Returns the value of the BSDF in that direction (as a Spectrum) and the probability
     pub fn sample_bsdf(
@@ -126,14 +148,25 @@ impl Material {
         ray: &mut Ray,
         rng: &mut RandGen,
     ) -> (Spectrum, Float) {
-        match self {
-            Self::Plastic(m) => m.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng),
-            Self::Metal(m) => m.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng),
+        // world to local
+        ray.geometry.direction = self.to_local(normal, e1, e2, ray.geometry.direction);
+        let n_normal = Vector3D::new(0., 0., 1.0);
+        let n_e1 = Vector3D::new(1.0, 0., 0.);
+        let n_e2 = Vector3D::new(0.0, 1., 0.);
+        let (v, pdf) = match self {
+            Self::Plastic(m) => m.sample_bsdf(n_normal, n_e1, n_e2, intersection_pt, ray, rng),
+            Self::Metal(m) => m.sample_bsdf(n_normal, n_e1, n_e2, intersection_pt, ray, rng),
             Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
             Self::Mirror(_m) => panic!("Trying to sample the BSDF of a Mirror"),
             Self::Dielectric(_m) => panic!("Trying to sample the BSDF of a Dielectric"),
             Self::Glass(_m) => panic!("Trying to sample the BSDF of a Glass"),
-        }
+        };
+
+        // local to world
+        ray.geometry.direction =
+            self.to_world(intersection_pt, normal, e1, e2, ray.geometry.direction);
+
+        (v, pdf)
     }
 
     /// Evaluates a BSDF based on an input and outpt directions
@@ -145,13 +178,20 @@ impl Material {
         ray: &Ray,
         vout: Vector3D,
     ) -> Spectrum {
+        let mut ray = ray.clone();
+        // convert ray into local
+        ray.geometry.direction = self.to_local(normal, e1, e2, ray.geometry.direction);
+        let vout = self.to_local(normal, e1, e2, vout);
+        let normal = Vector3D::new(0., 0., 1.);
+        let e1 = Vector3D::new(1.0, 0., 0.);
+        let e2 = Vector3D::new(0.0, 1., 0.);
         match self {
-            Self::Plastic(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-            Self::Metal(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
+            Self::Plastic(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
+            Self::Metal(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
             Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
-            Self::Mirror(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-            Self::Dielectric(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-            Self::Glass(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
+            Self::Mirror(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
+            Self::Dielectric(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
+            Self::Glass(m) => m.eval_bsdf(normal, e1, e2, &ray, vout),
         }
     }
 }

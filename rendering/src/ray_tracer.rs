@@ -22,10 +22,10 @@ use crate::camera::{Camera, CameraSample};
 use crate::colour::Spectrum;
 use crate::image::ImageBuffer;
 use crate::material::Material;
+use crate::rand::*;
 use crate::ray::Ray;
 use crate::scene::{Object, Scene};
 use crate::Float;
-use crate::rand::*;
 use geometry::intersection::SurfaceSide;
 use geometry::Ray3D;
 
@@ -146,7 +146,7 @@ impl RayTracer {
                 }
 
                 ray.colour *= specular_li;
-                return specular_li
+                return specular_li;
             }
 
             // Calculate the number of direct samples
@@ -364,7 +364,7 @@ impl RayTracer {
         #[cfg(feature = "parallel")]
         let i = i.into_par_iter();
 
-        let progress = utils::ProgressBar::new(total_pixels);
+        let progress = utils::ProgressBar::new("Rendering".to_string(), total_pixels);
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;

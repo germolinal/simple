@@ -344,16 +344,14 @@ fn cornell() -> Result<(), String> {
     let camera = Pinhole::new(view, film);
 
     let integrator = RayTracer {
-        n_ambient_samples: 390,
-        n_shadow_samples: 100,
+        n_ambient_samples: 590,
+        n_shadow_samples: 1,
         max_depth: 3,
         ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new(
-        "./tests/scenes/images/cornell_ab0.hdr",
-    ))
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/cornell.hdr"))
 }
 
 #[test]

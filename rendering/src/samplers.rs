@@ -104,20 +104,28 @@ pub fn sample_cosine_weighted_horizontal_hemisphere(rng: &mut RandGen) -> Vector
 }
 
 /// Samples a hemisphere pointing UP, uniformly and randomly.
-pub fn uniform_upper_hemisphere(rng: &mut RandGen) -> (f32, f32, f32) {
-    let (rand1, rand2): (f32, f32) = rng.gen();
-    // let rand2: f32 = rng.gen();
-    let sq = (1.0 - rand1 * rand1).sqrt();
-    let pie2 = 2.0 * std::f32::consts::PI * rand2;
-    let (pie2_sin, pie2_cos) = pie2.sin_cos();
-    let x = pie2_cos * sq;
-    let y = pie2_sin * sq;
-    let z = rand1;
+pub fn uniform_upper_hemisphere(rng: &mut RandGen) -> (Float, Float, Float) {
+    let u: (Float, Float) = rng.gen();
+    let v = sample_uniform_hemisphere(u);
+    (v.x, v.y, v.z)
+}
 
-    (x, y, z)
+/// Samples a hemisphere looking up
+pub fn sample_uniform_hemisphere(u: (Float, Float)) -> Vector3D {
+    let rand1 = u.0;
+    let rand2 = u.1;
+    let z = rand1;
+    let r = (1.0 - rand1 * rand1).sqrt();
+    let pie2 = 2.0 * crate::PI * rand2;
+    let (pie2_sin, pie2_cos) = pie2.sin_cos();
+    let x = pie2_cos * r;
+    let y = pie2_sin * r;
+
+    Vector3D::new(x, y, z)
 }
 
 /// Samples a hemisphere pointing in N direction
+#[deprecated]
 pub fn uniform_sample_hemisphere(
     rng: &mut RandGen,
     e1: Vector3D,

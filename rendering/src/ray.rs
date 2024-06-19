@@ -25,6 +25,12 @@ use crate::Float;
 use geometry::intersection::IntersectionInfo;
 use geometry::{Point3D, Ray3D, Transform, Vector3D};
 
+#[derive(Debug, Clone, Copy)]
+pub enum TransportMode {
+    Radiance,
+    Importance,
+}
+
 /// Represents a ray (of light?) beyond pure geometry. It
 /// includes also the current index of refraction and, potentially,
 /// time (for blurry images)
@@ -106,13 +112,13 @@ impl Ray {
             max_ambient_samples
         } else {
             /* Adapted From Radiance's samp_hemi() at src/rt/ambcomp.c */
-            let wt = self.value;
-            // russian roullete
-            let r: Float = rng.gen();
-            if r > wt / limit_weight {
-                self.value = limit_weight;
-                return 0; // kill it!
-            }
+            // let wt = self.value;
+            // // russian roullete
+            // let r: Float = rng.gen();
+            // if r > wt / limit_weight {
+            //     self.value = limit_weight;
+            //     return 0; // kill it!
+            // }
             // 1 // Stephen, this is on you.
             1
         }
