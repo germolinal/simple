@@ -22,7 +22,7 @@ impl Diffuse {
 }
 impl MaterialTrait for Diffuse {
     fn id(&self) -> &str {
-        "diffuse"
+        "Diffuse"
     }
     fn flags(&self) -> MatFlag {
         MatFlag::Diffuse
