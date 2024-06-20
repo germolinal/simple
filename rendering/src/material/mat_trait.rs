@@ -82,6 +82,9 @@ impl BitAnd for MatFlag {
 }
 
 pub trait MaterialTrait: std::fmt::Debug {
+    /// Identifies the material.
+    fn id(&self) -> &str;
+
     /// Queries the material behaviour
     fn flags(&self) -> MatFlag;
 

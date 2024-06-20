@@ -11,22 +11,25 @@ use geometry::Vector3D;
 
 // pub fn sample_diffuse()
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Diffuse {
-    rho: Spectrum,
+    pub colour: Spectrum,
 }
 impl Diffuse {
     pub fn new(rho: Spectrum) -> Self {
-        Self { rho }
+        Self { colour: rho }
     }
 }
 impl MaterialTrait for Diffuse {
+    fn id(&self) -> &str {
+        "diffuse"
+    }
     fn flags(&self) -> MatFlag {
         MatFlag::Diffuse
     }
     fn eval_bsdf(&self, wo: Vector3D, wi: Vector3D, _transport_mode: TransportMode) -> Spectrum {
         if same_heisphere(wo, wi) {
-            self.rho / PI
+            self.colour / PI
         } else {
             Spectrum::BLACK
         }
@@ -41,7 +44,7 @@ impl MaterialTrait for Diffuse {
         trans_flags: TransFlag,
     ) -> Option<BSDFSample> {
         if trans_flags & TransFlag::Reflection {
-            Some(BSDFSample::new_diffuse(self.rho, u))
+            Some(BSDFSample::new_diffuse(self.colour, u))
         } else {
             None
         }

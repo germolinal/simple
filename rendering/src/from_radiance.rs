@@ -21,7 +21,7 @@ SOFTWARE.
 use crate::colour::Spectrum;
 use crate::Float;
 
-use crate::material::{Dielectric, Glass, Light, Metal, Mirror, Plastic};
+use crate::material::{Dielectric, Diffuse, Glass, Light, Metal, Mirror, Plastic};
 
 use crate::material::Material;
 use crate::primitive::Primitive;
@@ -30,7 +30,7 @@ use crate::scene::Scene;
 use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Sphere3D, Triangulation3D, Vector3D};
 
 use std::fs;
-
+const MIN_SPECULARITY: Float = 1e-4;
 #[derive(Default)]
 struct RadianceReader {
     current_char_index: usize,
@@ -220,12 +220,17 @@ impl RadianceReader {
             .map_err(|e| e.to_string())?;
 
         self.modifiers.push(name.to_string());
+        let colour = Spectrum([red, green, blue]);
 
-        let metal = Material::Metal(Metal {
-            colour: Spectrum([red, green, blue]),
-            specularity,
-            roughness,
-        });
+        let metal = if specularity < MIN_SPECULARITY {
+            Material::Diffuse(Diffuse { colour })
+        } else {
+            Material::Metal(Metal {
+                colour: Spectrum([red, green, blue]),
+                specularity,
+                roughness,
+            })
+        };
         scene.push_material(metal);
 
         Ok(())
@@ -268,11 +273,17 @@ impl RadianceReader {
 
         self.modifiers.push(name.to_string());
 
-        let plastic = Material::Plastic(Plastic {
-            colour: Spectrum([red, green, blue]),
-            specularity,
-            roughness,
-        });
+        let colour = Spectrum([red, green, blue]);
+        let plastic = if specularity < MIN_SPECULARITY {
+            Material::Diffuse(Diffuse { colour })
+        } else {
+            Material::Plastic(Plastic {
+                colour,
+                specularity,
+                roughness,
+            })
+        };
+
         scene.push_material(plastic);
 
         Ok(())

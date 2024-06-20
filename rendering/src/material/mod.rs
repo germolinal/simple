@@ -23,6 +23,7 @@ use crate::Float;
 use crate::{colour::Spectrum, ray::TransportMode};
 use bsdf_sample::BSDFSample;
 use geometry::{Point3D, Vector3D};
+use mat_trait::MaterialTrait;
 
 mod light;
 pub use light::Light;
@@ -59,6 +60,7 @@ mod ward;
 pub enum Material {
     Plastic(Plastic),
     Metal(Metal),
+    Diffuse(Diffuse),
     Light(Light),
     Mirror(Mirror),
     Dielectric(Dielectric),
@@ -69,6 +71,7 @@ impl Material {
     /// Returns an id, for debugging and error reporting purposes
     pub fn id(&self) -> &str {
         match self {
+            Self::Diffuse(m) => m.id(),
             Self::Plastic(m) => m.id(),
             Self::Metal(m) => m.id(),
             Self::Light(m) => m.id(),
@@ -83,6 +86,7 @@ impl Material {
     /// elements of the [`Spectrum`]. E.g., the reflectance values.
     pub fn colour(&self) -> Spectrum {
         match self {
+            Self::Diffuse(m) => m.colour,
             Self::Plastic(m) => m.colour(),
             Self::Metal(m) => m.colour(),
             Self::Light(m) => m.colour(),
@@ -148,9 +152,12 @@ impl Material {
         let uc: Float = rng.gen();
         let u: (Float, Float) = rng.gen();
         let transport_mode = TransportMode::default();
-        let trans_flags = TransFlag::default();
+        let trans_flags = TransFlag::All;
 
         let ret = match self {
+            Self::Diffuse(m) => {
+                m.sample_bsdf(ray.geometry.direction, uc, u, transport_mode, trans_flags)
+            }
             Self::Plastic(m) => {
                 m.sample_bsdf(ray.geometry.direction, uc, u, transport_mode, trans_flags)
             }
@@ -174,7 +181,6 @@ impl Material {
         // local to world
         ray.geometry.direction = self.to_world(normal, e1, e2, ray.geometry.direction);
 
-        // (v, pdf)
         ret
     }
 
@@ -195,6 +201,7 @@ impl Material {
         let e1 = Vector3D::new(1.0, 0., 0.);
         let e2 = Vector3D::new(0.0, 1., 0.);
         match self {
+            Self::Diffuse(m) => m.eval_bsdf(ray.geometry.direction, vout, TransportMode::default()),
             Self::Plastic(m) => m.eval_bsdf(ray.geometry.direction, vout, TransportMode::default()),
             Self::Metal(m) => m.eval_bsdf(ray.geometry.direction, vout, TransportMode::default()),
             Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
