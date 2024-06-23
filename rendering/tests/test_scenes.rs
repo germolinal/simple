@@ -319,7 +319,7 @@ fn sponza() -> Result<(), String> {
 fn cornell() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
 
-    let mut scene = Scene::from_radiance("./tests/scenes/cornell.rad".to_string())?;
+    let mut scene = Scene::from_radiance("./tests/scenes/cornell_glass.rad".to_string())?;
 
     scene.build_accelerator();
 
@@ -344,9 +344,9 @@ fn cornell() -> Result<(), String> {
     let camera = Pinhole::new(view, film);
 
     let integrator = RayTracer {
-        n_ambient_samples: 120,
+        n_ambient_samples: 860,
         n_shadow_samples: 1,
-        max_depth: 3,
+        max_depth: 5,
         ..RayTracer::default()
     };
 

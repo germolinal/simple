@@ -45,6 +45,7 @@ impl Plastic {
     pub fn sample_bsdf(
         &self,
         wo: Vector3D,
+        _eta: Float,
         uc: Float,
         u: (Float, Float),
         transport_mode: TransportMode,

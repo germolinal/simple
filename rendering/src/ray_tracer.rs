@@ -129,25 +129,25 @@ impl RayTracer {
             // let mut wt = ray.value;
 
             // Handle specular materials... we have 1 or 2 rays... spawn those.
-            if material.specular_only() {
-                let mut specular_li = Spectrum::BLACK;
+            // if material.specular_only() {
+            //     let mut specular_li = Spectrum::BLACK;
 
-                let paths = material.get_possible_paths(&normal, &intersection_pt, ray);
+            //     let paths = material.get_possible_paths(&normal, &intersection_pt, ray);
 
-                for (new_ray, bsdf_value) in paths.iter().flatten() {
-                    let mut new_ray = *new_ray;
+            //     for (new_ray, bsdf_value) in paths.iter().flatten() {
+            //         let mut new_ray = *new_ray;
 
-                    ray.value *= bsdf_value.radiance();
+            //         ray.value *= bsdf_value.radiance();
 
-                    new_ray.depth += 1;
+            //         new_ray.depth += 1;
 
-                    let li = self.trace_ray(rng, scene, &mut new_ray, aux);
-                    specular_li += li * *bsdf_value
-                }
+            //         let li = self.trace_ray(rng, scene, &mut new_ray, aux);
+            //         specular_li += li * *bsdf_value
+            //     }
 
-                ray.colour *= specular_li;
-                return specular_li;
-            }
+            //     ray.colour *= specular_li;
+            //     return specular_li;
+            // }
 
             // Calculate the number of direct samples
 

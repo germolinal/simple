@@ -47,14 +47,16 @@ use geometry::{Point3D, Vector3D};
 /// let (n1, cos1, n2, cos2) = cos_and_n(&ray, normal, mat_refraction_index);
 /// ```
 pub fn cos_and_n(
-    ray: &Ray,
+    // ray: &Ray,
+    vin: Vector3D,
+    n1: Float,
     normal: Vector3D,
     refraction_index: Float,
 ) -> (Float, Float, Float, Option<Float>) {
-    let vin = ray.geometry.direction;
+    // let vin = ray.geometry.direction;
 
     let cos1 = (vin * normal).abs();
-    let n1 = ray.refraction_index;
+    // let n1 = ray.refraction_index;
     let mut n2 = refraction_index;
     // If the ray already has this refraction index, assume
     // we are leaving a volume, entering air.
@@ -152,15 +154,9 @@ pub fn fresnel_transmission_dir(
     ret
 }
 
-/// Calculates the purely specular reflection direction.
+/// Calculates the purely specular reflection direction, assuming the normal direction is UP
 pub fn mirror_direction(vin: Vector3D, normal: Vector3D) -> Vector3D {
-    debug_assert!((vin.length() - 1.).abs() < 1e-6);
-    debug_assert!((normal.length() - 1.).abs() < 1e-6);
-    let vin_normal = vin * normal;
-    let mut ret = vin - normal * (2. * vin_normal);
-    ret.normalize();
-
-    ret
+    Vector3D::new(vin.x, vin.y, -vin.z)
 }
 
 /// Calculates the Mirror BSDF and modifies the given ray so that it now points in that direction

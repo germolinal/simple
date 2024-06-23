@@ -2,6 +2,7 @@ use super::bsdf_sample::BSDFSample;
 use super::local_coordinates_utils::abs_cos_theta;
 use crate::samplers::sample_uniform_hemisphere;
 use crate::Float;
+
 use crate::PI;
 use crate::{ray::TransportMode, Spectrum};
 use geometry::Vector3D;
@@ -42,6 +43,8 @@ pub enum MatFlag {
     Diffuse = DIFFUSE,
     Glossy = GLOSSY,
     Specular = SPECULAR,
+    GlossyTransmissionReflection = TRANSMISSION | REFLECTION | GLOSSY,
+    SpecularTransmissionReflection = TRANSMISSION | REFLECTION | SPECULAR,
     DiffuseReflection = DIFFUSE | REFLECTION,
     DiffuseTransmission = DIFFUSE | TRANSMISSION,
     GlossyReflection = GLOSSY | REFLECTION,
@@ -103,6 +106,7 @@ pub trait MaterialTrait: std::fmt::Debug {
     fn sample_bsdf(
         &self,
         wo: Vector3D,
+        eta: Float,
         uc: Float,
         u: (Float, Float),
         transport_mode: TransportMode,
@@ -116,7 +120,7 @@ pub trait MaterialTrait: std::fmt::Debug {
         let mut rho = Spectrum::BLACK;
         uc.into_iter().zip(u2.into_iter()).for_each(|(a, b)| {
             if let Some(sample) =
-                self.sample_bsdf(wo, *a, *b, TransportMode::Radiance, TransFlag::All)
+                self.sample_bsdf(wo, 1.0, *a, *b, TransportMode::Radiance, TransFlag::All)
             {
                 rho += sample.spectrum * abs_cos_theta(sample.wi) / sample.pdf;
             }
@@ -131,9 +135,14 @@ pub trait MaterialTrait: std::fmt::Debug {
         let mut rho = Spectrum::BLACK;
         uc.into_iter().zip(u2.into_iter()).for_each(|(a, b)| {
             let wo = sample_uniform_hemisphere(*b);
-            if let Some(sample) =
-                self.sample_bsdf(wo, *a, *b, TransportMode::default(), TransFlag::default())
-            {
+            if let Some(sample) = self.sample_bsdf(
+                wo,
+                1.0,
+                *a,
+                *b,
+                TransportMode::default(),
+                TransFlag::default(),
+            ) {
                 const UNIFORM_HEMISPHERE_PDF: Float = 0.5 / PI;
                 rho += sample.spectrum * abs_cos_theta(sample.wi) * abs_cos_theta(wo)
                     / (sample.pdf * UNIFORM_HEMISPHERE_PDF);

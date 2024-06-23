@@ -38,6 +38,7 @@ impl MaterialTrait for Diffuse {
     fn sample_bsdf(
         &self,
         _wo: Vector3D,
+        _eta: Float,
         _uc: Float,
         u: (Float, Float),
         _transport_mode: TransportMode,

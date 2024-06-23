@@ -22,6 +22,7 @@ use crate::ray::Ray;
 use crate::Float;
 use crate::{colour::Spectrum, ray::TransportMode};
 use bsdf_sample::BSDFSample;
+use geometry::intersection::SurfaceSide;
 use geometry::{Point3D, Vector3D};
 use mat_trait::MaterialTrait;
 
@@ -153,20 +154,28 @@ impl Material {
         let u: (Float, Float) = rng.gen();
         let transport_mode = TransportMode::default();
         let trans_flags = TransFlag::All;
+        let wo = ray.geometry.direction;
+        let eta = ray.refraction_index;
 
         let ret = match self {
-            Self::Diffuse(m) => {
-                m.sample_bsdf(ray.geometry.direction, uc, u, transport_mode, trans_flags)
-            }
-            Self::Plastic(m) => {
-                m.sample_bsdf(ray.geometry.direction, uc, u, transport_mode, trans_flags)
-            }
-            Self::Metal(m) => {
-                m.sample_bsdf(ray.geometry.direction, uc, u, transport_mode, trans_flags)
-            }
+            Self::Diffuse(m) => m.sample_bsdf(wo, eta, uc, u, transport_mode, trans_flags),
+            Self::Plastic(m) => m.sample_bsdf(wo, eta, uc, u, transport_mode, trans_flags),
+            Self::Metal(m) => m.sample_bsdf(wo, eta, uc, u, transport_mode, trans_flags),
             Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
             Self::Mirror(_m) => panic!("Trying to sample the BSDF of a Mirror"),
-            Self::Dielectric(_m) => panic!("Trying to sample the BSDF of a Dielectric"),
+            Self::Dielectric(m) => {
+                let ret = m.sample_bsdf(wo, eta, uc, u, transport_mode, trans_flags);
+                // if front or back?
+                // dbg!("Fix the refraction index transition");
+                match ray.interaction.geometry_shading.side {
+                    // Going in
+                    SurfaceSide::Front => ray.refraction_index = m.refraction_index,
+                    // Going out... TODO?: create a stack of refraction indexes
+                    SurfaceSide::Back => ray.refraction_index = 1.0,
+                    _ => unreachable!(),
+                }
+                ret
+            }
             Self::Glass(_m) => panic!("Trying to sample the BSDF of a Glass"),
         };
 

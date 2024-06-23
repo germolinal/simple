@@ -127,7 +127,12 @@ impl Glass {
             "length is {}",
             mirror_dir.length()
         );
-        let (_n1, cos1, ..) = cos_and_n(ray, normal, self.refraction_index);
+        let (_n1, cos1, ..) = cos_and_n(
+            ray.geometry.direction,
+            ray.refraction_index,
+            normal,
+            self.refraction_index,
+        );
         let intersection_pt = *intersection_pt;
         let (refl, trans) = self.refl_trans(normal, ray.geometry.direction, cos1);
 
@@ -209,7 +214,12 @@ impl Glass {
         ray: &Ray,
         vout: Vector3D,
     ) -> Spectrum {
-        let (_n1, cos1, _n2, cos2) = cos_and_n(ray, normal, self.refraction_index);
+        let (_n1, cos1, _n2, cos2) = cos_and_n(
+            ray.geometry.direction,
+            ray.refraction_index,
+            normal,
+            self.refraction_index,
+        );
         let (refl, trans) = self.refl_trans(normal, ray.geometry.direction, cos1);
         let vin = ray.geometry.direction;
         let mirror_dir = mirror_direction(vin, normal);

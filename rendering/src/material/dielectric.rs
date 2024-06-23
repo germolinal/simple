@@ -18,16 +18,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::colour::Spectrum;
+use crate::material::bsdf_sample::BSDFSample;
 use crate::material::specular::*;
-use crate::ray::Ray;
+use crate::ray::{Ray, TransportMode};
 use crate::Float;
+use crate::{colour::Spectrum, material::mat_trait::TransFlag};
 use geometry::{Point3D, Vector3D};
+
+use super::mat_trait::{MatFlag, MaterialTrait};
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
     pub colour: Spectrum,
     pub refraction_index: Float,
+    // roughness...?
 }
 
 // /// From Radiance's Dielectric.c
@@ -93,11 +97,90 @@ impl Dielectric {
     }
 }
 
-impl Dielectric {
-    pub fn id(&self) -> &str {
+impl MaterialTrait for Dielectric {
+    fn id(&self) -> &str {
         "Dielectric"
     }
 
+    fn flags(&self) -> MatFlag {
+        if (1.0 - self.refraction_index).abs() < 1e-9 {
+            MatFlag::Transmission
+        } else {
+            // if roughness < 1e-8 {
+            //     MatFlag::GlossyTransmissionReflection
+            // }else{
+            MatFlag::SpecularTransmissionReflection
+            // }
+        }
+    }
+
+    fn sample_bsdf(
+        &self,
+        wo: Vector3D,
+        eta: Float,
+        uc: Float,
+        _u: (Float, Float),
+        transport_mode: crate::ray::TransportMode,
+        trans_flags: super::mat_trait::TransFlag,
+    ) -> Option<super::bsdf_sample::BSDFSample> {
+        let normal = Vector3D::new(0., 0., 1.);
+        let (n1, cos1, n2, cos2) = cos_and_n(wo, eta, normal, self.refraction_index);
+        // let (refl, trans) = self.refl_trans(n1, cos1, n2, cos2);
+        let refl = match cos2 {
+            Some(v) => fresnel_reflectance(n1, cos1, n2, v),
+            None => 1.0,
+        };
+
+        let trans = 1.0 - refl;
+        let mut pr = refl;
+        let mut pt = trans;
+
+        let n1_over_n2 = n1 / n2;
+
+        if n1_over_n2 == 1.0 || true {
+            // if it is smooth or perectly transmissive
+            if !(trans_flags & TransFlag::Reflection) {
+                pr = 0.0;
+            }
+            if !(trans_flags & TransFlag::Transmission) {
+                pt = 0.0;
+            }
+            let ret = if uc < pr / (pr + pt) {
+                // Prefect specular reflection
+                // let wi = Vector3D::new(-wo.x, -wo.y, wo.z);
+                let wi = mirror_direction(wo, normal);
+                // let spectrum = Spectrum::gray(0.2);
+                let spectrum = Spectrum::gray(refl / cos1);f
+                let pdf = pr / (pr + pt);
+                BSDFSample::new(spectrum, wi, pdf, MatFlag::SpecularReflection)
+            } else {
+                // transmission
+                let cos2 = cos2.unwrap();
+                let wi = fresnel_transmission_dir(wo, normal, n1, cos1, n2, cos2);
+                let mut spectrum = Spectrum::gray(trans / cos2) * self.colour;
+                if let TransportMode::Radiance = transport_mode {
+                    spectrum *= n1_over_n2.sqrt();
+                }
+                let pdf = pt / (pr + pt);
+                BSDFSample::new(spectrum, wi, pdf, MatFlag::SpecularTransmission)
+            };
+            Some(ret)
+        } else {
+            unreachable!("No support for non-smooth dielectrics")
+        }
+    }
+
+    fn eval_bsdf(
+        &self,
+        wo: Vector3D,
+        wi: Vector3D,
+        transport_mode: crate::ray::TransportMode,
+    ) -> Spectrum {
+        todo!();
+    }
+}
+
+impl Dielectric {
     pub fn colour(&self) -> Spectrum {
         self.colour
     }
@@ -111,7 +194,12 @@ impl Dielectric {
         let normal = *normal;
         let intersection_pt = *intersection_pt;
 
-        let (n1, cos1, n2, cos2) = cos_and_n(ray, normal, self.refraction_index);
+        let (n1, cos1, n2, cos2) = cos_and_n(
+            ray.geometry.direction,
+            ray.refraction_index,
+            normal,
+            self.refraction_index,
+        );
         let (refl, trans) = self.refl_trans(n1, cos1, n2, cos2);
         let ray_dir = ray.geometry.direction;
         let mirror_dir = mirror_direction(ray_dir, normal);
@@ -217,7 +305,12 @@ impl Dielectric {
         ray: &Ray,
         vout: Vector3D,
     ) -> Spectrum {
-        let (n1, cos1, n2, cos2) = cos_and_n(ray, normal, self.refraction_index);
+        let (n1, cos1, n2, cos2) = cos_and_n(
+            ray.geometry.direction,
+            ray.refraction_index,
+            normal,
+            self.refraction_index,
+        );
         let (refl, trans) = self.refl_trans(n1, cos1, n2, cos2);
         let vin = ray.geometry.direction;
         let mirror_dir = mirror_direction(vin, normal);
@@ -282,7 +375,12 @@ mod tests {
             ..Ray::default()
         };
 
-        let (np1, cos1, np2, cos2) = cos_and_n(&ray, normal, mat.refraction_index);
+        let (np1, cos1, np2, cos2) = cos_and_n(
+            ray.geometry.direction,
+            ray.refraction_index,
+            normal,
+            mat.refraction_index,
+        );
         assert!((n1 - np1).abs() < 1e-8, "np1 = {}, n1 = {}", np1, n1);
         assert!((n2 - np2).abs() < 1e-8, "np2 = {}, n2 = {}", np2, n2);
         assert!((1. - cos1).abs() < 1e-8, "cos1 = {}", cos1);
@@ -331,7 +429,12 @@ mod tests {
                 ..Ray::default()
             };
 
-            let (_np1, _cos1, _np2, cos2) = cos_and_n(&ray, normal, mat.refraction_index);
+            let (_np1, _cos1, _np2, cos2) = cos_and_n(
+                ray.geometry.direction,
+                ray.refraction_index,
+                normal,
+                mat.refraction_index,
+            );
             assert!(cos2.is_some());
             angle += angle_d;
         }
@@ -347,7 +450,12 @@ mod tests {
             ..Ray::default()
         };
 
-        let (_np1, _cos1, _np2, cos2) = cos_and_n(&ray, normal, mat.refraction_index);
+        let (_np1, _cos1, _np2, cos2) = cos_and_n(
+            ray.geometry.direction,
+            ray.refraction_index,
+            normal,
+            mat.refraction_index,
+        );
         assert!(cos2.is_some());
         angle += angle_d;
 
@@ -362,7 +470,12 @@ mod tests {
                 ..Ray::default()
             };
 
-            let (_np1, _cos1, _np2, cos2) = cos_and_n(&ray, normal, mat.refraction_index);
+            let (_np1, _cos1, _np2, cos2) = cos_and_n(
+                ray.geometry.direction,
+                ray.refraction_index,
+                normal,
+                mat.refraction_index,
+            );
             assert!(cos2.is_some());
             angle += angle_d;
         }
@@ -389,7 +502,12 @@ mod tests {
             ..Ray::default()
         };
 
-        let (n1, cos1, n2, cos2) = cos_and_n(&ray, normal, mat.refraction_index);
+        let (n1, cos1, n2, cos2) = cos_and_n(
+            ray.geometry.direction,
+            ray.refraction_index,
+            normal,
+            mat.refraction_index,
+        );
         let theta1 = cos1.acos();
         let theta2 = cos2.unwrap().acos();
         let fresnel_1 = n1 * theta1.sin();
