@@ -22,7 +22,7 @@ use crate::colour::Spectrum;
 use crate::colour_matrix::ColourMatrix;
 use crate::rand::*;
 use crate::ray::Ray;
-use crate::ray_tracer::RayTracerHelper;
+
 use crate::samplers::sample_cosine_weighted_horizontal_hemisphere;
 use crate::scene::Scene;
 use crate::Float;
@@ -120,7 +120,7 @@ impl DCFactory {
                             new_ray_dir.length()
                         );
 
-                        let mut aux = RayTracerHelper::with_capacity(self.max_depth + 1);
+                        let mut aux = [0; 32];
                         let mut new_ray = Ray {
                             // time: 0.,
                             geometry: Ray3D {
@@ -175,22 +175,22 @@ impl DCFactory {
     /// Recursively traces a ray until it excedes the `max_depth` of the
     /// `DCFactory` or the ray does not hit anything (i.e., it reaches either
     /// the sky or the ground)
-    fn trace_ray(
+    fn trace_ray<const N: usize>(
         &self,
         scene: &Scene,
         ray: &mut Ray,
         contribution: &mut ColourMatrix,
         rng: &mut RandGen,
-        aux: &mut RayTracerHelper,
+        aux: &mut [usize; N],
     ) {
         // If hits an object
-        if let Some(triangle_index) = scene.cast_ray(ray, &mut aux.nodes) {
+        if let Some((triangle_index, mut interaction)) = scene.cast_ray(ray.geometry, aux) {
             // Limit bounces
             if ray.depth > self.max_depth {
                 return;
             }
             // NEARLY copied... except from the return statement
-            let material = match ray.interaction.geometry_shading.side {
+            let material = match interaction.geometry_shading.side {
                 SurfaceSide::Front => {
                     &scene.materials[scene.front_material_indexes[triangle_index]]
                 }
@@ -206,28 +206,10 @@ impl DCFactory {
                 return;
             }
 
-            let (intersection_pt, normal, ..) = ray.get_triad();
+            // let (intersection_pt, normal, ..) = ray.get_triad();
             #[cfg(feature = "textures")]
             ray.interaction
                 .interpolate_normal(scene.normals[triangle_index]);
-
-            // Handle specular materials... we have 1 or 2 rays... spawn those.
-            if material.specular_only() {
-                let paths = material.get_possible_paths(&normal, &intersection_pt, ray);
-                for (new_ray, bsdf_value) in paths.iter().flatten() {
-                    let mut new_ray = *new_ray;
-                    new_ray.colour *= *bsdf_value;
-                    new_ray.value *= bsdf_value.radiance();
-
-                    let q: Float = rng.gen();
-                    if q < self.count_specular_bounce {
-                        new_ray.depth += 1
-                    }
-
-                    self.trace_ray(scene, &mut new_ray, contribution, rng, aux)
-                }
-                return;
-            }
 
             let n_ambient_samples = ray.get_n_ambient_samples(
                 self.n_ambient_samples,
@@ -237,12 +219,17 @@ impl DCFactory {
             );
 
             // Spawn more rays
-            let depth = ray.depth;
-            aux.rays[depth] = *ray;
-            let (_pt, normal, e1, e2, ..) = ray.get_triad();
+            // let depth = ray.depth;
+
+            let (_pt, normal, ..) = ray.get_triad();
             (0..n_ambient_samples).for_each(|_| {
                 let sample = material
-                    .sample_bsdf(normal, e1, e2, intersection_pt, ray, rng)
+                    .sample_bsdf(
+                        ray.direction(),
+                        &mut interaction,
+                        &mut ray.refraction_index,
+                        rng,
+                    )
                     .unwrap();
                 let new_ray_dir = ray.geometry.direction;
                 debug_assert!(

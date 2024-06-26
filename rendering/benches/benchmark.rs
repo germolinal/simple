@@ -1,16 +1,13 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rendering::{rand::Rng, Ray, Scene, Spectrum};
+use rendering::{rand::Rng, Scene, Spectrum};
 
 // Reference targets: https://github.com/svenstaro/bvh
 pub fn criterion_benchmark(c: &mut Criterion) {
     // Setup
     let mut aux = [0; 32];
-    let mut ray = black_box(Ray {
-        geometry: geometry::Ray3D {
-            direction: geometry::Vector3D::new(0., 1., 2.).get_normalized(),
-            origin: geometry::Point3D::new(1., 2., 1.),
-        },
-        ..Ray::default()
+    let ray = black_box(geometry::Ray3D {
+        direction: geometry::Vector3D::new(0., 1., 2.).get_normalized(),
+        origin: geometry::Point3D::new(1., 2., 1.),
     });
 
     // ROOM
@@ -20,7 +17,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     room.build_accelerator();
 
     c.bench_function("intersect_room", |b| {
-        b.iter(|| room.cast_ray(&mut ray, &mut aux))
+        b.iter(|| room.cast_ray(ray, &mut aux))
     });
 
     // c.bench_function("unobstructed_room", |b| {
@@ -90,17 +87,17 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     let tri_1200 = get_triangle_scene(1200);
     c.bench_function("intersect_1200_triangles", |b| {
-        b.iter(|| tri_1200.cast_ray(&mut ray, &mut aux))
+        b.iter(|| tri_1200.cast_ray(ray, &mut aux))
     });
 
     let tri_12k = get_triangle_scene(12_000);
     c.bench_function("intersect_12k_triangles", |b| {
-        b.iter(|| tri_12k.cast_ray(&mut ray, &mut aux))
+        b.iter(|| tri_12k.cast_ray(ray, &mut aux))
     });
 
     let tri_120k = get_triangle_scene(120_000);
     c.bench_function("intersect_120k_triangles", |b| {
-        b.iter(|| tri_120k.cast_ray(&mut ray, &mut aux))
+        b.iter(|| tri_120k.cast_ray(ray, &mut aux))
     });
 
     // c.bench_function("unobstructed_triangles", |b| {
@@ -111,12 +108,9 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     // SPONZA
 
-    let mut ray = black_box(Ray {
-        geometry: geometry::Ray3D {
-            direction: geometry::Vector3D::new(1., 0., 0.).get_normalized(),
-            origin: geometry::Point3D::new(0., 5., 0.),
-        },
-        ..Ray::default()
+    let ray = black_box(geometry::Ray3D {
+        direction: geometry::Vector3D::new(1., 0., 0.).get_normalized(),
+        origin: geometry::Point3D::new(0., 5., 0.),
     });
 
     let mut scene = black_box(Scene::default());
@@ -131,17 +125,14 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     scene.build_accelerator();
 
     c.bench_function("intersect_sponza", |b| {
-        b.iter(|| scene.cast_ray(&mut ray, &mut aux))
+        b.iter(|| scene.cast_ray(ray, &mut aux))
     });
 
     // DINING
 
-    let mut ray = black_box(Ray {
-        geometry: geometry::Ray3D {
-            direction: geometry::Vector3D::new(1., 0., 0.).get_normalized(),
-            origin: geometry::Point3D::new(-4.0, 1., 0.),
-        },
-        ..Ray::default()
+    let ray = black_box(geometry::Ray3D {
+        direction: geometry::Vector3D::new(1., 0., 0.).get_normalized(),
+        origin: geometry::Point3D::new(-4.0, 1., 0.),
     });
 
     let mut scene = black_box(Scene::default());
@@ -156,7 +147,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     scene.build_accelerator();
 
     c.bench_function("intersect_dining", |b| {
-        b.iter(|| scene.cast_ray(&mut ray, &mut aux))
+        b.iter(|| scene.cast_ray(ray, &mut aux))
     });
 }
 

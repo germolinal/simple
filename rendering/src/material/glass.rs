@@ -18,10 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::colour::Spectrum;
 use crate::material::specular::*;
 use crate::ray::Ray;
 use crate::Float;
+use crate::{colour::Spectrum, ray::TransportMode};
 use geometry::{Point3D, Vector3D};
 
 fn any_transmission(colour: &mut Spectrum) -> bool {
@@ -119,7 +119,7 @@ impl Glass {
         let normal = *normal;
         // Only two possible direction:
 
-        let mirror_dir = mirror_direction(ray.geometry.direction, normal);
+        let mirror_dir = mirror_direction(ray.geometry.direction);
 
         debug_assert!(
             // some paranoia checks
@@ -208,45 +208,41 @@ impl Glass {
 
     pub fn eval_bsdf(
         &self,
-        normal: Vector3D,
-        _e1: Vector3D,
-        _e2: Vector3D,
-        ray: &Ray,
-        vout: Vector3D,
+        _wo: Vector3D,
+        _wi: Vector3D,
+        _eta: Float,
+        _transport_mode: TransportMode,
     ) -> Spectrum {
-        let (_n1, cos1, _n2, cos2) = cos_and_n(
-            ray.geometry.direction,
-            ray.refraction_index,
-            normal,
-            self.refraction_index,
-        );
-        let (refl, trans) = self.refl_trans(normal, ray.geometry.direction, cos1);
-        let vin = ray.geometry.direction;
-        let mirror_dir = mirror_direction(vin, normal);
-        debug_assert!(
-            (1. - mirror_dir.length()).abs() < 1e-5,
-            "length is {}",
-            mirror_dir.length()
-        );
+        // let normal = Vector3D::new(0., 0., 1.);
+        // let (_n1, cos1, _n2, cos2) = cos_and_n(wo, eta, normal, self.refraction_index);
+        // let (refl, trans) = self.refl_trans(normal, wo, cos1);
 
-        // If reflection
-        if vout.is_same_direction(mirror_dir) {
-            return refl;
-        }
+        // let mirror_dir = mirror_direction(wo);
+        // debug_assert!(
+        //     (1. - mirror_dir.length()).abs() < 1e-5,
+        //     "length is {}",
+        //     mirror_dir.length()
+        // );
 
-        let mut colour = self.colour;
-        if any_transmission(&mut colour) {
-            // it is not refraction either
-            return Spectrum::BLACK;
-        }
-        // Check transmission
-        if let Some(_cos2) = cos2 {
-            if vout.is_same_direction(vin) {
-                return self.colour * trans;
-            }
-        }
-        // panic!("Glass should never reach critical angle");
-        Spectrum::ONE / cos1
+        // // If reflection
+        // if vout.is_same_direction() {
+        //     return refl;
+        // }
+
+        // let mut colour = self.colour;
+        // if any_transmission(&mut colour) {
+        //     // it is not refraction either
+        //     return Spectrum::BLACK;
+        // }
+        // // Check transmission
+        // if let Some(_cos2) = cos2 {
+        //     if vout.is_same_direction(vin) {
+        //         return self.colour * trans;
+        //     }
+        // }
+        // // panic!("Glass should never reach critical angle");
+        // Spectrum::ONE / cos1
+        Spectrum::BLACK
     }
 }
 

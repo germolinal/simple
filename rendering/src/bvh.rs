@@ -548,7 +548,7 @@ impl BoundingVolumeTree {
     pub fn intersect<const N: usize>(
         &self,
         scene: &Scene,
-        ray: &Ray3D,
+        ray: Ray3D,
         nodes_to_visit: &mut [usize; N], //&mut Vec<usize>,
     ) -> Option<(usize, Point3D)> {
         const MIN_T: Float = 0.0000001;
@@ -633,7 +633,7 @@ impl BoundingVolumeTree {
     pub fn unobstructed_distance<const N: usize>(
         &self,
         scene: &Scene,
-        ray: &Ray3D,
+        ray: Ray3D,
         distance_squared: Float,
         nodes_to_visit: &mut [usize; N],
     ) -> bool {
@@ -717,7 +717,7 @@ mod tests {
     use crate::colour::Spectrum;
     use crate::material::Material;
     use crate::material::Plastic;
-    use crate::Ray;
+
     use geometry::{Point3D, Ray3D, Sphere3D};
 
     use crate::primitive::Primitive;
@@ -764,10 +764,13 @@ mod tests {
     #[test]
     fn test_empty() {
         let mut scene = Scene::new();
-        let ray = Ray::default();
+        let ray = Ray3D {
+            origin: Point3D::new(0., 0., 0.),
+            direction: Vector3D::new(0., 0., 0.),
+        };
         let (bvh, _) = BoundingVolumeTree::new(&mut scene);
         let mut aux = [0; 32];
-        assert!(bvh.intersect(&scene, &ray.geometry, &mut aux).is_none());
+        assert!(bvh.intersect(&scene, ray, &mut aux).is_none());
     }
 
     /// A simple scene with two 0.5-r-spheres; one at x = -1 and the other
@@ -857,33 +860,31 @@ mod tests {
             assert_eq!(&scene.triangles[i], &original_scene.triangles[original_i]);
         }
 
-        let mut ray = Ray {
-            geometry: Ray3D {
-                origin: Point3D::new(-1., -10., 0.),
-                direction: Vector3D::new(0., 1., 0.),
-            },
-            ..Ray::default()
+        let ray = Ray3D {
+            origin: Point3D::new(-1., -10., 0.),
+            direction: Vector3D::new(0., 1., 0.),
         };
         let mut aux = [0; 32];
-        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
+        let res = scene.cast_ray(ray, &mut aux);
+        assert!(res.is_some());
+        let (_, interaction) = res.unwrap();
 
         assert!(
-            (ray.interaction.point - Point3D::new(-1., -0.5, 0.)).length() < 1e-5,
+            (interaction.point - Point3D::new(-1., -0.5, 0.)).length() < 1e-5,
             "diff is {}",
-            (ray.interaction.point - Point3D::new(-1., -0.5, 0.)).length()
+            (interaction.point - Point3D::new(-1., -0.5, 0.)).length()
         );
 
-        let mut ray = Ray {
-            geometry: Ray3D {
-                origin: Point3D::new(1., -10., 0.),
-                direction: Vector3D::new(0., 1., 0.),
-            },
-            ..Ray::default()
+        let ray = Ray3D {
+            origin: Point3D::new(1., -10., 0.),
+            direction: Vector3D::new(0., 1., 0.),
         };
         let mut aux = [0; 32];
-        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
+        let ret = scene.cast_ray(ray, &mut aux);
+        assert!(ret.is_some());
+        let (_, interaction) = ret.unwrap();
 
-        assert!((ray.interaction.point - Point3D::new(1., -0.5, 0.)).length() < 1e-5);
+        assert!((interaction.point - Point3D::new(1., -0.5, 0.)).length() < 1e-5);
     }
 
     #[test]
@@ -892,32 +893,29 @@ mod tests {
         scene.build_accelerator();
         // let (bvh, ..) = BoundingVolumeTree::new(&mut scene);
 
-        let mut ray = Ray {
-            geometry: Ray3D {
-                origin: Point3D::new(0., -10., -1.),
-                direction: Vector3D::new(0., 1., 0.),
-            },
-            ..Ray::default()
+        let ray = Ray3D {
+            origin: Point3D::new(0., -10., -1.),
+            direction: Vector3D::new(0., 1., 0.),
         };
         let mut aux = [0; 32];
-        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
-
+        let ret = scene.cast_ray(ray, &mut aux);
+        assert!(ret.is_some());
+        let (_, interaction) = ret.unwrap();
         assert!(
-            (ray.interaction.point - Point3D::new(0., -0.5, -1.)).length() < 1e-9,
+            (interaction.point - Point3D::new(0., -0.5, -1.)).length() < 1e-9,
             "Point was {}",
-            ray.interaction.point
+            interaction.point
         );
 
-        let mut ray = Ray {
-            geometry: Ray3D {
-                origin: Point3D::new(0., -10., 1.),
-                direction: Vector3D::new(0., 1., 0.),
-            },
-            ..Ray::default()
+        let ray = Ray3D {
+            origin: Point3D::new(0., -10., 1.),
+            direction: Vector3D::new(0., 1., 0.),
         };
         let mut aux = [0; 32];
-        assert!(scene.cast_ray(&mut ray, &mut aux).is_some());
+        let ret = scene.cast_ray(ray, &mut aux);
+        assert!(ret.is_some());
+        let (_, interaction) = ret.unwrap();
 
-        assert!((ray.interaction.point - Point3D::new(0., -0.5, 1.)).length() < 1e-9);
+        assert!((interaction.point - Point3D::new(0., -0.5, 1.)).length() < 1e-9);
     }
 }

@@ -21,9 +21,10 @@ SOFTWARE.
 use crate::camera::{Camera, CameraSample};
 use crate::colour::Spectrum;
 use crate::image::ImageBuffer;
+use crate::interaction::Interaction;
 use crate::material::Material;
 use crate::rand::*;
-use crate::ray::Ray;
+use crate::samplers::sample_uniform_hemisphere;
 use crate::scene::{Object, Scene};
 use crate::Float;
 use geometry::intersection::SurfaceSide;
@@ -31,29 +32,6 @@ use geometry::Ray3D;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
-
-pub struct RayTracerHelper {
-    pub rays: Vec<Ray>,
-    pub nodes: [usize; 32],
-}
-
-impl std::default::Default for RayTracerHelper {
-    fn default() -> Self {
-        Self {
-            rays: vec![Ray::default(); 15],
-            nodes: [0; 32], //Vec::with_capacity(64),
-        }
-    }
-}
-
-impl RayTracerHelper {
-    pub fn with_capacity(n: usize) -> Self {
-        Self {
-            rays: vec![Ray::default(); n],
-            nodes: [0; 32], // Vec::with_capacity(64),
-        }
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct RayTracer {
@@ -78,118 +56,112 @@ impl Default for RayTracer {
 
 impl RayTracer {
     /// Recursively traces a ray
-    pub fn trace_ray(
+    pub fn trace_ray<const N: usize>(
         &self,
         rng: &mut RandGen,
         scene: &Scene,
-        ray: &mut Ray,
-        aux: &mut RayTracerHelper,
+        mut ray: Ray3D,
+        aux: &mut [usize; N],
     ) -> Spectrum {
-        if let Some(triangle_index) = scene.cast_ray(ray, &mut aux.nodes) {
-            let material = match ray.interaction.geometry_shading.side {
-                SurfaceSide::Front => {
-                    &scene.materials[scene.front_material_indexes[triangle_index]]
-                }
-                SurfaceSide::Back => &scene.materials[scene.back_material_indexes[triangle_index]],
-                SurfaceSide::NonApplicable => {
-                    // Hit parallel to the surface...
-                    return Spectrum::BLACK;
-                }
-            };
-
-            let (intersection_pt, normal, ..) = ray.get_triad();
-
-            // for now, emmiting materials don't reflect... but they
-            // are visible when viewed directly from the camera
-            if material.emits_light() {
-                if ray.depth == 0 {
-                    return material.colour();
-                } else {
-                    return Spectrum::BLACK;
-                }
-                // let light_pdf = crate::triangle::triangle_solid_angle_pdf(
-                //     &scene.triangles[triangle_index],
-                //     intersection_pt,
-                //     ray.interaction.geometry_shading.normal,
-                //     &ray.geometry,
-                // );
-                // return (material.colour(), light_pdf);
-                // return (Spectrum::BLACK, light_pdf);
-            }
-
-            // Limit bounces
-            if ray.depth > self.max_depth {
-                return Spectrum::BLACK;
-            }
-
-            #[cfg(feature = "textures")]
-            ray.interaction
-                .interpolate_normal(scene.normals[triangle_index]);
-
-            // let mut wt = ray.value;
-
-            // Handle specular materials... we have 1 or 2 rays... spawn those.
-            // if material.specular_only() {
-            //     let mut specular_li = Spectrum::BLACK;
-
-            //     let paths = material.get_possible_paths(&normal, &intersection_pt, ray);
-
-            //     for (new_ray, bsdf_value) in paths.iter().flatten() {
-            //         let mut new_ray = *new_ray;
-
-            //         ray.value *= bsdf_value.radiance();
-
-            //         new_ray.depth += 1;
-
-            //         let li = self.trace_ray(rng, scene, &mut new_ray, aux);
-            //         specular_li += li * *bsdf_value
-            //     }
-
-            //     ray.colour *= specular_li;
-            //     return specular_li;
-            // }
-
-            // Calculate the number of direct samples
-
-            let n_shadow_samples = if ray.depth == 0 {
-                self.n_shadow_samples
-            } else {
-                1
-            };
-
-            /* DIRECT LIGHT */
-            let local = self.get_local_illumination(
-                scene,
-                material,
-                ray,
-                rng,
-                n_shadow_samples,
-                &mut aux.nodes,
-            );
-
-            /* INDIRECT */
-            let n_ambient_samples = ray.get_n_ambient_samples(
-                self.n_ambient_samples,
-                self.max_depth,
-                self.limit_weight,
-                rng,
-            );
-
-            let global =
-                self.get_global_illumination(scene, n_ambient_samples, material, ray, rng, aux);
-
-            local + global
+        let original_ray = ray;
+        let mut spectrum = Spectrum::BLACK;
+        // If max_depth is Zero, then there is no point in
+        // using multiple ambient samples
+        let n_ambient_samples = if self.max_depth == 0 {
+            1
         } else {
-            // Did not hit... so, let's check the sky
-            if let Some(sky) = &scene.sky {
-                let sky_brightness = sky(ray.geometry.direction);
-                let colour = scene.sky_colour.unwrap_or_else(|| Spectrum::gray(1.0));
-                ray.colour *= colour * sky_brightness;
-                colour * sky_brightness
-            } else {
-                Spectrum::BLACK
+            self.n_ambient_samples
+        };
+
+        for _ in 0..n_ambient_samples {
+            ray = original_ray;
+
+            let mut beta = Spectrum::ONE;
+            let mut depth = 0;
+            let mut refraction_coefficient = 1.0;
+            // println!("====");
+            loop {
+                // println!("{},{}", beta.0[0], spectrum.0[0]);
+                let intersect = scene.cast_ray(ray, aux);
+                if intersect.is_none() {
+                    // and also the let's check the sky
+                    if let Some(sky) = &scene.sky {
+                        let sky_brightness = sky(ray.direction);
+                        let colour = scene.sky_colour.unwrap_or_else(|| Spectrum::gray(1.0));
+                        spectrum += beta * colour * sky_brightness;
+                    }
+                    // path is done
+                    break;
+                }
+
+                let (triangle_index, mut interaction) = intersect.unwrap();
+                let material = match interaction.geometry_shading.side {
+                    SurfaceSide::Front => {
+                        &scene.materials[scene.front_material_indexes[triangle_index]]
+                    }
+                    SurfaceSide::Back => {
+                        &scene.materials[scene.back_material_indexes[triangle_index]]
+                    }
+                    SurfaceSide::NonApplicable => {
+                        // Hit parallel to the surface...
+                        break;
+                    }
+                };
+
+                // We hit a light... lights do not reflect,
+                // so break
+                if material.emits_light() {
+                    if depth == 0 {
+                        spectrum += beta * material.colour();
+                    }
+                    break;
+                }
+
+                #[cfg(feature = "textures")]
+                interaction.interpolate_normal(scene.normals[triangle_index]);
+
+                // Direct lighting
+                let n_shadow_samples = if depth == 0 { self.n_shadow_samples } else { 1 };
+                let local = self.get_local_illumination(
+                    scene,
+                    material,
+                    &interaction,
+                    refraction_coefficient,
+                    rng,
+                    n_shadow_samples,
+                    aux,
+                );
+                spectrum += beta * local;
+
+                // reached limit.
+                depth += 1;
+                if depth > self.max_depth {
+                    break;
+                }
+
+                // Sample BSDF, and continue
+                if let Some(sample) = material.sample_bsdf(
+                    ray.direction,
+                    &mut interaction,
+                    &mut refraction_coefficient,
+                    rng,
+                ) {
+                    let cos_theta = (interaction.geometry_shading.normal * sample.wi).abs();
+
+                    beta *= sample.spectrum * cos_theta / (sample.pdf);
+                    // dbg!(spectrum, beta, sample.spectrum, cos_theta, sample.pdf);
+
+                    ray = Ray3D {
+                        direction: sample.wi,
+                        origin: interaction.point,
+                    }
+                } else {
+                    break;
+                };
             }
         }
+
+        spectrum / n_ambient_samples as Float
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -197,25 +169,26 @@ impl RayTracer {
         &self,
         scene: &Scene,
         material: &Material,
-        ray: &Ray,
+        interaction: &Interaction,
+        eta: Float,
         rng: &mut RandGen,
         n_shadow_samples: usize,
         lights: &[Object],
         node_aux: &mut [usize; N],
     ) -> Spectrum {
-        let (mut intersection_pt, normal, e1, e2) = ray.get_triad();
+        let (mut intersection_pt, normal, e1, e2) = interaction.get_triad();
         intersection_pt += normal * 0.001; // prevent self-shading
         let mut local_illum = Spectrum::BLACK;
 
         let n = n_shadow_samples;
-        let n_shadow_samples = n_shadow_samples as Float;
+        let n_shadow_samples = n as Float;
 
         for light in lights.iter() {
             // let this_origin = this_origin + normal * 0.001;
             let mut i = 0;
             // let mut missed = 0;
             while i < n {
-                let direction = if n == 1 {
+                let direction = if n > 1 {
                     light.primitive.sample_direction(rng, intersection_pt)
                 } else {
                     let (_, direction) = light.primitive.direction(intersection_pt);
@@ -227,7 +200,7 @@ impl RayTracer {
                 };
 
                 if let Some((light_colour, light_pdf)) =
-                    intersect_light(scene, light, &shadow_ray, node_aux)
+                    intersect_light(scene, light, shadow_ray, node_aux)
                 {
                     i += 1;
                     if light_pdf < 1e-18 {
@@ -236,28 +209,28 @@ impl RayTracer {
                     }
 
                     let cos_theta = (normal * direction).abs();
-                    let vout = shadow_ray.direction * -1.;
+                    let wi = shadow_ray.direction; // * -1.;
 
-                    let mat_bsdf_value = material.eval_bsdf(normal, e1, e2, ray, vout);
+                    let mat_bsdf_value = material.eval_bsdf(
+                        normal,
+                        e1,
+                        e2,
+                        Ray3D {
+                            direction: interaction.wo,
+                            origin: interaction.point + normal * 0.0001,
+                        },
+                        wi,
+                        eta,
+                    );
                     let fx = light_colour * cos_theta * mat_bsdf_value;
 
                     // Return... light sources have a pdf equal to their 1/Omega (i.e. their size)
-                    local_illum += fx / (n_shadow_samples * light_pdf); //denominator;
-                } else {
-                    #[cfg(debug_assertions)]
-                    {
-                        eprintln!(
-                            "Missed Light... primitive '{}' (i = {})",
-                            light.primitive.id(),
-                            i
-                        )
-                    }
+                    local_illum += fx / light_pdf;
                 }
-                // ... missed light. Try again
             } // end of iterating samples
         } // end of iterating lights
 
-        local_illum
+        local_illum / n_shadow_samples
     }
 
     /// Calculates the luminance produced by the direct sources in the
@@ -265,8 +238,9 @@ impl RayTracer {
     fn get_local_illumination<const N: usize>(
         &self,
         scene: &Scene,
-        material: &Material, //&impl Material,
-        ray: &Ray,
+        material: &Material,
+        interaction: &Interaction,
+        eta: Float,
         rng: &mut RandGen,
         n_shadow_samples: usize,
         node_aux: &mut [usize; N],
@@ -274,7 +248,8 @@ impl RayTracer {
         let close = self.sample_light_array(
             scene,
             material,
-            ray,
+            interaction,
+            eta,
             rng,
             n_shadow_samples,
             &scene.lights,
@@ -283,7 +258,8 @@ impl RayTracer {
         let distant = self.sample_light_array(
             scene,
             material,
-            ray,
+            interaction,
+            eta,
             rng,
             n_shadow_samples,
             &scene.distant_lights,
@@ -294,60 +270,57 @@ impl RayTracer {
         close + distant
     }
 
-    fn get_global_illumination(
-        &self,
-        scene: &Scene,
-        n_ambient_samples: usize,
-        material: &Material,
-        ray: &mut Ray,
-        rng: &mut RandGen,
-        aux: &mut RayTracerHelper,
-    ) -> Spectrum {
-        if n_ambient_samples == 0 {
-            return Spectrum::BLACK;
-        }
+    // fn get_global_illumination<const N: usize>(
+    //     &self,
+    //     scene: &Scene,
+    //     n_ambient_samples: usize,
+    //     material: &Material,
+    //     ray: &mut Ray,
+    //     rng: &mut RandGen,
+    //     aux: &mut [usize; N],
+    // ) -> Spectrum {
+    //     if n_ambient_samples == 0 {
+    //         return Spectrum::BLACK;
+    //     }
 
-        let (intersection_pt, normal, e1, e2) = ray.get_triad();
+    //     let (intersection_pt, normal, e1, e2) = ray.get_triad();
 
-        let mut global = Spectrum::BLACK;
+    //     let mut global = Spectrum::BLACK;
 
-        let depth = ray.depth;
-        aux.rays[depth] = *ray; // store a copy.
+    //     let depth = ray.depth;
 
-        let mut count = 0;
-        while count < n_ambient_samples {
-            // Choose a direction.
-            let sample = material
-                .sample_bsdf(normal, e1, e2, intersection_pt, ray, rng)
-                .expect("could not sample material");
-            let new_ray_dir = ray.geometry.direction;
-            debug_assert!(
-                (1. - new_ray_dir.length()).abs() < 1e-2,
-                "Length is {}",
-                new_ray_dir.length()
-            );
-            debug_assert!(
-                (1. - normal.length()).abs() < 1e-2,
-                "normal Length is {}",
-                normal.length()
-            );
+    //     let mut count = 0;
+    //     while count < n_ambient_samples {
+    //         // Choose a direction.
+    //         let sample = material
+    //             .sample_bsdf(normal, e1, e2, intersection_pt, ray, rng)
+    //             .expect("could not sample material");
+    //         let new_ray_dir = ray.geometry.direction;
+    //         debug_assert!(
+    //             (1. - new_ray_dir.length()).abs() < 1e-2,
+    //             "Length is {}",
+    //             new_ray_dir.length()
+    //         );
+    //         debug_assert!(
+    //             (1. - normal.length()).abs() < 1e-2,
+    //             "normal Length is {}",
+    //             normal.length()
+    //         );
 
-            let cos_theta = (normal * new_ray_dir).abs();
-            let bsdf_rad = sample.spectrum.radiance();
-            ray.depth += 1;
-            ray.value *= bsdf_rad * cos_theta / sample.pdf;
+    //         let cos_theta = (normal * new_ray_dir).abs();
+    //         let bsdf_rad = sample.spectrum.radiance();
+    //         ray.depth += 1;
+    //         ray.value *= bsdf_rad * cos_theta / sample.pdf;
 
-            let li = self.trace_ray(rng, scene, ray, aux);
+    //         let li = self.trace_ray(rng, scene, ray, aux);
 
-            count += 1;
+    //         count += 1;
 
-            global += li * sample.spectrum * cos_theta / sample.pdf;
+    //         global += li * sample.spectrum * cos_theta / sample.pdf;
+    //     }
 
-            *ray = aux.rays[depth];
-        }
-
-        global / (count as Float)
-    }
+    //     global / (count as Float)
+    // }
 
     #[allow(clippy::needless_collect)]
     pub fn render(self, scene: &Scene, camera: &dyn Camera) -> ImageBuffer {
@@ -369,22 +342,15 @@ impl RayTracer {
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
-            let mut aux = RayTracerHelper::with_capacity(self.max_depth + 1);
+            let mut aux = [0; 32];
             let mut rng = get_rng();
 
             for pixel in chunk {
                 let y = (pindex as Float / width as Float).floor() as usize;
                 let x = pindex - y * width;
-                let (mut ray, weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
-                ray.value = weight;
+                let (ray, _weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
 
-                let v = self.trace_ray(&mut rng, scene, &mut ray, &mut aux);
-                // if v.radiance() < 1e-4{
-                //     dbg!(pindex, v);
-                //     let (mut ray, weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
-                //     let (v, _) = self.trace_ray(&mut rng, scene, &mut ray, &mut aux);
-                // }
-                *pixel = v;
+                *pixel = self.trace_ray(&mut rng, scene, ray, &mut aux);
 
                 progress.tic();
                 pindex += 1;
@@ -405,7 +371,7 @@ impl RayTracer {
 pub fn intersect_light<const N: usize>(
     scene: &Scene,
     light: &Object,
-    shadow_ray: &Ray3D,
+    shadow_ray: Ray3D,
     node_aux: &mut [usize; N],
 ) -> Option<(Spectrum, Float)> {
     let light_direction = shadow_ray.direction;
@@ -414,7 +380,7 @@ pub fn intersect_light<const N: usize>(
     // Expect direction to be normalized
     debug_assert!((1. - light_direction.length()).abs() < 0.0001);
 
-    let info = light.primitive.intersect(shadow_ray)?;
+    let info = light.primitive.intersect(&shadow_ray)?;
 
     let light_distance_squared = (origin - info.p).length_squared();
 
@@ -435,7 +401,7 @@ pub fn intersect_light<const N: usize>(
     // let light_material = &scene.materials[light.front_material_index];
 
     let light_colour = light_material.colour();
-    let light_pdf = light.primitive.solid_angle_pdf(&info, shadow_ray);
+    let light_pdf = light.primitive.solid_angle_pdf(&info, &shadow_ray);
 
     // let light_pdf = 1. / light.primitive.omega(origin);
 

@@ -74,7 +74,7 @@ pub use from_simple_model::{SceneElement, SimpleModelReader};
 
 // Ray-tracer
 mod ray_tracer;
-pub use ray_tracer::{RayTracer, RayTracerHelper};
+pub use ray_tracer::RayTracer;
 
 // mod backward_metropolis;
 // pub use crate::backward_metropolis::{

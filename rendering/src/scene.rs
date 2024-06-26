@@ -22,9 +22,9 @@ SOFTWARE.
 use crate::bvh::BoundingVolumeTree;
 use crate::colour::Spectrum;
 use crate::from_simple_model::SimpleModelReader;
+use crate::interaction::Interaction;
 use crate::material::{Light, Material};
 use crate::primitive::Primitive;
-use crate::ray::Ray;
 use crate::triangle::Triangle;
 use crate::Float;
 use calendar::Date;
@@ -220,24 +220,24 @@ impl Scene {
     /// the Interaction
     pub fn cast_ray<const N: usize>(
         &self,
-        ray: &mut Ray,
+        ray: Ray3D,
         node_aux: &mut [usize; N],
-    ) -> Option<usize> {
+    ) -> Option<(usize, Interaction)> {
         if let Some(accelerator) = &self.accelerator {
-            let aux = accelerator.intersect(self, &ray.geometry, node_aux);
+            let aux = accelerator.intersect(self, ray, node_aux);
 
             match aux {
                 Some((i, ..)) => {
                     // update ray
                     let t = &self.triangles[i];
-                    let (point, u, v) =
-                        crate::triangle::baricentric_coordinates(&ray.geometry, t).unwrap();
-                    ray.interaction.point = point;
-                    ray.interaction.wo = ray.geometry.direction * -1.;
-                    ray.interaction.geometry_shading =
-                        crate::triangle::new_info(t, point, u, v, ray.geometry.direction);
-                    // return
-                    Some(i)
+                    let (point, u, v) = crate::triangle::baricentric_coordinates(ray, t).unwrap();
+                    let interaction = Interaction {
+                        point,
+                        wo: ray.direction * -1.0,
+                        geometry_shading: crate::triangle::new_info(t, point, u, v, ray.direction),
+                    };
+
+                    Some((i, interaction))
                 }
                 None => None,
             }
@@ -249,7 +249,7 @@ impl Scene {
     /// Checks whether a [`Ray3D`] can travel a certain distance without hitting any surface
     pub fn unobstructed_distance<const N: usize>(
         &self,
-        ray: &Ray3D,
+        ray: Ray3D,
         distance_squared: Float,
         node_aux: &mut [usize; N],
     ) -> bool {

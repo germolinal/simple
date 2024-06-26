@@ -116,7 +116,7 @@ pub fn world_bounds(t: &Triangle) -> BBox3D {
 /// (or `None` if they don't intersect)
 pub fn intersect_triangle_slice(
     scene: &Scene,
-    ray: &geometry::Ray3D,
+    ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
 ) -> Option<(usize, IntersectionInfo)> {
@@ -125,7 +125,7 @@ pub fn intersect_triangle_slice(
 
 pub fn simple_intersect_triangle_slice(
     scene: &Scene,
-    ray: &geometry::Ray3D,
+    ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
 ) -> Option<(usize, Point3D)> {
@@ -136,22 +136,11 @@ pub fn simple_intersect_triangle_slice(
 /// intersection
 pub fn simple_triangle_intersect(
     scene: &Scene,
-    ray: &geometry::Ray3D,
+    ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
 ) -> Option<(usize, geometry::Point3D)> {
     fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
-}
-
-pub struct Intersection {
-    pub e1: Vector3D,
-    pub e2: Vector3D,
-    pub normal: Vector3D,
-    pub point: Point3D,
-    // pub tri_index: usize,
-    pub side: SurfaceSide,
-    pub u: Float,
-    pub v: Float,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -168,8 +157,12 @@ pub fn new_info(
     let normal = dpdu.cross(dpdv).get_normalized();
     // eprintln!("normal = {}", normal);
     let (normal, side) = SurfaceSide::get_side(normal, ray_dir);
-    let e1 = dpdu.get_normalized();
-    let e2 = normal.cross(e1).get_normalized();
+    let mut e1 = dpdu.get_normalized();
+    let mut e2 = normal.cross(e1).get_normalized();
+    if let SurfaceSide::Back = side {
+        std::mem::swap(&mut e1, &mut e2)
+    }
+
     debug_assert!((1.0 - normal.length()).abs() < 1e-5);
     debug_assert!((1.0 - e1.length()).abs() < 1e-5);
     debug_assert!((1.0 - e2.length()).abs() < 1e-5);
@@ -470,7 +463,7 @@ mod testing {
                 direction: dir,
             };
 
-            if let Some((.., info)) = intersect_triangle_slice(&scene, &ray, 0, 1) {
+            if let Some((.., info)) = intersect_triangle_slice(&scene, ray, 0, 1) {
                 let phit = info.p;
 
                 if let Some(exp_p) = expect_pt {

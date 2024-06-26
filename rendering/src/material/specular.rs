@@ -155,17 +155,18 @@ pub fn fresnel_transmission_dir(
 }
 
 /// Calculates the purely specular reflection direction, assuming the normal direction is UP
-pub fn mirror_direction(vin: Vector3D, normal: Vector3D) -> Vector3D {
+pub fn mirror_direction(vin: Vector3D) -> Vector3D {
     Vector3D::new(vin.x, vin.y, -vin.z)
 }
 
 /// Calculates the Mirror BSDF and modifies the given ray so that it now points in that direction
-pub fn mirror_bsdf(intersection_pt: Point3D, ray: &mut Ray, normal: Vector3D) -> Float {
+pub fn mirror_bsdf(intersection_pt: Point3D, ray: &mut Ray) -> Float {
     // avoid self shading
-    ray.geometry.origin = intersection_pt + normal * 0.00001;
+    ray.geometry.origin = intersection_pt;
+    ray.geometry.origin.z += 0.00001;
     let ray_dir = ray.geometry.direction;
-    let cos = (ray_dir * normal).abs();
-    ray.geometry.direction = mirror_direction(ray_dir, normal);
+    let cos = ray_dir.z.abs();
+    ray.geometry.direction = mirror_direction(ray_dir);
     debug_assert!(
         (ray.geometry.direction.length() - 1.).abs() < 1e-5,
         "dir len is {}",
@@ -175,10 +176,10 @@ pub fn mirror_bsdf(intersection_pt: Point3D, ray: &mut Ray, normal: Vector3D) ->
 }
 
 /// Evaluates the mirror BSDf
-pub fn eval_mirror_bsdf(normal: Vector3D, vin: Vector3D, vout: Vector3D) -> Float {
-    let mirror = mirror_direction(vin, normal);
+pub fn eval_mirror_bsdf(vin: Vector3D, vout: Vector3D) -> Float {
+    let mirror = mirror_direction(vin);
     if vout.is_parallel(mirror) {
-        let cos = (vin * normal).abs();
+        let cos = (vin.z).abs();
         1. / cos
     } else {
         0.
@@ -191,12 +192,12 @@ mod tests {
 
     #[test]
     fn test_mirror_direction() -> Result<(), String> {
-        fn check(v: Vector3D, normal: Vector3D, mirror: Vector3D) -> Result<(), String> {
+        fn check(v: Vector3D, _normal: Vector3D, mirror: Vector3D) -> Result<(), String> {
             let v = v.get_normalized();
-            let normal = normal.get_normalized();
+            // let normal = normal.get_normalized();
             let mirror = mirror.get_normalized();
 
-            let found = mirror_direction(v, normal);
+            let found = mirror_direction(v);
             if !(mirror - found).is_zero() {
                 return Err(format!(
                     "Expected mirror direction was {} | found {}",

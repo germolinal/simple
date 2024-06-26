@@ -23,7 +23,7 @@ use crate::{colour::Spectrum, ray::TransportMode};
 use geometry::Vector3D;
 
 use super::bsdf_sample::BSDFSample;
-use super::mat_trait::TransFlag;
+use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
 
 /// Information required for modelling Radiance's Plastic and Plastic
 #[derive(Debug, Clone)]
@@ -33,16 +33,19 @@ pub struct Plastic {
     pub roughness: Float,
 }
 
-impl Plastic {
-    pub fn id(&self) -> &str {
+impl MaterialTrait for Plastic {
+    fn id(&self) -> &str {
         "Plastic"
     }
+    fn flags(&self) -> MatFlag {
+        MatFlag::GlossyReflection
+    }
 
-    pub fn colour(&self) -> Spectrum {
+    fn colour(&self) -> Spectrum {
         self.colour
     }
 
-    pub fn sample_bsdf(
+    fn sample_bsdf(
         &self,
         wo: Vector3D,
         _eta: Float,
@@ -75,7 +78,13 @@ impl Plastic {
         // (bsdf, weight)
     }
 
-    pub fn eval_bsdf(&self, wo: Vector3D, wi: Vector3D, transport_mode: TransportMode) -> Spectrum {
+    fn eval_bsdf(
+        &self,
+        wo: Vector3D,
+        wi: Vector3D,
+        _eta: Float,
+        transport_mode: TransportMode,
+    ) -> Spectrum {
         let (direct, diffuse) = crate::material::ward::evaluate_ward_anisotropic(
             self.specularity,
             self.roughness,

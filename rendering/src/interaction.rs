@@ -22,7 +22,7 @@ use geometry::intersection::IntersectionInfo;
 use geometry::{Point3D, Transform, Vector3D};
 
 /// The data for a SurfaceInteraction]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Interaction {
     /* GENERAL INTERACTION DATA */
     /// The [`Point3D`] of the interaction
@@ -32,10 +32,6 @@ pub struct Interaction {
     /// This is the negative ray direction
     pub wo: Vector3D,
 
-    // Scaterring media at the point of interaction
-    // pub medium_interface: MediumInterface,
-
-    /* FOR SURFACE INTERACTION */
     /// Stores the shading information based on
     /// pure geometry
     pub geometry_shading: IntersectionInfo,
@@ -55,6 +51,15 @@ impl Interaction {
             wo,
             geometry_shading,
         }
+    }
+
+    /// Returns the Intersection point, Normal, e1, e2
+    pub fn get_triad(&self) -> (Point3D, Vector3D, Vector3D, Vector3D) {
+        let intersection_pt = self.point;
+        let normal = self.geometry_shading.normal;
+        let e1 = self.geometry_shading.dpdu;
+        let e2 = self.geometry_shading.dpdv;
+        (intersection_pt, normal, e1, e2)
     }
 
     #[cfg(feature = "textures")]

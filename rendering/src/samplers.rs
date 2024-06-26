@@ -37,6 +37,24 @@ pub fn uniform_sample_triangle(u: (Float, Float), a: Point3D, b: Point3D, c: Poi
 }
 
 pub fn uniform_sample_horizontal_disc(u: (Float, Float), radius: Float) -> (Float, Float) {
+    // let (ux, uy) = (2.0 * u.0 - 1.0, 2.0 * u.1 - 1.0);
+    // if ux < 1e-9 && uy < 1e-9 {
+    //     return (0., 0.);
+    // }
+
+    // let (theta, mut r) = if ux.abs() > uy.abs() {
+    //     let r = ux;
+    //     let theta = (crate::PI / 4.0) * (uy / ux);
+    //     (theta, r)
+    // } else {
+    //     let r = uy;
+    //     let theta = crate::PI / 2.0 - (crate::PI / 4.0) * (ux / uy);
+    //     (theta, r)
+    // };
+    // r *= radius;
+    // let (sin, cos) = theta.sin_cos();
+    // (r * sin, r * cos)
+
     let (r, theta) = u;
 
     let r = radius * r.sqrt();
@@ -46,22 +64,6 @@ pub fn uniform_sample_horizontal_disc(u: (Float, Float), radius: Float) -> (Floa
     let local_x = r * theta_sin;
     let local_y = r * theta_cos;
     (local_x, local_y)
-
-    // rejection sampling
-    // const MAX_ITER: usize = 30;
-    // for _ in 0..MAX_ITER {
-    //     let (mut x, mut y): (Float, Float) = rng.gen();
-    //     x = x.mul_add(2.0 * radius, -radius);
-    //     y = y.mul_add(2.0 * radius, -radius);
-    //     let found_rsq = x * x + y * y;
-    //     if found_rsq < radius * radius {
-    //         return (x as f32, y as f32);
-    //     }
-    // }
-    // panic!(
-    //     "Exceeded maximum iterations ({}) when uniform_sample_horizontal_disc()",
-    //     MAX_ITER
-    // );
 }
 
 /// Transforms a Point from Local Coordinates (defined by the triad `local_e1`, `local_e2` and `normal`,
@@ -99,7 +101,7 @@ pub fn sample_cosine_weighted_horizontal_hemisphere(u: (Float, Float)) -> Vector
     let (local_x, local_y) = uniform_sample_horizontal_disc(u, 1.);
     let aux = (local_x * local_x + local_y * local_y).clamp(0., 1.);
     let local_z = (1. - aux).sqrt();
-    Vector3D::new(local_x as Float, local_y as Float, local_z as Float)
+    Vector3D::new(local_x, local_y, local_z)
 }
 
 /// Samples a hemisphere looking up
@@ -259,47 +261,16 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn test_approx_sin(){
-    //     const MAX_ERR : Float = 0.0105;
-    //     let mut x = 0.0;
-    //     loop {
-    //         if x > 2.*PI {
-    //             break;
-    //         }
-    //         let exp = x.sin();
-    //         let found = approx_sin(x);
-    //         let diff = exp - found;
-    //         x += PI/180.;
-    //         println!("[SMALL_ANGLE = {}] sin = {} | approx_sin = {} | err = {}", PI/5., exp, found, diff);
-    //         if exp >= 0. {
-    //             assert!(diff >= 0.);
-    //         }else{
-    //             assert!(diff <= 0.);
-    //         }
-    //         assert!( diff.abs() < MAX_ERR);
-    //     }
-    // }
-
-    // #[test]
-    // fn test_approx_cos(){
-    //     const MAX_ERR : Float = 0.0023;
-    //     let mut x = 0.0;
-    //     loop {
-    //         if x > 2.*PI {
-    //             break;
-    //         }
-    //         let exp = x.cos();
-    //         let found = approx_cos(x);
-    //         let diff = exp - found;
-    //         x += PI/180.;
-    //         println!("[SMALL_ANGLE = {}] cos = {} | approx_cos = {} | err = {}", PI/5., exp, found, diff);
-    //         if exp >= -1e-5 {
-    //             assert!(diff >= 0.);
-    //         }else{
-    //             assert!(diff <= 0.);
-    //         }
-    //         assert!( diff.abs() < MAX_ERR);
-    //     }
-    // }
+    #[test]
+    fn test_uniform_sample_horizontal_disc() {
+        let mut rng = get_rng();
+        for _ in 0..100 {
+            let u = rng.gen();
+            let (x, y) = uniform_sample_horizontal_disc(u, 1.0);
+            assert!(!x.is_nan());
+            assert!(!y.is_nan());
+            assert!(x * x + y * y <= 1.0);
+            println!("{},{}", x, y);
+        }
+    }
 }

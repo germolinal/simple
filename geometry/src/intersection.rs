@@ -63,7 +63,7 @@ impl std::default::Default for SurfaceSide {
 
 /// Contains more detailed information about the
 /// what is happening at the surface in the intersection point
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct IntersectionInfo {
     /// The point of intersection
     pub p: Point3D,
@@ -83,11 +83,11 @@ pub struct IntersectionInfo {
     /// Partial derivative of the position `p` with respect to `v`
     pub dpdv: Vector3D,
 
-    /// Partial derivative of the normal `n` with respect to u    
+    /// Partial derivative of the normal `n` with respect to u
     #[cfg(feature = "textures")]
     pub dndu: Vector3D,
 
-    /// Partial derivative of the normal `n` with respect to v    
+    /// Partial derivative of the normal `n` with respect to v
     #[cfg(feature = "textures")]
     pub dndv: Vector3D,
 
@@ -122,7 +122,7 @@ impl std::default::Default for IntersectionInfo {
 }
 
 impl IntersectionInfo {
-    /// Creates a new `IntersectionInfo` object    
+    /// Creates a new `IntersectionInfo` object
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         ray: &Ray3D,

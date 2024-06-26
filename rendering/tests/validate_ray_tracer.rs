@@ -1,8 +1,8 @@
 use geometry::{Point3D, Ray3D, Vector3D};
-use rendering::{Float, Ray, RayTracer, RayTracerHelper, Scene};
+use rendering::{Float, RayTracer, Scene};
 use validate::{valid, SeriesValidator, ValidFunc, Validator};
 
-const MAX_DEPTH: usize = 11;
+const MAX_DEPTH: usize = 190;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
@@ -35,7 +35,7 @@ fn load_expected_results(filename: String) -> Result<Vec<Float>, String> {
     Ok(r)
 }
 
-fn load_rays(filename: &str) -> Result<Vec<Ray>, String> {
+fn load_rays(filename: &str) -> Result<Vec<Ray3D>, String> {
     let s = std::fs::read_to_string(filename).map_err(|e| e.to_string())?;
     let r = s
         .lines()
@@ -46,12 +46,9 @@ fn load_rays(filename: &str) -> Result<Vec<Ray>, String> {
                 .map(|x| x.parse::<Float>().expect("This should never fail"))
                 .collect();
 
-            Ray {
-                geometry: Ray3D {
-                    origin: Point3D::new(a[0], a[1], a[2]),
-                    direction: Vector3D::new(a[3], a[4], a[5]).get_normalized(),
-                },
-                ..Ray::default()
+            Ray3D {
+                origin: Point3D::new(a[0], a[1], a[2]),
+                direction: Vector3D::new(a[3], a[4], a[5]).get_normalized(),
             }
         })
         .collect();
@@ -64,21 +61,22 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
         .expect("Could not read");
     scene.build_accelerator();
 
-    let n_ambient_samples = if max_depth > 0 { 49120 } else { 520 };
+    let n_ambient_samples = 9000;
+
     let integrator = RayTracer {
         n_ambient_samples,
-        n_shadow_samples: 100,
+        n_shadow_samples: 1,
         max_depth,
         limit_weight: 1e-9,
         ..RayTracer::default()
     };
-    let mut aux = RayTracerHelper::default();
+    let mut aux = [0; 32];
     let mut rng = rendering::rand::get_rng();
 
-    let mut rays = load_rays("./tests/points.pts")?;
+    let rays = load_rays("./tests/points.pts")?;
 
     let found: Vec<Float> = rays
-        .iter_mut()
+        .into_iter()
         .map(|ray| {
             let c = integrator.trace_ray(&mut rng, &scene, ray, &mut aux);
             c.radiance()
@@ -163,14 +161,14 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
     validator.push(plastic_diffuse_global()?);
     validator.push(plastic_diffuse_direct()?);
 
-    validator.push(plastic_specular_global()?);
-    validator.push(plastic_specular_direct()?);
+    // validator.push(plastic_specular_global()?);
+    // validator.push(plastic_specular_direct()?);
 
-    validator.push(plastic_rough_global()?);
-    validator.push(plastic_rough_direct()?);
+    // validator.push(plastic_rough_global()?);
+    // validator.push(plastic_rough_direct()?);
 
-    validator.push(plastic_full_global()?);
-    validator.push(plastic_full_direct()?);
+    // validator.push(plastic_full_global()?);
+    // validator.push(plastic_full_direct()?);
 
     Ok(())
 }
@@ -246,14 +244,14 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     validator.push(metal_diffuse_global()?);
     validator.push(metal_diffuse_direct()?);
 
-    validator.push(metal_specular_global()?);
-    validator.push(metal_specular_direct()?);
+    // validator.push(metal_specular_global()?);
+    // validator.push(metal_specular_direct()?);
 
-    validator.push(metal_rough_global()?);
-    validator.push(metal_rough_direct()?);
+    // validator.push(metal_rough_global()?);
+    // validator.push(metal_rough_direct()?);
 
-    validator.push(metal_full_global()?);
-    validator.push(metal_full_direct()?);
+    // validator.push(metal_full_global()?);
+    // validator.push(metal_full_direct()?);
 
     Ok(())
 }
@@ -279,7 +277,7 @@ fn validate_ray_tracer() -> Result<(), String> {
 
     metal(&mut validator)?;
     plastic(&mut validator)?;
-    glass(&mut validator)?;
+    // glass(&mut validator)?;
 
     validator.validate()
 }

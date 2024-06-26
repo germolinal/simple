@@ -27,7 +27,13 @@ impl MaterialTrait for Diffuse {
     fn flags(&self) -> MatFlag {
         MatFlag::Diffuse
     }
-    fn eval_bsdf(&self, wo: Vector3D, wi: Vector3D, _transport_mode: TransportMode) -> Spectrum {
+    fn eval_bsdf(
+        &self,
+        wo: Vector3D,
+        wi: Vector3D,
+        _eta: Float,
+        _transport_mode: TransportMode,
+    ) -> Spectrum {
         if same_heisphere(wo, wi) {
             self.colour / PI
         } else {
@@ -49,5 +55,9 @@ impl MaterialTrait for Diffuse {
         } else {
             None
         }
+    }
+
+    fn colour(&self) -> Spectrum {
+        self.colour
     }
 }

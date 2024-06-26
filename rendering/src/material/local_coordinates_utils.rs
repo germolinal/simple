@@ -8,10 +8,11 @@ pub(crate) fn same_heisphere(w: Vector3D, wp: Vector3D) -> bool {
     w.z * wp.z > 0.0
 }
 
+#[allow(dead_code)]
 pub(crate) fn cos_theta(v: Vector3D) -> Float {
     v.z
 }
-
+#[allow(dead_code)]
 pub(crate) fn cos2_theta(v: Vector3D) -> Float {
     v.z * v.z
 }
@@ -19,23 +20,23 @@ pub(crate) fn cos2_theta(v: Vector3D) -> Float {
 pub(crate) fn abs_cos_theta(v: Vector3D) -> Float {
     v.z.abs()
 }
-
+#[allow(dead_code)]
 pub(crate) fn sin2_theta(v: Vector3D) -> Float {
     (1.0 - cos2_theta(v)).max(0.0) // NaN is ignored
 }
-
+#[allow(dead_code)]
 pub(crate) fn sin_theta(v: Vector3D) -> Float {
     sin2_theta(v).sqrt()
 }
-
+#[allow(dead_code)]
 pub(crate) fn tan_theta(v: Vector3D) -> Float {
     sin_theta(v) / cos_theta(v)
 }
-
+#[allow(dead_code)]
 pub(crate) fn tan2_theta(v: Vector3D) -> Float {
     sin2_theta(v) / cos2_theta(v)
 }
-
+#[allow(dead_code)]
 pub(crate) fn cos_phi(v: Vector3D) -> Float {
     let sin_theta = sin_theta(v);
     if sin_theta == 0.0 {
@@ -44,7 +45,7 @@ pub(crate) fn cos_phi(v: Vector3D) -> Float {
         (v.x / sin_theta).clamp(-1.0, 1.0)
     }
 }
-
+#[allow(dead_code)]
 pub(crate) fn sin_phi(v: Vector3D) -> Float {
     let sin_theta = sin_theta(v);
     if sin_theta == 0.0 {
@@ -55,6 +56,7 @@ pub(crate) fn sin_phi(v: Vector3D) -> Float {
 }
 
 /// the cosine of the angles projected on the XY plane by two vectors
+#[allow(dead_code)]
 pub(crate) fn cos_d_phi(wa: Vector3D, wb: Vector3D) -> Float {
     let waxy = wa.x.powi(2) + wa.y.powi(2);
     let wbxy = wb.x.powi(2) + wb.y.powi(2);

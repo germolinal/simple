@@ -91,13 +91,22 @@ pub trait MaterialTrait: std::fmt::Debug {
     /// Queries the material behaviour
     fn flags(&self) -> MatFlag;
 
+    /// returns the colour
+    fn colour(&self) -> Spectrum;
+
     /// Evaluates the BSDF based on the pair of incoming and outgoing vectors
     ///
     /// Transport mode indicates whether paths are being constructed
     /// towards the camera or towards light sources
     ///
     /// wo and wi are in local coordinates (which is why we do not need e1, e2, etc.)
-    fn eval_bsdf(&self, wo: Vector3D, wi: Vector3D, transport_mode: TransportMode) -> Spectrum;
+    fn eval_bsdf(
+        &self,
+        wo: Vector3D,
+        wi: Vector3D,
+        eta: Float,
+        transport_mode: TransportMode,
+    ) -> Spectrum;
 
     /// Samples the BSDF
     ///
@@ -119,9 +128,14 @@ pub trait MaterialTrait: std::fmt::Debug {
     fn directional_rho(&self, wo: Vector3D, uc: &[Float], u2: &[(Float, Float)]) -> Spectrum {
         let mut rho = Spectrum::BLACK;
         uc.into_iter().zip(u2.into_iter()).for_each(|(a, b)| {
-            if let Some(sample) =
-                self.sample_bsdf(wo, 1.0, *a, *b, TransportMode::Radiance, TransFlag::All)
-            {
+            if let Some(sample) = self.sample_bsdf(
+                wo,
+                1.0, // mock index of refraction
+                *a,
+                *b,
+                TransportMode::Radiance,
+                TransFlag::All,
+            ) {
                 rho += sample.spectrum * abs_cos_theta(sample.wi) / sample.pdf;
             }
         });
@@ -137,7 +151,7 @@ pub trait MaterialTrait: std::fmt::Debug {
             let wo = sample_uniform_hemisphere(*b);
             if let Some(sample) = self.sample_bsdf(
                 wo,
-                1.0,
+                1.0, // mock refraction index
                 *a,
                 *b,
                 TransportMode::default(),

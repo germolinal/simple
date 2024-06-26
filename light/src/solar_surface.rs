@@ -23,7 +23,7 @@ use std::sync::Arc;
 use crate::Float;
 
 use matrix::Matrix;
-use rendering::{colour_matrix::*, DCFactory, Ray, Scene};
+use rendering::{colour_matrix::*, DCFactory, Scene};
 
 use model::{Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface};
 
@@ -302,12 +302,8 @@ impl SolarSurface {
 
         let n_samples = 10000;
         let mut node_aux = [0; 2];
-        for r in &rays {
-            let mut ray = Ray {
-                geometry: *r,
-                ..Ray::default()
-            };
-            let normal = r.direction;
+        for ray in &rays {
+            let normal = ray.direction;
             let e1 = normal.get_perpendicular()?;
             let e2 = normal.cross(e1);
 
@@ -315,7 +311,7 @@ impl SolarSurface {
                 let u = rng.gen();
                 let dir = rendering::samplers::uniform_sample_tilted_hemisphere(u, e1, e2, normal);
 
-                if scene.cast_ray(&mut ray, &mut node_aux).is_none() {
+                if scene.cast_ray(*ray, &mut node_aux).is_none() {
                     if dir.z > 0.0 {
                         sky += 1.0;
                     } else {

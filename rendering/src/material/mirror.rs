@@ -20,7 +20,7 @@ SOFTWARE.
 
 use crate::colour::Spectrum;
 use crate::material::specular::{eval_mirror_bsdf, mirror_bsdf};
-use crate::ray::Ray;
+use crate::ray::{Ray, TransportMode};
 use geometry::{Point3D, Vector3D};
 
 /// A mirror material
@@ -44,7 +44,7 @@ impl Mirror {
     ) -> [Option<(Ray, Spectrum)>; 2] {
         // Calculate the ray direction and BSDF
         let mut ray = *ray;
-        let v = mirror_bsdf(*intersection_pt, &mut ray, *normal);
+        let v = mirror_bsdf(*intersection_pt, &mut ray);
         let cos_theta = (*normal * ray.geometry.direction).abs();
         [Some((ray, Spectrum::ONE * v * cos_theta)), None]
     }
@@ -65,14 +65,11 @@ impl Mirror {
 
     pub fn eval_bsdf(
         &self,
-        normal: Vector3D,
-        _e1: Vector3D,
-        _e2: Vector3D,
-        ray: &Ray,
-        vout: Vector3D,
+        wo: Vector3D,
+        wi: Vector3D,
+        _transport_mode: TransportMode,
     ) -> Spectrum {
-        let vin = ray.geometry.direction;
-        self.0 * eval_mirror_bsdf(normal, vin, vout)
+        self.0 * eval_mirror_bsdf(wo, wi)
     }
 }
 
