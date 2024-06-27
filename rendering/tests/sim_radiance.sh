@@ -3,7 +3,7 @@
 
 IMG=./img.hdr
 RPICT_OPTIONS="-ab 4 -aa 0.0"
-RTRACE_OPTIONS="-lw 1e-20 -ad 10024 -aa 0"
+RTRACE_OPTIONS="-aa 0 -lr -0 -lw 1e-10 -ad 30000 " #"-lw 1e-20 -ad 10024 -aa 0 "
 RCONTRIB_OPTIONS="-lw 1e-10 -ad 30000"
 POINTS="../../points.pts"
 N_BOUNCES=30
@@ -29,7 +29,7 @@ do
         cat $POINTS | rtrace -h -ab 0 $RTRACE_OPTIONS $OCTREE_GLASS | rcalc -e '$1=$1*0.265 + $2*0.67 + $3*0.065' > direct_results.txt
         cat $POINTS | rtrace -h -ab $N_BOUNCES $RTRACE_OPTIONS $OCTREE_GLASS | rcalc -e '$1=$1*0.265 + $2*0.67 + $3*0.065' > global_results.txt
 
-        # echo 2 1 1 0 1 0 | /Users/germolinal/Documents/Radiance/build/UILD_HEADLESS/bin/Debug/rtrace -h /Users/germolinal/Documents/simple/rendering/tests/metal_box_diffuse/octree.oct
+
 
         rm -rf $OCTREE_GLASS
 

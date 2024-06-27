@@ -23,10 +23,10 @@ use crate::colour::Spectrum;
 use crate::image::ImageBuffer;
 use crate::interaction::Interaction;
 use crate::material::Material;
-use crate::rand::*;
-use crate::samplers::sample_uniform_hemisphere;
+use crate::samplers::{sample_cosine_weighted_horizontal_hemisphere, sample_uniform_hemisphere};
 use crate::scene::{Object, Scene};
 use crate::Float;
+use crate::{rand::*, PI};
 use geometry::intersection::SurfaceSide;
 use geometry::Ray3D;
 
@@ -79,9 +79,8 @@ impl RayTracer {
             let mut beta = Spectrum::ONE;
             let mut depth = 0;
             let mut refraction_coefficient = 1.0;
-            // println!("====");
+            let mut specular_bounce = true;
             loop {
-                // println!("{},{}", beta.0[0], spectrum.0[0]);
                 let intersect = scene.cast_ray(ray, aux);
                 if intersect.is_none() {
                     // and also the let's check the sky
@@ -111,7 +110,7 @@ impl RayTracer {
                 // We hit a light... lights do not reflect,
                 // so break
                 if material.emits_light() {
-                    if depth == 0 {
+                    if specular_bounce {
                         spectrum += beta * material.colour();
                     }
                     break;
@@ -139,6 +138,18 @@ impl RayTracer {
                     break;
                 }
 
+                // let u = rng.gen();
+                // let new_dir = sample_cosine_weighted_horizontal_hemisphere(u);
+                // let cos_theta = new_dir.z;
+                // let pdf = new_dir.z / PI; //
+                // let spectrum = material.colour() / PI; // rho over P
+                // beta *= spectrum * cos_theta / pdf;
+                // let (_, normal, e1, e2) = interaction.get_triad();
+                // specular_bounce = false;
+                // ray = Ray3D {
+                //     direction: material.to_world(normal, e1, e2, new_dir),
+                //     origin: interaction.point + normal * 0.001,
+                // }
                 // Sample BSDF, and continue
                 if let Some(sample) = material.sample_bsdf(
                     ray.direction,
@@ -147,14 +158,12 @@ impl RayTracer {
                     rng,
                 ) {
                     let cos_theta = (interaction.geometry_shading.normal * sample.wi).abs();
-
-                    beta *= sample.spectrum * cos_theta / (sample.pdf);
-                    // dbg!(spectrum, beta, sample.spectrum, cos_theta, sample.pdf);
-
+                    beta *= sample.spectrum * cos_theta / sample.pdf;
                     ray = Ray3D {
                         direction: sample.wi,
                         origin: interaction.point,
-                    }
+                    };
+                    specular_bounce = sample.is_specular();
                 } else {
                     break;
                 };
@@ -188,7 +197,7 @@ impl RayTracer {
             let mut i = 0;
             // let mut missed = 0;
             while i < n {
-                let direction = if n > 1 {
+                let wi = if n > 1 {
                     light.primitive.sample_direction(rng, intersection_pt)
                 } else {
                     let (_, direction) = light.primitive.direction(intersection_pt);
@@ -196,7 +205,7 @@ impl RayTracer {
                 };
                 let shadow_ray = Ray3D {
                     origin: intersection_pt,
-                    direction,
+                    direction: wi,
                 };
 
                 if let Some((light_colour, light_pdf)) =
@@ -208,21 +217,10 @@ impl RayTracer {
                         continue;
                     }
 
-                    let cos_theta = (normal * direction).abs();
-                    let wi = shadow_ray.direction; // * -1.;
-
-                    let mat_bsdf_value = material.eval_bsdf(
-                        normal,
-                        e1,
-                        e2,
-                        Ray3D {
-                            direction: interaction.wo,
-                            origin: interaction.point + normal * 0.0001,
-                        },
-                        wi,
-                        eta,
-                    );
-                    let fx = light_colour * cos_theta * mat_bsdf_value;
+                    let cos_theta = (normal * wi).abs();
+                    let wo = interaction.wo;
+                    let bsdf = material.eval_bsdf(normal, e1, e2, wo, wi, eta);
+                    let fx = light_colour * cos_theta * bsdf;
 
                     // Return... light sources have a pdf equal to their 1/Omega (i.e. their size)
                     local_illum += fx / light_pdf;

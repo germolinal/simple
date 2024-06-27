@@ -87,7 +87,7 @@ impl Material {
     /// elements of the [`Spectrum`]. E.g., the reflectance values.
     pub fn colour(&self) -> Spectrum {
         match self {
-            Self::Diffuse(m) => m.colour,
+            Self::Diffuse(m) => m.colour(),
             Self::Plastic(m) => m.colour(),
             Self::Metal(m) => m.colour(),
             Self::Light(m) => m.colour(),
@@ -129,10 +129,10 @@ impl Material {
     //     }
     // }
 
-    fn to_local(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
+    pub fn to_local(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
         Vector3D::new(v * e1, v * e2, v * normal)
     }
-    fn to_world(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
+    pub fn to_world(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
         e1 * v.x + e2 * v.y + normal * v.z
     }
 
@@ -194,23 +194,22 @@ impl Material {
         normal: Vector3D,
         e1: Vector3D,
         e2: Vector3D,
-        ray: Ray3D,
+        mut vin: Vector3D,
         vout: Vector3D,
         eta: Float,
     ) -> Spectrum {
-        let mut ray = ray.clone();
         // convert ray into local
-        ray.direction = self.to_local(normal, e1, e2, ray.direction);
+        vin = self.to_local(normal, e1, e2, vin);
         let vout = self.to_local(normal, e1, e2, vout);
 
         match self {
-            Self::Diffuse(m) => m.eval_bsdf(ray.direction, vout, eta, TransportMode::default()),
-            Self::Plastic(m) => m.eval_bsdf(ray.direction, vout, eta, TransportMode::default()),
-            Self::Metal(m) => m.eval_bsdf(ray.direction, vout, eta, TransportMode::default()),
+            Self::Diffuse(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
+            Self::Plastic(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
+            Self::Metal(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
             Self::Light(_) => Spectrum::BLACK,
-            Self::Mirror(m) => m.eval_bsdf(ray.direction, vout, TransportMode::default()),
-            Self::Dielectric(m) => m.eval_bsdf(ray.direction, vout, eta, TransportMode::default()),
-            Self::Glass(m) => m.eval_bsdf(ray.direction, vout, eta, TransportMode::default()),
+            Self::Mirror(m) => m.eval_bsdf(vin, vout, TransportMode::default()),
+            Self::Dielectric(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
+            Self::Glass(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
         }
     }
 }

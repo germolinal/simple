@@ -28,12 +28,10 @@ impl BSDFSample {
 
     pub fn new_diffuse(f: Spectrum, u: (Float, Float)) -> Self {
         let mut wi = sample_cosine_weighted_horizontal_hemisphere(u);
-        // let mut wi = sample_uniform_hemisphere(u);
         if wi.z < 0.0 {
             wi.z *= -1.0;
         }
         let pdf = abs_cos_theta(wi) / PI;
-        // let pdf = 0.5 / PI;
         let s = f / PI;
         BSDFSample::new(s, wi, pdf, MatFlag::DiffuseReflection)
     }
