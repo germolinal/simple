@@ -1,8 +1,5 @@
 use super::{local_coordinates_utils::abs_cos_theta, mat_trait::MatFlag};
-use crate::{
-    samplers::{sample_cosine_weighted_horizontal_hemisphere, sample_uniform_hemisphere},
-    Float, Spectrum, PI,
-};
+use crate::{samplers::sample_cosine_weighted_horizontal_hemisphere, Float, Spectrum, PI};
 use geometry::Vector3D;
 
 #[derive(Clone, Debug)]

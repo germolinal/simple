@@ -104,10 +104,6 @@ struct Inputs {
     #[clap(short = 'a', long = "ambient_samples", default_value_t = 70)]
     pub n_ambient_samples: usize,
 
-    /// A lower value makes the Russian roulette less deadly
-    #[clap(short = 'w', long = "limit_weight", default_value_t = 1e-3)]
-    pub limit_weight: Float,
-
     /* Film */
     /// The Horizontal resolution of the final image
     #[clap(short = 'x', long, default_value_t = 512)]
@@ -176,7 +172,6 @@ fn main() -> Result<(), String> {
         n_ambient_samples: inputs.n_ambient_samples,
         n_shadow_samples: inputs.n_shadow_samples,
         max_depth: inputs.max_depth,
-        limit_weight: inputs.limit_weight,
     };
 
     let buffer = integrator.render(&scene, &camera);

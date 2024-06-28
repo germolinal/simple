@@ -3,7 +3,7 @@
 
 IMG=./img.hdr
 RPICT_OPTIONS="-ab 4 -aa 0.0"
-RTRACE_OPTIONS="-aa 0 -lr -0 -lw 1e-10 -ad 30000 " #"-lw 1e-20 -ad 10024 -aa 0 "
+RTRACE_OPTIONS="-aa 0 -lr -0 -lw 1e-8 -ad 30000 " #"-lw 1e-20 -ad 10024 -aa 0 "
 RCONTRIB_OPTIONS="-lw 1e-10 -ad 30000"
 POINTS="../../points.pts"
 N_BOUNCES=30

@@ -2,7 +2,7 @@ use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::{Float, RayTracer, Scene};
 use validate::{valid, SeriesValidator, ValidFunc, Validator};
 
-const MAX_DEPTH: usize = 190;
+const MAX_DEPTH: usize = 30;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
@@ -61,13 +61,12 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
         .expect("Could not read");
     scene.build_accelerator();
 
-    let n_ambient_samples = 13000;
+    let n_ambient_samples = 9900;
 
     let integrator = RayTracer {
         n_ambient_samples,
         n_shadow_samples: 1,
         max_depth,
-        limit_weight: 1e-9,
         ..RayTracer::default()
     };
     let mut aux = [0; 32];

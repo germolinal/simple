@@ -23,10 +23,9 @@ use crate::colour::Spectrum;
 use crate::image::ImageBuffer;
 use crate::interaction::Interaction;
 use crate::material::Material;
-use crate::samplers::{sample_cosine_weighted_horizontal_hemisphere, sample_uniform_hemisphere};
+use crate::rand::*;
 use crate::scene::{Object, Scene};
 use crate::Float;
-use crate::{rand::*, PI};
 use geometry::intersection::SurfaceSide;
 use geometry::Ray3D;
 
@@ -38,8 +37,6 @@ pub struct RayTracer {
     pub max_depth: usize,
     pub n_shadow_samples: usize,
     pub n_ambient_samples: usize,
-
-    pub limit_weight: Float,
 }
 
 impl Default for RayTracer {
@@ -48,8 +45,6 @@ impl Default for RayTracer {
             max_depth: 2,
             n_shadow_samples: 10,
             n_ambient_samples: 70,
-
-            limit_weight: 1e-3,
         }
     }
 }
@@ -138,18 +133,6 @@ impl RayTracer {
                     break;
                 }
 
-                // let u = rng.gen();
-                // let new_dir = sample_cosine_weighted_horizontal_hemisphere(u);
-                // let cos_theta = new_dir.z;
-                // let pdf = new_dir.z / PI; //
-                // let spectrum = material.colour() / PI; // rho over P
-                // beta *= spectrum * cos_theta / pdf;
-                // let (_, normal, e1, e2) = interaction.get_triad();
-                // specular_bounce = false;
-                // ray = Ray3D {
-                //     direction: material.to_world(normal, e1, e2, new_dir),
-                //     origin: interaction.point + normal * 0.001,
-                // }
                 // Sample BSDF, and continue
                 if let Some(sample) = material.sample_bsdf(
                     ray.direction,
