@@ -23,7 +23,7 @@ use crate::Float;
 use crate::{colour::Spectrum, ray::TransportMode};
 use bsdf_sample::BSDFSample;
 use geometry::intersection::SurfaceSide;
-use geometry::{Ray3D, Vector3D};
+use geometry::Vector3D;
 use mat_trait::MaterialTrait;
 
 mod light;
@@ -163,7 +163,7 @@ impl Material {
             Self::Dielectric(m) => {
                 let ret = m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags);
                 // if front or back?
-                // dbg!("Fix the refraction index transition");
+                // dbg!("Fxix the refraction index transition");
                 match interaction.geometry_shading.side {
                     // Going in
                     SurfaceSide::Front => *eta = m.refraction_index,
@@ -173,14 +173,14 @@ impl Material {
                 }
                 ret
             }
-            Self::Glass(_m) => panic!("Trying to sample the BSDF of a Glass"),
+            Self::Glass(m) => m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags),
         };
 
         if let Some(sample) = &mut ret {
             if sample.is_reflection() {
-                interaction.point = intersection_pt + normal * 0.001;
+                interaction.point = intersection_pt + normal * 0.00001;
             } else if sample.is_transmission() {
-                interaction.point = intersection_pt - normal * 0.001;
+                interaction.point = intersection_pt - normal * 0.00001;
             }
             sample.wi = self.to_world(normal, e1, e2, sample.wi);
         }

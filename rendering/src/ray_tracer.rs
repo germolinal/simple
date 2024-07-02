@@ -140,6 +140,14 @@ impl RayTracer {
                     &mut refraction_coefficient,
                     rng,
                 ) {
+                    // Russian roulette
+                    let q = (1. - beta.radiance()).max(0.);
+                    let aux: Float = rng.gen();
+                    if aux < q {
+                        break;
+                    }
+                    beta /= 1. - q;
+
                     let cos_theta = (interaction.geometry_shading.normal * sample.wi).abs();
                     beta *= sample.spectrum * cos_theta / sample.pdf;
                     ray = Ray3D {

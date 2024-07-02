@@ -22,10 +22,11 @@ use crate::material::bsdf_sample::BSDFSample;
 use crate::material::specular::*;
 use crate::ray::TransportMode;
 use crate::Float;
-use crate::{colour::Spectrum, material::mat_trait::TransFlag};
+use crate::{
+    colour::Spectrum,
+    material::mat_trait::{MatFlag, MaterialTrait, TransFlag},
+};
 use geometry::Vector3D;
-
-use super::mat_trait::{MatFlag, MaterialTrait};
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
@@ -125,7 +126,6 @@ impl MaterialTrait for Dielectric {
     ) -> Option<super::bsdf_sample::BSDFSample> {
         let normal = Vector3D::new(0., 0., 1.);
         let (n1, cos1, n2, cos2) = cos_and_n(wo, eta, normal, self.refraction_index);
-        // let (refl, trans) = self.refl_trans(n1, cos1, n2, cos2);
         let refl = match cos2 {
             Some(v) => fresnel_reflectance(n1, cos1, n2, v),
             None => 1.0,

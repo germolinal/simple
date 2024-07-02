@@ -19,6 +19,8 @@ SOFTWARE.
 */
 
 use geometry::intersection::IntersectionInfo;
+#[cfg(feature = "textures")]
+use geometry::intersection::SurfaceSide;
 use geometry::{Point3D, Transform, Vector3D};
 
 /// The data for a SurfaceInteraction]

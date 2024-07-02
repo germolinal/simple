@@ -61,7 +61,7 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
         .expect("Could not read");
     scene.build_accelerator();
 
-    let n_ambient_samples = 9900;
+    let n_ambient_samples = 29000;
 
     let integrator = RayTracer {
         n_ambient_samples,
@@ -302,10 +302,9 @@ fn glass(validator: &mut Validator) -> Result<(), String> {
     Ok(())
 }
 
-#[ignore]
 #[test]
 fn validate_ray_tracer() -> Result<(), String> {
-    // cargo test --release  --features parallel --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture --ignored
+    // cargo test --release  --features parallel --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture
     let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");
 
     metal(&mut validator)?;
