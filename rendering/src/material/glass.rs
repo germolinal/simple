@@ -76,7 +76,7 @@ impl MaterialTrait for Glass {
     fn sample_bsdf(
         &self,
         wo: Vector3D,
-        eta: Float,
+        _eta: Float,
         uc: Float,
         _u: (Float, Float),
         _transport_mode: TransportMode,
