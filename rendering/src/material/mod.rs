@@ -149,19 +149,17 @@ impl Material {
         let (intersection_pt, normal, e1, e2) = interaction.get_triad();
         let wo = self.to_local(normal, e1, e2, wo);
 
-        let uc: Float = rng.gen();
-        let u: (Float, Float) = rng.gen();
         let transport_mode = TransportMode::default();
         let trans_flags = TransFlag::All;
 
         let mut ret = match self {
-            Self::Diffuse(m) => m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags),
-            Self::Plastic(m) => m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags),
-            Self::Metal(m) => m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags),
+            Self::Diffuse(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
+            Self::Plastic(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
+            Self::Metal(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
             Self::Light(_m) => None, //panic!("Material '{}' has no BSDF", m.id()),
             Self::Mirror(m) => None, //m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags),
             Self::Dielectric(m) => {
-                let ret = m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags);
+                let ret = m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags);
                 // if front or back?
                 // dbg!("Fxix the refraction index transition");
                 match interaction.geometry_shading.side {
@@ -173,7 +171,7 @@ impl Material {
                 }
                 ret
             }
-            Self::Glass(m) => m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags),
+            Self::Glass(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
         };
 
         if let Some(sample) = &mut ret {

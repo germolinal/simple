@@ -19,7 +19,6 @@ SOFTWARE.
 */
 
 use crate::material::specular::*;
-
 use crate::Float;
 use crate::{
     colour::Spectrum,
@@ -27,8 +26,10 @@ use crate::{
     ray::TransportMode,
 };
 use geometry::Vector3D;
+use rand::*;
 
 use super::bsdf_sample::BSDFSample;
+use super::RandGen;
 
 fn any_transmission(colour: &mut Spectrum) -> bool {
     const MIN_COLOUR: Float = 1e-15;
@@ -77,8 +78,7 @@ impl MaterialTrait for Glass {
         &self,
         wo: Vector3D,
         _eta: Float,
-        uc: Float,
-        _u: (Float, Float),
+        rng: &mut RandGen,
         _transport_mode: TransportMode,
         trans_flags: TransFlag,
     ) -> Option<BSDFSample> {
@@ -137,6 +137,7 @@ impl MaterialTrait for Glass {
             return None;
         }
 
+        let uc: Float = rng.gen();
         if uc <= pr / (pr + pt) {
             // Reflection
 

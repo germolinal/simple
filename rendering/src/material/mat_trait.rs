@@ -1,7 +1,9 @@
 use super::bsdf_sample::BSDFSample;
 use super::local_coordinates_utils::abs_cos_theta;
+use super::RandGen;
 use crate::samplers::sample_uniform_hemisphere;
 use crate::Float;
+use rand::*;
 
 use crate::PI;
 use crate::{ray::TransportMode, Spectrum};
@@ -116,8 +118,7 @@ pub trait MaterialTrait: std::fmt::Debug {
         &self,
         wo: Vector3D,
         eta: Float,
-        uc: Float,
-        u: (Float, Float),
+        rng: &mut RandGen,
         transport_mode: TransportMode,
         trans_flags: TransFlag,
     ) -> Option<BSDFSample>;
@@ -125,35 +126,34 @@ pub trait MaterialTrait: std::fmt::Debug {
     /// Calculates the directional-hemispherical reflectance
     ///
     /// In its base implementation, it uses the Montecarlo method to integrate.
-    fn directional_rho(&self, wo: Vector3D, uc: &[Float], u2: &[(Float, Float)]) -> Spectrum {
+    fn directional_rho(&self, wo: Vector3D, rng: &mut RandGen, nsamples: usize) -> Spectrum {
         let mut rho = Spectrum::BLACK;
-        uc.into_iter().zip(u2.into_iter()).for_each(|(a, b)| {
+        for _ in 0..nsamples {
             if let Some(sample) = self.sample_bsdf(
                 wo,
                 1.0, // mock index of refraction
-                *a,
-                *b,
+                rng,
                 TransportMode::Radiance,
                 TransFlag::All,
             ) {
                 rho += sample.spectrum * abs_cos_theta(sample.wi) / sample.pdf;
             }
-        });
-        rho / uc.len() as Float
+        }
+        rho / nsamples as Float
     }
 
     /// Calculates the hemispherical-hemispherical reflectance
     ///
     /// In its base implementation, it uses the Montecarlo method to integrate.
-    fn hemispherical_rho(&self, uc: &[Float], u2: &[(Float, Float)]) -> Spectrum {
+    fn hemispherical_rho(&self, rng: &mut RandGen, nsamples: usize) -> Spectrum {
         let mut rho = Spectrum::BLACK;
-        uc.into_iter().zip(u2.into_iter()).for_each(|(a, b)| {
-            let wo = sample_uniform_hemisphere(*b);
+        for _ in 0..nsamples {
+            let b = rng.gen();
+            let wo = sample_uniform_hemisphere(b);
             if let Some(sample) = self.sample_bsdf(
                 wo,
                 1.0, // mock refraction index
-                *a,
-                *b,
+                rng,
                 TransportMode::default(),
                 TransFlag::default(),
             ) {
@@ -161,8 +161,8 @@ pub trait MaterialTrait: std::fmt::Debug {
                 rho += sample.spectrum * abs_cos_theta(sample.wi) * abs_cos_theta(wo)
                     / (sample.pdf * UNIFORM_HEMISPHERE_PDF);
             }
-        });
-        rho / (PI * uc.len() as Float)
+        }
+        rho / (PI * nsamples as Float)
     }
 
     fn is_reflective(&self) -> bool {
@@ -190,7 +190,6 @@ mod tests {
     use super::*;
     use crate::material::get_rng;
     use crate::material::Diffuse;
-    use crate::rand::*;
 
     #[test]
     fn test_non_specular() {
@@ -213,25 +212,17 @@ mod tests {
     fn test_lambertian_hemispherical_reflectance() {
         let mut rng = get_rng();
         let n = 500000;
-        let mut u: Vec<Float> = Vec::with_capacity(n);
-        let mut u2: Vec<(Float, Float)> = Vec::with_capacity(n);
-        for _ in 0..n {
-            let su: Float = rng.gen();
-            u.push(su);
-            let su2: (Float, Float) = rng.gen();
-            u2.push(su2);
-        }
 
         let mat = Diffuse::new(Spectrum::gray(1.0));
 
-        let rho = mat.directional_rho(Vector3D::new(1., 0., 0.), &u, &u2);
+        let rho = mat.directional_rho(Vector3D::new(1., 0., 0.), &mut rng, n);
         assert!(
             (rho.0[0] - 1.0).abs() < 1e-8,
             "Found rho to be {}... expecting 1.0",
             rho.0[0]
         );
 
-        let rho = mat.hemispherical_rho(&u, &u2);
+        let rho = mat.hemispherical_rho(&mut rng, n);
         assert!(
             (rho.0[0] - 1.0).abs() < 1e-2,
             "Found rho to be {}... expecting 1.0",

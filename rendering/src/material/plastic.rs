@@ -24,6 +24,7 @@ use geometry::Vector3D;
 
 use super::bsdf_sample::BSDFSample;
 use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
+use super::RandGen;
 
 /// Information required for modelling Radiance's Plastic and Plastic
 #[derive(Debug, Clone)]
@@ -49,8 +50,7 @@ impl MaterialTrait for Plastic {
         &self,
         wo: Vector3D,
         _eta: Float,
-        uc: Float,
-        u: (Float, Float),
+        rng: &mut RandGen,
         transport_mode: TransportMode,
         trans_flags: TransFlag,
     ) -> Option<BSDFSample> {
@@ -59,23 +59,16 @@ impl MaterialTrait for Plastic {
             self.roughness,
             self.roughness,
             wo,
-            uc,
-            u,
+            rng,
             transport_mode,
             trans_flags,
         );
         if let Some(sample) = &mut ret {
-            sample.spectrum *= self.colour();
+            if let MatFlag::DiffuseReflection = sample.flags {
+                sample.spectrum *= self.colour().normalize();
+            }
         }
         ret
-
-        // // (Spectrum::gray(diffuse) * self.colour, weight)
-        // let diffuse_component = self.colour * diffuse;
-        // let specular_component = Spectrum::gray(direct);
-        // let bsdf =
-        //     diffuse_component * (1.0 - self.specularity) + specular_component * self.specularity;
-
-        // (bsdf, weight)
     }
 
     fn eval_bsdf(

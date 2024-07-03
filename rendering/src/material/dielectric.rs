@@ -27,6 +27,9 @@ use crate::{
     material::mat_trait::{MatFlag, MaterialTrait, TransFlag},
 };
 use geometry::Vector3D;
+use rand::*;
+
+use super::RandGen;
 
 #[derive(Debug, Clone)]
 pub struct Dielectric {
@@ -119,8 +122,7 @@ impl MaterialTrait for Dielectric {
         &self,
         wo: Vector3D,
         eta: Float,
-        uc: Float,
-        _u: (Float, Float),
+        rng: &mut RandGen,
         transport_mode: crate::ray::TransportMode,
         trans_flags: super::mat_trait::TransFlag,
     ) -> Option<super::bsdf_sample::BSDFSample> {
@@ -145,6 +147,7 @@ impl MaterialTrait for Dielectric {
             if !(trans_flags & TransFlag::Transmission) {
                 pt = 0.0;
             }
+            let uc: Float = rng.gen();
             let ret = if uc < pr / (pr + pt) {
                 // Prefect specular reflection
                 // let wi = Vector3D::new(-wo.x, -wo.y, wo.z);

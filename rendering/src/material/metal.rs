@@ -24,6 +24,7 @@ use geometry::Vector3D;
 
 use super::bsdf_sample::BSDFSample;
 use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
+use super::RandGen;
 
 /// Information required for modelling Radiance's Metal and Metal
 #[derive(Debug, Clone)]
@@ -50,31 +51,25 @@ impl MaterialTrait for Metal {
         &self,
         wo: Vector3D,
         _eta: Float,
-        uc: Float,
-        u: (Float, Float),
+        rng: &mut RandGen,
         transport_mode: TransportMode,
         trans_flags: TransFlag,
     ) -> Option<BSDFSample> {
-        crate::material::ward::sample_ward_anisotropic(
+        let mut ret = crate::material::ward::sample_ward_anisotropic(
             self.specularity,
             self.roughness,
             self.roughness,
             wo,
-            uc,
-            u,
+            rng,
             transport_mode,
             trans_flags,
-        )
+        );
 
         // Plastic differs from Metal in that the direct component is coloured
-        // let bsdf = self.colour * direct + self.colour * diffuse;
-
-        // let diffuse_component = self.colour * diffuse;
-        // let specular_component = Spectrum::gray(direct);
-        // let bsdf =
-        //     diffuse_component * (1.0 - self.specularity) + specular_component * self.specularity;
-
-        // (bsdf, weight)
+        if let Some(sample) = &mut ret {
+            sample.spectrum *= self.colour().normalize();
+        }
+        ret
     }
 
     fn eval_bsdf(

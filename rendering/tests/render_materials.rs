@@ -123,11 +123,11 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
 
     // Create film
     let film = Film {
-        resolution: (320, 320),
+        resolution: (200, 200),
     };
 
     // Create view
-    let view_point = Point3D::new(0., -2. * HALF_ROOM_SIZE, 4.1);
+    let view_point = Point3D::new(0., -1.1 * HALF_ROOM_SIZE, 4.1);
     let view_direction = (centre - view_point).get_normalized();
     let view = View {
         view_direction,
@@ -140,7 +140,7 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
 
     let integrator = RayTracer {
         n_ambient_samples: 60,
-        n_shadow_samples: 3,
+        n_shadow_samples: 1,
         max_depth: 1,
         ..RayTracer::default()
     };
@@ -152,7 +152,7 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_specular_plastic() -> Result<(), String> {
-    // cargo test --package rendering --test render_materials -- test_render_specular_plastic --exact --nocapture --ignored
+    // Xcargo test --package rendering --test render_materials -- test_render_specular_plastic --exact --nocapture --ignored
 
     let plastic = Material::Plastic(Plastic {
         colour: Spectrum([0.9, 0.5, 0.5]),

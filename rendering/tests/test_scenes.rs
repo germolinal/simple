@@ -316,8 +316,8 @@ fn sponza() -> Result<(), String> {
 
 #[test]
 #[ignore]
-fn cornell() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell --exact --nocapture
+fn cornell_glass() -> Result<(), String> {
+    // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell_glass --exact --nocapture
 
     let mut scene = Scene::from_radiance("./tests/scenes/cornell_glass.rad".to_string())?;
 
@@ -351,7 +351,51 @@ fn cornell() -> Result<(), String> {
     };
 
     let buffer = integrator.render(&scene, &camera);
-    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/cornell.hdr"))
+    buffer.save_hdre(std::path::Path::new(
+        "./tests/scenes/images/cornell_glass.hdr",
+    ))
+}
+
+#[test]
+#[ignore]
+fn cornell_solid() -> Result<(), String> {
+    // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell_solid --exact --nocapture
+
+    let mut scene = Scene::from_radiance("./tests/scenes/cornell_solid.rad".to_string())?;
+
+    scene.build_accelerator();
+
+    // Create camera
+    let film = Film {
+        // resolution: (320, 240),
+        resolution: (512, 367),
+        // resolution: (1024, 768),
+        // resolution: (512, 512),
+    };
+
+    // Create view
+    let view = View {
+        view_direction: Vector3D::new(0., 1., 0.).get_normalized(),
+        // view_point: Point3D::new(2., 1., 1.),
+        view_point: Point3D::new(3., -5., 2.25),
+        field_of_view: 50.,
+        ..View::default()
+    };
+
+    // Create camera
+    let camera = Pinhole::new(view, film);
+
+    let integrator = RayTracer {
+        n_ambient_samples: 300,
+        n_shadow_samples: 1,
+        max_depth: 8,
+        ..RayTracer::default()
+    };
+
+    let buffer = integrator.render(&scene, &camera);
+    buffer.save_hdre(std::path::Path::new(
+        "./tests/scenes/images/cornell_solid.hdr",
+    ))
 }
 
 #[test]

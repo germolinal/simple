@@ -1,10 +1,10 @@
-// pub fn sample_
-
 use super::{
     bsdf_sample::BSDFSample,
     local_coordinates_utils::same_heisphere,
     mat_trait::{MatFlag, MaterialTrait, TransFlag},
+    RandGen,
 };
+use rand::*;
 
 use crate::{ray::TransportMode, Float, Spectrum, PI};
 use geometry::Vector3D;
@@ -45,11 +45,11 @@ impl MaterialTrait for Diffuse {
         &self,
         _wo: Vector3D,
         _eta: Float,
-        _uc: Float,
-        u: (Float, Float),
+        rng: &mut RandGen,
         _transport_mode: TransportMode,
         trans_flags: TransFlag,
     ) -> Option<BSDFSample> {
+        let u = rng.gen();
         if trans_flags & TransFlag::Reflection {
             Some(BSDFSample::new_diffuse(self.colour, u))
         } else {

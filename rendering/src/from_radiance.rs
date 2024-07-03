@@ -30,7 +30,7 @@ use crate::scene::Scene;
 use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Sphere3D, Triangulation3D, Vector3D};
 
 use std::fs;
-const MIN_SPECULARITY: Float = 1e-4;
+const MIN_SPECULARITY: Float = 1e-5;
 #[derive(Default)]
 struct RadianceReader {
     current_char_index: usize,
@@ -284,6 +284,7 @@ impl RadianceReader {
             })
         };
 
+        
         scene.push_material(plastic);
 
         Ok(())
