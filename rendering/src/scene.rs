@@ -25,11 +25,14 @@ use crate::from_simple_model::SimpleModelReader;
 use crate::interaction::Interaction;
 use crate::material::{Light, Material};
 use crate::primitive::Primitive;
+use crate::rand::RandGen;
 use crate::triangle::Triangle;
 use crate::Float;
 use calendar::Date;
+use geometry::intersection::{IntersectionInfo, SurfaceSide};
 use geometry::{Ray3D, Vector3D};
 use model::Model;
+use rand::Rng;
 
 #[derive(Clone, Default)]
 pub struct Object {
@@ -94,6 +97,16 @@ impl Scene {
     /// Creates an empty scene
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Samples a light (not a distant light, just a light)
+    /// uniformly. Returns None if there are no lights. Returns
+    /// the probability of sampling this light.
+    pub fn sample_light_uniform(&self, rng: &mut RandGen) -> Option<(&Object, Float)> {
+        let mut i: usize = rng.gen();
+        i = i % self.lights.len();
+        let pdf = 1. / self.lights.len() as Float;
+        Some((&self.lights[i], pdf))
     }
 
     /// Adds the elements describing a Perez sky to the scene.

@@ -49,6 +49,24 @@ impl Default for RayTracer {
     }
 }
 
+#[allow(dead_code)]
+fn power_heuristic(na: usize, pdfa: Float, nb: usize, pdfb: Float) -> Float {
+    let na = na as f64;
+    let nb = nb as f64;
+    let a = na * pdfa;
+    let b = nb * pdfb;
+    a * a / (a * a + b * b)
+}
+
+#[allow(dead_code)]
+fn balance_heuristic(na: usize, pdfa: Float, nb: usize, pdfb: Float) -> Float {
+    let na = na as f64;
+    let nb = nb as f64;
+    let a = na * pdfa;
+    let b = nb * pdfb;
+    a / (a + b)
+}
+
 impl RayTracer {
     /// Recursively traces a ray
     pub fn trace_ray<const N: usize>(
@@ -71,6 +89,7 @@ impl RayTracer {
         for _ in 0..n_ambient_samples {
             ray = original_ray;
 
+            let mut ray_prob = 1.0;
             let mut beta = Spectrum::ONE;
             let mut depth = 0;
             let mut refraction_coefficient = 1.0;
@@ -78,6 +97,22 @@ impl RayTracer {
             loop {
                 let intersect = scene.cast_ray(ray, aux);
                 if intersect.is_none() {
+                    // Check distant lights
+                    for light in &scene.distant_lights {
+                        if let Some((light_colour, light_pdf)) =
+                            intersect_light(scene, light, ray, aux)
+                        {
+                            if light_pdf > 1e-18 {
+                                let w = if depth == 0 || specular_bounce {
+                                    1.0
+                                } else {
+                                    power_heuristic(1, ray_prob, 1, light_pdf)
+                                };
+                                spectrum += beta * w * light_colour;
+                            }
+                        }
+                    }
+
                     // and also the let's check the sky
                     if let Some(sky) = &scene.sky {
                         let sky_brightness = sky(ray.direction);
@@ -115,17 +150,19 @@ impl RayTracer {
                 interaction.interpolate_normal(scene.normals[triangle_index]);
 
                 // Direct lighting
-                let n_shadow_samples = if depth == 0 { self.n_shadow_samples } else { 1 };
-                let local = self.get_local_illumination(
-                    scene,
-                    material,
-                    &interaction,
-                    refraction_coefficient,
-                    rng,
-                    n_shadow_samples,
-                    aux,
-                );
-                spectrum += beta * local;
+                if !material.specular_only() {
+                    let n_shadow_samples = if depth == 0 { self.n_shadow_samples } else { 1 };
+                    let local = self.get_local_illumination(
+                        scene,
+                        material,
+                        &interaction,
+                        refraction_coefficient,
+                        rng,
+                        n_shadow_samples,
+                        aux,
+                    );
+                    spectrum += beta * local;
+                }
 
                 // reached limit.
                 depth += 1;
@@ -140,16 +177,9 @@ impl RayTracer {
                     &mut refraction_coefficient,
                     rng,
                 ) {
-                    // Russian roulette
-                    let q = (1. - beta.radiance()).max(0.);
-                    let aux: Float = rng.gen();
-                    if aux < q {
-                        break;
-                    }
-                    beta /= 1. - q;
-
                     let cos_theta = (interaction.geometry_shading.normal * sample.wi).abs();
                     beta *= sample.spectrum * cos_theta / sample.pdf;
+                    ray_prob = sample.pdf;
                     ray = Ray3D {
                         direction: sample.wi,
                         origin: interaction.point,
@@ -158,14 +188,23 @@ impl RayTracer {
                 } else {
                     break;
                 };
+
+                // Russian roulette
+                let q = (1. - beta.radiance()).max(0.);
+                let aux: Float = rng.gen();
+                if aux < q {
+                    break;
+                }
+                beta /= 1. - q;
             }
         }
 
         spectrum / n_ambient_samples as Float
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn sample_light_array<const N: usize>(
+    /// Calculates the luminance produced by the direct sources in the
+    /// scene
+    fn get_local_illumination<const N: usize>(
         &self,
         scene: &Scene,
         material: &Material,
@@ -173,7 +212,6 @@ impl RayTracer {
         eta: Float,
         rng: &mut RandGen,
         n_shadow_samples: usize,
-        lights: &[Object],
         node_aux: &mut [usize; N],
     ) -> Spectrum {
         let (mut intersection_pt, normal, e1, e2) = interaction.get_triad();
@@ -182,9 +220,7 @@ impl RayTracer {
 
         let n = n_shadow_samples;
         let n_shadow_samples = n as Float;
-
-        for light in lights.iter() {
-            // let this_origin = this_origin + normal * 0.001;
+        if let Some((light, p_light)) = scene.sample_light_uniform(rng) {
             let mut i = 0;
             // let mut missed = 0;
             while i < n {
@@ -213,50 +249,16 @@ impl RayTracer {
                     let bsdf = material.eval_bsdf(normal, e1, e2, wo, wi, eta);
                     let fx = light_colour * cos_theta * bsdf;
 
-                    // Return... light sources have a pdf equal to their 1/Omega (i.e. their size)
-                    local_illum += fx / light_pdf;
+                    let bsdf_pdf = bsdf.radiance();
+
+                    let weight = power_heuristic(n, light_pdf * p_light, 1, bsdf_pdf);
+
+                    local_illum += weight * fx / light_pdf;
                 }
             } // end of iterating samples
-        } // end of iterating lights
+        }
 
         local_illum / n_shadow_samples
-    }
-
-    /// Calculates the luminance produced by the direct sources in the
-    /// scene
-    fn get_local_illumination<const N: usize>(
-        &self,
-        scene: &Scene,
-        material: &Material,
-        interaction: &Interaction,
-        eta: Float,
-        rng: &mut RandGen,
-        n_shadow_samples: usize,
-        node_aux: &mut [usize; N],
-    ) -> Spectrum {
-        let close = self.sample_light_array(
-            scene,
-            material,
-            interaction,
-            eta,
-            rng,
-            n_shadow_samples,
-            &scene.lights,
-            node_aux,
-        );
-        let distant = self.sample_light_array(
-            scene,
-            material,
-            interaction,
-            eta,
-            rng,
-            n_shadow_samples,
-            &scene.distant_lights,
-            node_aux,
-        );
-
-        // return
-        close + distant
     }
 
     // fn get_global_illumination<const N: usize>(
