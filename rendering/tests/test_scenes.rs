@@ -316,6 +316,42 @@ fn sponza() -> Result<(), String> {
 
 #[test]
 #[ignore]
+fn scene_0() -> Result<(), String> {
+    // cargo test --package rendering --test test_scenes -- --ignored scene_0 --exact --nocapture
+
+    let mut scene = Scene::from_radiance("./tests/scenes/scene0.rad".to_string())?;
+
+    scene.build_accelerator();
+
+    // Create camera
+    let film = Film {
+        resolution: (512, 512),
+    };
+
+    // Create view
+    let view = View {
+        view_point: Point3D::new(2.25, 0.375, 1.),
+        view_direction: Vector3D::new(-0.25, 0.125, -0.125),
+        field_of_view: 45.,
+        ..View::default()
+    };
+
+    // Create camera
+    let camera = Pinhole::new(view, film);
+
+    let integrator = RayTracer {
+        n_ambient_samples: 20,
+        n_shadow_samples: 1,
+        max_depth: 8,
+        ..RayTracer::default()
+    };
+
+    let buffer = integrator.render(&scene, &camera);
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/scene0.hdr"))
+}
+
+#[test]
+#[ignore]
 fn cornell_glass() -> Result<(), String> {
     // cargo test --features parallel --release --package rendering --test test_scenes -- --ignored cornell_glass --exact --nocapture
 
