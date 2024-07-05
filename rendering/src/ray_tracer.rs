@@ -222,7 +222,6 @@ impl RayTracer {
         let n_shadow_samples = n as Float;
         if let Some((light, p_light)) = scene.sample_light_uniform(rng) {
             let mut i = 0;
-            // let mut missed = 0;
             while i < n {
                 let wi = if n > 1 {
                     light.primitive.sample_direction(rng, intersection_pt)
@@ -249,11 +248,11 @@ impl RayTracer {
                     let bsdf = material.eval_bsdf(normal, e1, e2, wo, wi, eta);
                     let fx = light_colour * cos_theta * bsdf;
 
-                    let bsdf_pdf = bsdf.radiance();
+                    let bsdf_pdf = material.pdf(normal, e1, e2, wi, wo, eta);
 
                     let weight = power_heuristic(n, light_pdf * p_light, 1, bsdf_pdf);
 
-                    local_illum += weight * fx / light_pdf;
+                    local_illum += weight * fx / (light_pdf * p_light);
                 }
             } // end of iterating samples
         }

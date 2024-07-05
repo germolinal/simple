@@ -19,34 +19,64 @@ SOFTWARE.
 */
 
 use crate::colour::Spectrum;
-use crate::material::specular::{eval_mirror_bsdf, mirror_bsdf};
-use crate::ray::{Ray, TransportMode};
-use geometry::{Point3D, Vector3D};
+
+use crate::ray::TransportMode;
+use crate::Float;
+use geometry::Vector3D;
+
+use super::bsdf_sample::BSDFSample;
+use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
+use super::{mirror_direction, RandGen};
 
 /// A mirror material
 #[derive(Debug, Clone)]
 pub struct Mirror(pub Spectrum);
 
-impl Mirror {
-    pub fn id(&self) -> &str {
+impl MaterialTrait for Mirror {
+    fn id(&self) -> &str {
         "Mirror"
     }
 
-    pub fn colour(&self) -> Spectrum {
+    fn colour(&self) -> Spectrum {
         self.0
     }
 
-    pub fn get_possible_paths(
+    fn flags(&self) -> MatFlag {
+        MatFlag::Specular
+    }
+
+    fn pdf(
         &self,
-        normal: &Vector3D,
-        intersection_pt: &Point3D,
-        ray: &Ray,
-    ) -> [Option<(Ray, Spectrum)>; 2] {
-        // Calculate the ray direction and BSDF
-        let mut ray = *ray;
-        let v = mirror_bsdf(*intersection_pt, &mut ray);
-        let cos_theta = (*normal * ray.geometry.direction).abs();
-        [Some((ray, Spectrum::ONE * v * cos_theta)), None]
+        _wo: Vector3D,
+        _wi: Vector3D,
+        _eta: Float,
+        _transport_mode: TransportMode,
+    ) -> Float {
+        0.
+    }
+
+    fn eval_bsdf(
+        &self,
+        _wo: Vector3D,
+        _wi: Vector3D,
+        _eta: Float,
+        _transport_mode: TransportMode,
+    ) -> Spectrum {
+        Spectrum::BLACK
+    }
+
+    fn sample_bsdf(
+        &self,
+        wo: Vector3D,
+        _eta: Float,
+        _rng: &mut RandGen,
+        _transport_mode: TransportMode,
+        _trans_flags: TransFlag,
+    ) -> Option<BSDFSample> {
+        let wi = mirror_direction(wo);
+        let spectrum = self.colour() / wo.z.abs();
+        let ret = BSDFSample::new(spectrum, wi, 1., MatFlag::SpecularReflection);
+        Some(ret)
     }
 
     // pub fn sample_bsdf(
@@ -62,69 +92,7 @@ impl Mirror {
     //     // let bsdf = mirror_bsdf(intersection_pt, ray, normal);
     //     // (self.0 * bsdf, 1.)
     // }
-
-    pub fn eval_bsdf(
-        &self,
-        wo: Vector3D,
-        wi: Vector3D,
-        _transport_mode: TransportMode,
-    ) -> Spectrum {
-        self.0 * eval_mirror_bsdf(wo, wi)
-    }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::rand::*;
-    use crate::Float;
-    use geometry::{Ray3D, Vector3D};
-
-    #[test]
-    fn test_get_possible_paths_mirror() {
-        let mirror = Mirror(Spectrum([0.1, 0.2, 0.3]));
-
-        let mut rng = get_rng();
-
-        for _ in 0..500 {
-            let refraction_index: Float = rng.gen();
-            let (x, y, z): (Float, Float, Float) = rng.gen();
-            let direction = Vector3D::new(x, y, -z).get_normalized();
-
-            let normal = Vector3D::new(0., 0., 1.);
-            let intersection_pt = Point3D::new(0., 0., 0.);
-            let ray = Ray {
-                geometry: Ray3D {
-                    origin: Point3D::new(0., 0., 2.),
-                    direction,
-                },
-                refraction_index,
-                ..Ray::default()
-            };
-
-            let paths = mirror.get_possible_paths(&normal, &intersection_pt, &ray);
-            // Reflection
-            if let Some((new_ray, bsdf)) = paths[0] {
-                assert_eq!(
-                    new_ray.refraction_index, refraction_index,
-                    "Expecting the ray's refraction index to be {}... found {}",
-                    refraction_index, ray.refraction_index
-                );
-                assert!(
-                    bsdf.radiance().is_finite() && !bsdf.radiance().is_nan(),
-                    "impossible BSDF --> {}",
-                    bsdf
-                );
-                let new_dir = new_ray.geometry.direction;
-                assert!(( (new_dir.x - direction.x).abs() < 1e-5 && (new_dir.y - direction.y).abs() < 1e-5 && (new_dir.z  + direction.z).abs() < 1e-5 ), "Expecting reflected direction to be mirrored against direction (ray.dir = {} | exp = {}).", ray.geometry.direction, direction);
-            } else {
-                panic!("Expecting a reflection path")
-            }
-
-            // Transmission
-            if let Some(_) = paths[1] {
-                panic!("Mirrors should not transmit!")
-            }
-        }
-    }
-}
+mod tests {}

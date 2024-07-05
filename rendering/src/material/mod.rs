@@ -204,10 +204,31 @@ impl Material {
             Self::Diffuse(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
             Self::Plastic(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
             Self::Metal(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
-            Self::Light(_) => Spectrum::BLACK,
-            Self::Mirror(m) => m.eval_bsdf(vin, vout, TransportMode::default()),
-            Self::Dielectric(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
-            Self::Glass(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
+            Self::Light(_) | Self::Mirror(_) | Self::Dielectric(_) | Self::Glass(_) => {
+                Spectrum::BLACK
+            }
+        }
+    }
+
+    /// Evaluates a BSDF based on an input and outpt directions
+    pub fn pdf(
+        &self,
+        normal: Vector3D,
+        e1: Vector3D,
+        e2: Vector3D,
+        mut vin: Vector3D,
+        vout: Vector3D,
+        eta: Float,
+    ) -> Float {
+        // convert ray into local
+        vin = self.to_local(normal, e1, e2, vin);
+        let vout = self.to_local(normal, e1, e2, vout);
+
+        match self {
+            Self::Diffuse(m) => m.pdf(vin, vout, eta, TransportMode::default()),
+            Self::Plastic(m) => m.pdf(vin, vout, eta, TransportMode::default()),
+            Self::Metal(m) => m.pdf(vin, vout, eta, TransportMode::default()),
+            Self::Light(_) | Self::Mirror(_) | Self::Dielectric(_) | Self::Glass(_) => 0.,
         }
     }
 }

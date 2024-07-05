@@ -29,7 +29,7 @@ use crate::rand::RandGen;
 use crate::triangle::Triangle;
 use crate::Float;
 use calendar::Date;
-use geometry::intersection::{IntersectionInfo, SurfaceSide};
+
 use geometry::{Ray3D, Vector3D};
 use model::Model;
 use rand::Rng;

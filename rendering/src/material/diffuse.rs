@@ -1,6 +1,6 @@
 use super::{
     bsdf_sample::BSDFSample,
-    local_coordinates_utils::same_heisphere,
+    local_coordinates_utils::{abs_cos_theta, same_heisphere},
     mat_trait::{MatFlag, MaterialTrait, TransFlag},
     RandGen,
 };
@@ -27,6 +27,7 @@ impl MaterialTrait for Diffuse {
     fn flags(&self) -> MatFlag {
         MatFlag::Diffuse
     }
+
     fn eval_bsdf(
         &self,
         wo: Vector3D,
@@ -38,6 +39,20 @@ impl MaterialTrait for Diffuse {
             self.colour / PI
         } else {
             Spectrum::BLACK
+        }
+    }
+
+    fn pdf(
+        &self,
+        wo: Vector3D,
+        wi: Vector3D,
+        _eta: Float,
+        _transport_mode: TransportMode,
+    ) -> Float {
+        if same_heisphere(wo, wi) {
+            abs_cos_theta(wi) / PI
+        } else {
+            0.0
         }
     }
 

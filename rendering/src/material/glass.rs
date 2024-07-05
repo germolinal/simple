@@ -167,6 +167,16 @@ impl MaterialTrait for Glass {
     ) -> Spectrum {
         Spectrum::BLACK
     }
+
+    fn pdf(
+        &self,
+        _wo: Vector3D,
+        _wi: Vector3D,
+        _eta: Float,
+        _transport_mode: TransportMode,
+    ) -> Float {
+        0.
+    }
 }
 
 // #[cfg(test)]

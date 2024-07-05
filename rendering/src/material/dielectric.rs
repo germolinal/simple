@@ -118,6 +118,16 @@ impl MaterialTrait for Dielectric {
         }
     }
 
+    fn pdf(
+        &self,
+        _wo: Vector3D,
+        _wi: Vector3D,
+        _eta: Float,
+        _transport_mode: TransportMode,
+    ) -> Float {
+        0.
+    }
+
     fn sample_bsdf(
         &self,
         wo: Vector3D,

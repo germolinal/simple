@@ -96,6 +96,9 @@ pub trait MaterialTrait: std::fmt::Debug {
     /// returns the colour
     fn colour(&self) -> Spectrum;
 
+    /// Returns the PDF of that sampling wo,wo would returln
+    fn pdf(&self, wo: Vector3D, wi: Vector3D, eta: Float, transport_mode: TransportMode) -> Float;
+
     /// Evaluates the BSDF based on the pair of incoming and outgoing vectors
     ///
     /// Transport mode indicates whether paths are being constructed

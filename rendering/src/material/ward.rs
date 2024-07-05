@@ -81,7 +81,6 @@ pub fn sample_ward_anisotropic(
             let l_n = wo.z;
             let v_n = v.z;
             if v_n < 0.0 || l_n < 0.0 {
-                // if l_n > 0.0 {
                 // Here we want to evaluate the BSDF before we update the ray... otherwise the returned value would be incorrect
                 let (spec, _diffuse) =
                     evaluate_ward_anisotropic(specularity, alpha, beta, wo, v, transport_mode);
@@ -124,6 +123,26 @@ pub fn sample_ward_anisotropic(
     }
 }
 
+pub fn ward_pdf(
+    specularity: Float,
+    alpha: Float,
+    beta: Float,
+    wo: Vector3D,
+    wi: Vector3D,
+    transport_mode: TransportMode,
+) -> Float {
+    // Here we want to evaluate the BSDF before we update the ray... otherwise the returned value would be incorrect
+    let (spec, _diffuse) =
+        evaluate_ward_anisotropic(specularity, alpha, beta, wo, wi, transport_mode);
+    assert!(
+        !spec.is_nan(),
+        "incorrect (i.e., NaN) bsdf when calculating Ward aniso."
+    );
+
+    // eq. 14 and 15
+    0.5 * (1. + wo.z / wi.z) * spec / specularity
+}
+
 /// Evaluates a Ward BSDF
 ///
 /// This implementation is based on "A new Ward BRDF model with bounded albedo" (2010),
@@ -163,7 +182,6 @@ pub fn evaluate_ward_anisotropic(
 mod tests {
 
     use geometry::Vector3D;
-    use rand::*;
 
     use crate::{
         material::{get_rng, mat_trait::TransFlag, mirror_direction},
@@ -179,7 +197,7 @@ mod tests {
         let alpha = 0.02;
         let beta = 0.03;
         let wo = Vector3D::new(1., 0., 1.).get_normalized();
-        let wi = -mirror_direction(wo);
+        let _wi = -mirror_direction(wo);
 
         for _ in 0..100 {
             let sample = sample_ward_anisotropic(

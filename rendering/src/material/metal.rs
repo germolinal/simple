@@ -24,6 +24,7 @@ use geometry::Vector3D;
 
 use super::bsdf_sample::BSDFSample;
 use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
+use super::ward::ward_pdf;
 use super::RandGen;
 
 /// Information required for modelling Radiance's Metal and Metal
@@ -45,6 +46,17 @@ impl MaterialTrait for Metal {
 
     fn colour(&self) -> Spectrum {
         self.colour
+    }
+
+    fn pdf(&self, wo: Vector3D, wi: Vector3D, eta: Float, transport_mode: TransportMode) -> Float {
+        ward_pdf(
+            self.specularity,
+            self.roughness,
+            self.roughness,
+            wo,
+            wi,
+            transport_mode,
+        )
     }
 
     fn sample_bsdf(

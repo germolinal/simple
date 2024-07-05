@@ -387,7 +387,7 @@ fn cornell_solid() -> Result<(), String> {
 
     let integrator = RayTracer {
         n_ambient_samples: 200,
-        n_shadow_samples: 1,
+        n_shadow_samples: 30,
         max_depth: 98,
         ..RayTracer::default()
     };
