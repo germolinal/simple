@@ -77,7 +77,7 @@ impl MaterialTrait for Plastic {
         );
         if let Some(sample) = &mut ret {
             if let MatFlag::DiffuseReflection = sample.flags {
-                sample.spectrum *= self.colour().normalize();
+                sample.spectrum *= self.colour();
             }
         }
         ret
@@ -99,8 +99,7 @@ impl MaterialTrait for Plastic {
             transport_mode,
         );
 
-        // Spectrum::gray(direct) + self.colour * diffuse
-        self.colour * direct + self.colour * diffuse
+        Spectrum::gray(direct) + self.colour() * diffuse
     }
 }
 

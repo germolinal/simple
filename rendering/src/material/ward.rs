@@ -90,7 +90,7 @@ pub fn sample_ward_anisotropic(
                 );
 
                 // eq. 14 and 15
-                let pdf = 0.5 * (1. + v_n / l_n) * spec / specularity;
+                let pdf = 0.5 * (1. + v_n / l_n) * spec; // * specularity / specularity;
                 let mut spectrum = Spectrum::gray(spec);
                 spectrum /= l_n.abs();
                 if pdf < 1e-8 && spec < 1e-8 {
@@ -118,7 +118,9 @@ pub fn sample_ward_anisotropic(
             }
         } // end of loop. If we did not return, try again.
     } else {
-        let ret = BSDFSample::new_diffuse(Spectrum::gray(1. - specularity), rng.gen());
+        let diff = 1. - specularity;
+        let mut ret = BSDFSample::new_diffuse(Spectrum::gray(diff), rng.gen());
+        ret.pdf *= diff;
         Some(ret)
     }
 }
@@ -131,16 +133,22 @@ pub fn ward_pdf(
     wi: Vector3D,
     transport_mode: TransportMode,
 ) -> Float {
+    if !same_heisphere(wo, wi) {
+        return 0.0;
+    }
     // Here we want to evaluate the BSDF before we update the ray... otherwise the returned value would be incorrect
-    let (spec, _diffuse) =
-        evaluate_ward_anisotropic(specularity, alpha, beta, wo, wi, transport_mode);
+    let (spec, _) = evaluate_ward_anisotropic(specularity, alpha, beta, wo, wi, transport_mode);
     assert!(
         !spec.is_nan(),
         "incorrect (i.e., NaN) bsdf when calculating Ward aniso."
     );
 
     // eq. 14 and 15
-    0.5 * (1. + wo.z / wi.z) * spec / specularity
+    // we would nee d to multiply this by Specularity to account for the probability
+    // of this being specular
+    let spec_pdf = 0.5 * (1. + wo.z / wi.z) * spec; // * specularity/specularity;
+    let diffuse_pdf = (1. - specularity) * wi.z.abs() / PI;
+    spec_pdf + diffuse_pdf
 }
 
 /// Evaluates a Ward BSDF
@@ -175,7 +183,7 @@ pub fn evaluate_ward_anisotropic(
     };
 
     let diff = (1. - specularity) / PI;
-    (spec, diff)
+    (spec / wo.z.abs(), diff)
 }
 
 #[cfg(test)]

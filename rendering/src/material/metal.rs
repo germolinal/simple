@@ -79,7 +79,7 @@ impl MaterialTrait for Metal {
 
         // Plastic differs from Metal in that the direct component is coloured
         if let Some(sample) = &mut ret {
-            sample.spectrum *= self.colour().normalize();
+            sample.spectrum *= self.colour();
         }
         ret
     }
@@ -100,6 +100,6 @@ impl MaterialTrait for Metal {
             transport_mode,
         );
 
-        self.colour * direct + self.colour * diffuse
+        self.colour() * (direct + diffuse)
     }
 }

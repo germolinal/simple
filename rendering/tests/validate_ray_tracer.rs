@@ -87,7 +87,7 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
     } else {
         load_expected_results(format!("./tests/ray_tracer/{dir}/global_results.txt"))?
     };
-    println!("{}", dir);
+    println!("{} | {}", dir, max_depth);
     println!("exp,found");
     for i in 0..expected.len() {
         println!("{},{}", expected[i], found[i])
@@ -304,7 +304,7 @@ fn glass(validator: &mut Validator) -> Result<(), String> {
 
 #[test]
 fn validate_ray_tracer() -> Result<(), String> {
-    // cargo test --release  --features parallel --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture
+    // cargo test --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture
     let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");
 
     metal(&mut validator)?;

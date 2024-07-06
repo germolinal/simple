@@ -508,7 +508,6 @@ impl RadianceReader {
             .map_err(|e| e.to_string())?;
 
         let sphere = Sphere3D::new(radius, Point3D::new(center_x, center_y, center_z));
-        dbg!(&sphere);
 
         let mod_index = self.get_modifier_index(modifier);
         scene.push_object(mod_index, mod_index, Primitive::Sphere(sphere));

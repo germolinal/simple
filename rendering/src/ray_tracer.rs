@@ -42,8 +42,8 @@ pub struct RayTracer {
 impl Default for RayTracer {
     fn default() -> Self {
         Self {
-            max_depth: 2,
-            n_shadow_samples: 10,
+            max_depth: 100,
+            n_shadow_samples: 1,
             n_ambient_samples: 70,
         }
     }
