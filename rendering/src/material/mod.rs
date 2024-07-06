@@ -157,7 +157,7 @@ impl Material {
             Self::Plastic(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
             Self::Metal(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
             Self::Light(_m) => None, //panic!("Material '{}' has no BSDF", m.id()),
-            Self::Mirror(m) => None, //m.sample_bsdf(wo, *eta, uc, u, transport_mode, trans_flags),
+            Self::Mirror(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
             Self::Dielectric(m) => {
                 let ret = m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags);
                 // if front or back?

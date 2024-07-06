@@ -48,7 +48,7 @@ impl MaterialTrait for Metal {
         self.colour
     }
 
-    fn pdf(&self, wo: Vector3D, wi: Vector3D, eta: Float, transport_mode: TransportMode) -> Float {
+    fn pdf(&self, wo: Vector3D, wi: Vector3D, _eta: Float, transport_mode: TransportMode) -> Float {
         ward_pdf(
             self.specularity,
             self.roughness,

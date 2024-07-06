@@ -78,20 +78,6 @@ impl MaterialTrait for Mirror {
         let ret = BSDFSample::new(spectrum, wi, 1., MatFlag::SpecularReflection);
         Some(ret)
     }
-
-    // pub fn sample_bsdf(
-    //     &self,
-    //     _normal: Vector3D,
-    //     _e1: Vector3D,
-    //     _e2: Vector3D,
-    //     _intersection_pt: Point3D,
-    //     _ray: &mut Ray,
-    //     _rng: &mut RandGen,
-    // ) -> (Spectrum, Float) {
-    //     unreachable!();
-    //     // let bsdf = mirror_bsdf(intersection_pt, ray, normal);
-    //     // (self.0 * bsdf, 1.)
-    // }
 }
 
 #[cfg(test)]

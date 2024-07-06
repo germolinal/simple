@@ -25,6 +25,7 @@ use crate::Float;
 use geometry::intersection::IntersectionInfo;
 use geometry::{Point3D, Ray3D, Transform, Vector3D};
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, Default)]
 pub enum TransportMode {
     #[default]
