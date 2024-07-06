@@ -147,7 +147,7 @@ pub fn ward_pdf(
     // we would nee d to multiply this by Specularity to account for the probability
     // of this being specular
     let spec_pdf = 0.5 * (1. + wo.z / wi.z) * spec; // * specularity/specularity;
-    let diffuse_pdf = (1. - specularity) * wi.z.abs() / PI;
+    let diffuse_pdf = (1. - specularity) * wo.z.abs() / PI;
     spec_pdf + diffuse_pdf
 }
 

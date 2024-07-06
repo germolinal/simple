@@ -222,15 +222,20 @@ impl RadianceReader {
         self.modifiers.push(name.to_string());
         let colour = Spectrum([red, green, blue]);
 
-        let metal = if specularity < MIN_SPECULARITY {
-            Material::Diffuse(Diffuse { colour })
-        } else {
-            Material::Metal(Metal {
-                colour: Spectrum([red, green, blue]),
-                specularity,
-                roughness,
-            })
-        };
+        // let metal = if specularity < MIN_SPECULARITY {
+        //     Material::Diffuse(Diffuse { colour })
+        // } else {
+        //     Material::Metal(Metal {
+        //         colour: Spectrum([red, green, blue]),
+        //         specularity,
+        //         roughness,
+        //     })
+        // };
+        let metal = Material::Metal(Metal {
+            colour: Spectrum([red, green, blue]),
+            specularity,
+            roughness,
+        });
         scene.push_material(metal);
 
         Ok(())
@@ -274,15 +279,20 @@ impl RadianceReader {
         self.modifiers.push(name.to_string());
 
         let colour = Spectrum([red, green, blue]);
-        let plastic = if specularity < MIN_SPECULARITY {
-            Material::Diffuse(Diffuse { colour })
-        } else {
-            Material::Plastic(Plastic {
-                colour,
-                specularity,
-                roughness,
-            })
-        };
+        // let plastic = if specularity < MIN_SPECULARITY {
+        //     Material::Diffuse(Diffuse { colour })
+        // } else {
+        //     Material::Plastic(Plastic {
+        //         colour,
+        //         specularity,
+        //         roughness,
+        //     })
+        // };
+        let plastic = Material::Plastic(Plastic {
+            colour,
+            specularity,
+            roughness,
+        });
 
         scene.push_material(plastic);
 

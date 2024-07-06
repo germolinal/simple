@@ -159,7 +159,7 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
     /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Plastic - Global illumination")]
     fn plastic_full_global() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("plastic_box_specular", MAX_DEPTH)?;
+        let (expected, found) = get_simple_results("plastic_box_full", MAX_DEPTH)?;
         Ok(get_validator(expected, found))
     }
 
@@ -169,7 +169,7 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
     /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Plastic - Direct illumination")]
     fn plastic_full_direct() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("plastic_box_specular", 0)?;
+        let (expected, found) = get_simple_results("plastic_box_full", 0)?;
         Ok(get_validator(expected, found))
     }
 
@@ -256,7 +256,7 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Metal - Global illumination")]
     fn metal_full_global() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("metal_box_specular", MAX_DEPTH)?;
+        let (expected, found) = get_simple_results("metal_box_full", MAX_DEPTH)?;
 
         Ok(get_validator(expected, found))
     }
@@ -267,7 +267,7 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Metal - Direct illumination")]
     fn metal_full_direct() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("metal_box_specular", 0)?;
+        let (expected, found) = get_simple_results("metal_box_full", 0)?;
 
         Ok(get_validator(expected, found))
     }
