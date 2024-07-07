@@ -28,7 +28,7 @@ impl ProgressBar {
         let c = self
             .counter
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let progress = if c > self.total_count {
+        let progress = if c >= self.total_count {
             eprintln!(
                 "Progress bar '{}' overflowed... ticked beyond count of {}",
                 self.title, self.total_count
@@ -41,7 +41,8 @@ impl ProgressBar {
         let lp = self
             .last_progress
             .load(std::sync::atomic::Ordering::Relaxed);
-        let delta = progress - lp;
+
+        let delta = if progress > lp { progress - lp } else { 0 };
         if delta >= 100 / BAR_LENGTH {
             self.last_progress
                 .fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
