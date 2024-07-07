@@ -316,6 +316,7 @@ fn sponza() -> Result<(), String> {
 
 #[test]
 #[ignore]
+
 fn scene_0() -> Result<(), String> {
     // cargo test --package rendering --test test_scenes -- --ignored scene_0 --exact --nocapture
 

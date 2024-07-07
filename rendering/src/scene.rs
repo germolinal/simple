@@ -233,6 +233,7 @@ impl Scene {
     /// the Interaction
     pub fn cast_ray<const N: usize>(
         &self,
+
         ray: Ray3D,
         node_aux: &mut [usize; N],
     ) -> Option<(usize, Interaction)> {

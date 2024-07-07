@@ -6,13 +6,18 @@ RPICT_OPTIONS="-ab 4 -aa 0.0"
 RTRACE_OPTIONS="-aa 0 -lr -0 -lw 1e-8 -ad 30000 " #"-lw 1e-20 -ad 10024 -aa 0 "
 RCONTRIB_OPTIONS="-lw 1e-10 -ad 30000"
 POINTS="../../points.pts"
+<<<<<<< HEAD
 N_BOUNCES=30
+=======
+N_BOUNCES=10
+>>>>>>> b84f513fee56e71c5b8b8d0d588df10a6b02d13e
 WHITE_SKY=sky.rad
 OCTREE_GLASS=octree.oct
 OCTREE_NO_GLASS=octree_no_glass.oct
 BLACK_OCTREE_GLASS=black_$OCTREE_GLASS.oct
 BLACK_OCTREE_NO_GLASS=black_$OCTREE_NO_GLASS.oct
 
+<<<<<<< HEAD
 # Run rtrace sims
 cd ray_tracer
 for dir in $(ls -d */)
@@ -39,6 +44,34 @@ do
     cd ..
 done
 cd ..
+=======
+# # Run rtrace sims
+# cd ray_tracer
+# for dir in $(ls -d */)
+# do
+#     cd $dir
+#     rm -rf scene.rad
+#     for rad in $(ls | grep .rad)
+#     do
+#         echo Running sim on $dir
+
+#         oconv -f $rad > $OCTREE_GLASS # Frozen octree
+
+#         # rpict $RPICT_OPTIONS -vp 2 1 1 -vd 0 1 0 -vh 60 -vv 60 -x 512 -y 512 $OCTREE_GLASS > $IMG
+#         cat $POINTS | rtrace -h -ab 0 $RTRACE_OPTIONS $OCTREE_GLASS | rcalc -e '$1=$1*0.265 + $2*0.67 + $3*0.065' > direct_results.txt
+#         cat $POINTS | rtrace -h -ab $N_BOUNCES $RTRACE_OPTIONS $OCTREE_GLASS | rcalc -e '$1=$1*0.265 + $2*0.67 + $3*0.065' > global_results.txt
+
+#         # echo 2 1 1 0 1 0 | /Users/germolinal/Documents/Radiance/build/UILD_HEADLESS/bin/Debug/rtrace -h /Users/germolinal/Documents/simple/rendering/tests/metal_box_diffuse/octree.oct
+
+#         rm -rf $OCTREE_GLASS
+
+
+#     done
+
+#     cd ..
+# done
+# cd ..
+>>>>>>> b84f513fee56e71c5b8b8d0d588df10a6b02d13e
 
 
 # DC sims

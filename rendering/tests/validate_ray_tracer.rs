@@ -1,7 +1,7 @@
 use geometry::{Point3D, Ray3D, Vector3D};
+
 use rendering::{Float, RayTracer, Scene};
 use validate::{valid, SeriesValidator, ValidFunc, Validator};
-
 const MAX_DEPTH: usize = 30;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
@@ -257,7 +257,6 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     #[valid("Full Metal - Global illumination")]
     fn metal_full_global() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_full", MAX_DEPTH)?;
-
         Ok(get_validator(expected, found))
     }
 
@@ -268,7 +267,6 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     #[valid("Full Metal - Direct illumination")]
     fn metal_full_direct() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_full", 0)?;
-
         Ok(get_validator(expected, found))
     }
 

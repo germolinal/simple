@@ -69,6 +69,7 @@ pub fn sample_ward_anisotropic(
                 1.
             } else {
                 (-xi2.ln() / ((cosp / alpha).powi(2) + (sinp / beta).powi(2))).sqrt()
+                // (alpha.powi(2) * -xi2.ln()).sqrt()
             };
 
             let h = Vector3D::new(cosp * d, sinp * d, 1.0);

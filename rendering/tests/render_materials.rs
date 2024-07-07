@@ -152,7 +152,7 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_specular_plastic() -> Result<(), String> {
-    // Xcargo test --package rendering --test render_materials -- test_render_specular_plastic --exact --nocapture --ignored
+    // cargo test --package rendering --test render_materials -- test_render_specular_plastic --exact --nocapture --ignored
 
     let plastic = Material::Plastic(Plastic {
         colour: Spectrum([0.9, 0.5, 0.5]),

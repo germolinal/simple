@@ -24,6 +24,7 @@ use crate::image::ImageBuffer;
 use crate::interaction::Interaction;
 use crate::material::Material;
 use crate::rand::*;
+
 use crate::scene::{Object, Scene};
 use crate::Float;
 use geometry::intersection::SurfaceSide;
@@ -73,6 +74,7 @@ impl RayTracer {
         &self,
         rng: &mut RandGen,
         scene: &Scene,
+
         mut ray: Ray3D,
         aux: &mut [usize; N],
     ) -> Spectrum {
@@ -205,6 +207,7 @@ impl RayTracer {
     /// Calculates the luminance produced by the direct sources in the
     /// scene
     #[allow(clippy::too_many_arguments)]
+
     fn get_local_illumination<const N: usize>(
         &self,
         scene: &Scene,
@@ -220,6 +223,7 @@ impl RayTracer {
         let mut local_illum = Spectrum::BLACK;
 
         let n = n_shadow_samples;
+
         let n_shadow_samples = n as Float;
         if let Some((light, p_light)) = scene.sample_light_uniform(rng) {
             let mut i = 0;
@@ -282,13 +286,13 @@ impl RayTracer {
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
             let mut aux = [0; 32];
+
             let mut rng = get_rng();
 
             for pixel in chunk {
                 let y = (pindex as Float / width as Float).floor() as usize;
                 let x = pindex - y * width;
                 let (ray, _weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
-
                 *pixel = self.trace_ray(&mut rng, scene, ray, &mut aux);
 
                 progress.tic();

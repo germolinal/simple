@@ -470,7 +470,6 @@ impl BoundingVolumeTree {
             &mut ordered_normals,
         );
 
-        // scene.triangles = ordered_triangles; // Update the Scene with the ordered primitive.
         scene.triangles = ordered_triangles.iter().map(|t| t.as_array()).collect();
         scene.front_material_indexes = ordered_front_materials;
         scene.back_material_indexes = ordered_back_materials;
@@ -717,7 +716,6 @@ mod tests {
     use crate::colour::Spectrum;
     use crate::material::Material;
     use crate::material::Plastic;
-
     use geometry::{Point3D, Ray3D, Sphere3D};
 
     use crate::primitive::Primitive;
@@ -901,6 +899,7 @@ mod tests {
         let ret = scene.cast_ray(ray, &mut aux);
         assert!(ret.is_some());
         let (_, interaction) = ret.unwrap();
+
         assert!(
             (interaction.point - Point3D::new(0., -0.5, -1.)).length() < 1e-9,
             "Point was {}",
