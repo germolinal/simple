@@ -41,23 +41,13 @@ struct Inputs {
     pub mf: usize,
 
     /// The number of bounces before a ray is terminated (-ab in Radiance lingo)
-    #[clap(short = 'b', long = "max_depth", default_value_t = 2)]
+    #[clap(short = 'b', long = "max_depth", default_value_t = 120)]
     pub max_depth: usize,
 
     /// The number of secondary rays sent from the first interaction.
     /// From the second interaction and on, this number is reduced
-    #[clap(short = 'a', long = "ambient_samples", default_value_t = 1700)]
+    #[clap(short = 'a', long = "ambient_samples", default_value_t = 30000)]
     pub n_ambient_samples: usize,
-
-    /// A lower value makes the Russian roulette less deadly
-    #[clap(short = 'w', long = "limit_weight", default_value_t = 1e-3)]
-    pub limit_weight: Float,
-
-    /// The probability of counting purely specular bounces as an actual bounce.
-    /// (Specular bounces seldom count because that allows achieving caustics better...
-    /// and they are cheap)
-    #[clap(short = 'c', long = "count_specular", default_value_t = 0.3)]
-    pub count_specular_bounce: Float,
 
     /// The number of sensors to receive in the standard input
     #[clap(short = 'n', long, default_value_t = 64)]
@@ -87,8 +77,6 @@ fn main() -> Result<(), String> {
         max_depth: inputs.max_depth,
         n_ambient_samples: inputs.n_ambient_samples,
         reinhart: ReinhartSky::new(inputs.mf),
-        limit_weight: inputs.limit_weight,
-        count_specular_bounce: inputs.count_specular_bounce,
     };
 
     let rays = vec![

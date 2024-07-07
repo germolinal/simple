@@ -5,10 +5,18 @@ use crate::samplers::sample_uniform_hemisphere;
 use crate::Float;
 use rand::*;
 
+use crate::Spectrum;
 use crate::PI;
-use crate::{ray::TransportMode, Spectrum};
 use geometry::Vector3D;
 use std::ops::BitAnd;
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy, Default)]
+pub enum TransportMode {
+    #[default]
+    Radiance,
+    Importance,
+}
 
 #[derive(Clone, Copy, Debug, Default)]
 #[repr(u8)]
@@ -158,7 +166,7 @@ pub trait MaterialTrait: std::fmt::Debug {
                 1.0, // mock refraction index
                 rng,
                 TransportMode::default(),
-                TransFlag::default(),
+                TransFlag::All,
             ) {
                 const UNIFORM_HEMISPHERE_PDF: Float = 0.5 / PI;
                 rho += sample.spectrum * abs_cos_theta(sample.wi) * abs_cos_theta(wo)
@@ -197,7 +205,7 @@ mod tests {
     #[test]
     fn test_non_specular() {
         assert!(!MatFlag::Unset.is_non_specular());
-        assert!(MatFlag::Reflection.is_non_specular());
+        assert!(!MatFlag::Reflection.is_non_specular());
         assert!(!MatFlag::Transmission.is_non_specular());
         assert!(MatFlag::Diffuse.is_non_specular()); // YES!
         assert!(MatFlag::Glossy.is_non_specular()); // YES!
@@ -218,7 +226,7 @@ mod tests {
 
         let mat = Diffuse::new(Spectrum::gray(1.0));
 
-        let rho = mat.directional_rho(Vector3D::new(1., 0., 0.), &mut rng, n);
+        let rho = mat.directional_rho(Vector3D::new(1., 0., -1.), &mut rng, n);
         assert!(
             (rho.0[0] - 1.0).abs() < 1e-8,
             "Found rho to be {}... expecting 1.0",

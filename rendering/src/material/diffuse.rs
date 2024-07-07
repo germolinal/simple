@@ -6,7 +6,7 @@ use super::{
 };
 use rand::*;
 
-use crate::{ray::TransportMode, Float, Spectrum, PI};
+use crate::{material::TransportMode, Float, Spectrum, PI};
 use geometry::Vector3D;
 
 // pub fn sample_diffuse()

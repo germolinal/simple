@@ -52,8 +52,6 @@ pub mod primitive;
 
 pub mod primitive_samplers;
 pub mod rand;
-mod ray;
-pub use ray::Ray;
 pub mod samplers;
 mod scene;
 pub use scene::{Scene, Wavelengths};

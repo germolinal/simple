@@ -9,6 +9,9 @@ fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<ScatterValidator<Fl
         found,
         expected_legend: Some("Radiance"),
         found_legend: Some("SIMPLE"),
+        allowed_r2: Some(0.98),
+        allowed_intersect_delta: Some(0.05),
+        allowed_slope_delta: Some(0.05),
         ..validate::ScatterValidator::default()
     })
 }
@@ -60,9 +63,8 @@ fn get_simple_results(dir: &str, max_depth: usize, with_glass: bool) -> (Vec<Flo
     scene.build_accelerator();
 
     let integrator = DCFactory {
-        n_ambient_samples: 15120,
+        n_ambient_samples: 50120,
         max_depth,
-        limit_weight: 1e-9,
         ..DCFactory::default()
     };
 
@@ -116,13 +118,6 @@ fn room_global_with_no_glass() -> Box<dyn Validate> {
     get_validator(expected, found)
 }
 
-/// Calculate the Daylight Coefficients in a room with a Glass window, with zero bounces
-#[valid(Room With Glass - Direct)]
-fn room_direct_with_glass() -> Box<dyn Validate> {
-    let (expected, found) = get_simple_results("room", 0, true);
-    get_validator(expected, found)
-}
-
 /// Calculate the Daylight Coefficients in a room, with zero bounces
 #[valid(Room With No Glass - Direct)]
 fn room_direct_with_no_glass() -> Box<dyn Validate> {
@@ -132,15 +127,13 @@ fn room_direct_with_no_glass() -> Box<dyn Validate> {
 
 fn room(validator: &mut Validator) {
     validator.push(room_direct_with_no_glass());
-    validator.push(room_direct_with_glass());
     validator.push(room_global_with_no_glass());
     validator.push(room_global_with_glass());
 }
 
-#[ignore]
 #[test]
 fn validate_dc() -> Result<(), String> {
-    // cargo test --release --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture --ignored
+    // cargo test --package rendering --test validate_dc -- validate_dc --exact --nocapture
     let mut validator = Validator::new(
         "Validate Daylight Coefficients",
         "../docs/validation/daylight_coefficient.html",

@@ -260,58 +260,6 @@ impl RayTracer {
         local_illum / n_shadow_samples
     }
 
-    // fn get_global_illumination<const N: usize>(
-    //     &self,
-    //     scene: &Scene,
-    //     n_ambient_samples: usize,
-    //     material: &Material,
-    //     ray: &mut Ray,
-    //     rng: &mut RandGen,
-    //     aux: &mut [usize; N],
-    // ) -> Spectrum {
-    //     if n_ambient_samples == 0 {
-    //         return Spectrum::BLACK;
-    //     }
-
-    //     let (intersection_pt, normal, e1, e2) = ray.get_triad();
-
-    //     let mut global = Spectrum::BLACK;
-
-    //     let depth = ray.depth;
-
-    //     let mut count = 0;
-    //     while count < n_ambient_samples {
-    //         // Choose a direction.
-    //         let sample = material
-    //             .sample_bsdf(normal, e1, e2, intersection_pt, ray, rng)
-    //             .expect("could not sample material");
-    //         let new_ray_dir = ray.geometry.direction;
-    //         debug_assert!(
-    //             (1. - new_ray_dir.length()).abs() < 1e-2,
-    //             "Length is {}",
-    //             new_ray_dir.length()
-    //         );
-    //         debug_assert!(
-    //             (1. - normal.length()).abs() < 1e-2,
-    //             "normal Length is {}",
-    //             normal.length()
-    //         );
-
-    //         let cos_theta = (normal * new_ray_dir).abs();
-    //         let bsdf_rad = sample.spectrum.radiance();
-    //         ray.depth += 1;
-    //         ray.value *= bsdf_rad * cos_theta / sample.pdf;
-
-    //         let li = self.trace_ray(rng, scene, ray, aux);
-
-    //         count += 1;
-
-    //         global += li * sample.spectrum * cos_theta / sample.pdf;
-    //     }
-
-    //     global / (count as Float)
-    // }
-
     #[allow(clippy::needless_collect)]
     pub fn render(self, scene: &Scene, camera: &dyn Camera) -> ImageBuffer {
         let (width, height) = camera.film_resolution();
@@ -347,7 +295,6 @@ impl RayTracer {
             }
         });
 
-        // println!("\nScene took {} seconds to render", now.elapsed().as_secs());
         progress.done();
 
         // return

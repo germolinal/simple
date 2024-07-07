@@ -20,7 +20,7 @@ SOFTWARE.
 
 use crate::colour::Spectrum;
 
-use crate::ray::TransportMode;
+use crate::material::TransportMode;
 use crate::Float;
 use geometry::Vector3D;
 

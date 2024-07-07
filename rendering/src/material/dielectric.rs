@@ -20,7 +20,7 @@ SOFTWARE.
 
 use crate::material::bsdf_sample::BSDFSample;
 use crate::material::specular::*;
-use crate::ray::TransportMode;
+use crate::material::TransportMode;
 use crate::Float;
 use crate::{
     colour::Spectrum,
@@ -133,7 +133,7 @@ impl MaterialTrait for Dielectric {
         wo: Vector3D,
         eta: Float,
         rng: &mut RandGen,
-        transport_mode: crate::ray::TransportMode,
+        transport_mode: crate::material::TransportMode,
         trans_flags: super::mat_trait::TransFlag,
     ) -> Option<super::bsdf_sample::BSDFSample> {
         let normal = Vector3D::new(0., 0., 1.);
@@ -188,7 +188,7 @@ impl MaterialTrait for Dielectric {
         _wo: Vector3D,
         _wi: Vector3D,
         _eta: Float,
-        _transport_mode: crate::ray::TransportMode,
+        _transport_mode: crate::material::TransportMode,
     ) -> Spectrum {
         Spectrum::BLACK
     }

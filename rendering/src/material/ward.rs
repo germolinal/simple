@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::ray::TransportMode;
+use crate::material::TransportMode;
 use crate::Spectrum;
 use crate::{Float, PI};
 use geometry::Vector3D;
@@ -192,8 +192,8 @@ mod tests {
     use geometry::Vector3D;
 
     use crate::{
+        material::TransportMode,
         material::{get_rng, mat_trait::TransFlag, mirror_direction},
-        ray::TransportMode,
     };
 
     use super::*;
@@ -243,7 +243,7 @@ mod tests {
                 beta,
                 wo,
                 wi,
-                crate::ray::TransportMode::Radiance,
+                crate::material::TransportMode::Radiance,
             );
 
             let plot = wi * spec;

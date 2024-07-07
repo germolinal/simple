@@ -19,7 +19,7 @@ SOFTWARE.
 */
 
 use crate::Float;
-use crate::{colour::Spectrum, ray::TransportMode};
+use crate::{colour::Spectrum, material::TransportMode};
 use geometry::Vector3D;
 
 use super::bsdf_sample::BSDFSample;

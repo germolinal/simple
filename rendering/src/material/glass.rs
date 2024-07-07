@@ -23,7 +23,7 @@ use crate::Float;
 use crate::{
     colour::Spectrum,
     material::mat_trait::{MatFlag, MaterialTrait, TransFlag},
-    ray::TransportMode,
+    material::TransportMode,
 };
 use geometry::Vector3D;
 use rand::*;

@@ -238,7 +238,7 @@ impl BBox3D {
     ///     direction: Vector3D::new(0., 0., 1.)
     /// };
     /// let inv_dir = Vector3D::new(1./ray.direction.x, 1./ray.direction.y, 1./ray.direction.z);
-    /// assert!(bbox.intersect(&ray, &inv_dir));
+    /// assert!(bbox.intersect(ray, &inv_dir));
     /// ```
     pub fn intersect(&self, ray: Ray3D, inv_dir: &Vector3D) -> bool {
         let Vector3D {

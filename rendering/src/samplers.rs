@@ -37,24 +37,6 @@ pub fn uniform_sample_triangle(u: (Float, Float), a: Point3D, b: Point3D, c: Poi
 }
 
 pub fn uniform_sample_horizontal_disc(u: (Float, Float), radius: Float) -> (Float, Float) {
-    // let (ux, uy) = (2.0 * u.0 - 1.0, 2.0 * u.1 - 1.0);
-    // if ux < 1e-9 && uy < 1e-9 {
-    //     return (0., 0.);
-    // }
-
-    // let (theta, mut r) = if ux.abs() > uy.abs() {
-    //     let r = ux;
-    //     let theta = (crate::PI / 4.0) * (uy / ux);
-    //     (theta, r)
-    // } else {
-    //     let r = uy;
-    //     let theta = crate::PI / 2.0 - (crate::PI / 4.0) * (ux / uy);
-    //     (theta, r)
-    // };
-    // r *= radius;
-    // let (sin, cos) = theta.sin_cos();
-    // (r * sin, r * cos)
-
     let (r, theta) = u;
 
     let r = radius * r.sqrt();
@@ -85,12 +67,6 @@ pub fn local_to_world(
     let x = centre.x + x_local * local_e1.x + y_local * local_e2.x + z_local * normal.x;
     let y = centre.y + x_local * local_e1.y + y_local * local_e2.y + z_local * normal.y;
     let z = centre.z + x_local * local_e1.z + y_local * local_e2.z + z_local * normal.z;
-
-    debug_assert!(
-        (1. - Vector3D::new(x, y, z).length()) < 1e-5,
-        "Expecting a unit vector... found length {:.6}",
-        Vector3D::new(x, y, z).length()
-    );
 
     (x, y, z)
 }

@@ -18,13 +18,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+use crate::colour::Spectrum;
 use crate::rand::*;
 use crate::Float;
-use crate::{colour::Spectrum, ray::TransportMode};
 use bsdf_sample::BSDFSample;
 use geometry::intersection::SurfaceSide;
 use geometry::Vector3D;
-use mat_trait::MaterialTrait;
+pub use mat_trait::{MaterialTrait, TransportMode};
 
 mod light;
 pub use light::Light;

@@ -43,7 +43,12 @@ impl ProgressBar {
     fn show_progress(&self, progress: usize) {
         let filled_length = (BAR_LENGTH as f64 * (progress as f64 / 100.0)).round() as usize;
         let filled = "=".repeat(filled_length);
-        let empty = " ".repeat(BAR_LENGTH - filled_length);
+        let n_empty = if BAR_LENGTH >= filled_length {
+            BAR_LENGTH - filled_length
+        } else {
+            0
+        };
+        let empty = " ".repeat(n_empty);
         print!(
             "\r    {} [{}{}] {:.2}%",
             self.title, filled, empty, progress
