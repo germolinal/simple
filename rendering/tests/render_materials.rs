@@ -166,7 +166,7 @@ fn test_render_specular_plastic() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_specular_metal() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_specular_metal --ignored --exact --nocapture
+    // cargo test --package rendering --test render_materials -- test_render_specular_metal --ignored --exact --nocapture
 
     let metal = Material::Metal(Metal {
         colour: Spectrum([0.0, 0.5, 0.5]),
@@ -180,7 +180,7 @@ fn test_render_specular_metal() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_glass() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_glass --ignored --exact --nocapture
+    // cargo test --package rendering --test render_materials -- test_render_glass --ignored --exact --nocapture
     let metal = Material::Glass(Glass {
         colour: Spectrum([0.9, 0.9, 0.9]),
         refraction_index: 1.52,
@@ -192,7 +192,7 @@ fn test_render_glass() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_mirror() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_mirror --ignored --exact --nocapture
+    // cargo test --package rendering --test render_materials -- test_render_mirror --ignored --exact --nocapture
 
     let plastic = Material::Mirror(Mirror(Spectrum::gray(0.5)));
 
@@ -202,7 +202,7 @@ fn test_render_mirror() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_dielectric() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_dielectric --exact --nocapture --ignored
+    // cargo test --package rendering --test render_materials -- test_render_dielectric --exact --nocapture --ignored
 
     let dielectric = Material::Dielectric(Dielectric {
         colour: Spectrum::gray(0.95),

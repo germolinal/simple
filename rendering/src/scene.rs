@@ -103,6 +103,9 @@ impl Scene {
     /// uniformly. Returns None if there are no lights. Returns
     /// the probability of sampling this light.
     pub fn sample_light_uniform(&self, rng: &mut RandGen) -> Option<(&Object, Float)> {
+        if self.lights.is_empty() {
+            return None;
+        }
         let mut i: usize = rng.gen();
         i %= self.lights.len();
         let pdf = 1. / self.lights.len() as Float;

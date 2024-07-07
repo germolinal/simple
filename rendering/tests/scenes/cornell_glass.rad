@@ -76,26 +76,13 @@ lamp sphere thelamp
 0
 4 3 3 4.4 0.1
 
-<<<<<<< HEAD
-red sphere glassed
-=======
 solid_glass sphere glassed
->>>>>>> b84f513fee56e71c5b8b8d0d588df10a6b02d13e
 0
 0
 4   4.5 3 1 1
 
-<<<<<<< HEAD
-<<<<<<<< HEAD:rendering/tests/scenes/cornell_glass.rad
-mymirror sphere mirrored_ball
-========
-
-red sphere mirrored_ball
->>>>>>>> b84f513fee56e71c5b8b8d0d588df10a6b02d13e:rendering/tests/scenes/cornell.rad
-=======
 
 mymirror sphere mirrored_ball
->>>>>>> b84f513fee56e71c5b8b8d0d588df10a6b02d13e
 0
 0
 4   1.5 4.5 1 1
