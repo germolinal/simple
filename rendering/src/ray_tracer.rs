@@ -52,8 +52,8 @@ impl Default for RayTracer {
 
 #[allow(dead_code)]
 fn power_heuristic(na: usize, pdfa: Float, nb: usize, pdfb: Float) -> Float {
-    let na = na as f64;
-    let nb = nb as f64;
+    let na = na as Float;
+    let nb = nb as Float;
     let a = na * pdfa;
     let b = nb * pdfb;
     a * a / (a * a + b * b)
@@ -61,8 +61,8 @@ fn power_heuristic(na: usize, pdfa: Float, nb: usize, pdfb: Float) -> Float {
 
 #[allow(dead_code)]
 fn balance_heuristic(na: usize, pdfa: Float, nb: usize, pdfb: Float) -> Float {
-    let na = na as f64;
-    let nb = nb as f64;
+    let na = na as Float;
+    let nb = nb as Float;
     let a = na * pdfa;
     let b = nb * pdfb;
     a / (a + b)
