@@ -1,5 +1,6 @@
 use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::{colour_matrix, ColourMatrix, DCFactory, Float, Scene};
+use utils::ProgressBar;
 use validate::{valid, ScatterValidator, Validate, Validator};
 
 fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<ScatterValidator<Float>> {
@@ -69,7 +70,12 @@ fn get_simple_results(dir: &str, max_depth: usize, with_glass: bool) -> (Vec<Flo
     };
 
     let rays = load_rays("./tests/points.pts");
-    let found_matrix = integrator.calc_dc(&rays, &scene);
+    let progress_bar = ProgressBar::new(
+        "Calculating daylight coefficients".to_string(),
+        rays.len() * integrator.n_ambient_samples,
+    );
+    let found_matrix = integrator.calc_dc(&rays, &scene, Some(&progress_bar));
+    progress_bar.done();
     let found = flatten_matrix(&found_matrix);
 
     let expected = if max_depth == 0 {

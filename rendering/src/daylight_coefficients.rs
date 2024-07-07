@@ -28,6 +28,7 @@ use crate::Float;
 use geometry::intersection::SurfaceSide;
 use geometry::Vector3D;
 use geometry::{Point3D, Ray3D};
+use utils::ProgressBar;
 use weather::solar::ReinhartSky;
 
 #[cfg(feature = "parallel")]
@@ -53,14 +54,14 @@ impl Default for DCFactory {
 }
 
 impl DCFactory {
-    pub fn calc_dc(&self, rays: &[Ray3D], scene: &Scene) -> ColourMatrix {
+    pub fn calc_dc(
+        &self,
+        rays: &[Ray3D],
+        scene: &Scene,
+        progress_bar: Option<&ProgressBar>,
+    ) -> ColourMatrix {
         // Initialize matrix
         let n_bins = self.reinhart.n_bins;
-
-        let progress = utils::ProgressBar::new(
-            "Calculating Daylight Coefficients".to_string(),
-            rays.len() * self.n_ambient_samples,
-        );
 
         // Process... This can be in parallel, or not.
         #[cfg(not(feature = "parallel"))]
@@ -124,7 +125,9 @@ impl DCFactory {
                         let mut rng = get_rng();
                         self.trace_ray(scene, new_ray, &mut this_ret, &mut rng, &mut aux);
 
-                        progress.tic();
+                        if let Some(progress) = &progress_bar {
+                            progress.tic();
+                        }
                         this_ret
                     })
                     .collect(); // End of iterating primary rays
@@ -146,8 +149,6 @@ impl DCFactory {
                 ret.set(sensor_index, patch_index, v).unwrap();
             }
         }
-
-        progress.done();
 
         ret
     }

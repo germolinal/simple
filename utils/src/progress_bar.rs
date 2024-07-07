@@ -28,17 +28,24 @@ impl ProgressBar {
         let c = self
             .counter
             .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        let progress = (100. * (c as f32) / self.total_count as f32).round() as usize;
+        let progress = if c > self.total_count {
+            eprintln!(
+                "Progress bar '{}' overflowed... ticked beyond count of {}",
+                self.title, self.total_count
+            );
+            100
+        } else {
+            (100. * (c as f32) / self.total_count as f32).round() as usize
+        };
+
         let lp = self
             .last_progress
             .load(std::sync::atomic::Ordering::Relaxed);
-        if progress > lp {
-            let delta = progress - lp;
-            if delta >= 100 / BAR_LENGTH {
-                self.last_progress
-                    .fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
-                self.show_progress(progress);
-            }
+        let delta = progress - lp;
+        if delta >= 100 / BAR_LENGTH {
+            self.last_progress
+                .fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
+            self.show_progress(progress);
         }
     }
 

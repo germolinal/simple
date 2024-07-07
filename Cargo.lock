@@ -652,6 +652,7 @@ dependencies = [
  "serde",
  "serde_json",
  "test_models",
+ "utils",
  "validate",
  "weather",
 ]
@@ -1121,6 +1122,7 @@ dependencies = [
  "rhai",
  "schedule",
  "serde_json",
+ "utils",
  "validate",
  "weather",
 ]

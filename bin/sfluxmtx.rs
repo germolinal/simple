@@ -24,6 +24,7 @@ use weather::ReinhartSky;
 use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::daylight_coefficients::DCFactory;
 use rendering::Wavelengths;
+use utils::ProgressBar;
 
 /// Calculates the Daylight Coefficients
 #[derive(Debug, Parser)]
@@ -105,7 +106,13 @@ fn main() -> Result<(), String> {
         },
     ];
 
-    let dc_matrix = factory.calc_dc(&rays, &scene);
+    let progress = ProgressBar::new(
+        "Calculating Daylight Coefficients".to_string(),
+        rays.len() * factory.n_ambient_samples,
+    );
+
+    let dc_matrix = factory.calc_dc(&rays, &scene, Some(&progress));
+    progress.done();
     save_colour_matrix(&dc_matrix, std::path::Path::new(&inputs.output))?;
 
     Ok(())
