@@ -497,8 +497,6 @@ mod testing {
         Ok(())
     }
 
-    
-
     #[test]
     fn serde_surface() -> Result<(), String> {
         // Hardcode a reference... too verbose

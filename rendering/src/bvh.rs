@@ -119,7 +119,7 @@ impl DestructuredTriangle {
         }
     }
 
-    fn into_array(&self) -> Triangle {
+    fn as_array(&self) -> Triangle {
         [
             self.ax, self.ay, self.az, self.bx, self.by, self.bz, self.cx, self.cy, self.cz,
         ]
@@ -471,7 +471,7 @@ impl BoundingVolumeTree {
         );
 
         // scene.triangles = ordered_triangles; // Update the Scene with the ordered primitive.
-        scene.triangles = ordered_triangles.iter().map(|t| t.into_array()).collect();
+        scene.triangles = ordered_triangles.iter().map(|t| t.as_array()).collect();
         scene.front_material_indexes = ordered_front_materials;
         scene.back_material_indexes = ordered_back_materials;
         scene.normals = ordered_normals;

@@ -104,7 +104,7 @@ impl Scene {
     /// the probability of sampling this light.
     pub fn sample_light_uniform(&self, rng: &mut RandGen) -> Option<(&Object, Float)> {
         let mut i: usize = rng.gen();
-        i = i % self.lights.len();
+        i %= self.lights.len();
         let pdf = 1. / self.lights.len() as Float;
         Some((&self.lights[i], pdf))
     }

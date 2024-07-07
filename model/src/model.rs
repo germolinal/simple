@@ -718,11 +718,11 @@ impl Model {
     ///  }").unwrap();
     ///
     /// let mut model = Model::default();
-    /// let c = Construction::new("the construction"); 
+    /// let c = Construction::new("the construction");
     /// model.add_construction(c); // <-- this should not be empty
     /// assert!(model.surfaces.is_empty());
     /// model.add_surface(s);
-    /// 
+    ///
     /// assert_eq!(model.surfaces.len(), 1);
     ///
     /// // Adding a new surface with the same name issues a warning, but still works
@@ -772,7 +772,7 @@ impl Model {
     /// ```rust
     /// use model::{Model, Surface, Construction};
     /// use json5;
-    /// 
+    ///
     /// let mut model = Model::default();    
     /// // Add construction
     /// let c = Construction::new("the construction");    
@@ -791,7 +791,7 @@ impl Model {
     ///     ]
     ///  }").unwrap();
     ///
-    /// 
+    ///
     /// model.add_surface(s);
     /// assert!(model.get_surface("the surface").is_ok());
     /// assert!(model.get_surface("nope... I am not here").is_err());
@@ -926,11 +926,11 @@ impl Model {
     /// }").unwrap();
     ///
     /// let mut model = Model::default();
-    /// 
+    ///
     /// // Add construction
     /// let c = Construction::new("Double Clear Glass");    
     /// model.add_construction(c); // <-- this should not be empty
-    /// 
+    ///
     /// assert!(model.fenestrations.is_empty());
     /// model.add_fenestration(fen);
     /// assert_eq!(model.fenestrations.len(), 1);
@@ -954,13 +954,13 @@ impl Model {
     /// use model::Surface;
     ///
     /// let mut model = Model::default();
-    /// 
+    ///
     /// // Add construction
     /// let c = Construction::new("Double Clear Glass");    
     /// model.add_construction(c); // <-- this should not be empty
     /// let c = Construction::new("the construction");    
     /// model.add_construction(c); // <-- this should not be empty
-    /// 
+    ///
     /// model.add_space(Space::new("Space 1"));
     /// let s: Surface = json5::from_str(
     ///     "{
@@ -1086,9 +1086,9 @@ impl Model {
     /// use json5;
     ///
     /// let mut model = Model::default();
-    /// let c = Construction::new("Double Clear Glass"); 
+    /// let c = Construction::new("Double Clear Glass");
     /// model.add_construction(c); // <-- this should not be empty
-    /// 
+    ///
     /// let fen  : Fenestration = json5::from_str("{
     ///     name: 'Window 1',
     ///     construction: 'Double Clear Glass',
@@ -1108,7 +1108,7 @@ impl Model {
     ///     ]
     /// }").unwrap();
     ///
-    /// 
+    ///
     /// model.add_fenestration(fen);
     /// assert!(model.get_fenestration("Window 1").is_ok());
     /// assert!(model.get_fenestration("Huge window facing west that creates overheating").is_err());

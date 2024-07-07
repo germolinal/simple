@@ -23,7 +23,6 @@ use weather::ReinhartSky;
 // use rendering::from_radiance::from
 use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::daylight_coefficients::DCFactory;
-use rendering::Float;
 use rendering::Wavelengths;
 
 /// Calculates the Daylight Coefficients

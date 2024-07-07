@@ -149,38 +149,38 @@ impl MaterialTrait for Dielectric {
 
         let n1_over_n2 = n1 / n2;
 
-        if n1_over_n2 == 1.0 || true {
-            // if it is smooth or perectly transmissive
-            if !(trans_flags & TransFlag::Reflection) {
-                pr = 0.0;
-            }
-            if !(trans_flags & TransFlag::Transmission) {
-                pt = 0.0;
-            }
-            let uc: Float = rng.gen();
-            let ret = if uc < pr / (pr + pt) {
-                // Prefect specular reflection
-                // let wi = Vector3D::new(-wo.x, -wo.y, wo.z);
-                let wi = mirror_direction(wo);
-                // let spectrum = Spectrum::gray(0.2);
-                let spectrum = Spectrum::gray(refl / cos1);
-                let pdf = pr / (pr + pt);
-                BSDFSample::new(spectrum, wi, pdf, MatFlag::SpecularReflection)
-            } else {
-                // transmission
-                let cos2 = cos2.unwrap();
-                let wi = fresnel_transmission_dir(wo, normal, n1, cos1, n2, cos2);
-                let mut spectrum = Spectrum::gray(trans / cos2) * self.colour;
-                if let TransportMode::Radiance = transport_mode {
-                    spectrum *= n1_over_n2.sqrt();
-                }
-                let pdf = pt / (pr + pt);
-                BSDFSample::new(spectrum, wi, pdf, MatFlag::SpecularTransmission)
-            };
-            Some(ret)
-        } else {
-            unreachable!("No support for non-smooth dielectrics")
+        // if n1_over_n2 == 1.0 || true {
+        // if it is smooth or perectly transmissive
+        if !(trans_flags & TransFlag::Reflection) {
+            pr = 0.0;
         }
+        if !(trans_flags & TransFlag::Transmission) {
+            pt = 0.0;
+        }
+        let uc: Float = rng.gen();
+        let ret = if uc < pr / (pr + pt) {
+            // Prefect specular reflection
+            // let wi = Vector3D::new(-wo.x, -wo.y, wo.z);
+            let wi = mirror_direction(wo);
+            // let spectrum = Spectrum::gray(0.2);
+            let spectrum = Spectrum::gray(refl / cos1);
+            let pdf = pr / (pr + pt);
+            BSDFSample::new(spectrum, wi, pdf, MatFlag::SpecularReflection)
+        } else {
+            // transmission
+            let cos2 = cos2.unwrap();
+            let wi = fresnel_transmission_dir(wo, normal, n1, cos1, n2, cos2);
+            let mut spectrum = Spectrum::gray(trans / cos2) * self.colour;
+            if let TransportMode::Radiance = transport_mode {
+                spectrum *= n1_over_n2.sqrt();
+            }
+            let pdf = pt / (pr + pt);
+            BSDFSample::new(spectrum, wi, pdf, MatFlag::SpecularTransmission)
+        };
+        Some(ret)
+        // } else {
+        //     unreachable!("No support for non-smooth dielectrics")
+        // }
     }
 
     fn eval_bsdf(

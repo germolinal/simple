@@ -100,7 +100,6 @@ impl OpticalInfo {
             n_ambient_samples: options
                 .solar_ambient_divitions_or(crate::solar_model::MODULE_NAME, 300),
             reinhart: ReinhartSky::new(mf),
-            ..DCFactory::default()
         };
 
         // calculate

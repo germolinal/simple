@@ -163,11 +163,6 @@ impl DCFactory {
         rng: &mut RandGen,
         aux: &mut [usize; N],
     ) {
-        let original_ray = ray;
-
-        // for _ in 0..self.n_ambient_samples {
-        ray = original_ray;
-
         let mut beta = Spectrum::gray(crate::PI);
         let mut depth = 0;
         let mut refraction_coefficient = 1.0;
@@ -230,7 +225,6 @@ impl DCFactory {
             }
             beta /= 1. - q;
         }
-        // }
     }
 }
 

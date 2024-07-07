@@ -204,6 +204,7 @@ impl RayTracer {
 
     /// Calculates the luminance produced by the direct sources in the
     /// scene
+    #[allow(clippy::too_many_arguments)]
     fn get_local_illumination<const N: usize>(
         &self,
         scene: &Scene,
