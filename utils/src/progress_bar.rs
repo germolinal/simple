@@ -32,11 +32,13 @@ impl ProgressBar {
         let lp = self
             .last_progress
             .load(std::sync::atomic::Ordering::Relaxed);
-        let delta = progress - lp;
-        if delta >= 100 / BAR_LENGTH {
-            self.last_progress
-                .fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
-            self.show_progress(progress);
+        if progress > lp {
+            let delta = progress - lp;
+            if delta >= 100 / BAR_LENGTH {
+                self.last_progress
+                    .fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
+                self.show_progress(progress);
+            }
         }
     }
 
