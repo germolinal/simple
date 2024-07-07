@@ -8,14 +8,14 @@ edition = "2021"
 
 [dependencies]
 derive = { path = "../derive" }
-calendar = { path="../calendar" }
-geometry = {path = "../geometry"}
-matrix = {path = "../matrix"}
+calendar = { path = "../calendar" }
+geometry = { path = "../geometry" }
+matrix = { path = "../matrix" }
 schedule = { path = "../schedule" }
 rhai = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-json5 = { workspace=true }
+json5 = { workspace = true }
 
 [features]
 default = []

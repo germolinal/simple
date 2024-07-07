@@ -21,7 +21,8 @@ members = [
     "schedule",
     "test_models",
     "weather",
-    "derive", "utils",
+    "derive",
+    "utils",
 ]
 
 
