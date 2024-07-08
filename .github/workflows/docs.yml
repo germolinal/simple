@@ -30,10 +30,10 @@ jobs:
         # The run `cargo test -p model` writes the IOReference.
       - name: Run tests parallel
         run: |
-          cargo test --release --features parallel --verbose --workspace
-          cargo test --release --features parallel --verbose -p simple -- --ignored
           cargo test -p model
 
+        # cargo test --release --features parallel --verbose --workspace
+        # cargo test --release --features parallel --verbose -p simple -- --ignored
       - name: Checkout SIMPLE Docs
         uses: actions/checkout@v4
         with:
