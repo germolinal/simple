@@ -46,7 +46,6 @@ jobs:
 
       - name: Copy documentation
         run: |
-          echo ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
           rm -rf simple_docs/auto_src/*
           cp -rf simple/docs simple_docs/auto_src/docs
           mkdir  simple_docs/auto_src/model
@@ -54,7 +53,9 @@ jobs:
 
       - name: Push docs
         run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions"
           cd simple_docs
-          git add .
+          git add auto_src
           git commit -m 'automatic documentation update'
           git push
