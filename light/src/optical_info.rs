@@ -96,10 +96,11 @@ impl OpticalInfo {
 
         // calculator
         let solar_dc_factory = DCFactory {
-            max_depth: 0,
+            max_depth: 1,
             n_ambient_samples: options
                 .solar_ambient_divitions_or(crate::solar_model::MODULE_NAME, 300),
             reinhart: ReinhartSky::new(mf),
+            // ..DCFactory::default()
         };
 
         let mut nsensors = 0;
