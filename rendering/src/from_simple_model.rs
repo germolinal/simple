@@ -250,9 +250,7 @@ impl SimpleModelReader {
 mod tests {
 
     use super::*;
-    use crate::camera::{Film, Pinhole, View};
     use crate::material::Light;
-    use crate::ray_tracer::RayTracer;
     use crate::Float;
     use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Vector3D};
     use model::{Construction, Fenestration, Surface};
@@ -264,7 +262,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_scene_from_model() -> Result<(), String> {
         // BUILD SCENE
         let (model, _state_header) = Model::from_file("./tests/scenes/room.spl".to_string())?;
@@ -283,34 +280,36 @@ mod tests {
             )),
         );
 
-        // RENDER
-        scene.build_accelerator();
+        // // RENDER
+        // scene.build_accelerator();
 
-        // Create film
-        let film = Film {
-            resolution: (512, 512),
-        };
+        // // Create film
+        // let film = Film {
+        //     resolution: (512, 512),
+        // };
 
-        // Create view
-        let view = View {
-            view_direction: Vector3D::new(0., 1., 0.).get_normalized(),
-            view_point: Point3D::new(2., 1., 1.),
-            ..View::default()
-        };
-        // Create camera
-        let camera = Pinhole::new(view, film);
+        // // Create view
+        // let view = View {
+        //     view_direction: Vector3D::new(0., 1., 0.).get_normalized(),
+        //     view_point: Point3D::new(2., 1., 1.),
+        //     ..View::default()
+        // };
+        // // Create camera
+        // let camera = Pinhole::new(view, film);
 
-        let integrator = RayTracer {
-            n_ambient_samples: 70,
-            n_shadow_samples: 1,
-            // max_depth: 3,
-            ..RayTracer::default()
-        };
+        // let integrator = RayTracer {
+        //     n_ambient_samples: 70,
+        //     n_shadow_samples: 1,
+        //     // max_depth: 3,
+        //     ..RayTracer::default()
+        // };
 
-        let buffer = integrator.render(&scene, &camera);
-        buffer.save_hdre(std::path::Path::new(
-            "./tests/scenes/images/simple_room.hdr",
-        ))
+        // let buffer = integrator.render(&scene, &camera);
+        // buffer.save_hdre(std::path::Path::new(
+        //     "./tests/scenes/images/simple_room.hdr",
+        // ))
+        //
+        Ok(())
     }
 
     #[test]

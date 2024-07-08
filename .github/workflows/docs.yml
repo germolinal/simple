@@ -1,57 +1,53 @@
 name: Build Docs
 
-on:  
+on:
   push:
-    branches: [ main ]  
+    branches: [dev]
 
 env:
   CARGO_TERM_COLOR: always
 
-jobs:    
+jobs:
   # This is the one we use for producing documentation
   test_parallel:
-    runs-on: ubuntu-latest  
+    runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
+      contents: "read"
       pages: write
-      id-token: 'write'   
+      id-token: "write"
 
     steps:
-    - uses: actions/checkout@v3   
+      - uses: actions/checkout@v4
 
-    - name: Install stable toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
 
-      # The runs in parallel/release create the validation results.
-      # The run `cargo test -p model` writes the IOReference.
-    - name: Run tests parallel
-      run: |        
-        cargo test --release --features parallel --verbose --workspace 
-        cargo test --release --features parallel --verbose -p simple -- --ignored 
-        cargo test -p model
-    
-    - name: Install MdBook
-      run: cargo install mdbook
+        # The runs in parallel/release create the validation results.
+        # The run `cargo test -p model` writes the IOReference.
+      - name: Run tests parallel
+        run: |
+          cargo test --release --features parallel --verbose --workspace
+          cargo test --release --features parallel --verbose -p simple -- --ignored
+          cargo test -p model
 
-    - name: Install MDBook Katex
-      run: cargo install mdbook-katex
+      - name: Checkout SIMPLE Docs
+        uses: actions/checkout@v4
+        with:
+          repository: germolinal/simple_docs
+          token: ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
+          path: simple_docs
 
-    - name: Build mdbook
-      run: mdbook build ./docs/ioreference
-
-    - name: Setup Pages
-      uses: actions/configure-pages@v3
-
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v2
-      with:
-        # Upload Docs
-        path: './docs'
-
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v2
+      - name: Copy documentation
+        run: |
+          cp -rf docs/. simple_docs/auto_src/docs
+          mkdir  simple_docs/model
+          mkdir  simple_docs/model/tests
+          cp -R model/tests/. simple_docs/auto_src/model/tests/.
+          cd simple_docs/auto_src
+          git add .
+          git commit -m 'automatic documentation update'
+          git push
