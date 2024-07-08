@@ -8,50 +8,6 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test_default:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - uses: actions/checkout@v4
-      - name: Run tests default
-        run: |
-          cargo test --workspace
-          cargo test --release -p simple -- --ignored
-  check_float:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - uses: actions/checkout@v4
-      - name: Check float
-        run: cargo check --features float --verbose --workspace
-
-  check_float_parallel:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - uses: actions/checkout@v4
-      - name: Check float parallel
-        run: cargo check --features float --features parallel --verbose --workspace
-
-  # This is the one we use for producing documentation
   test_parallel:
     runs-on: ubuntu-latest
     steps:
@@ -66,5 +22,56 @@ jobs:
 
       - name: Run tests parallel
         run: |
-          cargo test --features parallel --verbose --workspace
-          cargo test --release --features parallel --verbose -p simple -- --ignored
+          cargo test --features parallel --workspace
+          cargo test --release --features parallel -p simple -- --ignored
+
+      - name: Push validation report
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions"
+          git add docs/validation
+          git commit -m '(automatic) updated validation report'
+          git push
+
+  check_default:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Run tests default
+        run: |
+          cargo check --workspace
+
+  check_float:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Check float
+        run: cargo check --features float --workspace
+
+  check_float_parallel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Check float parallel
+        run: cargo check --features float --features parallel --workspace

@@ -7,8 +7,6 @@
 optical_data.json
 cold_optical_data.json
 
-docs/validation/*.html
-
 # MAIN
 #######
 # Validations
