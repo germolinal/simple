@@ -18,7 +18,7 @@ jobs:
           toolchain: stable
           override: true
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Run tests default
         run: |
           cargo test --workspace
@@ -33,7 +33,7 @@ jobs:
           toolchain: stable
           override: true
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check float
         run: cargo check --features float --verbose --workspace
 
@@ -47,7 +47,7 @@ jobs:
           toolchain: stable
           override: true
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Check float parallel
         run: cargo check --features float --features parallel --verbose --workspace
 
@@ -55,7 +55,7 @@ jobs:
   test_parallel:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1

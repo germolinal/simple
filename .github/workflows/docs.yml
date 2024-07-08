@@ -8,8 +8,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # This is the one we use for producing documentation
-  test_parallel:
+  build_docs:
     runs-on: ubuntu-latest
     permissions:
       contents: "read"
@@ -35,6 +34,7 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+        run: echo ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
 
         # The runs in parallel/release create the validation results.
         # The run `cargo test -p model` writes the IOReference.
