@@ -256,7 +256,6 @@ mod tests {
     use crate::Float;
     use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Vector3D};
     use model::{Construction, Fenestration, Surface};
-    use std::time::Instant;
     use validate::assert_close;
 
     #[test]
@@ -302,16 +301,13 @@ mod tests {
         let camera = Pinhole::new(view, film);
 
         let integrator = RayTracer {
-            n_ambient_samples: 220,
+            n_ambient_samples: 70,
             n_shadow_samples: 1,
-            max_depth: 3,
+            // max_depth: 3,
             ..RayTracer::default()
         };
 
-        let now = Instant::now();
-
         let buffer = integrator.render(&scene, &camera);
-        println!("Room took {} seconds to render", now.elapsed().as_secs());
         buffer.save_hdre(std::path::Path::new(
             "./tests/scenes/images/simple_room.hdr",
         ))

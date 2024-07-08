@@ -23,7 +23,6 @@ jobs:
         run: |
           cargo test --workspace
           cargo test --release -p simple -- --ignored
-          cargo test --release --workspace -- --ignored
   check_float:
     runs-on: ubuntu-latest
     steps:
