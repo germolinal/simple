@@ -2,15 +2,15 @@
 name = "matrix"
 version = "0.1.0"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-rayon = {workspace=true, optional=true}
-serde = {version="1.0.142", features=["derive"]}
+rayon = { workspace = true, optional = true }
+serde = { version = "1.0.142", features = ["derive"] }
 
 [dev-dependencies]
 serde_json = "1.0.83"
-criterion = {version="0.5.1", features = ["html_reports"]}
+criterion = { version = "0.5.1", features = ["html_reports"] }
 
 [features]
 default = []
@@ -20,4 +20,3 @@ parallel = ["rayon"]
 [[bench]]
 name = "generic_matrix_bench"
 harness = false
-

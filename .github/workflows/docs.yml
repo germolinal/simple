@@ -44,10 +44,10 @@ jobs:
       - name: Copy documentation
         run: |
           cp -rf docs/. simple_docs/auto_src/docs
-          mkdir  simple_docs/model
-          mkdir  simple_docs/model/tests
+          mkdir  simple_docs/auto_src/model
+          mkdir  simple_docs/auto_src/model/tests
           cp -R model/tests/. simple_docs/auto_src/model/tests/.
-          cd simple_docs/auto_src
+          cd simple_docs
           git add .
           git commit -m 'automatic documentation update'
           git push

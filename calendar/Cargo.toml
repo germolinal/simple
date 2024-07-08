@@ -2,17 +2,17 @@
 name = "calendar"
 version = "0.1.0"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = { workspace=true, features = ["derive"], optional=true}
-chrono = {version="0.4.22", optional=true}
+serde = { workspace = true, features = ["derive"], optional = true }
+chrono = { version = "0.4.22", optional = true }
 
 [dev-dependencies]
-serde_json = {version="1"}
+serde_json = { version = "1" }
 
 [features]
 default = []
