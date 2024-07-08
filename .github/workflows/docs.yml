@@ -47,14 +47,11 @@ jobs:
 
       - name: Copy documentation
         run: |
-          ls -a
-          ls -a simple_docs
-          cp -rf simple/docs/. simple_docs/auto_src/docs
-          ls -a simple_docs/auto_src/docs
-          cp -R model/tests/. simple_docs/auto_src/model/tests/.
+          rm -rf simple_docs/auto_src/*
+          cp -rf simple/docs simple_docs/auto_src/docs
+          mkdir  simple_docs/auto_src/model
+          cp -rf simple/model/tests simple_docs/auto_src/model/tests
 
-        # mkdir  simple_docs/auto_src/model
-        # mkdir  simple_docs/auto_src/model/tests
       - name: Push docs
         run: |
           cd simple_docs
