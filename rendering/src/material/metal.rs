@@ -18,11 +18,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::colour::Spectrum;
-use crate::rand::*;
-use crate::ray::Ray;
 use crate::Float;
-use geometry::{Point3D, Vector3D};
+use crate::{colour::Spectrum, material::TransportMode};
+use geometry::Vector3D;
+
+use super::bsdf_sample::BSDFSample;
+use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
+use super::ward::ward_pdf;
+use super::RandGen;
 
 /// Information required for modelling Radiance's Metal and Metal
 #[derive(Debug, Clone)]
@@ -32,62 +35,71 @@ pub struct Metal {
     pub roughness: Float,
 }
 
-impl Metal {
-    pub fn id(&self) -> &str {
+impl MaterialTrait for Metal {
+    fn id(&self) -> &str {
         "Metal"
     }
 
-    pub fn colour(&self) -> Spectrum {
+    fn flags(&self) -> MatFlag {
+        MatFlag::GlossyReflection
+    }
+
+    fn colour(&self) -> Spectrum {
         self.colour
     }
 
-    pub fn sample_bsdf(
-        &self,
-        normal: Vector3D,
-        e1: Vector3D,
-        e2: Vector3D,
-        intersection_pt: Point3D,
-        ray: &mut Ray,
-        rng: &mut RandGen,
-    ) -> (Spectrum, Float) {
-        let (direct, diffuse, weight) = crate::material::ward::sample_ward_anisotropic(
-            normal,
-            e1,
-            e2,
-            intersection_pt,
+    fn pdf(&self, wo: Vector3D, wi: Vector3D, _eta: Float, transport_mode: TransportMode) -> Float {
+        ward_pdf(
             self.specularity,
             self.roughness,
             self.roughness,
-            ray,
+            wo,
+            wi,
+            transport_mode,
+        )
+    }
+
+    fn sample_bsdf(
+        &self,
+        wo: Vector3D,
+        _eta: Float,
+        rng: &mut RandGen,
+        transport_mode: TransportMode,
+        trans_flags: TransFlag,
+    ) -> Option<BSDFSample> {
+        let mut ret = crate::material::ward::sample_ward_anisotropic(
+            self.specularity,
+            self.roughness,
+            self.roughness,
+            wo,
             rng,
+            transport_mode,
+            trans_flags,
         );
 
         // Plastic differs from Metal in that the direct component is coloured
-        let bsdf = self.colour * direct + self.colour * diffuse;
-
-        (bsdf, weight)
+        if let Some(sample) = &mut ret {
+            sample.spectrum *= self.colour();
+        }
+        ret
     }
 
-    pub fn eval_bsdf(
+    fn eval_bsdf(
         &self,
-        normal: Vector3D,
-        e1: Vector3D,
-        e2: Vector3D,
-        ray: &Ray,
-        vout: Vector3D,
+        wo: Vector3D,
+        wi: Vector3D,
+        _eta: Float,
+        transport_mode: TransportMode,
     ) -> Spectrum {
-        let vout = vout * -1.;
         let (direct, diffuse) = crate::material::ward::evaluate_ward_anisotropic(
-            normal,
-            e1,
-            e2,
             self.specularity,
             self.roughness,
             self.roughness,
-            ray,
-            vout,
+            wo,
+            wi,
+            transport_mode,
         );
 
-        self.colour * direct + self.colour * diffuse
+        self.colour() * (direct + diffuse)
     }
 }

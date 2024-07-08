@@ -52,8 +52,6 @@ pub mod primitive;
 
 pub mod primitive_samplers;
 pub mod rand;
-mod ray;
-pub use ray::Ray;
 pub mod samplers;
 mod scene;
 pub use scene::{Scene, Wavelengths};
@@ -74,7 +72,7 @@ pub use from_simple_model::{SceneElement, SimpleModelReader};
 
 // Ray-tracer
 mod ray_tracer;
-pub use ray_tracer::{RayTracer, RayTracerHelper};
+pub use ray_tracer::RayTracer;
 
 // mod backward_metropolis;
 // pub use crate::backward_metropolis::{

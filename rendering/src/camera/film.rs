@@ -20,6 +20,7 @@ SOFTWARE.
 
 use crate::Float;
 
+#[derive(Debug, Clone)]
 pub struct Film {
     /// Contains the number of Pixels in Width and Height
     pub resolution: (usize, usize),

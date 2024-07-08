@@ -1,8 +1,8 @@
 use geometry::{Point3D, Ray3D, Vector3D};
-use rendering::{Float, Ray, RayTracer, RayTracerHelper, Scene};
-use validate::{valid, SeriesValidator, ValidFunc, Validator};
 
-const MAX_DEPTH: usize = 13;
+use rendering::{Float, RayTracer, Scene};
+use validate::{valid, SeriesValidator, ValidFunc, Validator};
+const MAX_DEPTH: usize = 30;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
@@ -35,7 +35,7 @@ fn load_expected_results(filename: String) -> Result<Vec<Float>, String> {
     Ok(r)
 }
 
-fn load_rays(filename: &str) -> Result<Vec<Ray>, String> {
+fn load_rays(filename: &str) -> Result<Vec<Ray3D>, String> {
     let s = std::fs::read_to_string(filename).map_err(|e| e.to_string())?;
     let r = s
         .lines()
@@ -46,12 +46,9 @@ fn load_rays(filename: &str) -> Result<Vec<Ray>, String> {
                 .map(|x| x.parse::<Float>().expect("This should never fail"))
                 .collect();
 
-            Ray {
-                geometry: Ray3D {
-                    origin: Point3D::new(a[0], a[1], a[2]),
-                    direction: Vector3D::new(a[3], a[4], a[5]).get_normalized(),
-                },
-                ..Ray::default()
+            Ray3D {
+                origin: Point3D::new(a[0], a[1], a[2]),
+                direction: Vector3D::new(a[3], a[4], a[5]).get_normalized(),
             }
         })
         .collect();
@@ -60,27 +57,27 @@ fn load_rays(filename: &str) -> Result<Vec<Ray>, String> {
 }
 
 fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Float>), String> {
-    let mut scene =
-        Scene::from_radiance(format!("./tests/ray_tracer/{dir}/box.rad")).expect("Could not read");
+    let mut scene = Scene::from_radiance(format!("./tests/ray_tracer/{}/box.rad", dir))
+        .expect("Could not read");
     scene.build_accelerator();
 
-    let n_ambient_samples = if max_depth > 0 { 60120 } else { 5120 };
+    let n_ambient_samples = 29000;
+
     let integrator = RayTracer {
         n_ambient_samples,
-        n_shadow_samples: 10,
+        n_shadow_samples: 1,
         max_depth,
-        limit_weight: 1e-9,
         ..RayTracer::default()
     };
-    let mut aux = RayTracerHelper::default();
+    let mut aux = [0; 32];
     let mut rng = rendering::rand::get_rng();
 
-    let mut rays = load_rays("./tests/points.pts")?;
+    let rays = load_rays("./tests/points.pts")?;
 
-    let found = rays
-        .iter_mut()
+    let found: Vec<Float> = rays
+        .into_iter()
         .map(|ray| {
-            let (c, _) = integrator.trace_ray(&mut rng, &scene, ray, &mut aux);
+            let c = integrator.trace_ray(&mut rng, &scene, ray, &mut aux);
             c.radiance()
         })
         .collect();
@@ -90,16 +87,19 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
     } else {
         load_expected_results(format!("./tests/ray_tracer/{dir}/global_results.txt"))?
     };
-    // println!("Exp,Found");
-    // for i in 0..found.len() {
-    //     println!("{},{}", expected[i], found[i]);
-    // }
+    println!("{} | {}", dir, max_depth);
+    println!("exp,found");
+    for i in 0..expected.len() {
+        println!("{},{}", expected[i], found[i])
+    }
     Ok((expected, found))
 }
 
 fn plastic(validator: &mut Validator) -> Result<(), String> {
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse plastic,
     /// without specularity or roughness.
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Diffuse Plastic - Global illumination")]
     fn plastic_diffuse_global() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("plastic_box_diffuse", MAX_DEPTH)?;
@@ -108,6 +108,8 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse plastic,
     /// without specularity or roughness. It only takes into account direct lighting (no bounces)
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Diffuse Plastic - Direct illumination")]
     fn plastic_diffuse_direct() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("plastic_box_diffuse", 0)?;
@@ -115,6 +117,8 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse plastic with some roughness
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Rough Plastic - Global illumination")]
     fn plastic_rough_global() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("plastic_box_rough", MAX_DEPTH)?;
@@ -123,6 +127,8 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse plastic with some roughness.
     /// It only takes into account direct lighting (no bounces)
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Rough Plastic - Direct illumination")]
     fn plastic_rough_direct() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("plastic_box_rough", 0)?;
@@ -130,6 +136,8 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular plastic with no roughness
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Specular Plastic - Global illumination")]
     fn plastic_specular_global() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("plastic_box_specular", MAX_DEPTH)?;
@@ -138,6 +146,8 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular plastic with no roughness.
     /// It only takes into account direct lighting (no bounces)
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Specular Plastic - Direct illumination")]
     fn plastic_specular_direct() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("plastic_box_specular", 0)?;
@@ -145,17 +155,21 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular plastic with some roughness
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Plastic - Global illumination")]
     fn plastic_full_global() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("plastic_box_specular", MAX_DEPTH)?;
+        let (expected, found) = get_simple_results("plastic_box_full", MAX_DEPTH)?;
         Ok(get_validator(expected, found))
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular plastic with some roughness.
     /// It only takes into account direct lighting
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Plastic - Direct illumination")]
     fn plastic_full_direct() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("plastic_box_specular", 0)?;
+        let (expected, found) = get_simple_results("plastic_box_full", 0)?;
         Ok(get_validator(expected, found))
     }
 
@@ -177,6 +191,8 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
 fn metal(validator: &mut Validator) -> Result<(), String> {
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse metal,
     /// without specularity or roughness.
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Diffuse Metal - Global illumination")]
     fn metal_diffuse_global() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_diffuse", MAX_DEPTH)?;
@@ -185,6 +201,8 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse metal,
     /// without specularity or roughness. It only takes into account direct lighting (no bounces)
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Diffuse Metal - Direct illumination")]
     fn metal_diffuse_direct() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_diffuse", 0)?;
@@ -192,6 +210,8 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse metal with some roughness
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Rough Metal - Global illumination")]
     fn metal_rough_global() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_rough", MAX_DEPTH)?;
@@ -201,6 +221,8 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of diffuse metal with some roughness.
     /// It only takes into account direct lighting (no bounces)
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Rough Metal - Direct illumination")]
     fn metal_rough_direct() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_rough", 0)?;
@@ -209,6 +231,8 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular metal with no roughness
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Specular Metal - Global illumination")]
     fn metal_specular_global() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_specular", MAX_DEPTH)?;
@@ -218,6 +242,8 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular metal with no roughness.
     /// It only takes into account direct lighting (no bounces)
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Specular Metal - Direct illumination")]
     fn metal_specular_direct() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("metal_box_specular", 0)?;
@@ -226,19 +252,21 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular metal with some roughness
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Metal - Global illumination")]
     fn metal_full_global() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("metal_box_specular", MAX_DEPTH)?;
-
+        let (expected, found) = get_simple_results("metal_box_full", MAX_DEPTH)?;
         Ok(get_validator(expected, found))
     }
 
     /// Contrasts the results of SIMPLE and Radiance, in a box made of a partially specular metal with some roughness.
     /// It only takes into account direct lighting
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 0 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Full Metal - Direct illumination")]
     fn metal_full_direct() -> Result<ValidFunc, String> {
-        let (expected, found) = get_simple_results("metal_box_specular", 0)?;
-
+        let (expected, found) = get_simple_results("metal_box_full", 0)?;
         Ok(get_validator(expected, found))
     }
 
@@ -258,7 +286,9 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
 }
 
 fn glass(validator: &mut Validator) -> Result<(), String> {
-    /// Checks the results on a glass box
+    /// Contrasts the results of SIMPLE and Radiance, in a box made out of a glass.
+    ///
+    /// Radiance parameters used are ` rtrace -h -ab 30 -aa 0 -lr -0 -lw 1e-10 -ad 30000 $OCTREE `
     #[valid("Glass")]
     fn glass_full() -> Result<ValidFunc, String> {
         let (expected, found) = get_simple_results("glass_box", MAX_DEPTH)?;
@@ -270,10 +300,9 @@ fn glass(validator: &mut Validator) -> Result<(), String> {
     Ok(())
 }
 
-#[ignore]
 #[test]
 fn validate_ray_tracer() -> Result<(), String> {
-    // cargo test --release  --features parallel --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture --ignored
+    // cargo test --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture
     let mut validator = Validator::new("Validate Ray Tracer", "../docs/validation/ray_tracer.html");
 
     metal(&mut validator)?;

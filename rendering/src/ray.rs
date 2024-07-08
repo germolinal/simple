@@ -106,16 +106,15 @@ impl Ray {
             max_ambient_samples
         } else {
             /* Adapted From Radiance's samp_hemi() at src/rt/ambcomp.c */
-
             let wt = self.value;
-
             // russian roullete
             let r: Float = rng.gen();
             if r > wt / limit_weight {
                 self.value = limit_weight;
                 return 0; // kill it!
             }
-            1 // Stephen, this is on you.
+            // 1 // Stephen, this is on you.
+            1
         }
     }
 }

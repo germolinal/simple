@@ -23,8 +23,8 @@ use weather::ReinhartSky;
 // use rendering::from_radiance::from
 use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::daylight_coefficients::DCFactory;
-use rendering::Float;
 use rendering::Wavelengths;
+use utils::ProgressBar;
 
 /// Calculates the Daylight Coefficients
 #[derive(Debug, Parser)]
@@ -41,23 +41,13 @@ struct Inputs {
     pub mf: usize,
 
     /// The number of bounces before a ray is terminated (-ab in Radiance lingo)
-    #[clap(short = 'b', long = "max_depth", default_value_t = 2)]
+    #[clap(short = 'b', long = "max_depth", default_value_t = 120)]
     pub max_depth: usize,
 
     /// The number of secondary rays sent from the first interaction.
     /// From the second interaction and on, this number is reduced
-    #[clap(short = 'a', long = "ambient_samples", default_value_t = 1700)]
+    #[clap(short = 'a', long = "ambient_samples", default_value_t = 30000)]
     pub n_ambient_samples: usize,
-
-    /// A lower value makes the Russian roulette less deadly
-    #[clap(short = 'w', long = "limit_weight", default_value_t = 1e-3)]
-    pub limit_weight: Float,
-
-    /// The probability of counting purely specular bounces as an actual bounce.
-    /// (Specular bounces seldom count because that allows achieving caustics better...
-    /// and they are cheap)
-    #[clap(short = 'c', long = "count_specular", default_value_t = 0.3)]
-    pub count_specular_bounce: Float,
 
     /// The number of sensors to receive in the standard input
     #[clap(short = 'n', long, default_value_t = 64)]
@@ -67,7 +57,7 @@ struct Inputs {
 fn main() -> Result<(), String> {
     // time cargo run --release --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
     // cargo instruments --release --template Allocations --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
-    // cargo instruments --features simd --release --template 'CPU Profiler' --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
+    // cargo instruments --release --template 'CPU Profiler' --package simple --bin sfluxmtx -- -i tests/cold_apartment/cold.spl -o check.csv -b 5 -a 5000
 
     let inputs = Inputs::parse();
 
@@ -87,8 +77,6 @@ fn main() -> Result<(), String> {
         max_depth: inputs.max_depth,
         n_ambient_samples: inputs.n_ambient_samples,
         reinhart: ReinhartSky::new(inputs.mf),
-        limit_weight: inputs.limit_weight,
-        count_specular_bounce: inputs.count_specular_bounce,
     };
 
     let rays = vec![
@@ -118,7 +106,13 @@ fn main() -> Result<(), String> {
         },
     ];
 
-    let dc_matrix = factory.calc_dc(&rays, &scene);
+    let progress = ProgressBar::new(
+        "Calculating Daylight Coefficients".to_string(),
+        rays.len() * factory.n_ambient_samples,
+    );
+
+    let dc_matrix = factory.calc_dc(&rays, &scene, Some(&progress));
+    progress.done();
     save_colour_matrix(&dc_matrix, std::path::Path::new(&inputs.output))?;
 
     Ok(())

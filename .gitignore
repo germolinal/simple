@@ -28,7 +28,7 @@ docs/ioreference/src/auto-*.md
 docs/ioreference/src/SUMMARY.md
 docs/ioreference/book
 docs/validation.html
-model/model.json 
+model/model.json
 
 # GEOMETRY
 ############
@@ -71,6 +71,7 @@ rendering/tests/scenes/**/*.mtx
 rendering/tests/scenes/**/*.oct
 rendering/tests/scenes/images/*.tiff
 # rendering/docs/validation/*.html
+**/img.hdr**
 
 # WEATHER
 ##########

@@ -256,7 +256,6 @@ mod tests {
     use crate::Float;
     use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Vector3D};
     use model::{Construction, Fenestration, Surface};
-    use std::time::Instant;
     use validate::assert_close;
 
     #[test]
@@ -272,17 +271,7 @@ mod tests {
         let mut reader = SimpleModelReader::default();
         let (mut scene, map) = reader.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         let light_index = scene.push_material(Material::Light(Light(Spectrum::gray(10000.))));
         scene.push_object(
@@ -312,16 +301,13 @@ mod tests {
         let camera = Pinhole::new(view, film);
 
         let integrator = RayTracer {
-            n_ambient_samples: 220,
+            n_ambient_samples: 70,
             n_shadow_samples: 1,
-            max_depth: 3,
+            // max_depth: 3,
             ..RayTracer::default()
         };
 
-        let now = Instant::now();
-
         let buffer = integrator.render(&scene, &camera);
-        println!("Room took {} seconds to render", now.elapsed().as_secs());
         buffer.save_hdre(std::path::Path::new(
             "./tests/scenes/images/simple_room.hdr",
         ))
@@ -361,17 +347,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 1);
         let (element_type, index) = map[0];
@@ -400,17 +376,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 3);
 
@@ -447,17 +413,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 5);
 

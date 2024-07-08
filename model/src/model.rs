@@ -49,7 +49,7 @@ pub struct Model {
     /// The [`Construction`]s in the model
     pub constructions: Vec<Arc<Construction>>,
 
-    /// The windows and doors in the surface    
+    /// The windows and doors in the surface
     pub fenestrations: Vec<Arc<Fenestration>>,
 
     /// The Heating/Cooling devices in the space
@@ -309,7 +309,7 @@ impl Model {
     /// }"#;
     ///
     /// let (model, header) = Model::from_json(&json_str).unwrap();
-    /// assert_eq!(Some((1.2, 5.21, 123.0)), model.geolocation());         
+    /// assert_eq!(Some((1.2, 5.21, 123.0)), model.geolocation());
     /// ```
     pub fn geolocation(&self) -> Option<(Float, Float, Float)> {
         if let Some(site) = &self.site_details {
@@ -573,7 +573,7 @@ impl Model {
     ///
     /// let sub = Normal::new("some fancy material").wrap();
     /// let mut model = Model::default();
-    /// model.add_substance(sub);    
+    /// model.add_substance(sub);
     ///
     /// // correct name
     /// let s = model.get_substance("some fancy material").unwrap();
@@ -583,7 +583,7 @@ impl Model {
     /// }
     ///
     /// // incorrect name
-    /// assert!(model.get_substance("I do not exist").is_err());    
+    /// assert!(model.get_substance("I do not exist").is_err());
     /// ```
     pub fn get_substance<S: Into<String>>(&self, name: S) -> Result<Substance, String> {
         let name: String = name.into();
@@ -682,7 +682,7 @@ impl Model {
     /// use model::{Model, Construction};
     ///
     /// let c = Construction::new("Cool Construction");
-    /// let mut model = Model::default();    
+    /// let mut model = Model::default();
     /// model.add_construction(c);
     ///
     /// assert!(model.get_construction("Cool Construction").is_ok());
@@ -718,11 +718,11 @@ impl Model {
     ///  }").unwrap();
     ///
     /// let mut model = Model::default();
-    /// let c = Construction::new("the construction"); 
+    /// let c = Construction::new("the construction");
     /// model.add_construction(c); // <-- this should not be empty
     /// assert!(model.surfaces.is_empty());
     /// model.add_surface(s);
-    /// 
+    ///
     /// assert_eq!(model.surfaces.len(), 1);
     ///
     /// // Adding a new surface with the same name issues a warning, but still works
@@ -772,10 +772,15 @@ impl Model {
     /// ```rust
     /// use model::{Model, Surface, Construction};
     /// use json5;
-    /// 
-    /// let mut model = Model::default();    
+    ///
+    /// let mut model = Model::default();
     /// // Add construction
-    /// let c = Construction::new("the construction");    
+    /// let c = Construction::new("the construction");
+    /// model.add_construction(c); // <-- this should not be empty
+    ///
+    /// let mut model = Model::default();
+    /// // Add construction
+    /// let c = Construction::new("the construction");
     /// model.add_construction(c); // <-- this should not be empty
     ///
     /// // this is less verbose than creating the whole thing.
@@ -791,7 +796,7 @@ impl Model {
     ///     ]
     ///  }").unwrap();
     ///
-    /// 
+    ///
     /// model.add_surface(s);
     /// assert!(model.get_surface("the surface").is_ok());
     /// assert!(model.get_surface("nope... I am not here").is_err());
@@ -838,7 +843,7 @@ impl Model {
     /// use model::{Space, Model};
     ///
     /// let space = Space::new("Bedroom");
-    /// let mut model = Model::default();    
+    /// let mut model = Model::default();
     /// model.add_space(space);
     /// assert!(model.get_space("Bedroom").is_ok());
     /// assert!(model.get_space("Walrus Enclosure").is_err());
@@ -867,7 +872,7 @@ impl Model {
     /// // Adding a new building witht the same name warns the user but still works
     /// let b = Building::new("Main Campus");
     /// model.add_building(b);
-    /// assert_eq!(model.buildings.len(), 2);    
+    /// assert_eq!(model.buildings.len(), 2);
     /// ```
     pub fn add_building(&mut self, add: Building) -> Arc<Building> {
         if self.get_building(add.name()).is_ok() {
@@ -916,7 +921,7 @@ impl Model {
     ///
     /// let fen  : Fenestration = json5::from_str("{
     ///     name: 'Window 1',
-    ///     construction: 'Double Clear Glass',    
+    ///     construction: 'Double Clear Glass',
     ///     vertices: [
     ///         0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
     ///         0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}
@@ -926,11 +931,11 @@ impl Model {
     /// }").unwrap();
     ///
     /// let mut model = Model::default();
-    /// 
+    ///
     /// // Add construction
-    /// let c = Construction::new("Double Clear Glass");    
+    /// let c = Construction::new("Double Clear Glass");
     /// model.add_construction(c); // <-- this should not be empty
-    /// 
+    ///
     /// assert!(model.fenestrations.is_empty());
     /// model.add_fenestration(fen);
     /// assert_eq!(model.fenestrations.len(), 1);
@@ -954,13 +959,13 @@ impl Model {
     /// use model::Surface;
     ///
     /// let mut model = Model::default();
-    /// 
+    ///
     /// // Add construction
-    /// let c = Construction::new("Double Clear Glass");    
+    /// let c = Construction::new("Double Clear Glass");
     /// model.add_construction(c); // <-- this should not be empty
-    /// let c = Construction::new("the construction");    
+    /// let c = Construction::new("the construction");
     /// model.add_construction(c); // <-- this should not be empty
-    /// 
+    ///
     /// model.add_space(Space::new("Space 1"));
     /// let s: Surface = json5::from_str(
     ///     "{
@@ -969,7 +974,7 @@ impl Model {
     ///     back_boundary: {
     ///         type: 'Space',
     ///         space: 'Space 1',
-    ///     },    
+    ///     },
     ///     vertices: [
     ///         0, 0, 0, // X, Y and Z of Vertex 0
     ///         1, 0, 0, // X, Y and Z of Vertex 1
@@ -1086,9 +1091,9 @@ impl Model {
     /// use json5;
     ///
     /// let mut model = Model::default();
-    /// let c = Construction::new("Double Clear Glass"); 
+    /// let c = Construction::new("Double Clear Glass");
     /// model.add_construction(c); // <-- this should not be empty
-    /// 
+    ///
     /// let fen  : Fenestration = json5::from_str("{
     ///     name: 'Window 1',
     ///     construction: 'Double Clear Glass',
@@ -1108,7 +1113,6 @@ impl Model {
     ///     ]
     /// }").unwrap();
     ///
-    /// 
     /// model.add_fenestration(fen);
     /// assert!(model.get_fenestration("Window 1").is_ok());
     /// assert!(model.get_fenestration("Huge window facing west that creates overheating").is_err());
@@ -1134,7 +1138,7 @@ impl Model {
     /// assert_eq!(model.hvacs.len(), 1);
     ///
     /// // Adding a new HVAC with the same name warns the user, but works
-    ///  
+    ///
     /// let heater = ElectricHeater::new("15 dollar heater");
     /// model.add_hvac(heater.wrap()); // wrap it as an HVAC object
     /// assert_eq!(model.hvacs.len(), 2);
@@ -1214,9 +1218,9 @@ impl Model {
     /// assert_eq!(model.luminaires.len(), 1);
     ///
     /// // Adding a new luminaire with the same name will print a warning but still work
-    /// let luminaire = Luminaire::new("LED Lightbulb");        
+    /// let luminaire = Luminaire::new("LED Lightbulb");
     /// model.add_luminaire(luminaire);
-    /// assert_eq!(model.luminaires.len(), 2);    
+    /// assert_eq!(model.luminaires.len(), 2);
     ///
     /// ```
     pub fn add_luminaire(&mut self, add: Luminaire) -> Result<Arc<Luminaire>, String> {
@@ -1242,12 +1246,12 @@ impl Model {
 
     /// Retrieves a reference (`Arc`) to a [`Luminaire`] based on its name, from the `fenestrations`
     /// field
-    ///     
+    ///
     /// ```rust
     /// use model::{Model, Luminaire};
     ///
     /// let luminaire = Luminaire::new("LED Lightbulb");
-    /// let mut model = Model::default();    
+    /// let mut model = Model::default();
     /// model.add_luminaire(luminaire);
     ///
     /// assert!(model.get_luminaire("LED Lightbulb").is_ok());
@@ -1289,7 +1293,7 @@ impl Model {
     /// let found_sub = model.get_material_substance("Sweet Panel").unwrap();
     ///
     /// assert_eq!("is made of this", found_sub.name());
-    /// ```    
+    /// ```
     pub fn get_material_substance<S: Into<String>>(
         &self,
         mat_name: S,
@@ -1794,7 +1798,7 @@ mod testing {
             front_boundary: {
                 type: 'Space',
                 space: 'Space 2',
-            },    
+            },
             vertices: [
                 0, 0, 0, // X, Y and Z of Vertex 0
                 1, 0, 0, // X, Y and Z of Vertex 1
@@ -1864,12 +1868,12 @@ mod testing {
             front_boundary: {
                 type: 'Space',
                 space: 'Space 2',
-            },    
+            },
             vertices: [
-                0, 0, 0, 
+                0, 0, 0,
                 0, 1, 0,
-                1, 1, 0, 
-                1, 0, 0, 
+                1, 1, 0,
+                1, 0, 0,
             ]
          }",
         )
@@ -1956,7 +1960,7 @@ mod testing {
         let ast = engine
             .compile(
                 "
-            
+
             let some_space = space(\"some space\");
             let vol = some_space.infiltration_volume;
             print(`Infiltration volume is ${vol} `);
@@ -1969,7 +1973,7 @@ mod testing {
 
             print(\"NEXT ---->\");
 
-            
+
 
             // Electric
             let electric = hvac(\"electric heater\");
@@ -1989,24 +1993,24 @@ mod testing {
 
             print(\"BY INDEX NOW ---->\");
 
-            
+
 
             // Electric
             let electric = hvac(0);
             let power = electric.power_consumption;
             print(`Electric power consumption is ${power} W`);
-            
+
             // Ideal
             let ideal = hvac(1);
             let power = ideal.power_consumption;
             print(`Ideal power consumption is ${power} W`);
-            
+
 
             // Temperature
             let the_space = space(\"some space\");
             let temp = the_space.dry_bulb_temperature;
-            print(`Temp is ${temp}`)            
-            
+            print(`Temp is ${temp}`)
+
         ",
             )
             .map_err(|e| e.to_string())?;

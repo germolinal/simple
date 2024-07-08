@@ -41,9 +41,6 @@ pub type SolarModelMemory = ();
 
 /// The main model
 pub struct SolarModel {
-    // /// The scene that makes up this model from a lighting point of view.
-    // lighting_scene: Scene,
-
     // Workplanes
     /// The scene that makes up this model from a radiation point of view.
     // solar_scene: Scene,
@@ -63,7 +60,7 @@ pub struct SolarModel {
 
 impl SolarModel {
     /// This function makes the IR heat transfer Zero... we will try to fix this soon enough,
-    /// just not now    
+    /// just not now
     fn update_ir_radiation(
         &self,
         weather_data: &CurrentWeather,

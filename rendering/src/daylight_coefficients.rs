@@ -21,14 +21,14 @@ SOFTWARE.
 use crate::colour::Spectrum;
 use crate::colour_matrix::ColourMatrix;
 use crate::rand::*;
-use crate::ray::Ray;
-use crate::ray_tracer::RayTracerHelper;
+
 use crate::samplers::sample_cosine_weighted_horizontal_hemisphere;
 use crate::scene::Scene;
 use crate::Float;
 use geometry::intersection::SurfaceSide;
 use geometry::Vector3D;
 use geometry::{Point3D, Ray3D};
+use utils::ProgressBar;
 use weather::solar::ReinhartSky;
 
 #[cfg(feature = "parallel")]
@@ -41,9 +41,6 @@ pub struct DCFactory {
     pub reinhart: ReinhartSky,
     pub max_depth: usize,
     pub n_ambient_samples: usize,
-    pub limit_weight: Float,
-    pub count_specular_bounce: Float,
-    // pub limit_reflections: usize,
 }
 
 impl Default for DCFactory {
@@ -51,22 +48,20 @@ impl Default for DCFactory {
         Self {
             reinhart: ReinhartSky::new(1),
             max_depth: 0,
-            n_ambient_samples: 10,
-            count_specular_bounce: 0.5,
-
-            limit_weight: 1e-4,
-            // limit_reflections: 0,
+            n_ambient_samples: 300,
         }
     }
 }
 
 impl DCFactory {
-    pub fn calc_dc(&self, rays: &[Ray3D], scene: &Scene) -> ColourMatrix {
+    pub fn calc_dc(
+        &self,
+        rays: &[Ray3D],
+        scene: &Scene,
+        progress_bar: Option<&ProgressBar>,
+    ) -> ColourMatrix {
         // Initialize matrix
         let n_bins = self.reinhart.n_bins;
-
-        // let counter = std::sync::Arc::new(std::sync::Mutex::new(0));
-        // let last_progress = std::sync::Arc::new(std::sync::Mutex::new(0.0));
 
         // Process... This can be in parallel, or not.
         #[cfg(not(feature = "parallel"))]
@@ -86,7 +81,10 @@ impl DCFactory {
                 let mut rng = get_rng();
                 #[allow(clippy::needless_collect)]
                 let aux_iter: Vec<Vector3D> = (0..self.n_ambient_samples)
-                    .map(|_| sample_cosine_weighted_horizontal_hemisphere(&mut rng))
+                    .map(|_| {
+                        let u = rng.gen();
+                        sample_cosine_weighted_horizontal_hemisphere(u)
+                    })
                     .collect();
 
                 #[cfg(not(feature = "parallel"))]
@@ -117,42 +115,28 @@ impl DCFactory {
                             new_ray_dir.length()
                         );
 
-                        let mut aux = RayTracerHelper::with_capacity(self.max_depth + 1);
-                        let mut new_ray = Ray {
-                            // time: 0.,
-                            geometry: Ray3D {
-                                direction: new_ray_dir,
-                                origin,
-                            },
-                            colour: Spectrum::gray(crate::PI),
-                            ..Ray::default()
+                        let mut aux = [0; 32];
+
+                        let new_ray = Ray3D {
+                            direction: new_ray_dir,
+                            origin,
                         };
 
                         let mut rng = get_rng();
-                        // let current_weight = cos_theta;
-                        self.trace_ray(scene, &mut new_ray, &mut this_ret, &mut rng, &mut aux);
+                        self.trace_ray(scene, new_ray, &mut this_ret, &mut rng, &mut aux);
 
-                        // let mut c = counter.lock().unwrap();
-                        // *c += 1;
-                        // let nrays = rays.len() * self.n_ambient_samples;
-                        // let mut lp = last_progress.lock().unwrap();
-                        // let progress = (100. * *c as Float / nrays as Float).round() as Float;
-                        // if (*lp - progress.floor()) < 0.1 && (progress - *lp).abs() > 1. {
-                        //     *lp = progress;
-                        //     println!("... Done {:.0}%", progress);
-                        // }
-
+                        if let Some(progress) = &progress_bar {
+                            progress.tic();
+                        }
                         this_ret
                     })
                     .collect(); // End of iterating primary rays
-
                 let mut ret = ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
                 ray_contributions.iter().for_each(|v| {
                     ret += v;
                 });
 
                 ret
-                // ray_contributions.iter().sum();
             })
             .collect(); // End of iterating rays
 
@@ -172,100 +156,75 @@ impl DCFactory {
     /// Recursively traces a ray until it excedes the `max_depth` of the
     /// `DCFactory` or the ray does not hit anything (i.e., it reaches either
     /// the sky or the ground)
-    fn trace_ray(
+    fn trace_ray<const N: usize>(
         &self,
         scene: &Scene,
-        ray: &mut Ray,
+        mut ray: Ray3D,
         contribution: &mut ColourMatrix,
         rng: &mut RandGen,
-        aux: &mut RayTracerHelper,
+        aux: &mut [usize; N],
     ) {
-        // If hits an object
-        if let Some(triangle_index) = scene.cast_ray(ray, &mut aux.nodes) {
-            // Limit bounces
-            if ray.depth > self.max_depth {
-                return;
+        let mut beta = Spectrum::gray(crate::PI);
+        let mut depth = 0;
+        let mut refraction_coefficient = 1.0;
+
+        loop {
+            let intersect = scene.cast_ray(ray, aux);
+            if intersect.is_none() {
+                // Hit the sky.
+                let bin_n = self.reinhart.dir_to_bin(ray.direction);
+
+                let li = Spectrum::ONE;
+                contribution
+                    .add_to_element(0, bin_n, li * beta / self.n_ambient_samples as Float)
+                    .unwrap();
+                break;
             }
-            // NEARLY copied... except from the return statement
-            let material = match ray.interaction.geometry_shading.side {
+
+            let (triangle_index, mut interaction) = intersect.unwrap();
+            let material = match interaction.geometry_shading.side {
                 SurfaceSide::Front => {
                     &scene.materials[scene.front_material_indexes[triangle_index]]
                 }
                 SurfaceSide::Back => &scene.materials[scene.back_material_indexes[triangle_index]],
                 SurfaceSide::NonApplicable => {
                     // Hit parallel to the surface...
-                    return;
+                    break;
                 }
             };
-
-            // Limit bounces... also, emmiting materials don't reflect
-            if ray.depth > self.max_depth || material.emits_direct_light() {
-                return;
-            }
-
-            let (intersection_pt, normal, ..) = ray.get_triad();
             #[cfg(feature = "textures")]
-            ray.interaction
-                .interpolate_normal(scene.normals[triangle_index]);
+            interaction.interpolate_normal(scene.normals[triangle_index]);
 
-            // Handle specular materials... we have 1 or 2 rays... spawn those.
-            if material.specular_only() {
-                let paths = material.get_possible_paths(&normal, &intersection_pt, ray);
-                for (new_ray, bsdf_value) in paths.iter().flatten() {
-                    let mut new_ray = *new_ray;
-                    new_ray.colour *= *bsdf_value;
-                    new_ray.value *= bsdf_value.radiance();
-
-                    let q: Float = rng.gen();
-                    if q < self.count_specular_bounce {
-                        new_ray.depth += 1
-                    }
-
-                    self.trace_ray(scene, &mut new_ray, contribution, rng, aux)
-                }
-                return;
+            // reached limit.
+            depth += 1;
+            if depth > self.max_depth {
+                break;
             }
 
-            let n_ambient_samples = ray.get_n_ambient_samples(
-                self.n_ambient_samples,
-                self.max_depth,
-                self.limit_weight,
+            // Sample BSDF, and continue
+            if let Some(sample) = material.sample_bsdf(
+                ray.direction,
+                &mut interaction,
+                &mut refraction_coefficient,
                 rng,
-            );
+            ) {
+                let cos_theta = (interaction.geometry_shading.normal * sample.wi).abs();
+                beta *= sample.spectrum * cos_theta / sample.pdf;
+                ray = Ray3D {
+                    direction: sample.wi,
+                    origin: interaction.point,
+                };
+            } else {
+                break;
+            };
 
-            // Spawn more rays
-            let depth = ray.depth;
-            aux.rays[depth] = *ray;
-            let (_pt, normal, e1, e2, ..) = ray.get_triad();
-            (0..n_ambient_samples).for_each(|_| {
-                let (bsdf_value, weight) =
-                    material.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng);
-                let new_ray_dir = ray.geometry.direction;
-                debug_assert!(
-                    (1. as Float - new_ray_dir.length()).abs() < 1e-5,
-                    "Length is {}",
-                    new_ray_dir.length()
-                );
-
-                // increase depth
-                let cos_theta = (normal * new_ray_dir).abs();
-                ray.colour *= bsdf_value * cos_theta / weight;
-                ray.depth += 1;
-
-                self.trace_ray(scene, ray, contribution, rng, aux);
-            }); // End the foreach spawned ray
-        } else {
-            let bin_n = self.reinhart.dir_to_bin(ray.geometry.direction);
-
-            let li = Spectrum::ONE;
-            let old_value = contribution.get(0, bin_n).unwrap();
-            contribution
-                .set(
-                    0,
-                    bin_n,
-                    old_value + li * ray.colour / self.n_ambient_samples as Float, // accum_denom_samples as Float,
-                )
-                .unwrap();
+            // Russian roulette
+            let q = (1. - beta.radiance()).max(0.);
+            let aux: Float = rng.gen();
+            if aux < q {
+                break;
+            }
+            beta /= 1. - q;
         }
     }
 }

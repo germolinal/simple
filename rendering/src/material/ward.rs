@@ -18,12 +18,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::rand::*;
-use crate::ray::Ray;
+use crate::material::TransportMode;
+use crate::Spectrum;
 use crate::{Float, PI};
-use geometry::{Point3D, Vector3D};
+use geometry::Vector3D;
+use rand::*;
 
-use crate::samplers::{local_to_world, sample_cosine_weighted_horizontal_hemisphere};
+use super::bsdf_sample::BSDFSample;
+use super::local_coordinates_utils::same_heisphere;
+use super::mat_trait::{MatFlag, TransFlag};
+use super::RandGen;
 
 const LOW_ROUGHNESS: Float = 1e-3;
 
@@ -32,33 +36,26 @@ const LOW_ROUGHNESS: Float = 1e-3;
 ///
 /// This implementation is based on "A new Ward BRDF model with bounded albedo" (2010),
 /// by David Geisler-Moroder and Arne Dür
-#[allow(clippy::too_many_arguments)]
 pub fn sample_ward_anisotropic(
-    normal: Vector3D,
-    e1: Vector3D,
-    e2: Vector3D,
-    intersection_pt: Point3D,
     specularity: Float,
     mut alpha: Float,
     mut beta: Float,
-    ray: &mut Ray,
+    wo: Vector3D,
     rng: &mut RandGen,
-) -> (Float, Float, Float) {
-    if alpha < LOW_ROUGHNESS {
-        alpha = LOW_ROUGHNESS
-    }
-    if beta < LOW_ROUGHNESS {
-        beta = LOW_ROUGHNESS
-    }
-    ray.geometry.origin = intersection_pt + normal * 0.00001;
+    transport_mode: TransportMode,
+    _trans_flags: TransFlag,
+) -> Option<BSDFSample> {
+    alpha = alpha.max(LOW_ROUGHNESS);
+    beta = beta.max(LOW_ROUGHNESS);
 
     let prob_spec: Float = rng.gen();
 
     if prob_spec < specularity {
+        let mut attempts = 0;
         loop {
+            attempts += 1;
             let (xi1, xi2): (Float, Float) = rng.gen();
             // incident direction
-            let l = ray.geometry.direction * -1.;
 
             // From Radiance's https://github.com/NREL/Radiance/blob/2fcca99ace2f2435f32a09525ad31f2b3be3c1bc/src/rt/normal.c#L409
             let mut d = 2. * PI * xi1;
@@ -72,101 +69,187 @@ pub fn sample_ward_anisotropic(
                 1.
             } else {
                 (-xi2.ln() / ((cosp / alpha).powi(2) + (sinp / beta).powi(2))).sqrt()
+                // (alpha.powi(2) * -xi2.ln()).sqrt()
             };
 
-            let h = normal + e1 * cosp * d + e2 * sinp * d;
-            d = (h * l) * (-2.) / (1. + d.powi(2));
-            let v = (l + normal * d).get_normalized();
+            let h = Vector3D::new(cosp * d, sinp * d, 1.0);
+            d = (h * wo) * 2. / (1. + d.powi(2));
+            let mut v = -wo;
+            v.z += d;
+            v.normalize();
             debug_assert!((1. - v.length()).abs() < 1e-5, "len of v = {}", v.length());
 
-            let l_n = l * normal;
-            let v_n = v * normal;
-
-            // // let v_h = h * v;
-            if v_n > 0.0 || l_n > 0.0 {
+            let l_n = wo.z;
+            let v_n = v.z;
+            if v_n < 0.0 || l_n < 0.0 {
                 // Here we want to evaluate the BSDF before we update the ray... otherwise the returned value would be incorrect
-                let (spec, diffuse) = evaluate_ward_anisotropic(
-                    normal,
-                    e1,
-                    e2,
-                    specularity,
-                    alpha,
-                    beta,
-                    ray,
-                    v * -1.,
+                let (spec, _diffuse) =
+                    evaluate_ward_anisotropic(specularity, alpha, beta, wo, v, transport_mode);
+                assert!(
+                    !spec.is_nan(),
+                    "incorrect (i.e., NaN) bsdf when calculating Ward aniso."
                 );
-                if spec.is_nan() {
-                    panic!("incorrect (i.e., NaN) bsdf when calculating Ward aniso.");
+
+                // eq. 14 and 15
+                let pdf = 0.5 * (1. + v_n / l_n) * spec; // * specularity / specularity;
+                let mut spectrum = Spectrum::gray(spec);
+                spectrum /= l_n.abs();
+                if pdf < 1e-8 && spec < 1e-8 {
+                    continue;
                 }
-                ray.geometry.direction = v; // update ray
-                let weight = 2. / (1. + v_n / l_n); // Eq. 15
-                return (spec, diffuse, weight);
+
+                let ret = BSDFSample {
+                    pdf,
+                    spectrum,
+                    flags: MatFlag::GlossyReflection,
+                    wi: -v,
+                    ..Default::default()
+                };
+
+                return Some(ret);
+            } else if attempts > 50 {
+                let ret = BSDFSample {
+                    pdf: 1.0, // irrelevant, because spectrum is Zero
+                    spectrum: Spectrum::BLACK,
+                    flags: MatFlag::GlossyReflection,
+                    wi: v,
+                    ..Default::default()
+                };
+                return Some(ret);
             }
-            // return (0.0, 0., 1.);
         } // end of loop. If we did not return, try again.
     } else {
-        // Probability
-
-        // let local_dir = uniform_sample_hemisphere(rng, e1, e2, normal);
-        // let (x, y, z) = (local_dir.x, local_dir.y, local_dir.z);
-        let local_dir = sample_cosine_weighted_horizontal_hemisphere(rng);
-        let diffuse = (1. - specularity) / PI;
-
-        let (x, y, z) = local_to_world(
-            e1,
-            e2,
-            normal,
-            Point3D::new(0., 0., 0.),
-            local_dir.x,
-            local_dir.y,
-            local_dir.z,
-        );
-        let new_dir = Vector3D::new(x, y, z).get_normalized();
-        let pdf = normal * new_dir / PI;
-        // let pdf = 1./(2.*PI);
-        ray.geometry.direction = new_dir;
-        (0.0, diffuse, pdf)
+        let diff = 1. - specularity;
+        let mut ret = BSDFSample::new_diffuse(Spectrum::gray(diff), rng.gen());
+        ret.pdf *= diff;
+        Some(ret)
     }
+}
+
+pub fn ward_pdf(
+    specularity: Float,
+    alpha: Float,
+    beta: Float,
+    wo: Vector3D,
+    wi: Vector3D,
+    transport_mode: TransportMode,
+) -> Float {
+    if !same_heisphere(wo, wi) {
+        return 0.0;
+    }
+    // Here we want to evaluate the BSDF before we update the ray... otherwise the returned value would be incorrect
+    let (spec, _) = evaluate_ward_anisotropic(specularity, alpha, beta, wo, wi, transport_mode);
+    assert!(
+        !spec.is_nan(),
+        "incorrect (i.e., NaN) bsdf when calculating Ward aniso."
+    );
+
+    // eq. 14 and 15
+    // we would nee d to multiply this by Specularity to account for the probability
+    // of this being specular
+    let spec_pdf = 0.5 * (1. + wo.z / wi.z) * spec; // * specularity/specularity;
+    let diffuse_pdf = (1. - specularity) * wo.z.abs() / PI;
+    spec_pdf + diffuse_pdf
 }
 
 /// Evaluates a Ward BSDF
 ///
 /// This implementation is based on "A new Ward BRDF model with bounded albedo" (2010),
 /// by David Geisler-Moroder and Arne Dür
-#[allow(clippy::too_many_arguments)]
 pub fn evaluate_ward_anisotropic(
-    normal: Vector3D,
-    e1: Vector3D,
-    e2: Vector3D,
     specularity: Float,
     mut alpha: Float,
     mut beta: Float,
-    ray: &Ray,
-    l: Vector3D,
+    wo: Vector3D,
+    wi: Vector3D,
+    _transport_mode: TransportMode,
 ) -> (Float, Float) {
+    // let wi = mirror_direction(wo);
+    if !same_heisphere(wo, wi) {
+        return (0.0, 0.0);
+    }
+
     let spec = if specularity > 1e-5 {
-        if alpha < LOW_ROUGHNESS {
-            alpha = LOW_ROUGHNESS;
-        }
-        if beta < LOW_ROUGHNESS {
-            beta = LOW_ROUGHNESS;
-        }
+        alpha = alpha.max(LOW_ROUGHNESS);
+        beta = beta.max(LOW_ROUGHNESS);
 
-        let i = ray.geometry.direction;
-        let h = l - i;
-        let i_n = i * normal;
-        if i_n > 0. {
-            return (0.0, 0.0);
-        }
-
-        let h_n = h * normal;
+        let h = (wo + wi).get_normalized();
+        let h_n = h.z;
         // Eq. 17
         let c1 = specularity * (h * h) / (PI * alpha * beta * h_n.powi(4));
-        let c2 = -((h * e1 / alpha).powi(2) + (h * e2 / beta).powi(2)) / (h_n.powi(2));
+        let c2 = -((h.x / alpha).powi(2) + (h.y / beta).powi(2)) / (h_n.powi(2));
         c1 * c2.exp()
     } else {
         0.0
     };
 
-    (spec, (1. - specularity) / PI)
+    let diff = (1. - specularity) / PI;
+    (spec / wo.z.abs(), diff)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use geometry::Vector3D;
+
+    use crate::{
+        material::TransportMode,
+        material::{get_rng, mat_trait::TransFlag, mirror_direction},
+    };
+
+    use super::*;
+
+    #[test]
+    fn sample_ward() {
+        let mut rng = get_rng();
+        let specularity = 0.95;
+        let alpha = 0.02;
+        let beta = 0.03;
+        let wo = Vector3D::new(1., 0., 1.).get_normalized();
+        let _wi = -mirror_direction(wo);
+
+        for _ in 0..100 {
+            let sample = sample_ward_anisotropic(
+                specularity,
+                alpha,
+                beta,
+                wo,
+                &mut rng,
+                TransportMode::Radiance,
+                TransFlag::default(),
+            )
+            .unwrap();
+
+            // println!("{} * {} ={}", sample.wi, wi, sample.wi * wi);
+            // println!("{} - {}", sample.spectrum, sample.pdf);
+            println!("{},{},{}", sample.wi.x, sample.wi.z, sample.pdf);
+        }
+    }
+    #[test]
+    fn evaluate_ward() {
+        let specularity = 0.1;
+        let alpha = 0.5;
+        let beta = 0.5;
+        let wo = Vector3D::new(1., 0., -1.).get_normalized();
+
+        let n = 90;
+        let delta = 9.0 / n as Float;
+        for i in 0..n {
+            let wi = Vector3D::new(-1., 0., -delta * i as Float).get_normalized();
+
+            // println!("{}", wi)
+            let (spec, _diff) = evaluate_ward_anisotropic(
+                specularity,
+                alpha,
+                beta,
+                wo,
+                wi,
+                crate::material::TransportMode::Radiance,
+            );
+
+            let plot = wi * spec;
+
+            println!("{:.6},{:.6}", plot.x, plot.z);
+        }
+    }
 }

@@ -77,7 +77,7 @@ impl std::str::FromStr for Triplet {
 
 /// A program for Rendering an image from a .rad (i.e., Radiance) or .spl (i.e., Simple)
 /// formats
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Inputs {
     #[clap(short, long)]
@@ -95,7 +95,7 @@ struct Inputs {
 
     /// The number of shadow rays per light source sent from the first
     /// interaction. From the second interaction and on, only 1 shadow
-    /// ray is sent     
+    /// ray is sent
     #[clap(short = 's', long = "shadow_samples", default_value_t = 10)]
     pub n_shadow_samples: usize,
 
@@ -103,16 +103,6 @@ struct Inputs {
     /// From the second interaction and on, this number is reduced
     #[clap(short = 'a', long = "ambient_samples", default_value_t = 70)]
     pub n_ambient_samples: usize,
-
-    /// A lower value makes the Russian roulette less deadly
-    #[clap(short = 'w', long = "limit_weight", default_value_t = 1e-3)]
-    pub limit_weight: Float,
-
-    /// The probability of counting purely specular bounces as an actual bounce.
-    /// (Specular bounces seldom count because that allows achieving caustics better...
-    /// and they are cheap)
-    #[clap(short = 'c', long = "count_specular", default_value_t = 0.3)]
-    pub count_specular_bounce: Float,
 
     /* Film */
     /// The Horizontal resolution of the final image
@@ -133,7 +123,7 @@ struct Inputs {
     pub view_direction: Triplet,
 
     /// The view up (e.g., '-u 0. 1. 0')
-    #[clap(short='u', long, default_value_t=Triplet(0., 1., 0.))]
+    #[clap(short='u', long, default_value_t=Triplet(0., 0., 1.))]
     pub view_up: Triplet,
 
     /// The horizontal field of view, in degrees
@@ -142,6 +132,7 @@ struct Inputs {
 }
 
 fn main() -> Result<(), String> {
+    // cargo instruments --release --template 'CPU Profiler' --package simple --bin spict -- -i rendering/tests/scenes/cornell.rad -o rendering/tests/scenes/images/cornell2.hdr  -s 1 -b 2 -a 120 -p "3 -5 2.25" -d "0 1 0" -h 50 -x 512 -y 367
     let inputs = Inputs::parse();
 
     let input_file = inputs.input;
@@ -170,7 +161,7 @@ fn main() -> Result<(), String> {
     let view = View {
         view_direction: Vector3D::new(dir.0, dir.1, dir.2).get_normalized(),
         view_point: Point3D::new(p.0, p.1, p.2),
-        view_up: Vector3D::new(up.0, up.1, up.2),
+        view_up: Vector3D::new(up.0, up.1, up.2).get_normalized(),
         field_of_view: inputs.field_of_view,
     };
 
@@ -181,8 +172,6 @@ fn main() -> Result<(), String> {
         n_ambient_samples: inputs.n_ambient_samples,
         n_shadow_samples: inputs.n_shadow_samples,
         max_depth: inputs.max_depth,
-        limit_weight: inputs.limit_weight,
-        count_specular_bounce: inputs.count_specular_bounce,
     };
 
     let buffer = integrator.render(&scene, &camera);

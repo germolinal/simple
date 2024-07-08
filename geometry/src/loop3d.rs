@@ -325,7 +325,7 @@ impl Loop3D {
 
     /// Returns a clone of the [`Loop3D`] but reversed (vertices in the
     /// opposite order, and the normal [`Vector3D`] pointing on the
-    /// opposite direction)      
+    /// opposite direction)
     ///
     /// # Example
     /// ```
@@ -339,7 +339,7 @@ impl Loop3D {
     /// assert!(l.push(a).is_ok());
     /// assert!(l.push(b).is_ok());
     /// assert!(l.push(c).is_ok());
-    ///    
+    ///
     /// // reverse
     /// let rev_l = l.get_reversed();
     ///
@@ -355,7 +355,7 @@ impl Loop3D {
     ///     assert!(p.compare(rev_p));
     /// }
     ///
-    /// ```   
+    /// ```
     pub fn get_reversed(&self) -> Self {
         let mut ret = self.clone();
         ret.reverse();
@@ -417,7 +417,7 @@ impl Loop3D {
     ///
     /// let res = l.sanitize();
     /// assert!(res.is_ok());
-    ///     
+    ///
     /// ```
     pub fn sanitize(self) -> Result<Self, String> {
         let mut new = Self::with_capacity(self.len());
@@ -455,7 +455,7 @@ impl Loop3D {
     ///
     /// It checks that:
     /// * That the [`Loop3D`] has not been closed yet
-    /// * that the new [`Point3D`] is coplanar witht he rest of the [`Point3D`]    
+    /// * that the new [`Point3D`] is coplanar witht he rest of the [`Point3D`]
     /// * Adding the [`Point3D`] will not make the [`Loop3D`] intersect with itself
     fn valid_to_add(&self, point: Point3D) -> Result<(), String> {
         //check if it is closed
@@ -544,7 +544,7 @@ impl Loop3D {
         self.push_collinear(point, true)
     }
 
-    /// Counts the vertices in the [`Loop3D`]    
+    /// Counts the vertices in the [`Loop3D`]
     pub fn len(&self) -> usize {
         self.vertices.len()
     }
@@ -926,7 +926,7 @@ impl Loop3D {
             return Err("when projecting Loop3D: other is not closed".to_string());
         }
 
-        let anchor = other.vertices.get(0).ok_or("no vertices in anchor")?;
+        let anchor = other.vertices.first().ok_or("no vertices in anchor")?;
         let normal = other.normal();
 
         for p in self.vertices.iter_mut() {
@@ -973,8 +973,8 @@ impl Loop3D {
                     .to_string(),
             );
         }
-        let anchor = other.vertices.get(0).ok_or("no vertices in other")?;
-        let p = self.vertices.get(0).ok_or("no vertices in self")?;
+        let anchor = other.vertices.first().ok_or("no vertices in other")?;
+        let p = self.vertices.first().ok_or("no vertices in self")?;
         let d = p.distance_to_plane(*anchor, normal);
 
         Ok(d)
@@ -1452,8 +1452,8 @@ mod testing {
     #[test]
     fn serde_ok() -> Result<(), String> {
         let a = "[
-            0.0,0,0,  
-            1.0,1,1,  
+            0.0,0,0,
+            1.0,1,1,
             2,3,-1
         ]";
 
@@ -2259,8 +2259,8 @@ mod testing {
     fn test_project_into_plane_self() -> Result<(), String> {
         // Project into self.
         let lstr = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0,
             0, 1, 0
         ]";
@@ -2333,15 +2333,15 @@ mod testing {
     fn test_project_into_plane_z() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0,
             0, 1, 0
         ]";
 
         let other_str = "[
-            0, 0, 2.0,  
-            1, 0, 2.0,  
+            0, 0, 2.0,
+            1, 0, 2.0,
             1, 1, 2.0,
             0, 1, 2.0
         ]";
@@ -2363,15 +2363,15 @@ mod testing {
     fn test_project_into_plane_neg_z() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0,
             0, 1, 0
         ]";
 
         let other_str = "[
-            0, 0, -2.0,  
-            1, 0, -2.0,  
+            0, 0, -2.0,
+            1, 0, -2.0,
             1, 1, -2.0,
             0, 1, -2.0
         ]";
@@ -2393,15 +2393,15 @@ mod testing {
     fn test_normal_distance() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0,
             0, 1, 0
         ]";
 
         let other_str = "[
-            0, 0, 2.0,  
-            1, 0, 2.0,  
+            0, 0, 2.0,
+            1, 0, 2.0,
             1, 1, 2.0,
             0, 1, 2.0
         ]";
@@ -2419,14 +2419,14 @@ mod testing {
     fn test_normal_fail_not_normal() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0
         ]";
 
         let other_str = "[
-            0, 0, 2.0,  
-            1, 0, 1.0,  
+            0, 0, 2.0,
+            1, 0, 1.0,
             1, 1, 2.0
         ]";
 
@@ -2442,14 +2442,14 @@ mod testing {
     fn test_snap_too_far() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0
         ]";
 
         let other_str = "[
-            0, 0, 2.0,  
-            1, 0, 2.0,  
+            0, 0, 2.0,
+            1, 0, 2.0,
             1, 1, 2.0
         ]";
 
@@ -2465,15 +2465,15 @@ mod testing {
     fn test_snap() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0
         ]";
 
         let other_str = "[
-            0, 0, 0.001,  
-            1, 0, 0.001,  
-            1, 1, 0.001 
+            0, 0, 0.001,
+            1, 0, 0.001,
+            1, 1, 0.001
         ]";
 
         let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
@@ -2493,15 +2493,15 @@ mod testing {
     fn test_snap_2() -> Result<(), String> {
         // Project into a Loop above it.
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0
         ]";
 
         let other_str = "[
-            0, 0, 0.001,  
-            1, 0, 0.001,  
-            1, 1, 1.01 
+            0, 0, 0.001,
+            1, 0, 0.001,
+            1, 1, 1.01
         ]";
 
         let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
@@ -2515,8 +2515,8 @@ mod testing {
     #[test]
     fn test_intersect() -> Result<(), String> {
         let this_str = "[
-            0, 0, 0,  
-            1, 0, 0,  
+            0, 0, 0,
+            1, 0, 0,
             1, 1, 0,
             0, 1, 0
         ]";
@@ -2634,7 +2634,7 @@ mod testing {
             -0.5, 0, 0,
             0,0,0,
             0,1,0,
-            0.5, 1, 0,            
+            0.5, 1, 0,
             0.5,  2, 0,
             -0.5, 2, 0
         ]";

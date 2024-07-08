@@ -22,13 +22,17 @@ SOFTWARE.
 use crate::bvh::BoundingVolumeTree;
 use crate::colour::Spectrum;
 use crate::from_simple_model::SimpleModelReader;
+use crate::interaction::Interaction;
 use crate::material::{Light, Material};
 use crate::primitive::Primitive;
-use crate::ray::Ray;
+use crate::rand::RandGen;
+use crate::triangle::Triangle;
 use crate::Float;
 use calendar::Date;
+
 use geometry::{Ray3D, Vector3D};
 use model::Model;
+use rand::Rng;
 
 #[derive(Clone, Default)]
 pub struct Object {
@@ -40,51 +44,7 @@ pub struct Object {
 
 #[derive(Default)]
 pub struct Scene {
-    /// The x component of the first vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub ax: Vec<Float>,
-    /// The x component of the first vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub ay: Vec<Float>,
-    /// The x component of the first vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub az: Vec<Float>,
-    /// The x component of the second vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub bx: Vec<Float>,
-    /// The y component of the second vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub by: Vec<Float>,
-    /// The z component of the second vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub bz: Vec<Float>,
-    /// The x component of the third vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub cx: Vec<Float>,
-    /// The y component of the third vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub cy: Vec<Float>,
-    /// The z component of the third vertex of the
-    /// Triangles in the scene. These are not tested
-    /// directly for shadow (e.g., non-luminous objects
-    /// and diffuse light)
-    pub cz: Vec<Float>,
+    pub triangles: Vec<Triangle>,
 
     /// The normal of each vertex of each triangle.
     pub normals: Vec<(Vector3D, Vector3D, Vector3D)>,
@@ -137,6 +97,19 @@ impl Scene {
     /// Creates an empty scene
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Samples a light (not a distant light, just a light)
+    /// uniformly. Returns None if there are no lights. Returns
+    /// the probability of sampling this light.
+    pub fn sample_light_uniform(&self, rng: &mut RandGen) -> Option<(&Object, Float)> {
+        if self.lights.is_empty() {
+            return None;
+        }
+        let mut i: usize = rng.gen();
+        i %= self.lights.len();
+        let pdf = 1. / self.lights.len() as Float;
+        Some((&self.lights[i], pdf))
     }
 
     /// Adds the elements describing a Perez sky to the scene.
@@ -261,20 +234,41 @@ impl Scene {
     /// Casts a [`Ray`] and returns an `Option<usize>` indicating the index
     /// of the first primitive hit by the ray, if any. The `ray` passed will now contain
     /// the Interaction
-    pub fn cast_ray(&self, ray: &mut Ray, node_aux: &mut Vec<usize>) -> Option<usize> {
+    pub fn cast_ray<const N: usize>(
+        &self,
+
+        ray: Ray3D,
+        node_aux: &mut [usize; N],
+    ) -> Option<(usize, Interaction)> {
         if let Some(accelerator) = &self.accelerator {
-            accelerator.intersect(self, ray, node_aux)
+            let aux = accelerator.intersect(self, ray, node_aux);
+
+            match aux {
+                Some((i, ..)) => {
+                    // update ray
+                    let t = &self.triangles[i];
+                    let (point, u, v) = crate::triangle::baricentric_coordinates(ray, t).unwrap();
+                    let interaction = Interaction {
+                        point,
+                        wo: ray.direction * -1.0,
+                        geometry_shading: crate::triangle::new_info(t, point, u, v, ray.direction),
+                    };
+
+                    Some((i, interaction))
+                }
+                None => None,
+            }
         } else {
             panic!("Trying to cast_ray() in a scene without an acceleration structure")
         }
     }
 
     /// Checks whether a [`Ray3D`] can travel a certain distance without hitting any surface
-    pub fn unobstructed_distance(
+    pub fn unobstructed_distance<const N: usize>(
         &self,
-        ray: &Ray3D,
+        ray: Ray3D,
         distance_squared: Float,
-        node_aux: &mut Vec<usize>,
+        node_aux: &mut [usize; N],
     ) -> bool {
         if let Some(a) = &self.accelerator {
             a.unobstructed_distance(self, ray, distance_squared, node_aux)
@@ -291,7 +285,7 @@ impl Scene {
         self.materials.len() - 1
     }
 
-    /// Pushes a [`Primitive`] object into the [`Scene`]   
+    /// Pushes a [`Primitive`] object into the [`Scene`]
     ///
     /// If the [`Primitive`] is made of a light-emmiting [`Material`], then
     /// it will be added twice: One to the normal scene, and then another to
@@ -349,19 +343,7 @@ impl Scene {
         let front = vec![front_material_index; additional];
         let back = vec![back_material_index; additional];
 
-        // self.triangles.extend_from_slice(&triangles);
-        for t in triangles.iter() {
-            let [ax, ay, az, bx, by, bz, cx, cy, cz] = t;
-            self.ax.push(*ax);
-            self.ay.push(*ay);
-            self.az.push(*az);
-            self.bx.push(*bx);
-            self.by.push(*by);
-            self.bz.push(*bz);
-            self.cx.push(*cx);
-            self.cy.push(*cy);
-            self.cz.push(*cz);
-        }
+        self.triangles.extend_from_slice(&triangles);
 
         self.normals.extend_from_slice(&normals);
         self.front_material_indexes.extend_from_slice(&front);

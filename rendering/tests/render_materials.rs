@@ -123,11 +123,11 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
 
     // Create film
     let film = Film {
-        resolution: (320, 320),
+        resolution: (200, 200),
     };
 
     // Create view
-    let view_point = Point3D::new(0., -2. * HALF_ROOM_SIZE, 4.1);
+    let view_point = Point3D::new(0., -1.1 * HALF_ROOM_SIZE, 4.1);
     let view_direction = (centre - view_point).get_normalized();
     let view = View {
         view_direction,
@@ -140,7 +140,7 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
 
     let integrator = RayTracer {
         n_ambient_samples: 60,
-        n_shadow_samples: 3,
+        n_shadow_samples: 1,
         max_depth: 1,
         ..RayTracer::default()
     };
@@ -166,7 +166,7 @@ fn test_render_specular_plastic() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_specular_metal() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_specular_metal --ignored --exact --nocapture
+    // cargo test --package rendering --test render_materials -- test_render_specular_metal --ignored --exact --nocapture
 
     let metal = Material::Metal(Metal {
         colour: Spectrum([0.0, 0.5, 0.5]),
@@ -180,7 +180,7 @@ fn test_render_specular_metal() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_glass() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_glass --ignored --exact --nocapture
+    // cargo test --package rendering --test render_materials -- test_render_glass --ignored --exact --nocapture
     let metal = Material::Glass(Glass {
         colour: Spectrum([0.9, 0.9, 0.9]),
         refraction_index: 1.52,
@@ -192,7 +192,7 @@ fn test_render_glass() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_mirror() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_mirror --ignored --exact --nocapture
+    // cargo test --package rendering --test render_materials -- test_render_mirror --ignored --exact --nocapture
 
     let plastic = Material::Mirror(Mirror(Spectrum::gray(0.5)));
 
@@ -202,7 +202,7 @@ fn test_render_mirror() -> Result<(), String> {
 #[test]
 #[ignore]
 fn test_render_dielectric() -> Result<(), String> {
-    // cargo test --features parallel --release --package rendering --test render_materials -- test_render_dielectric --exact --nocapture --ignored
+    // cargo test --package rendering --test render_materials -- test_render_dielectric --exact --nocapture --ignored
 
     let dielectric = Material::Dielectric(Dielectric {
         colour: Spectrum::gray(0.95),

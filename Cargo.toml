@@ -22,6 +22,7 @@ members = [
     "test_models",
     "weather",
     "derive",
+    "utils",
 ]
 
 
@@ -90,6 +91,7 @@ rendering = { path = "rendering" }
 geometry = { path = "geometry" }
 polynomial = { path = "polynomial" }
 schedule = { path = "schedule" }
+utils = { path = "utils" }
 
 [dev-dependencies]
 validate = { git = "https://github.com/germolinal/validate" }

@@ -20,10 +20,10 @@ SOFTWARE.
 
 use crate::camera::{Camera, CameraSample, Film, View};
 use crate::rand::*;
-use crate::ray::Ray;
 use crate::Float;
 use geometry::{Ray3D, Vector3D};
 
+#[derive(Debug, Clone)]
 pub struct Pinhole {
     view: View,
     film: Film,
@@ -111,7 +111,7 @@ impl Camera for Pinhole {
 
     /// Generates a ray that will go through the View Point and a
     /// certain `CameraSample`
-    fn gen_ray(&self, sample: &CameraSample) -> (Ray, Float) {
+    fn gen_ray(&self, sample: &CameraSample) -> (Ray3D, Float) {
         let (width, height) = self.film.resolution;
         let aspect_ratio = height as Float / width as Float;
         let xlim = 2.;
@@ -127,12 +127,9 @@ impl Camera for Pinhole {
         let direction =
             self.view.view_direction * self.film_distance + self.u * x - self.view.view_up * y;
 
-        let ray = Ray {
-            geometry: Ray3D {
-                direction: direction.get_normalized(),
-                origin: self.view.view_point,
-            },
-            ..Ray::default()
+        let ray = Ray3D {
+            direction: direction.get_normalized(),
+            origin: self.view.view_point,
         };
 
         // return
@@ -172,7 +169,7 @@ mod tests {
         let sample = CameraSample { p_film: (10, 20) };
         // Let's assume this is right
         let (ray, _weight) = camera.gen_ray(&sample);
-        let (found_pixel, _weight) = camera.pixel_from_ray(&ray.geometry);
+        let (found_pixel, _weight) = camera.pixel_from_ray(&ray);
         assert_eq!(sample.p_film, found_pixel);
     }
 }
