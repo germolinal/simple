@@ -34,7 +34,6 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-        run: echo ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
 
         # The runs in parallel/release create the validation results.
         # The run `cargo test -p model` writes the IOReference.
@@ -47,6 +46,7 @@ jobs:
 
       - name: Copy documentation
         run: |
+          echo ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
           rm -rf simple_docs/auto_src/*
           cp -rf simple/docs simple_docs/auto_src/docs
           mkdir  simple_docs/auto_src/model
