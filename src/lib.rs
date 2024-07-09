@@ -71,7 +71,7 @@ pub use model;
 pub use model::{Model, SimulationState, SimulationStateElement, SimulationStateHeader, *};
 pub use polynomial::*;
 pub use rendering::{
-    rand::get_rng, rand::RandGen, rand::Rng, samplers, Ray, Scene, SceneElement, SimpleModelReader,
+    rand::get_rng, rand::RandGen, rand::Rng, samplers, Scene, SceneElement, SimpleModelReader,
     Wavelengths,
 };
 pub use schedule::*;

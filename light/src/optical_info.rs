@@ -96,25 +96,48 @@ impl OpticalInfo {
 
         // calculator
         let solar_dc_factory = DCFactory {
-            max_depth: 0,
+            max_depth: 1,
             n_ambient_samples: options
                 .solar_ambient_divitions_or(crate::solar_model::MODULE_NAME, 300),
             reinhart: ReinhartSky::new(mf),
-            ..DCFactory::default()
+            // ..DCFactory::default()
         };
 
-        // calculate
-        let front_surfaces_dc =
-            SolarSurface::calc_solar_dc_matrix(&surfaces, &solar_scene, &solar_dc_factory, true)?;
+        let mut nsensors = 0;
+        for s in surfaces.iter() {
+            nsensors += s.points.len();
+        }
+        for s in fenestrations.iter() {
+            nsensors += s.points.len();
+        }
+        let progress_bar = utils::ProgressBar::new(
+            "Calculating Solar Exposures".to_string(),
+            2 * nsensors * solar_dc_factory.n_ambient_samples,
+        );
 
-        let back_surfaces_dc =
-            SolarSurface::calc_solar_dc_matrix(&surfaces, &solar_scene, &solar_dc_factory, false)?;
+        // calculate
+        let front_surfaces_dc = SolarSurface::calc_solar_dc_matrix(
+            &surfaces,
+            &solar_scene,
+            &solar_dc_factory,
+            true,
+            Some(&progress_bar),
+        )?;
+
+        let back_surfaces_dc = SolarSurface::calc_solar_dc_matrix(
+            &surfaces,
+            &solar_scene,
+            &solar_dc_factory,
+            false,
+            Some(&progress_bar),
+        )?;
 
         let front_fenestrations_dc = SolarSurface::calc_solar_dc_matrix(
             &fenestrations,
             &solar_scene,
             &solar_dc_factory,
             true,
+            Some(&progress_bar),
         )?;
 
         let back_fenestrations_dc = SolarSurface::calc_solar_dc_matrix(
@@ -122,7 +145,9 @@ impl OpticalInfo {
             &solar_scene,
             &solar_dc_factory,
             false,
+            Some(&progress_bar),
         )?;
+        progress_bar.done();
 
         #[cfg(not(feature = "parallel"))]
         let surf_iter = surfaces.iter();

@@ -23,13 +23,14 @@ use std::sync::Arc;
 use crate::Float;
 
 use matrix::Matrix;
-use rendering::{colour_matrix::*, DCFactory, Ray, Scene};
+use rendering::{colour_matrix::*, DCFactory, Scene};
 
 use model::{Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface};
 
 use geometry::{Point3D, Polygon3D, Ray3D, Triangulation3D, Vector3D};
 use rendering::primitive_samplers::sample_triangle_surface;
 use rendering::rand::*;
+use utils::ProgressBar;
 
 use crate::optical_info::IRViewFactorSet;
 
@@ -55,7 +56,7 @@ fn get_sampler(triangles_areas: Vec<Float>) -> impl Fn(&mut RandGen) -> usize {
 /// It contains the normal of the original Surface and the points
 /// randomly sampled in each surface.
 pub struct SolarSurface {
-    points: Vec<Point3D>,
+    pub(crate) points: Vec<Point3D>,
     pub normal: Vector3D,
     pub receives_sun_front: bool,
     pub receives_sun_back: bool,
@@ -103,7 +104,7 @@ impl SolarSurface {
         })
     }
 
-    /// Receives sun if the boundary is either Space or Outdoor    
+    /// Receives sun if the boundary is either Space or Outdoor
     pub(crate) fn boundary_receives_sun(boundary: &Boundary) -> bool {
         matches!(boundary, Boundary::Space { .. } | Boundary::Outdoor)
     }
@@ -117,6 +118,7 @@ impl SolarSurface {
         scene: &Scene,
         dc_factory: &DCFactory,
         front_side: bool,
+        progress_bar: Option<&ProgressBar>,
     ) -> Result<Matrix, String> {
         if list.is_empty() {
             return Ok(Matrix::empty());
@@ -141,7 +143,7 @@ impl SolarSurface {
                 s.back_rays()
             };
 
-            dcs.push(s.solar_irradiance(&rays, scene, dc_factory))
+            dcs.push(s.solar_irradiance(&rays, scene, dc_factory, progress_bar))
         }
         if dcs.is_empty() {
             Ok(Matrix::empty())
@@ -276,9 +278,15 @@ impl SolarSurface {
     }
 
     /// Calculates the Daylight Coefficient matrix for the front of a `SolarSurface`
-    pub fn solar_irradiance(&self, rays: &[Ray3D], scene: &Scene, factory: &DCFactory) -> Matrix {
+    pub fn solar_irradiance(
+        &self,
+        rays: &[Ray3D],
+        scene: &Scene,
+        factory: &DCFactory,
+        progress_bar: Option<&ProgressBar>,
+    ) -> Matrix {
         // let front_rays = self.front_rays();
-        let dc = factory.calc_dc(rays, scene);
+        let dc = factory.calc_dc(rays, scene, progress_bar);
         let dc = colour_matrix_to_radiance(&dc);
         average_matrix(&dc)
     }
@@ -301,20 +309,17 @@ impl SolarSurface {
         let mut sky = 0.0;
 
         let n_samples = 10000;
-        let mut node_aux = Vec::with_capacity(2);
-        for r in &rays {
-            let mut ray = Ray {
-                geometry: *r,
-                ..Ray::default()
-            };
-            let normal = r.direction;
+        let mut node_aux = [0; 32];
+        for ray in &rays {
+            let normal = ray.direction;
             let e1 = normal.get_perpendicular()?;
             let e2 = normal.cross(e1);
 
             for _ in 0..n_samples {
-                let dir = rendering::samplers::uniform_sample_hemisphere(&mut rng, e1, e2, normal);
+                let u = rng.gen();
+                let dir = rendering::samplers::uniform_sample_tilted_hemisphere(u, e1, e2, normal);
 
-                if scene.cast_ray(&mut ray, &mut node_aux).is_none() {
+                if scene.cast_ray(*ray, &mut node_aux).is_none() {
                     if dir.z > 0.0 {
                         sky += 1.0;
                     } else {

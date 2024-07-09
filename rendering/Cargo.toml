@@ -12,6 +12,7 @@ matrix = { path = "../matrix" }
 geometry = { version = "0.2.0", path = "../geometry" }
 weather = { path = "../weather" }
 calendar = { path = "../calendar" }
+utils = { path = "../utils" }
 rand = { workspace = true, features = ["small_rng"] }
 rayon = { workspace = true, optional = true }
 serde = { workspace = true, features = ['derive'] }

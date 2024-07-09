@@ -37,7 +37,8 @@ fn uniform_cone_pdf(cos_theta: Float) -> Float {
 /* TRIANGLE */
 
 pub fn sample_triangle_surface(triangle: &Triangle3D, rng: &mut RandGen) -> Point3D {
-    uniform_sample_triangle(rng, triangle.a(), triangle.b(), triangle.c())
+    let u = rng.gen();
+    uniform_sample_triangle(u, triangle.a(), triangle.b(), triangle.c())
 }
 
 pub fn triangle_direction(triangle: &Triangle3D, point: Point3D) -> (Float, Vector3D) {
@@ -85,7 +86,8 @@ pub fn sphere_direction(sphere: &Sphere3D, point: Point3D) -> (Float, Vector3D) 
 
 pub fn sample_sphere_surface(sphere: &Sphere3D, rng: &mut RandGen) -> Point3D {
     // Sample a sphere of radius 1 centered at the origin
-    let p = uniform_sample_sphere(rng);
+    let u = rng.gen();
+    let p = uniform_sample_sphere(u);
     let (mut x, mut y, mut z) = (p.x, p.y, p.z);
 
     // So, this is here to avoid missed lights as well

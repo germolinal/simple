@@ -1,3 +1,4 @@
+use crate::interaction::Interaction;
 /*
 MIT License
 Copyright (c)  Germán Molina
@@ -19,18 +20,24 @@ SOFTWARE.
 */
 use crate::colour::Spectrum;
 use crate::rand::*;
-use crate::ray::Ray;
 use crate::Float;
-use geometry::{Point3D, Vector3D};
+use bsdf_sample::BSDFSample;
+use geometry::intersection::SurfaceSide;
+use geometry::Vector3D;
+pub use mat_trait::{MaterialTrait, TransportMode};
 
 mod light;
 pub use light::Light;
 
 mod plastic;
+use mat_trait::TransFlag;
 pub use plastic::Plastic;
 
 mod metal;
 pub use metal::Metal;
+
+mod diffuse;
+pub use diffuse::Diffuse;
 
 mod dielectric;
 pub use dielectric::Dielectric;
@@ -44,12 +51,17 @@ pub use glass::Glass;
 mod specular;
 pub use specular::*;
 
+pub mod bsdf_sample;
+mod local_coordinates_utils;
+
+mod mat_trait;
 mod ward;
 
 #[derive(Clone, Debug)]
 pub enum Material {
     Plastic(Plastic),
     Metal(Metal),
+    Diffuse(Diffuse),
     Light(Light),
     Mirror(Mirror),
     Dielectric(Dielectric),
@@ -60,6 +72,7 @@ impl Material {
     /// Returns an id, for debugging and error reporting purposes
     pub fn id(&self) -> &str {
         match self {
+            Self::Diffuse(m) => m.id(),
             Self::Plastic(m) => m.id(),
             Self::Metal(m) => m.id(),
             Self::Light(m) => m.id(),
@@ -74,6 +87,7 @@ impl Material {
     /// elements of the [`Spectrum`]. E.g., the reflectance values.
     pub fn colour(&self) -> Spectrum {
         match self {
+            Self::Diffuse(m) => m.colour(),
             Self::Plastic(m) => m.colour(),
             Self::Metal(m) => m.colour(),
             Self::Light(m) => m.colour(),
@@ -83,12 +97,12 @@ impl Material {
         }
     }
 
-    /// Should this material be tested for direct illumination?    
+    /// Should this material be tested for direct illumination?
     pub fn emits_direct_light(&self) -> bool {
         matches!(self, Self::Light(_))
     }
 
-    /// Should this material emits light    
+    /// Should this material emits light
     pub fn emits_light(&self) -> bool {
         matches!(self, Self::Light(_))
     }
@@ -101,39 +115,75 @@ impl Material {
         matches!(self, Self::Mirror(_) | Self::Glass(_) | Self::Dielectric(_))
     }
 
-    pub fn get_possible_paths(
-        &self,
-        normal: &Vector3D,
-        intersection_pt: &Point3D,
-        ray: &Ray,
-    ) -> [Option<(Ray, Spectrum)>; 2] {
-        match self {
-            Self::Mirror(m) => m.get_possible_paths(normal, intersection_pt, ray),
-            Self::Dielectric(m) => m.get_possible_paths(normal, intersection_pt, ray),
-            Self::Glass(m) => m.get_possible_paths(normal, intersection_pt, ray),
-            _ => panic!("Trying to get possible paths in non-specular material"),
-        }
+    // pub fn get_possible_paths(
+    //     &self,
+    //     normal: &Vector3D,
+    //     intersection_pt: &Point3D,
+    //     ray: &Ray,
+    // ) -> [Option<(Ray, Spectrum)>; 2] {
+    //     match self {
+    //         Self::Mirror(m) => m.get_possible_paths(normal, intersection_pt, ray),
+    //         Self::Dielectric(m) => m.get_possible_paths(normal, intersection_pt, ray),
+    //         Self::Glass(m) => m.get_possible_paths(normal, intersection_pt, ray),
+    //         _ => panic!("Trying to get possible paths in non-specular material"),
+    //     }
+    // }
+
+    pub fn to_local(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
+        Vector3D::new(v * e1, v * e2, v * normal)
+    }
+    pub fn to_world(&self, normal: Vector3D, e1: Vector3D, e2: Vector3D, v: Vector3D) -> Vector3D {
+        e1 * v.x + e2 * v.y + normal * v.z
     }
 
     /// Samples the bsdf (returned by modifying the given `Ray`).
     /// Returns the value of the BSDF in that direction (as a Spectrum) and the probability
     pub fn sample_bsdf(
         &self,
-        normal: Vector3D,
-        e1: Vector3D,
-        e2: Vector3D,
-        intersection_pt: Point3D,
-        ray: &mut Ray,
+        wo: Vector3D,
+        interaction: &mut Interaction,
+        eta: &mut Float,
         rng: &mut RandGen,
-    ) -> (Spectrum, Float) {
-        match self {
-            Self::Plastic(m) => m.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng),
-            Self::Metal(m) => m.sample_bsdf(normal, e1, e2, intersection_pt, ray, rng),
-            Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
-            Self::Mirror(_m) => panic!("Trying to sample the BSDF of a Mirror"),
-            Self::Dielectric(_m) => panic!("Trying to sample the BSDF of a Dielectric"),
-            Self::Glass(_m) => panic!("Trying to sample the BSDF of a Glass"),
+    ) -> Option<BSDFSample> {
+        // world to local
+        let (intersection_pt, normal, e1, e2) = interaction.get_triad();
+        let wo = self.to_local(normal, e1, e2, wo);
+
+        let transport_mode = TransportMode::default();
+        let trans_flags = TransFlag::All;
+
+        let mut ret = match self {
+            Self::Diffuse(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
+            Self::Plastic(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
+            Self::Metal(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
+            Self::Light(_m) => None, //panic!("Material '{}' has no BSDF", m.id()),
+            Self::Mirror(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
+            Self::Dielectric(m) => {
+                let ret = m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags);
+                // if front or back?
+                // dbg!("Fxix the refraction index transition");
+                match interaction.geometry_shading.side {
+                    // Going in
+                    SurfaceSide::Front => *eta = m.refraction_index,
+                    // Going out... TODO?: create a stack of refraction indexes
+                    SurfaceSide::Back => *eta = 1.0,
+                    _ => unreachable!(),
+                }
+                ret
+            }
+            Self::Glass(m) => m.sample_bsdf(wo, *eta, rng, transport_mode, trans_flags),
+        };
+
+        if let Some(sample) = &mut ret {
+            if sample.is_reflection() {
+                interaction.point = intersection_pt + normal * 0.00001;
+            } else if sample.is_transmission() {
+                interaction.point = intersection_pt - normal * 0.00001;
+            }
+            sample.wi = self.to_world(normal, e1, e2, sample.wi);
         }
+
+        ret
     }
 
     /// Evaluates a BSDF based on an input and outpt directions
@@ -142,86 +192,43 @@ impl Material {
         normal: Vector3D,
         e1: Vector3D,
         e2: Vector3D,
-        ray: &Ray,
+        mut vin: Vector3D,
         vout: Vector3D,
+        eta: Float,
     ) -> Spectrum {
+        // convert ray into local
+        vin = self.to_local(normal, e1, e2, vin);
+        let vout = self.to_local(normal, e1, e2, vout);
+
         match self {
-            Self::Plastic(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-            Self::Metal(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-            Self::Light(m) => panic!("Material '{}' has no BSDF", m.id()),
-            Self::Mirror(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-            Self::Dielectric(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-            Self::Glass(m) => m.eval_bsdf(normal, e1, e2, ray, vout),
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-
-    fn get_vectors(rng: &mut RandGen) -> (Vector3D, Vector3D, Vector3D, Ray, Vector3D) {
-        let e1 = Vector3D::new(rng.gen(), rng.gen(), rng.gen()).get_normalized();
-        let e2 = e1.get_perpendicular().unwrap();
-        let normal = e1.cross(e2);
-        let direction = geometry::Vector3D::new(rng.gen(), rng.gen(), rng.gen()).get_normalized();
-
-        // We need the direction to be opposite to normal.
-        if direction * normal < 0. {
-            let ray = Ray {
-                geometry: geometry::Ray3D {
-                    direction,
-                    origin: geometry::Point3D::new(rng.gen(), rng.gen(), rng.gen()),
-                },
-                refraction_index: rng.gen(),
-                ..Ray::default()
-            };
-            let vout = Vector3D::new(1., 4., 12.).get_normalized();
-
-            (normal, e1, e2, ray, vout)
-        } else {
-            get_vectors(rng)
+            Self::Diffuse(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
+            Self::Plastic(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
+            Self::Metal(m) => m.eval_bsdf(vin, vout, eta, TransportMode::default()),
+            Self::Light(_) | Self::Mirror(_) | Self::Dielectric(_) | Self::Glass(_) => {
+                Spectrum::BLACK
+            }
         }
     }
 
-    fn test_material(material: Material) {
-        let mut rng = crate::rand::get_rng();
-        for _ in 0..99999 {
-            let (normal, e1, e2, mut ray, vout) = get_vectors(&mut rng);
-            let old_ray = ray.clone();
-            let (bsdf, pdf) =
-                material.sample_bsdf(normal, e1, e2, Point3D::new(0., 0., 0.), &mut ray, &mut rng);
-            assert!(pdf.is_finite());
-            assert!(bsdf.radiance().is_finite());
-            assert!(old_ray.geometry.direction.length().is_finite());
-            let v: Vector3D = old_ray.geometry.origin.into();
-            assert!(v.length().is_finite());
-            let pdf = material.eval_bsdf(normal, e1, e2, &old_ray, vout);
-            assert!(pdf.radiance().is_finite());
+    /// Evaluates a BSDF based on an input and outpt directions
+    pub fn pdf(
+        &self,
+        normal: Vector3D,
+        e1: Vector3D,
+        e2: Vector3D,
+        mut vin: Vector3D,
+        vout: Vector3D,
+        eta: Float,
+    ) -> Float {
+        // convert ray into local
+        vin = self.to_local(normal, e1, e2, vin);
+        let vout = self.to_local(normal, e1, e2, vout);
+
+        match self {
+            Self::Diffuse(m) => m.pdf(vin, vout, eta, TransportMode::default()),
+            Self::Plastic(m) => m.pdf(vin, vout, eta, TransportMode::default()),
+            Self::Metal(m) => m.pdf(vin, vout, eta, TransportMode::default()),
+            Self::Light(_) | Self::Mirror(_) | Self::Dielectric(_) | Self::Glass(_) => 0.,
         }
-    }
-
-    #[test]
-    fn test_sample_plastic() {
-        let plastic = Material::Plastic(Plastic {
-            colour: Spectrum([0.5, 0.2, 0.9]),
-            specularity: 0.0,
-            roughness: 0.0,
-        });
-
-        println!("{}", std::mem::size_of_val(&plastic));
-        test_material(plastic)
-    }
-
-    #[test]
-    fn test_sample_metal() {
-        let metal = Material::Metal(Metal {
-            colour: Spectrum([0.5, 0.2, 0.9]),
-            specularity: 0.0,
-            roughness: 0.0,
-        });
-
-        test_material(metal)
     }
 }

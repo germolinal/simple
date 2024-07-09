@@ -4,33 +4,76 @@ use geometry::{
     BBox3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
 };
 
-mod fallback;
+pub mod fallback;
+pub use fallback::baricentric_coordinates;
 
-#[cfg(all(target_arch = "aarch64", feature = "simd"))]
-mod neon;
-#[cfg(all(target_arch = "aarch64", feature = "simd"))]
-pub(crate) use neon::LEAF_SIZE;
-#[cfg(not(feature = "simd"))]
 pub(crate) const LEAF_SIZE: usize = 24;
 
 /// The smallest definition of a Triangle I could think of
 pub type Triangle = [Float; 9];
 
-#[allow(clippy::too_many_arguments)]
-pub fn triangle_area(
-    ax: Float,
-    ay: Float,
-    az: Float,
-    bx: Float,
-    by: Float,
-    bz: Float,
-    cx: Float,
-    cy: Float,
-    cz: Float,
-) -> Float {
-    let ab = ((bx - ax).powi(2) + (by - ay).powi(2) + (bz - az).powi(2)).sqrt();
-    let bc = ((cx - bx).powi(2) + (cy - by).powi(2) + (cz - bz).powi(2)).sqrt();
-    let ca = ((ax - cx).powi(2) + (ay - cy).powi(2) + (az - cz).powi(2)).sqrt();
+#[macro_export]
+macro_rules! ax {
+    ( $n : expr ) => {{
+        $n[0]
+    }};
+}
+#[macro_export]
+macro_rules! ay {
+    ( $n : expr ) => {{
+        $n[1]
+    }};
+}
+#[macro_export]
+macro_rules! az {
+    ( $n : expr ) => {{
+        $n[2]
+    }};
+}
+#[macro_export]
+macro_rules! bx {
+    ( $n : expr ) => {{
+        $n[3]
+    }};
+}
+#[macro_export]
+macro_rules! by {
+    ( $n : expr ) => {{
+        $n[4]
+    }};
+}
+#[macro_export]
+macro_rules! bz {
+    ( $n : expr ) => {{
+        $n[5]
+    }};
+}
+#[macro_export]
+macro_rules! cx {
+    ( $n : expr ) => {{
+        $n[6]
+    }};
+}
+#[macro_export]
+macro_rules! cy {
+    ( $n : expr ) => {{
+        $n[7]
+    }};
+}
+#[macro_export]
+macro_rules! cz {
+    ( $n : expr ) => {{
+        $n[8]
+    }};
+}
+
+pub fn triangle_area(t: &Triangle) -> Float {
+    let ab =
+        ((bx![t] - ax![t]).powi(2) + (by![t] - ay![t]).powi(2) + (bz![t] - az![t]).powi(2)).sqrt();
+    let bc =
+        ((cx![t] - bx![t]).powi(2) + (cy![t] - by![t]).powi(2) + (cz![t] - bz![t]).powi(2)).sqrt();
+    let ca =
+        ((ax![t] - cx![t]).powi(2) + (ay![t] - cy![t]).powi(2) + (az![t] - cz![t]).powi(2)).sqrt();
 
     ((ca + bc + ab)
         * ((ca + bc + ab) / 2. - ab)
@@ -40,17 +83,8 @@ pub fn triangle_area(
         .sqrt()
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn triangle_solid_angle_pdf(
-    ax: Float,
-    ay: Float,
-    az: Float,
-    bx: Float,
-    by: Float,
-    bz: Float,
-    cx: Float,
-    cy: Float,
-    cz: Float,
+    t: &Triangle,
     point: Point3D,
     normal: Vector3D,
     ray: &Ray3D,
@@ -61,7 +95,7 @@ pub fn triangle_solid_angle_pdf(
     if cos_theta < 1e-7 {
         return 0.0;
     }
-    let area = triangle_area(ax, ay, az, bx, by, bz, cx, cy, cz);
+    let area = triangle_area(t);
     // return
     d2 / cos_theta.abs() / area
 }
@@ -82,71 +116,53 @@ pub fn world_bounds(t: &Triangle) -> BBox3D {
 /// (or `None` if they don't intersect)
 pub fn intersect_triangle_slice(
     scene: &Scene,
-    ray: &geometry::Ray3D,
+    ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
 ) -> Option<(usize, IntersectionInfo)> {
-    #[cfg(all(target_arch = "aarch64", feature = "simd"))]
-    {
-        return unsafe { neon::intersect_triangle_slice(scene, ray, ini, fin) };
-    }
-
-    #[allow(unused)]
     fallback::intersect_triangle_slice(scene, ray, ini, fin)
+}
+
+pub fn simple_intersect_triangle_slice(
+    scene: &Scene,
+    ray: geometry::Ray3D,
+    ini: usize,
+    fin: usize,
+) -> Option<(usize, Point3D)> {
+    fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
 
 /// Intersects a `Ray3D` and a [`Triangle`], returning the `Point3D` of
 /// intersection
 pub fn simple_triangle_intersect(
     scene: &Scene,
-    ray: &geometry::Ray3D,
+    ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
 ) -> Option<(usize, geometry::Point3D)> {
-    #[cfg(all(target_arch = "aarch64", feature = "simd"))]
-    {
-        return unsafe { neon::simple_intersect_triangle_slice(scene, ray, ini, fin) };
-    }
-
-    #[allow(unused)]
     fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
-}
-
-pub struct Intersection {
-    pub e1: Vector3D,
-    pub e2: Vector3D,
-    pub normal: Vector3D,
-    pub point: Point3D,
-    // pub tri_index: usize,
-    pub side: SurfaceSide,
-    pub u: Float,
-    pub v: Float,
 }
 
 #[allow(clippy::too_many_arguments)]
 pub fn new_info(
-    ax: Float,
-    ay: Float,
-    az: Float,
-    bx: Float,
-    by: Float,
-    bz: Float,
-    cx: Float,
-    cy: Float,
-    cz: Float,
+    t: &Triangle,
     point: Point3D,
     _u: Float,
     _v: Float,
     ray_dir: Vector3D,
 ) -> IntersectionInfo {
-    let dpdu = Vector3D::new(bx - ax, by - ay, bz - az);
-    let dpdv = Vector3D::new(cx - ax, cy - ay, cz - az);
+    let dpdu = Vector3D::new(bx![t] - ax![t], by![t] - ay![t], bz![t] - az![t]);
+    let dpdv = Vector3D::new(cx![t] - ax![t], cy![t] - ay![t], cz![t] - az![t]);
     // eprintln!("dpdu = {} | dpdv = {}", dpdu, dpdv);
     let normal = dpdu.cross(dpdv).get_normalized();
     // eprintln!("normal = {}", normal);
     let (normal, side) = SurfaceSide::get_side(normal, ray_dir);
-    let e1 = dpdu.get_normalized();
-    let e2 = normal.cross(e1).get_normalized();
+    let mut e1 = dpdu.get_normalized();
+    let mut e2 = normal.cross(e1).get_normalized();
+    if let SurfaceSide::Back = side {
+        std::mem::swap(&mut e1, &mut e2)
+    }
+
     debug_assert!((1.0 - normal.length()).abs() < 1e-5);
     debug_assert!((1.0 - e1.length()).abs() < 1e-5);
     debug_assert!((1.0 - e2.length()).abs() < 1e-5);
@@ -325,19 +341,19 @@ mod testing {
     #[test]
     fn test_triangle_area() {
         // in XY
-        assert_close!(0.5, triangle_area(0., 0., 0., 1., 0., 0., 0., 1., 0.));
+        assert_close!(0.5, triangle_area(&[0., 0., 0., 1., 0., 0., 0., 1., 0.]));
 
-        assert_close!(2., triangle_area(0., 0., 0., 2., 0., 0., 0., 2., 0.));
+        assert_close!(2., triangle_area(&[0., 0., 0., 2., 0., 0., 0., 2., 0.]));
 
         // in XZ
-        assert_close!(0.5, triangle_area(0., 0., 0., 1., 0., 0., 0., 0., 1.));
+        assert_close!(0.5, triangle_area(&[0., 0., 0., 1., 0., 0., 0., 0., 1.]));
 
-        assert_close!(2., triangle_area(0., 0., 0., 2., 0., 0., 0., 0., 2.));
+        assert_close!(2., triangle_area(&[0., 0., 0., 2., 0., 0., 0., 0., 2.]));
 
         // in YZ
-        assert_close!(0.5, triangle_area(0., 0., 0., 0., 1., 0., 0., 0., 1.));
+        assert_close!(0.5, triangle_area(&[0., 0., 0., 0., 1., 0., 0., 0., 1.]));
 
-        assert_close!(2., triangle_area(0., 0., 0., 0., 2., 0., 0., 0., 2.));
+        assert_close!(2., triangle_area(&[0., 0., 0., 0., 2., 0., 0., 0., 2.]));
     }
 
     #[test]
@@ -447,7 +463,7 @@ mod testing {
                 direction: dir,
             };
 
-            if let Some((.., info)) = intersect_triangle_slice(&scene, &ray, 0, 1) {
+            if let Some((.., info)) = intersect_triangle_slice(&scene, ray, 0, 1) {
                 let phit = info.p;
 
                 if let Some(exp_p) = expect_pt {

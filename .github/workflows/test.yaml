@@ -1,72 +1,69 @@
 name: Tests
 
-on:  
+on:
   pull_request:
-    branches: [ main, test ]  
+    branches: [test]
 
 env:
   CARGO_TERM_COLOR: always
 
-jobs:  
-  test_default:
-    runs-on: ubuntu-latest     
-    steps:
-
-    - name: Install stable toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-
-    - uses: actions/checkout@v3     
-    - name: Run tests default
-      run: |
-        cargo test --verbose --workspace 
-        cargo test --release --verbose -p simple -- --ignored
-  check_float:
-    runs-on: ubuntu-latest     
-    steps:
-    - name: Install stable toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-
-    - uses: actions/checkout@v3     
-    - name: Check float
-      run: cargo check --features float --verbose --workspace 
-    
-  check_float_parallel:
-    runs-on: ubuntu-latest     
-    steps:
-    - name: Install stable toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-
-    - uses: actions/checkout@v3     
-    - name: Check float parallel
-      run: cargo check --features float --features parallel --verbose --workspace 
-  
-  # This is the one we use for producing documentation
+jobs:
   test_parallel:
-    runs-on: ubuntu-latest     
-    steps:
-    - uses: actions/checkout@v3   
+    runs-on: ubuntu-latest
 
-    - name: Install stable toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-      
-    - name: Run tests parallel
-      run: |
-        cargo test --features parallel --verbose --workspace 
-        cargo test --release --features parallel --verbose -p simple -- --ignored 
-        
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run tests parallel
+        run: |
+          cargo test --features parallel --workspace
+          cargo test --release --features parallel -p simple -- --ignored
+
+  check_default:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Run tests default
+        run: |
+          cargo check --workspace
+
+  check_float:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Check float
+        run: cargo check --features float --workspace
+
+  check_float_parallel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Check float parallel
+        run: cargo check --features float --features parallel --workspace

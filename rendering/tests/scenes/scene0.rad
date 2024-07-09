@@ -1,0 +1,19 @@
+void light bright
+0
+0
+3 100 100 100
+
+void plastic red_plastic
+0
+0
+5 .7 .05 .05 .05 .05
+
+bright sphere fixture
+0
+0
+4 2 1 1.5 .125
+
+red_plastic sphere ball
+0
+0
+4 0.7 1.125 0.625 0.125

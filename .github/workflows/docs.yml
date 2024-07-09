@@ -1,57 +1,64 @@
 name: Build Docs
 
-on:  
-  push:
-    branches: [ main ]  
+on:
+  workflow_run:
+    workflows: [DONT Tests]
+    types: [completed]
+    branches: [dont_main]
 
 env:
   CARGO_TERM_COLOR: always
 
-jobs:    
-  # This is the one we use for producing documentation
-  test_parallel:
-    runs-on: ubuntu-latest  
+jobs:
+  build_docs:
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
+    runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
+      contents: "read"
       pages: write
-      id-token: 'write'   
+      id-token: "write"
 
     steps:
-    - uses: actions/checkout@v3   
+      - name: Checkout SIMPLE
+        uses: actions/checkout@v4
+        with:
+          path: simple
 
-    - name: Install stable toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
+      - name: Checkout SIMPLE Docs
+        uses: actions/checkout@v4
+        with:
+          repository: germolinal/simple_docs
+          token: ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
+          path: simple_docs
 
-      # The runs in parallel/release create the validation results.
-      # The run `cargo test -p model` writes the IOReference.
-    - name: Run tests parallel
-      run: |        
-        cargo test --release --features parallel --verbose --workspace 
-        cargo test --release --features parallel --verbose -p simple -- --ignored 
-        cargo test -p model
-    
-    - name: Install MdBook
-      run: cargo install mdbook
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
 
-    - name: Install MDBook Katex
-      run: cargo install mdbook-katex
+        # The runs in parallel/release create the validation results.
+        # The run `cargo test -p model` writes the IOReference.
+      - name: Run tests parallel
+        run: |
+          cargo test --manifest-path simple/Cargo.toml -p model
 
-    - name: Build mdbook
-      run: mdbook build ./docs/ioreference
+        # cargo test --manifest-path simple/Cargo.toml --release --features parallel --verbose --workspace
+        # cargo test --manifest-path simple/Cargo.toml --release --features parallel --verbose -p simple -- --ignored
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v3
+      - name: Copy documentation
+        run: |
+          rm -rf simple_docs/auto_src/*
+          cp -rf simple/docs simple_docs/auto_src/docs
+          mkdir  simple_docs/auto_src/model
+          cp -rf simple/model/tests simple_docs/auto_src/model/tests
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v2
-      with:
-        # Upload Docs
-        path: './docs'
-
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v2
+      - name: Push docs
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions"
+          cd simple_docs
+          git add auto_src
+          git commit -m 'automatic documentation update'
+          git push

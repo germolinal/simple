@@ -23,9 +23,10 @@ use crate::Float;
 use geometry::{
     BBox3D, Cylinder3D, DistantSource3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
 };
+use rand::*;
 
 use crate::primitive_samplers::*;
-use crate::samplers::uniform_sample_disc;
+use crate::samplers::uniform_sample_tilted_disc;
 use geometry::intersection::IntersectionInfo;
 
 #[derive(Clone, Debug)]
@@ -66,7 +67,7 @@ impl Primitive {
     /// Intersects an object with a [`Ray3D]` (IN WORLD COORDINATES) traveling forward, returning the distance
     /// `t` and the normal [`Vector3D`] at that point. If the distance
     /// is negative (i.e., the object is behind the plane), it should return
-    /// [`None`]. Returns detailed [`IntersectionInfo`] about the intersaction .    
+    /// [`None`]. Returns detailed [`IntersectionInfo`] about the intersaction .
     pub fn intersect(&self, ray: &Ray3D) -> Option<IntersectionInfo> {
         match self {
             Self::Sphere(s) => s.intersect(ray),
@@ -108,6 +109,7 @@ impl Primitive {
     }
 
     pub fn sample_direction(&self, rng: &mut RandGen, point: Point3D) -> Vector3D {
+        let u: (Float, Float) = rng.gen();
         let surface_point = match self {
             Self::Sphere(s) => sample_sphere_surface(s, rng),
             Self::Triangle(s) => sample_triangle_surface(s, rng),
@@ -115,7 +117,8 @@ impl Primitive {
             Self::Source(s) => {
                 let radius = (s.angle / 2.0).tan();
                 let normal = s.direction.get_normalized();
-                uniform_sample_disc(rng, radius, point + normal, normal)
+                let centre = point + normal;
+                uniform_sample_tilted_disc(u, radius, centre, normal)
             }
         };
         let direction = surface_point - point;

@@ -250,13 +250,10 @@ impl SimpleModelReader {
 mod tests {
 
     use super::*;
-    use crate::camera::{Film, Pinhole, View};
     use crate::material::Light;
-    use crate::ray_tracer::RayTracer;
     use crate::Float;
     use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Vector3D};
     use model::{Construction, Fenestration, Surface};
-    use std::time::Instant;
     use validate::assert_close;
 
     #[test]
@@ -265,24 +262,13 @@ mod tests {
     }
 
     #[test]
-    #[ignore]
     fn test_scene_from_model() -> Result<(), String> {
         // BUILD SCENE
         let (model, _state_header) = Model::from_file("./tests/scenes/room.spl".to_string())?;
         let mut reader = SimpleModelReader::default();
         let (mut scene, map) = reader.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         let light_index = scene.push_material(Material::Light(Light(Spectrum::gray(10000.))));
         scene.push_object(
@@ -294,37 +280,36 @@ mod tests {
             )),
         );
 
-        // RENDER
-        scene.build_accelerator();
+        // // RENDER
+        // scene.build_accelerator();
 
-        // Create film
-        let film = Film {
-            resolution: (512, 512),
-        };
+        // // Create film
+        // let film = Film {
+        //     resolution: (512, 512),
+        // };
 
-        // Create view
-        let view = View {
-            view_direction: Vector3D::new(0., 1., 0.).get_normalized(),
-            view_point: Point3D::new(2., 1., 1.),
-            ..View::default()
-        };
-        // Create camera
-        let camera = Pinhole::new(view, film);
+        // // Create view
+        // let view = View {
+        //     view_direction: Vector3D::new(0., 1., 0.).get_normalized(),
+        //     view_point: Point3D::new(2., 1., 1.),
+        //     ..View::default()
+        // };
+        // // Create camera
+        // let camera = Pinhole::new(view, film);
 
-        let integrator = RayTracer {
-            n_ambient_samples: 220,
-            n_shadow_samples: 1,
-            max_depth: 3,
-            ..RayTracer::default()
-        };
+        // let integrator = RayTracer {
+        //     n_ambient_samples: 70,
+        //     n_shadow_samples: 1,
+        //     // max_depth: 3,
+        //     ..RayTracer::default()
+        // };
 
-        let now = Instant::now();
-
-        let buffer = integrator.render(&scene, &camera);
-        println!("Room took {} seconds to render", now.elapsed().as_secs());
-        buffer.save_hdre(std::path::Path::new(
-            "./tests/scenes/images/simple_room.hdr",
-        ))
+        // let buffer = integrator.render(&scene, &camera);
+        // buffer.save_hdre(std::path::Path::new(
+        //     "./tests/scenes/images/simple_room.hdr",
+        // ))
+        //
+        Ok(())
     }
 
     #[test]
@@ -361,17 +346,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 1);
         let (element_type, index) = map[0];
@@ -400,17 +375,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 3);
 
@@ -447,17 +412,7 @@ mod tests {
         let mut r = SimpleModelReader::default();
         let (scene, map) = r.build_scene(&model, &Wavelengths::Solar)?;
 
-        assert_eq!(map.len(), scene.ax.len());
-        assert_eq!(map.len(), scene.ay.len());
-        assert_eq!(map.len(), scene.az.len());
-
-        assert_eq!(map.len(), scene.bx.len());
-        assert_eq!(map.len(), scene.by.len());
-        assert_eq!(map.len(), scene.bz.len());
-
-        assert_eq!(map.len(), scene.cx.len());
-        assert_eq!(map.len(), scene.cy.len());
-        assert_eq!(map.len(), scene.cz.len());
+        assert_eq!(map.len(), scene.triangles.len());
 
         assert_eq!(map.len(), 5);
 

@@ -40,7 +40,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 
     c.bench_function("bbox_intersection", |b| {
         b.iter(|| {
-            let _ = black_box(bbox.intersect(&ray, &inv_dir));
+            let _ = black_box(bbox.intersect(ray, &inv_dir));
         })
     });
 

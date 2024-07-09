@@ -6,6 +6,7 @@ use std::fmt::Write as _; // import without risk of name clashing
 #[derive(Clone)]
 pub struct VariantData {
     pub ident: syn::Ident,
+    #[allow(dead_code)]
     pub attributes: Vec<String>,
     pub fields: Vec<Field>,
     pub docs: String,

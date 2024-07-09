@@ -1,47 +1,39 @@
 use crate::{Float, Scene};
 use geometry::{intersection::IntersectionInfo, Point3D, Ray3D, Vector3D};
 
-#[cfg(doc)]
 use super::Triangle;
+use crate::{ax, ay, az, bx, by, bz, cx, cy, cz};
 
 /// Tests the intersection between a `Ray3D` and a
 /// [`Triangle`]. Returns the the point of intersection, and the `u`
 /// and `v` baricentric coordinates of the intersection point.
 #[allow(clippy::too_many_arguments)]
-pub(crate) fn baricentric_coordinates(
-    ray: &Ray3D,
-    ax: Float,
-    ay: Float,
-    az: Float,
-    bx: Float,
-    by: Float,
-    bz: Float,
-    cx: Float,
-    cy: Float,
-    cz: Float,
-) -> Option<(Point3D, Float, Float)> {
-    let edge1_x = bx - ax;
-    let edge1_y = by - ay;
-    let edge1_z = bz - az;
+pub fn baricentric_coordinates(ray: Ray3D, t: &Triangle) -> Option<(Point3D, Float, Float)> {
+    let edge1_x = bx![t] - ax![t];
+    let edge1_y = by![t] - ay![t];
+    let edge1_z = bz![t] - az![t];
 
-    let edge2_x = cx - ax;
-    let edge2_y = cy - ay;
-    let edge2_z = cz - az;
+    let edge2_x = cx![t] - ax![t];
+    let edge2_y = cy![t] - ay![t];
+    let edge2_z = cz![t] - az![t];
 
     let edge1 = Vector3D::new(edge1_x, edge1_y, edge1_z);
     let edge2 = Vector3D::new(edge2_x, edge2_y, edge2_z);
+
     const TINY: Float = 1e-5;
     let h = ray.direction.cross(edge2);
     let a = edge1 * h;
 
-    // if a.abs() < TINY {
     if a < TINY && a > -TINY {
         return None; // ray is parallel
     }
     let f = 1. / a;
-    let s = Vector3D::new(ray.origin.x - ax, ray.origin.y - ay, ray.origin.z - az);
+    let s = Vector3D::new(
+        ray.origin.x - ax![t],
+        ray.origin.y - ay![t],
+        ray.origin.z - az![t],
+    );
     let u = f * (s * h);
-    // if u > 1. + Float::EPSILON || u < -Float::EPSILON {
     if !(-Float::EPSILON..=1. + Float::EPSILON).contains(&u) {
         return None;
     }
@@ -58,10 +50,9 @@ pub(crate) fn baricentric_coordinates(
     }
 }
 
-#[inline(always)]
 pub(crate) fn intersect_triangle_slice(
     scene: &Scene,
-    ray: &geometry::Ray3D,
+    ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
 ) -> Option<(usize, IntersectionInfo)> {
@@ -69,47 +60,19 @@ pub(crate) fn intersect_triangle_slice(
     let mut t_squared = Float::MAX;
     let mut ret = None;
 
-    let it = scene
-        .ax
-        .iter()
-        .zip(&scene.ay)
-        .zip(&scene.az)
-        .zip(&scene.bx)
-        .zip(&scene.by)
-        .zip(&scene.bz)
-        .zip(&scene.cx)
-        .zip(&scene.cy)
-        .zip(&scene.cz)
-        .enumerate()
-        .skip(ini)
-        .take(fin - ini);
-    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
+    let it = scene.triangles.iter().enumerate().skip(ini).take(fin - ini);
+
+    for (i, triangle) in it {
         // Calculate baricentric coordinates
 
-        if let Some((point, u, v)) =
-            baricentric_coordinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
-        {
+        if let Some((point, u, v)) = baricentric_coordinates(ray, triangle) {
             // If hit, check the distance.
             let this_t_squared = (point - ray.origin).length_squared();
             // if the distance is less than the prevous one, update the info
             if this_t_squared > MIN_T && this_t_squared < t_squared {
                 // If the distance is less than what we had, update return data
                 t_squared = this_t_squared;
-                let info = super::new_info(
-                    *ax,
-                    *ay,
-                    *az,
-                    *bx,
-                    *by,
-                    *bz,
-                    *cx,
-                    *cy,
-                    *cz,
-                    point,
-                    u,
-                    v,
-                    ray.direction,
-                );
+                let info = super::new_info(triangle, point, u, v, ray.direction);
                 ret = Some((i, info));
             }
         }
@@ -120,7 +83,7 @@ pub(crate) fn intersect_triangle_slice(
 
 pub(crate) fn simple_intersect_triangle_slice(
     scene: &Scene,
-    ray: &geometry::Ray3D,
+    ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
 ) -> Option<(usize, geometry::Point3D)> {
@@ -128,24 +91,10 @@ pub(crate) fn simple_intersect_triangle_slice(
     let mut t_squared = Float::MAX;
     let mut ret = None;
 
-    let it = scene
-        .ax
-        .iter()
-        .zip(&scene.ay)
-        .zip(&scene.az)
-        .zip(&scene.bx)
-        .zip(&scene.by)
-        .zip(&scene.bz)
-        .zip(&scene.cx)
-        .zip(&scene.cy)
-        .zip(&scene.cz)
-        .enumerate()
-        .skip(ini)
-        .take(fin - ini);
-    for (i, ((((((((ax, ay), az), bx), by), bz), cx), cy), cz)) in it {
-        if let Some((point, ..)) =
-            baricentric_coordinates(ray, *ax, *ay, *az, *bx, *by, *bz, *cx, *cy, *cz)
-        {
+    let it = scene.triangles.iter().enumerate().skip(ini).take(fin - ini);
+
+    for (i, t) in it {
+        if let Some((point, ..)) = baricentric_coordinates(ray, t) {
             // If hit, check the distance.
             let this_t_squared = (point - ray.origin).length_squared();
             // if the distance is less than the prevous one, update the info

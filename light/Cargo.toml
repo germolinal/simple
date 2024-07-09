@@ -17,6 +17,7 @@ communication = { path = "../communication" }
 rendering = { path = "../rendering" }
 matrix = { path = "../matrix" }
 geometry = { path = "../geometry" }
+utils = { path = "../utils" }
 
 
 [dev-dependencies]

@@ -20,7 +20,6 @@ SOFTWARE.
 
 use crate::camera::{CameraSample, View};
 use crate::rand::*;
-use crate::ray::Ray;
 use crate::Float;
 use geometry::Ray3D;
 
@@ -29,7 +28,7 @@ pub trait Camera: Sync {
 
     /// Generates a ray that will go through the View Point and a
     /// certain `CameraSample`
-    fn gen_ray(&self, sample: &CameraSample) -> (Ray, Float);
+    fn gen_ray(&self, sample: &CameraSample) -> (Ray3D, Float);
 
     /// Generates a random CameraSample
     fn gen_random_sample(&self, rng: &mut RandGen) -> CameraSample;
