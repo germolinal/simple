@@ -2,9 +2,9 @@ name: Build Docs
 
 on:
   workflow_run:
-    workflows: [Tests]
+    workflows: [DONT Tests]
     types: [completed]
-    branches: [main]
+    branches: [dont_main]
 
 env:
   CARGO_TERM_COLOR: always
