@@ -7,6 +7,8 @@
 optical_data.json
 cold_optical_data.json
 
+docs/validation/*.html
+
 # MAIN
 #######
 # Validations
@@ -23,7 +25,7 @@ tests/*/*
 # MODEL
 #######
 docs/ioreference/src/auto-*.md
-docs/ioreference/src/*SUMMARY.md
+docs/ioreference/src/SUMMARY.md
 docs/ioreference/book
 docs/validation.html
 model/model.json
