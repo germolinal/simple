@@ -3,7 +3,7 @@ authors = ["germolinal"]
 language = "en"
 multilingual = false
 src = "src"
-title = "SIMPLE Simulation Input Output reference"
+title = "SIMPLE Simulation Official Documentation"
 
 
 [preprocessor.katex]

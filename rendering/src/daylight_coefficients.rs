@@ -47,7 +47,7 @@ impl Default for DCFactory {
     fn default() -> Self {
         Self {
             reinhart: ReinhartSky::new(1),
-            max_depth: 0,
+            max_depth: 190, // russian roulette takes care of this
             n_ambient_samples: 300,
         }
     }

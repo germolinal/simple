@@ -2,7 +2,7 @@
 name = "weather"
 version = "0.1.0"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,7 +11,7 @@ license = "MIT"
 calendar = { path = "../calendar", features = ["serde"] }
 schedule = { path = "../schedule" }
 geometry = { path = "../geometry" }
-matrix = {path="../matrix"}
+matrix = { path = "../matrix" }
 serde = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
@@ -21,8 +21,4 @@ serde_json = { workspace = true }
 
 [features]
 default = []
-float = [
-    "calendar/float", 
-    "geometry/float",
-    "matrix/float",
-]
+float = ["calendar/float", "geometry/float", "matrix/float"]

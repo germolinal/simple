@@ -1487,16 +1487,10 @@ mod testing {
 
         let dir = "../docs/ioreference/src";
 
-        let summary_template = format!("{}/SUMMARY_TEMPLATE.md", dir);
-        if !std::path::Path::new(&summary_template).exists() {
-            return Err(format!("File '{}' already exist", &summary_template));
-        }
-
-        let mut summary = std::fs::read_to_string(summary_template).map_err(|e| e.to_string())?;
-
         // Add automatic documentation
         // let dir = "../src";
         let summary_file = format!("{}/SUMMARY.md", dir);
+        let mut summary = String::new();
 
         // clear summary
         let f = std::fs::File::create(&summary_file).map_err(|e| e.to_string())?;
