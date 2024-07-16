@@ -17,7 +17,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 use crate::control_trait::SimpleControl;
 use crate::MultiphysicsModel;
 use model::rhai_api::register_control_api;
@@ -25,6 +24,7 @@ use model::{Model, SimulationState};
 use rhai::{Engine, AST};
 use std::borrow::Borrow;
 use std::cell::RefCell;
+use std::fs::{self};
 // use std::sync::RwLock;
 use std::sync::Arc;
 
@@ -39,13 +39,25 @@ pub struct RhaiControlScript {
 }
 
 impl RhaiControlScript {
-    /// Creates a new Rhai-based controller.
-    ///
-    /// This kind of
-    pub fn new(
+    /// Creates a new Rhai-based controller from a Rhai file
+    pub fn from_file(
         model: &Arc<Model>,
         state: SimulationState,
         control_file: &String,
+        research_mode: bool,
+    ) -> Result<(Self, Arc<RefCell<SimulationState>>), String> {
+        let control_script = match fs::read_to_string(&control_file) {
+            Ok(v) => v,
+            Err(_) => return Err(format!("Could not read Rhai script '{}'", control_file)),
+        };
+
+        Self::new(model, state, control_script, research_mode)
+    }
+    /// Creates a new Rhai-based controller from a Rhai script
+    pub fn new(
+        model: &Arc<Model>,
+        state: SimulationState,
+        control_script: impl AsRef<str>, //&String,
         research_mode: bool,
     ) -> Result<(Self, Arc<RefCell<SimulationState>>), String> {
         // Register API
@@ -54,7 +66,7 @@ impl RhaiControlScript {
         let state = Arc::new(RefCell::new(state));
         let model = Arc::new(model);
         register_control_api(&mut engine, &model, &state, research_mode);
-        let ast = match engine.compile_file(control_file.into()) {
+        let ast = match engine.compile(control_script) {
             Ok(v) => v,
             Err(e) => return Err(format!("Rhai {}", e)),
         };
