@@ -265,13 +265,23 @@ impl RayTracer {
         local_illum / n_shadow_samples
     }
 
-    #[allow(clippy::needless_collect)]
     pub fn render(self, scene: &Scene, camera: &dyn Camera) -> ImageBuffer {
         let (width, height) = camera.film_resolution();
-
         let total_pixels = width * height;
         let mut pixels = vec![Spectrum::BLACK; total_pixels];
+        self.render_into(scene, camera, width, height, &mut pixels);
+        ImageBuffer::from_pixels(width, height, pixels)
+    }
 
+    #[allow(clippy::needless_collect)]
+    pub fn render_into(
+        self,
+        scene: &Scene,
+        camera: &dyn Camera,
+        width: usize,
+        height: usize,
+        pixels: &mut Vec<Spectrum>,
+    ) {
         let chunk_len = 128;
         let i: Vec<&mut [Spectrum]> = pixels.chunks_mut(chunk_len).collect();
 
@@ -281,7 +291,7 @@ impl RayTracer {
         #[cfg(feature = "parallel")]
         let i = i.into_par_iter();
 
-        let progress = utils::ProgressBar::new("Rendering".to_string(), total_pixels);
+        let progress = utils::ProgressBar::new("Rendering".to_string(), width * height);
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
             let mut pindex = first_p * chunk_len;
@@ -301,9 +311,6 @@ impl RayTracer {
         });
 
         progress.done();
-
-        // return
-        ImageBuffer::from_pixels(width, height, pixels)
     }
 }
 

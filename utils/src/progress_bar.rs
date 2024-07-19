@@ -1,5 +1,6 @@
 use std::io::Write;
 use std::sync::atomic::AtomicUsize;
+#[cfg(not(feature = "wasm"))]
 use std::time::Instant;
 
 const BAR_LENGTH: usize = 50;
@@ -9,6 +10,7 @@ pub struct ProgressBar {
     last_progress: AtomicUsize,
     counter: AtomicUsize,
     total_count: usize,
+    #[cfg(not(feature = "wasm"))]
     start: Instant,
 }
 
@@ -19,6 +21,7 @@ impl ProgressBar {
             total_count,
             last_progress: AtomicUsize::new(0),
             counter: AtomicUsize::new(0),
+            #[cfg(not(feature = "wasm"))]
             start: Instant::now(),
         };
         ret.show_progress(0);
@@ -67,6 +70,7 @@ impl ProgressBar {
     }
 
     pub fn done(&self) {
+        #[cfg(not(feature = "wasm"))]
         println!("\nDone after {} seconds", self.start.elapsed().as_secs());
     }
 }

@@ -122,7 +122,7 @@ pub struct Object {
     /// The size of the object (x, y, z)
     pub dimensions: Point3D,
 
-    /// The location of the center of the objeect
+    /// The location of the center of the object
     #[serde(default)]
     pub location: Point3D,
 
@@ -233,7 +233,7 @@ mod testing {
             "up":[0, 0.2, 0.3],
             "specifications":{
                 "type": "Chair"
-            }            
+            }
         }"#;
         let a: Object = serde_json::from_str(input).unwrap();
         println!("{}", serde_json::to_string(&a).unwrap());
