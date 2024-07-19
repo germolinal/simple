@@ -36,7 +36,7 @@ use weather::{EPWWeather, Weather};
 #[clap(author, version, about, long_about = None)]
 pub struct SimOptions {
     /// Does not simulate, just reads the model to see whether
-    /// it can be parsed appropriately    
+    /// it can be parsed appropriately
     #[arg(long)]
     pub check: bool,
 
@@ -291,7 +291,7 @@ where
     let mut memory = pre_process_data.model.allocate_memory(&state)?;
 
     let (controller, state) =
-        RhaiControlScript::new(&model, state, control_file, options.research_mode)?;
+        RhaiControlScript::from_file(&model, state, control_file, options.research_mode)?;
 
     let report_len = if model.outputs.is_empty() {
         state_header.elements.len()

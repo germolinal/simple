@@ -28,10 +28,12 @@ pub fn get_docs(attrs: &[syn::Attribute]) -> Result<String, String> {
                 };
 
                 // extract the content
-                let mut doc = exp.to_string();
-                doc.remove(0);
-                // doc.remove(1);
-                // doc.remove(doc.len() - 1);
+                let doc = exp.to_string();
+                let mut c = doc.chars();
+                c.next();
+                c.next();
+                c.next_back();
+                let doc = c.as_str().to_string();
 
                 writeln!(ret, "{}", doc).map_err(|e| e.to_string())?;
             }

@@ -107,7 +107,7 @@ impl TerrainClass {
 /// ```
 ///  #### `.json`
 /// ```rs
-/// {{#include ../../../model/tests/scanner/site_details.spl }}
+/// {{#include ../../../model/tests/scanner/site_details.json }}
 /// ```
 #[derive(Clone, Debug, ObjectIO, Default, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -212,7 +212,7 @@ mod testing {
 
         // Deserialize from hardcoded string and check they are the same
         let from_hardcoded_json: SiteDetails = json5::from_str(
-            "{            
+            "{
             altitude: 123.0,
             terrain: 'Urban'
         }",
