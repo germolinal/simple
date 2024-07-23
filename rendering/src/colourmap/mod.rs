@@ -18,7 +18,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::colour::Spectrum;
 pub mod inferno;
 pub mod magma;
 pub mod plasma;
@@ -46,12 +45,30 @@ pub enum Colourmap {
     /// The deafult Colourmap in this library.
     /// Also, one of the colourmaps that is "analytically be perfectly
     /// perceptually-uniform, both in regular form and also when
-    /// converted to black-and-white" described in [here](https://bids.github.io/colormap/).    
+    /// converted to black-and-white" described in [here](https://bids.github.io/colormap/).
     Viridis,
 }
 
+impl Colourmap {
+    fn as_slice(&self) -> &[[Float; 3]] {
+        match self {
+            Colourmap::Inferno => crate::colourmap::inferno::INFERNO_COLOURMAP.as_slice(),
+            Colourmap::Magma => crate::colourmap::magma::MAGMA_COLOURMAP.as_slice(),
+            Colourmap::Plasma => crate::colourmap::plasma::PLASMA_COLOURMAP.as_slice(),
+            Colourmap::Radiance => crate::colourmap::radiance::RADIANCE_COLOURMAP.as_slice(),
+            Colourmap::Viridis => crate::colourmap::viridis::VIRIDIS_COLOURMAP.as_slice(),
+        }
+    }
+
+    /// Maps a color, linearly
+    pub fn map_linear(&self, x: Float, min: Float, max: Float) -> [Float; 3] {
+        let slice = self.as_slice();
+        map_linear_colour(x, min, max, slice)
+    }
+}
+
 /// Maps a linear RGB colour
-pub fn map_linear_colour(
+fn map_linear_colour(
     x: Float,
     min: Float,
     max: Float,
@@ -79,22 +96,25 @@ pub fn map_linear_colour(
     unreachable!()
 }
 
-/// Maps a Spectrum
-pub fn map_linear_spectrum(x: Float, min: Float, max: Float, map: &[Spectrum]) -> Spectrum {
-    if x <= min {
-        return map[0];
-    } else if x >= max {
-        return *map.last().expect("Given an empty colour map");
-    }
+#[cfg(test)]
+mod tests {
+    use super::Colourmap;
 
-    let delta = (max - min) / (map.len() - 1) as Float;
-    for i in 1..map.len() {
-        let bin_start = min + (i - 1) as Float * delta;
-        let bin_end = bin_start + delta;
-        if x <= bin_end {
-            let lam = (x - bin_start) / delta;
-            return map[i - 1] + (map[i] - map[i - 1]) * lam;
-        }
+    #[test]
+    fn test_map_linear() {
+        let min = 0.01;
+        let max = 8.;
+        let x = 5.;
+
+        let map = Colourmap::Viridis;
+        let slice = map.as_slice();
+
+        let y = map.map_linear(x, min, max);
+        println!("{:?}", y);
+
+        let y = map.map_linear(min - 0.01, min, max);
+        println!("{:?} | {:?}", y, slice[0]);
+        let y = map.map_linear(max + 0.01, min, max);
+        println!("{:?} | {:?}", y, slice[slice.len() - 1]);
     }
-    unreachable!()
 }
