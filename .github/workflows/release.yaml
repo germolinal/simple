@@ -58,7 +58,6 @@ jobs:
 
   publish_binaries:
     needs: test_and_docs
-    if: ${{github.event.workflow_run.conclusion == 'success'}}
 
     runs-on: ubuntu-latest
 
