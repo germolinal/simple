@@ -1,21 +1,17 @@
-name: Build Docs
+name: Release
 
 on:
-  workflow_run:
-    workflows: [Tests]
-    types: [completed]
+  pull_request:
     branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build_docs:
-    if: ${{github.event.workflow_run.conclusion == 'success'}}
+  test_and_docs:
     runs-on: ubuntu-latest
     permissions:
       contents: "read"
-      pages: write
       id-token: "write"
 
     steps:
@@ -24,13 +20,6 @@ jobs:
         with:
           path: simple
 
-      - name: Checkout SIMPLE Docs
-        uses: actions/checkout@v4
-        with:
-          repository: germolinal/simple_docs
-          token: ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
-          path: simple_docs
-
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -38,11 +27,18 @@ jobs:
           toolchain: stable
           override: true
 
-        # The runs in parallel/release create the validation results.
-        # The run `cargo test -p model` writes the IOReference.
       - name: Run tests parallel
         run: |
+          cargo test --manifest-path simple/Cargo.toml --features parallel --workspace
+          cargo test --manifest-path simple/Cargo.toml --release --features parallel -p simple -- --ignored
           cargo test --manifest-path simple/Cargo.toml -p model
+
+      - name: Checkout SIMPLE Docs
+        uses: actions/checkout@v4
+        with:
+          repository: germolinal/simple_docs
+          token: ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
+          path: simple_docs
 
       - name: Copy documentation
         run: |
@@ -57,10 +53,11 @@ jobs:
           git config --global user.name "github-actions"
           cd simple_docs
           git add auto_src
-          git commit -m 'automatic documentation and binaries update'
+          git commit -m 'automatic documentation update'
           git push
 
   publish_binaries:
+    needs: test_and_docs
     if: ${{github.event.workflow_run.conclusion == 'success'}}
 
     runs-on: ubuntu-latest
@@ -132,3 +129,46 @@ jobs:
           git add dist/binaries
           git commit -m 'automatic update of target ${{matrix.target}}'
           git push
+
+  check_default:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Run tests default
+        run: |
+          cargo check --workspace
+
+  check_float:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Check float
+        run: cargo check --features float --workspace
+
+  check_float_parallel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions/checkout@v4
+      - name: Check float parallel
+        run: cargo check --features float --features parallel --workspace
