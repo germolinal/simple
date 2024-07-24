@@ -103,7 +103,7 @@ jobs:
 
       - name: Compile for target ${{matrix.target}}
         run: |
-          cargo build --release --features parallel --target ${{matrix.target}}
+          cargo build --manifest-path simple/Cargo.toml --release --features parallel --target ${{matrix.target}}
 
       - name: Remove intermediate files in ${{matrix.target}}
         run: |
