@@ -2,9 +2,9 @@ name: Build Docs
 
 on:
   workflow_run:
-    workflows: [DONT Tests]
+    workflows: [Tests]
     types: [completed]
-    branches: [dont_main]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -44,9 +44,6 @@ jobs:
         run: |
           cargo test --manifest-path simple/Cargo.toml -p model
 
-        # cargo test --manifest-path simple/Cargo.toml --release --features parallel --verbose --workspace
-        # cargo test --manifest-path simple/Cargo.toml --release --features parallel --verbose -p simple -- --ignored
-
       - name: Copy documentation
         run: |
           rm -rf simple_docs/auto_src/*
@@ -60,5 +57,78 @@ jobs:
           git config --global user.name "github-actions"
           cd simple_docs
           git add auto_src
-          git commit -m 'automatic documentation update'
+          git commit -m 'automatic documentation and binaries update'
+          git push
+
+  publish_binaries:
+    if: ${{github.event.workflow_run.conclusion == 'success'}}
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: "read"
+      pages: write
+      id-token: "write"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          [
+            aarch64-apple-darwin,
+            x86_64-unknown-linux-gnu,
+            x86_64-pc-windows-msvc,
+          ]
+
+    steps:
+      - name: Checkout SIMPLE
+        uses: actions/checkout@v4
+        with:
+          path: simple
+
+      - name: Checkout SIMPLE Docs
+        uses: actions/checkout@v4
+        with:
+          repository: germolinal/simple_docs
+          token: ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
+          path: simple_docs
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install Target ${{matrix.target}}
+        run: |
+          rustup target add ${{matrix.target}}
+          sudo apt install -y zip
+
+      - name: Compile for target ${{matrix.target}}
+        run: |
+          cargo build --release --features parallel --target ${{matrix.target}}
+
+      - name: Remove intermediate files in ${{matrix.target}}
+        run: |
+          find target/${{matrix.target}}/release -type f -name "*.d" -delete
+          rm -rf target/${{matrix.target}}/release/.fingerprint
+          rm -rf target/${{matrix.target}}/release/build
+          rm -rf target/${{matrix.target}}/release/deps
+          rm -rf target/${{matrix.target}}/release/examples
+          rm -rf target/${{matrix.target}}/release/incremental
+          rm -rf target/${{matrix.target}}/release/.cargo-lock
+          rm -rf target/${{matrix.target}}/release/*.rlib
+
+      - name: Zip binaries for ${{matrix.target}}
+        run: |
+          zip -r simple_docs/dist/binaries/${{matrix.target}}.zip simple/target/${{matrix.target}}/release
+
+      - name: Push binaries
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions"
+          cd simple_docs
+          git add dist/binaries
+          git commit -m 'automatic update of target ${{matrix.target}}'
           git push
