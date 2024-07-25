@@ -59,13 +59,6 @@ jobs:
   publish_binaries:
     needs: test_and_docs
 
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: "read"
-      pages: write
-      id-token: "write"
-
     strategy:
       fail-fast: false
       matrix:
@@ -75,6 +68,23 @@ jobs:
             x86_64-unknown-linux-gnu,
             x86_64-pc-windows-msvc,
           ]
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-latest
+            compress_cmd: tar -czf simple_docs/dist/binaries/aarch64-apple-darwin.tgz simple/target/aarch64-apple-darwin/release
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+            compress_cmd: tar -czf simple_docs/dist/binaries/x86_64-unknown-linux-gnu.tar.gz simple/target/x86_64-unknown-linux-gnu/release
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+            compress_cmd: tar.exe -a -c -f simple_docs/dist/binaries/x86_64-pc-windows-msvc.zip simple/target/x86_64-pc-windows-msvc/release
+
+    runs-on: ${{ matrix.runner }}
+
+    permissions:
+      contents: "read"
+      pages: write
+      id-token: "write"
 
     steps:
       - name: Checkout SIMPLE
@@ -96,35 +106,42 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install Target ${{matrix.target}}
-        run: |
-          rustup target add ${{matrix.target}}
-          sudo apt install -y zip
-
       - name: Compile for target ${{matrix.target}}
         run: |
           cargo build --manifest-path simple/Cargo.toml --release --features parallel --target ${{matrix.target}}
 
       - name: Remove intermediate files in ${{matrix.target}}
         run: |
-          find target/${{matrix.target}}/release -type f -name "*.d" -delete
-          rm -rf simple/target/${{matrix.target}}/release/.fingerprint
-          rm -rf simple/target/${{matrix.target}}/release/build
-          rm -rf simple/target/${{matrix.target}}/release/deps
-          rm -rf simple/target/${{matrix.target}}/release/examples
-          rm -rf simple/target/${{matrix.target}}/release/incremental
-          rm -rf simple/target/${{matrix.target}}/release/.cargo-lock
-          rm -rf simple/target/${{matrix.target}}/release/*.rlib
+          if [[ "${{ matrix.runner }}" == "windows-latest" ]]; then
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/*.d"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/.fingerprint"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/build"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/deps"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/examples"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/incremental"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/.cargo-lock"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/*.rlib"
+          else
+            find simple/target/${{ matrix.target }}/release -type f -name "*.d" -delete
+            rm -rf simple/target/${{ matrix.target }}/release/.fingerprint
+            rm -rf simple/target/${{ matrix.target }}/release/build
+            rm -rf simple/target/${{ matrix.target }}/release/deps
+            rm -rf simple/target/${{ matrix.target }}/release/examples
+            rm -rf simple/target/${{ matrix.target }}/release/incremental
+            rm -rf simple/target/${{ matrix.target }}/release/.cargo-lock
+            rm -rf simple/target/${{ matrix.target }}/release/*.rlib
+          fi
+        shell: bash
 
       - name: Zip binaries for ${{matrix.target}}
-        run: |
-          zip -r simple_docs/dist/binaries/${{matrix.target}}.zip simple/target/${{matrix.target}}/release
+        run: ${{matrix.compress_cmd}}
 
       - name: Push binaries
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions"
           cd simple_docs
+          git pull --no-edit -X theirs
           git add dist/binaries
           git commit -m 'automatic update of target ${{matrix.target}}'
           git push
