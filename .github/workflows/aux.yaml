@@ -30,21 +30,29 @@ jobs:
   publish_binaries:
     needs: test_and_docs
 
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          [
+            aarch64-apple-darwin,
+            x86_64-unknown-linux-gnu,
+            x86_64-pc-windows-msvc,
+          ]
+        include:
+          - target: aarch64-apple-darwin
+            runner: macos-latest
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+
+    runs-on: ${{ matrix.runner }}
 
     permissions:
       contents: "read"
       pages: write
       id-token: "write"
-
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [
-            # aarch64-apple-darwin,
-            x86_64-unknown-linux-gnu,
-            # x86_64-pc-windows-msvc,
-          ]
 
     steps:
       - name: Checkout SIMPLE
@@ -77,7 +85,7 @@ jobs:
 
       - name: Remove intermediate files in ${{matrix.target}}
         run: |
-          find target/${{matrix.target}}/release -type f -name "*.d" -delete
+          find simple/target/${{matrix.target}}/release -type f -name "*.d" -delete
           rm -rf simple/target/${{matrix.target}}/release/.fingerprint
           rm -rf simple/target/${{matrix.target}}/release/build
           rm -rf simple/target/${{matrix.target}}/release/deps
