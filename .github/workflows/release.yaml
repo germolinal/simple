@@ -108,13 +108,13 @@ jobs:
       - name: Remove intermediate files in ${{matrix.target}}
         run: |
           find target/${{matrix.target}}/release -type f -name "*.d" -delete
-          rm -rf target/${{matrix.target}}/release/.fingerprint
-          rm -rf target/${{matrix.target}}/release/build
-          rm -rf target/${{matrix.target}}/release/deps
-          rm -rf target/${{matrix.target}}/release/examples
-          rm -rf target/${{matrix.target}}/release/incremental
-          rm -rf target/${{matrix.target}}/release/.cargo-lock
-          rm -rf target/${{matrix.target}}/release/*.rlib
+          rm -rf simple/target/${{matrix.target}}/release/.fingerprint
+          rm -rf simple/target/${{matrix.target}}/release/build
+          rm -rf simple/target/${{matrix.target}}/release/deps
+          rm -rf simple/target/${{matrix.target}}/release/examples
+          rm -rf simple/target/${{matrix.target}}/release/incremental
+          rm -rf simple/target/${{matrix.target}}/release/.cargo-lock
+          rm -rf simple/target/${{matrix.target}}/release/*.rlib
 
       - name: Zip binaries for ${{matrix.target}}
         run: |
