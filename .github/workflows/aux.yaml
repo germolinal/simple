@@ -77,10 +77,6 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Install Compression for ${{matrix.target}}
-        run: |
-          sudo apt install -y zip
-
       - name: Compile for target ${{matrix.target}}
         run: |
           cargo build --manifest-path simple/Cargo.toml --release --features parallel --target ${{matrix.target}}
