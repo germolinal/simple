@@ -84,14 +84,14 @@ jobs:
       - name: Remove intermediate files in ${{matrix.target}}
         run: |
           if [[ "${{ matrix.runner }}" == "windows-latest" ]]; then
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/*.d
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/.fingerprint
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/build
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/deps
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/examples
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/incremental
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/.cargo-lock
-            Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/*.rlib
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/*.d"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/.fingerprint"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/build"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/deps"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/examples"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/incremental"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/.cargo-lock"
+            pwsh -Command "Remove-Item -Recurse -Force simple/target/${{ matrix.target }}/release/*.rlib"
           else
             find simple/target/${{ matrix.target }}/release -type f -name "*.d" -delete
             rm -rf simple/target/${{ matrix.target }}/release/.fingerprint
@@ -112,7 +112,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions"
           cd simple_docs
-          git pull
+          git pull --no-edit -X theirs
           git add dist/binaries
           git commit -m 'automatic update of target ${{matrix.target}}'
           git push
