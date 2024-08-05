@@ -53,6 +53,7 @@ pub mod generic_matrix;
 /// Traits used to make the `GenericMatrix` generic.
 pub mod traits;
 pub use generic_matrix::GenericMatrix;
+pub use traits::Numberish;
 
 /// A `generic_matrix` that contains a `Float`
 pub mod matrix;
