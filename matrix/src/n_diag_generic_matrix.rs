@@ -63,6 +63,16 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
         Self { nrows, ncols, data }
     }
 
+    /// Copies the data from a `GenericMatrix` into `self`.
+    ///
+    /// # Panics
+    /// Panics if the matrices are of different sizes
+    pub fn copy_from(&mut self, other: &Self) {
+        assert_eq!(self.nrows, other.nrows);
+        assert_eq!(self.ncols, other.ncols);
+        self.data.copy_from_slice(&other.data)
+    }
+
     fn acc_n_in_row(row: usize, ncols: usize) -> usize {
         let mut n = 0;
         (0..row).for_each(|r| {
@@ -123,6 +133,11 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
         ncol + s >= nrow && ncol <= nrow + s
     }
 
+    /// Returns a tuple with number of rows and columns
+    pub fn size(&self) -> (usize, usize) {
+        (self.nrows, self.ncols)
+    }
+
     /// Gets an element from the matrix
     pub fn get(&self, nrow: usize, ncol: usize) -> Result<T, String> {
         if nrow < self.nrows && ncol < self.ncols {
@@ -143,6 +158,42 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
             if Self::is_diag_value(nrow, ncol) {
                 let i = self.index(nrow, ncol)?;
                 self.data[i] = v;
+                Ok(v)
+            } else {
+                Err(format!(
+                    "Trying to set element ({},{}), which is off diagonal of {}-diagonal matrix",
+                    nrow, ncol, N
+                ))
+            }
+        } else {
+            Err("Row or Column out of bounds.".to_string())
+        }
+    }
+
+    /// Sets an element from the matrix
+    pub fn add_to_element(&mut self, nrow: usize, ncol: usize, v: T) -> Result<T, String> {
+        if nrow < self.nrows && ncol < self.ncols {
+            if Self::is_diag_value(nrow, ncol) {
+                let i = self.index(nrow, ncol)?;
+                self.data[i] += v;
+                Ok(v)
+            } else {
+                Err(format!(
+                    "Trying to set element ({},{}), which is off diagonal of {}-diagonal matrix",
+                    nrow, ncol, N
+                ))
+            }
+        } else {
+            Err("Row or Column out of bounds.".to_string())
+        }
+    }
+
+    /// Sets an element from the matrix
+    pub fn scale_element(&mut self, nrow: usize, ncol: usize, v: T) -> Result<T, String> {
+        if nrow < self.nrows && ncol < self.ncols {
+            if Self::is_diag_value(nrow, ncol) {
+                let i = self.index(nrow, ncol)?;
+                self.data[i] *= v;
                 Ok(v)
             } else {
                 Err(format!(
@@ -192,6 +243,24 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
         }
 
         Ok(())
+    }
+
+    /// Scales a matrix by `s` and puts the result in `into`
+    pub fn scale_into(&self, s: Float, into: &mut Self) -> Result<(), String> {
+        if self.ncols != into.ncols || self.nrows != into.nrows {
+            return Err("Result matrix when scaling is not of appropriate size".to_string());
+        }
+
+        std::iter::zip(into.data.iter_mut(), self.data.iter())
+            .for_each(|(to, from)| *to = *from * s);
+
+        Ok(())
+    }
+}
+
+impl<const N: usize, T: Numberish> std::ops::MulAssign<T> for NDiagGenericMatrix<N, T> {
+    fn mul_assign(&mut self, s: T) {
+        self.data.iter_mut().for_each(|a| *a *= s);
     }
 }
 

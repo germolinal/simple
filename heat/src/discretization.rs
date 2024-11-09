@@ -359,7 +359,7 @@ impl Discretization {
     /// \overline{K}^{\star}=\begin{bmatrix}
     /// -\frac{\Delta t}{C\times R} - \frac{\Delta t}{C\times R_s} & \frac{\Delta t}{C\times R} \\
     ///  \frac{\Delta t}{C\times R} & -\frac{\Delta t}{C\times R} - \frac{\Delta t}{C\times R_s}\\
-    /// \end{bmatrix}   
+    /// \end{bmatrix}
     ///```
     /// Note that, in that equation, $`R_{si} = R_{so}`$. The reason for this is that, at the point of using this method,
     /// we do not not know want the values of $`R_{si}`$ and $`R_{so}`$ will be. To overcome this, I use a
@@ -384,7 +384,7 @@ impl Discretization {
     ///
     /// ```math
     /// 0 = {\Delta x}^2 - \left( \frac{\Delta t}{\rho c_p R_s} \right) \Delta x - \frac{2 \Delta t \lambda}{\rho c_p}
-    /// ```    
+    /// ```
     fn min_dx(dt: Float, k: Float, rho: Float, cp: Float) -> Float {
         let a_coef = 1.;
         let b_coef = -dt / (rho * cp * MAX_RS);
@@ -460,7 +460,7 @@ impl Discretization {
     /// This function recursively increases the model's timestep subdivisions (`n`) in order to reduce $`\Delta t`$ to numbers
     /// that respect the restrictions of (1) stability, (2) $`\Delta x_{max}`$, and (3) $`\Delta t_{min}`$. In other words,
     /// it searches (by testing $`\Delta t_{model}/1`$, $`\Delta t_{model}/2`$, $`\Delta t_{model}/3`$, ... $`\Delta t_{model}/n`$)
-    /// for the minimum `n` that respects this restrictions            
+    /// for the minimum `n` that respects this restrictions
     pub fn discretize_construction(
         construction: &Arc<Construction>,
         model: &Model,
@@ -567,7 +567,7 @@ impl Discretization {
     /// ```math
     /// \overline{K}=\begin{bmatrix} -U & U \\
     /// U & -U
-    /// \end{bmatrix}   
+    /// \end{bmatrix}
     ///```
     ///
     /// Then—ignoring all external inputs (i.e., a system disconnected from the environment—the K matrix
@@ -579,7 +579,7 @@ impl Discretization {
     /// U_{1\rightarrow2} & -U_{1\rightarrow2} - U_{2\rightarrow3} & U_{2\rightarrow3} & 0 \\
     /// 0 & U_{2\rightarrow3} & -U_{2\rightarrow3} - U_{3\rightarrow4} & U_{3\rightarrow4} \\
     /// 0 & 0 & U_{3\rightarrow4} & -U_{3\rightarrow4} \\
-    /// \end{bmatrix}   
+    /// \end{bmatrix}
     /// ```
     ///
     /// Now, these nodes are also connected to a front and back border conditions.
@@ -591,7 +591,7 @@ impl Discretization {
     /// U_{1\rightarrow2} & -U_{1\rightarrow2} - U_{2\rightarrow3} & U_{2\rightarrow3} & 0 \\
     /// 0 & U_{2\rightarrow3} & -U_{2\rightarrow3} - U_{3\rightarrow4} & U_{3\rightarrow4} \\
     /// 0 & 0 & U_{3\rightarrow4} & -U_{3\rightarrow4}- h_{si} \\
-    /// \end{bmatrix}   
+    /// \end{bmatrix}
     /// ```
     ///
     /// Additionally, the vector $`\vec{q}`$ will have to account for the border conditions. How this is done depends
@@ -600,7 +600,7 @@ impl Discretization {
     /// $`h_s`$ is the convection coefficient, $`E_{ir}`$ is the incident infrared radiation and $`\epsilon_s`$ is the
     /// emissivity of the surface. On the contrary, if the border condition is a cavity, then a value of $`T_{pane} U_{cavity}`$
     /// should be added. $`T_{pane}`$ is the temperature of the surface before or after.
-    ///         
+    ///
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn get_k_q(
         &self,
@@ -628,8 +628,8 @@ impl Discretization {
             self.segments.len(),
             nrows
         );
-        memory.k *= 0.0;
-        memory.q *= 0.0;
+        memory.k *= 0.;
+        memory.q.fill(0.);
         let nnodes = fin - ini;
 
         // this is just quite helpful
@@ -699,7 +699,7 @@ impl Discretization {
             (u, u * t_before)
         };
 
-        memory.q.add_to_element(0, 0, front_q)?;
+        memory.q[0] += front_q;
         #[cfg(debug_assertions)]
         if hs_front.is_nan() {
             dbg!(hs_front);
@@ -723,7 +723,7 @@ impl Discretization {
 
             (u, u * t_after)
         };
-        memory.q.add_to_element(nnodes - 1, 0, back_q)?;
+        memory.q[nnodes - 1] += back_q; //.add_to_element(, 0, back_q)?;
 
         #[cfg(debug_assertions)]
         if hs_back.is_nan() {
@@ -1161,17 +1161,7 @@ mod testing {
 
         let front_rad_hs = 1.0;
         let back_rad_hs = 1.0;
-        let mut memory = ChunkMemory {
-            aux: Matrix::new(0.0, n + 1, 1),
-            k: Matrix::new(0.0, n + 1, n + 1),
-            c: Matrix::new(0.0, n + 1, n + 1),
-            q: Matrix::new(0.0, n + 1, 1),
-            temps: Matrix::new(0.0, n + 1, 1),
-            k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
-        };
+        let mut memory = ChunkMemory::with_capacity(n + 1);
         d.get_k_q(
             0,
             n + 1,
@@ -1186,11 +1176,11 @@ mod testing {
         )?;
 
         println!("k = {}", memory.k);
-        println!("heat_flows = {}", memory.q);
+        println!("heat_flows = {:?}", memory.q);
 
         for r in 0..n + 1 {
             // Check q
-            let heat_flow = memory.q.get(r, 0)?;
+            let heat_flow = memory.q[r];
             if r == 0 {
                 // exterior temp is lower, so heat flow is negative
                 assert!(heat_flow < -1e-5);
@@ -1246,17 +1236,7 @@ mod testing {
 
         let front_rad_hs = 1.0;
         let back_rad_hs = 1.0;
-        let mut memory = ChunkMemory {
-            aux: Matrix::new(0.0, n + 1, 1),
-            k: Matrix::new(0.0, n + 1, n + 1),
-            c: Matrix::new(0.0, n + 1, n + 1),
-            q: Matrix::new(0.0, n + 1, 1),
-            temps: Matrix::new(0.0, n + 1, 1),
-            k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
-        };
+        let mut memory = ChunkMemory::with_capacity(n + 1);
 
         d.get_k_q(
             0,
@@ -1271,11 +1251,11 @@ mod testing {
             &mut memory,
         )?;
         println!("k = {}", memory.k);
-        println!("heat_flows = {}", memory.q);
+        println!("heat_flows = {:?}", memory.q);
 
         for r in 0..3 {
             // Check q
-            let heat_flow = memory.q.get(r, 0)?;
+            let heat_flow = memory.q[r];
             if r == 0 {
                 // exterior temp is lower, so heat flow is negative
                 assert!(heat_flow < -1e-5);
@@ -1331,17 +1311,7 @@ mod testing {
 
         let front_rad_hs = 1.0;
         let back_rad_hs = 1.0;
-        let mut memory = ChunkMemory {
-            aux: Matrix::new(0.0, n + 1, 1),
-            k: Matrix::new(0.0, n + 1, n + 1),
-            c: Matrix::new(0.0, n + 1, n + 1),
-            q: Matrix::new(0.0, n + 1, 1),
-            temps: Matrix::new(0.0, n + 1, 1),
-            k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
-        };
+        let mut memory = ChunkMemory::with_capacity(n + 1);
         d.get_k_q(
             2,
             5,
@@ -1355,11 +1325,11 @@ mod testing {
             &mut memory,
         )?;
         println!("k = {}", memory.k);
-        println!("heat_flows = {}", memory.q);
+        println!("heat_flows = {:?}", memory.q);
 
         for r in 0..3 {
             // Check q
-            let heat_flow = memory.q.get(r, 0)?;
+            let heat_flow = memory.q[r];
             if r == 1 {
                 // This element is Zero
                 assert!(heat_flow.abs() < 1e-29);
@@ -1440,17 +1410,7 @@ mod testing {
         let back_hs = 1.739658084820765;
         let front_rad_hs = 1.0;
         let back_rad_hs = 1.0;
-        let mut memory = ChunkMemory {
-            aux: Matrix::new(0.0, n + 1, 1),
-            k: Matrix::new(0.0, n + 1, n + 1),
-            c: Matrix::new(0.0, n + 1, n + 1),
-            q: Matrix::new(0.0, n + 1, 1),
-            temps: Matrix::new(0.0, n + 1, 1),
-            k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
-        };
+        let mut memory = ChunkMemory::with_capacity(n + 1);
         d.get_k_q(
             1,
             n,
@@ -1464,11 +1424,11 @@ mod testing {
             &mut memory,
         )?;
         println!("k = {}", memory.k);
-        println!("heat_flows = {}", memory.q);
+        println!("heat_flows = {:?}", memory.q);
 
         for r in 0..n - 1 {
             // Check q
-            let heat_flow = memory.q.get(r, 0)?;
+            let heat_flow = memory.q[r];
             if r == 0 {
                 assert!(heat_flow > 1e-5);
             } else if r == n - 2 {

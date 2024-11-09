@@ -23,7 +23,7 @@ use crate::discretization::Discretization;
 use crate::glazing::Glazing;
 use crate::Float;
 use geometry::Vector3D;
-use matrix::Matrix;
+use matrix::{Matrix, NDiagGenericMatrix, NDiagMatrix};
 use model::{
     Boundary, Construction, Fenestration, Model, SimulationStateHeader, Substance, Surface,
     SurfaceTrait, TerrainClass,
@@ -49,24 +49,32 @@ pub fn is_windward(wind_direction: Float, cos_tilt: Float, normal: Vector3D) -> 
 #[derive(Debug, Clone)]
 pub struct ChunkMemory {
     /// memory for a matrix
-    pub temps: Matrix,
+    pub temps: Vec<Float>,
     /// memory for a matrix
-    pub aux: Matrix,
+    pub aux: Vec<Float>,
     /// memory for a matrix
-    pub k: Matrix,
+    pub k: NDiagGenericMatrix<3, Float>,
     /// memory for a matrix
-    pub c: Matrix,
+    pub c: Vec<Float>,
     /// memory for a matrix
-    pub q: Matrix,
+    pub q: Vec<Float>,
     /// memory for a matrix
-    pub k1: Matrix,
+    pub k1: Vec<Float>,
 
     /// memory for a matrix
-    pub k2: Matrix,
+    pub k2: Vec<Float>,
     /// memory for a matrix
-    pub k3: Matrix,
+    pub k3: Vec<Float>,
     /// memory for a matrix
-    pub k4: Matrix,
+    pub k4: Vec<Float>,
+}
+
+fn add_assign(a: &mut Vec<Float>, b: &[Float]) {
+    a.iter_mut().zip(b).for_each(|(x, y)| *x += y)
+}
+
+fn scale(a: &mut Vec<Float>, v: Float) {
+    a.iter_mut().for_each(|x| *x *= v);
 }
 
 impl ChunkMemory {
@@ -74,17 +82,22 @@ impl ChunkMemory {
     ///
     /// This means allocating matrices
     pub fn new(ini: usize, fin: usize) -> Self {
-        let n = fin - ini - 1;
+        let n = fin - ini;
+        Self::with_capacity(n)
+    }
+
+    /// Creates a Chunk with capacity of 'n' nodes
+    pub fn with_capacity(n: usize) -> Self {
         ChunkMemory {
-            aux: Matrix::new(0.0, n + 1, 1),
-            k: Matrix::new(0.0, n + 1, n + 1),
-            c: Matrix::new(0.0, n + 1, n + 1),
-            q: Matrix::new(0.0, n + 1, 1),
-            temps: Matrix::new(0.0, n + 1, 1),
-            k1: Matrix::new(0.0, n + 1, 1),
-            k2: Matrix::new(0.0, n + 1, 1),
-            k3: Matrix::new(0.0, n + 1, 1),
-            k4: Matrix::new(0.0, n + 1, 1),
+            aux: vec![0.0; n],
+            k: NDiagMatrix::<3>::new(0.0, n, n),
+            c: vec![0.0; n],
+            q: vec![0.0; n],
+            temps: vec![0.0; n],
+            k1: vec![0.0; n],
+            k2: vec![0.0; n],
+            k3: vec![0.0; n],
+            k4: vec![0.0; n],
         }
     }
 }
@@ -105,10 +118,10 @@ pub struct SurfaceMemory {
 }
 
 fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
-    let (crows, ..) = memory.c.size();
+    let crows = memory.c.len();
     // Rearrenge into dT = (dt/C) * K + (dt/C)*q
     for nrow in 0..crows {
-        let v = dt / memory.c.get(nrow, nrow)?;
+        let v = dt / memory.c[nrow];
         // transform k into k_prime (i.e., k * dt/C)
         let ini = if nrow == 0 { 0 } else { nrow - 1 };
         let fin = if nrow == crows - 1 {
@@ -120,7 +133,7 @@ fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
         for ncol in ini..=fin {
             memory.k.scale_element(nrow, ncol, v)?;
         }
-        memory.q.scale_element(nrow, 0, v)?;
+        memory.q[nrow] *= v;
     }
     Ok(())
 }
@@ -173,35 +186,31 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
             "Expecting 'K' to be a squared matrix... nrows={}, ncols={}",
             krows, kcols
         );
-        let (crows, ccols) = memory.c.size();
+        let crows = memory.c.len();
         assert_eq!(
-            crows, ccols,
-            "Expecting 'C' to be a squared matrix... nrows={}, ncols={}",
-            crows, ccols
+            crows, krows,
+            "Expecting 'c' to be to have {} rows because K has {} rows... found {}",
+            krows, krows, crows
         );
-        let (qrows, qcols) = memory.q.size();
+        let qrows = memory.q.len();
         assert_eq!(
             qrows, krows,
             "Expecting 'q' to be to have {} rows because K has {} rows... found {}",
             krows, krows, qrows
         );
-        assert_eq!(
-            qcols, 1,
-            "expecting 'q' to have 1 column... found {}",
-            qcols
-        );
     }
 
     // I am not sure why I need to clean... I thought this was not necessary.
-    memory.k1 *= 0.0;
-    memory.k2 *= 0.0;
-    memory.k3 *= 0.0;
-    memory.k4 *= 0.0;
-    memory.aux *= 0.0;
+    memory.k1.fill(0.0);
+    memory.k2.fill(0.0);
+    memory.k3.fill(0.0);
+    memory.k4.fill(0.0);
+    memory.aux.fill(0.0);
 
     // get k1
-    memory.k.prod_tri_diag_into(&memory.temps, &mut memory.k1)?;
-    memory.k1 += &memory.q;
+    memory.k.column_prod_into(&memory.temps, &mut memory.k1)?;
+    // equivalent of memory.k1 += &memory.q;
+    add_assign(&mut memory.k1, &memory.q);
 
     // returning "temperatures + k1" is Euler... continuing is
     // Runge–Kutta 4th order
@@ -210,36 +219,54 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
     return Ok(());
     */
 
-    memory.k1.scale_into(0.5, &mut memory.aux)?;
-    memory.aux += &memory.temps;
+    // eq. to memory.k1.scale_into(0.5, &mut memory.aux)?;
+    memory.aux = memory.k1.iter().map(|v| 0.5 * v).collect();
+    // memory.aux += &memory.temps;
+    add_assign(&mut memory.aux, &memory.temps);
 
     // k2
-    memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k2)?;
-    memory.k2 += &memory.q;
+    memory.k.column_prod_into(&memory.aux, &mut memory.k2)?;
+    // memory.k2 += &memory.q;
+    add_assign(&mut memory.k2, &memory.q);
 
     // k3
-    memory.k2.scale_into(0.5, &mut memory.aux)?;
-    memory.aux += &memory.temps;
-    memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k3)?;
-    memory.k3 += &memory.q;
+    // memory.k2.scale_into(0.5, &mut memory.aux)?;
+    memory.aux = memory.k2.iter().map(|v| 0.5 * v).collect();
+    // memory.aux += &memory.temps;
+    add_assign(&mut memory.aux, &memory.temps);
+
+    memory.k.column_prod_into(&memory.aux, &mut memory.k3)?;
+    // memory.k3 += &memory.q;
+    add_assign(&mut memory.k3, &memory.q);
 
     // k4
-    memory.aux.copy_from(&memory.k3);
-    memory.aux += &memory.temps;
-    memory.k.prod_tri_diag_into(&memory.aux, &mut memory.k4)?;
-    memory.k4 += &memory.q;
+    // memory.aux.copy_from(&memory.k3);
+    memory.aux.copy_from_slice(&memory.k3);
+    // memory.aux += &memory.temps;
+    add_assign(&mut memory.aux, &memory.temps);
+    memory.k.column_prod_into(&memory.aux, &mut memory.k4)?;
+    // memory.k4 += &memory.q;
+    add_assign(&mut memory.k4, &memory.q);
 
     // Scale them and add them all up
-    memory.k1 /= 6.;
-    memory.k2 /= 3.;
-    memory.k3 /= 3.;
-    memory.k4 /= 6.;
+    // memory.k1 /= 6.;
+    scale(&mut memory.k1, 1. / 6.);
+    // memory.k2 /= 3.;
+    scale(&mut memory.k2, 1. / 3.);
+    // memory.k3 /= 3.;
+    scale(&mut memory.k3, 1. / 3.);
+    // memory.k4 /= 6.;
+    scale(&mut memory.k4, 1. / 6.);
 
     // Let's add it all and return
-    memory.temps += &memory.k1;
-    memory.temps += &memory.k2;
-    memory.temps += &memory.k3;
-    memory.temps += &memory.k4;
+    // memory.temps += &memory.k1;
+    // memory.temps += &memory.k2;
+    // memory.temps += &memory.k3;
+    // memory.temps += &memory.k4;
+    add_assign(&mut memory.temps, &memory.k1);
+    add_assign(&mut memory.temps, &memory.k2);
+    add_assign(&mut memory.temps, &memory.k3);
+    add_assign(&mut memory.temps, &memory.k4);
 
     Ok(())
 }
@@ -739,7 +766,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         )?;
 
         // Build Mass matrix
-        memory.c *= 0.0;
+        memory.c.fill(0.0);
         for (i, (mass, ..)) in self
             .discretization
             .segments
@@ -748,13 +775,13 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             .take(fin - ini)
             .enumerate()
         {
-            memory.c.set(i, i, *mass)?;
+            memory.c[i] = *mass;
         }
 
         // ... here we add solar gains
         for (local_i, global_i) in (ini..fin).enumerate() {
             let v = solar_radiation.get(global_i, 0)?;
-            memory.q.add_to_element(local_i, 0, v)?;
+            memory.q[local_i] += v;
         }
 
         rearrange_k(dt, memory)?;
@@ -767,13 +794,13 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             if v.is_nan() {
                 dbg!(v);
             }
-            memory.temps.set(local_i, 0, v)?;
+            memory.temps[local_i] = v;
         }
 
         rk4(memory)?;
 
         for (local_i, global_i) in (ini..fin).enumerate() {
-            let v = memory.temps.get(local_i, 0)?;
+            let v = memory.temps[local_i];
             #[cfg(debug_assertions)]
             if v.is_nan() {
                 dbg!(v);
@@ -1040,18 +1067,21 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             // add solar gains
             for (local_i, i) in (ini..fin).enumerate() {
                 let v = solar_radiation.get(i, 0)?;
-                memory.q.add_to_element(local_i, 0, v)?;
+                // memory.q.add_to_element(local_i, 0, v)?;
+                memory.q[local_i] += v;
             }
-            memory.q *= -1.;
+            // memory.q *= -1.;
+            scale(&mut memory.q, -1.);
 
             temp_k.copy_from(&memory.k);
-            temps.copy_from(&memory.q);
+            temps.copy_from_slice(&memory.q);
 
-            temp_k.mut_n_diag_gaussian(&mut temps, 3)?; // and just like that, temps is the new temperatures
+            // FIX THIS!
+            temp_k.mut_gaussian(&mut temps)?; // and just like that, temps is the new temperatures
 
             let mut err = 0.0;
             for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = temps.get(local_i, 0)?;
+                let local_temp = temps[local_i];
                 let global_temp = global_temperatures.get(i, 0)?;
                 err += (local_temp - global_temp).abs();
             }
@@ -1092,7 +1122,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             //     err / ((fin - ini) as Float),
             // );
             for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = temps.get(local_i, 0)?;
+                let local_temp = temps[local_i];
                 // temperatures.set(i, 0, local_temp)?;
                 global_temperatures.add_to_element(i, 0, local_temp)?;
                 global_temperatures.scale_element(i, 0, 0.5)?;
@@ -1214,7 +1244,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
     }
     */
 
-    /// Marches one timestep. Returns front and back heat flow    
+    /// Marches one timestep. Returns front and back heat flow
     #[allow(clippy::too_many_arguments)]
     pub fn march(
         &self,
@@ -1874,9 +1904,15 @@ mod testing {
     #[test]
     fn test_rk4() -> Result<(), String> {
         // Setup
-        let c = Matrix::from_data(2, 2, vec![1., 0., 0., 1.]);
-        let k = Matrix::from_data(2, 2, vec![1., -3., 4., -6.]);
-        let q = Matrix::from_data(2, 1, vec![0., 0.]);
+        let c = vec![1.,  1.];
+        let mut k = NDiagMatrix::new(0.0, 2, 2);
+        // vec![1., -3., 4., -6.]
+        k.set(0, 0, 1.)?;
+        k.set(0, 1, -3.)?;
+        k.set(1, 0, 4.)?;
+        k.set(1, 1, -6.)?;
+
+        let q = vec![0., 0.];
 
         // This system has a transient solution equals to c1*[0.75 1]'* e^(-3t) + c2*[1 1]' * e^(-2t)...
 
@@ -1888,24 +1924,24 @@ mod testing {
             c,
             k,
             q,
-            temps: Matrix::from_data(2, 1, vec![0.75 + 1., 2.]),
+            temps: vec![0.75 + 1., 2.],
             // These are just to put intermediate data
-            aux: Matrix::new(0.0, 2, 1),
-            k1: Matrix::new(0.0, 2, 1),
-            k2: Matrix::new(0.0, 2, 1),
-            k3: Matrix::new(0.0, 2, 1),
-            k4: Matrix::new(0.0, 2, 1),
+            aux: vec![0.; 2],
+            k1: vec![0.; 2],
+            k2: vec![0.; 2],
+            k3: vec![0.; 2],
+            k4: vec![0.; 2],
         };
         let dt = 0.01;
         rearrange_k(dt, /*&c,*/ &mut memory)?;
 
         let mut time = 0.0;
         loop {
-            let temp_a = memory.temps.get(0, 0)?;
+            let temp_a = memory.temps[0];
             let exp_temp_a = temp_a_fn(time);
             let diff_a = (temp_a - exp_temp_a).abs();
 
-            let temp_b = memory.temps.get(1, 0)?;
+            let temp_b = memory.temps[1];
             let exp_temp_b = temp_b_fn(time);
             let diff_b = (temp_b - exp_temp_b).abs();
             #[cfg(feature = "float")]
