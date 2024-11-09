@@ -50,6 +50,7 @@ macro_rules! one_sided_n {
 /// Contains a structure that allows performing mathematical operations over
 /// matrices that do not contain numbers, but also other structures.
 pub mod generic_matrix;
+
 /// Traits used to make the `GenericMatrix` generic.
 pub mod traits;
 pub use generic_matrix::GenericMatrix;
@@ -58,3 +59,11 @@ pub use traits::{Numberish, OneZero};
 /// A `generic_matrix` that contains a `Float`
 pub mod matrix;
 pub use crate::matrix::Matrix;
+
+/// A more compact representation of an N-Diagonal matrix
+pub mod n_diag_generic_matrix;
+pub use crate::n_diag_generic_matrix::NDiagGenericMatrix;
+
+/// a more compact version of an N-Diagonal matrix for floating point numbers
+pub mod n_diag_matrix;
+pub use crate::n_diag_matrix::NDiagMatrix;

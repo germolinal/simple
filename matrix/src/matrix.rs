@@ -17,6 +17,7 @@ impl Matrix {
     /// # Note
     /// This method will clone both `self` and `b`, meaning that it won't be very performant. Check `mut_n_diag_gaussian()`
     /// for what might be a more conservative approach.
+    #[must_use]
     pub fn n_diag_gaussian(&self, b: &Matrix, n: usize) -> Result<Matrix, String> {
         // Clone Self and B; then solve... put results on X
         let mut a = self.clone();

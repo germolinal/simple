@@ -42,7 +42,7 @@ impl<T: Numberish> GenericMatrix<T> {
     /// Creates a `GenericMatrix` of `nrows` and `ncols` full of values `v`
     #[must_use]
     pub fn new(v: T, nrows: usize, ncols: usize) -> Self {
-        GenericMatrix {
+        Self {
             nrows,
             ncols,
             data: vec![v; nrows * ncols],
@@ -102,6 +102,11 @@ impl<T: Numberish> GenericMatrix<T> {
         self.nrows == 0 && self.ncols == 0
     }
 
+    /// Borrows the data as a slice
+    pub fn as_slice(&self) -> &[T] {
+        &self.data
+    }
+
     /// Copies the data from a `GenericMatrix` into `self`.
     ///
     /// # Panics
@@ -112,7 +117,7 @@ impl<T: Numberish> GenericMatrix<T> {
         self.data.copy_from_slice(&other.data)
     }
 
-    /// Returns a tuple with number of rows and columns    
+    /// Returns a tuple with number of rows and columns
     pub fn size(&self) -> (usize, usize) {
         (self.nrows, self.ncols)
     }
@@ -122,7 +127,7 @@ impl<T: Numberish> GenericMatrix<T> {
         self.ncols * nrow + ncol
     }
 
-    /// Gets an element from the matrix    
+    /// Gets an element from the matrix
     pub fn get(&self, nrow: usize, ncol: usize) -> Result<T, String> {
         if nrow < self.nrows && ncol < self.ncols {
             let i: usize = self.index(nrow, ncol);
@@ -132,7 +137,7 @@ impl<T: Numberish> GenericMatrix<T> {
         }
     }
 
-    /// Sets an element into the matrix    
+    /// Sets an element into the matrix
     pub fn set(&mut self, nrow: usize, ncol: usize, v: T) -> Result<T, String> {
         if nrow < self.nrows && ncol < self.ncols {
             let mut i: usize = self.ncols * nrow;
@@ -168,7 +173,7 @@ impl<T: Numberish> GenericMatrix<T> {
 
     /* ARITHMETIC OPERATION */
 
-    /// Adds `self` with `other`, puting the result in `into`    
+    /// Adds `self` with `other`, puting the result in `into`
     pub fn add_into(
         &self,
         other: &GenericMatrix<T>,
@@ -190,7 +195,7 @@ impl<T: Numberish> GenericMatrix<T> {
         Ok(())
     }
 
-    /// Substracts `other` from `self`, puting the result in `into`    
+    /// Substracts `other` from `self`, puting the result in `into`
     pub fn sub_into(
         &self,
         other: &GenericMatrix<T>,
@@ -211,7 +216,7 @@ impl<T: Numberish> GenericMatrix<T> {
         Ok(())
     }
 
-    /// Scales a matrix by `s` and puts the result in `into`     
+    /// Scales a matrix by `s` and puts the result in `into`
     pub fn scale_into(&self, s: Float, into: &mut GenericMatrix<T>) -> Result<(), String> {
         if self.ncols != into.ncols || self.nrows != into.nrows {
             return Err("Result matrix when scaling is not of appropriate size".to_string());
@@ -223,7 +228,7 @@ impl<T: Numberish> GenericMatrix<T> {
         Ok(())
     }
 
-    /// Multiplies a matrix by `other`, putting the result into `into`    
+    /// Multiplies a matrix by `other`, putting the result into `into`
     #[allow(clippy::needless_collect)]
     pub fn prod_into(
         &self,
@@ -272,7 +277,7 @@ impl<T: Numberish> GenericMatrix<T> {
 
     /// Multiplies a tri-diagonal matrix `self` by another matrix `other`, puting the results into `into`. When matrices are large
     /// this can be much faster than just multiplying, as we acknowledge that most of the Matrix
-    /// will be Zeroes.    
+    /// will be Zeroes.
     pub fn prod_tri_diag_into(
         &self,
         other: &GenericMatrix<T>,
@@ -364,7 +369,7 @@ impl<T: Numberish> GenericMatrix<T> {
         true
     }
 
-    /// Concatenates the rows in `other` below the rows of `self`    
+    /// Concatenates the rows in `other` below the rows of `self`
     pub fn concat_rows(&mut self, other: &GenericMatrix<T>) -> Result<(), String> {
         let (other_rows, other_cols) = other.size();
         if self.ncols != other_cols {
@@ -499,7 +504,7 @@ impl<T: Numberish> std::ops::DivAssign<T> for GenericMatrix<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Float, GenericMatrix, Matrix};
+    use crate::{n_diag_generic_matrix::NDiagGenericMatrix, Float, GenericMatrix, Matrix};
 
     #[test]
     fn test_serde() -> Result<(), String> {
@@ -1186,22 +1191,28 @@ mod tests {
     fn test_prod_n_diag() -> Result<(), String> {
         // Check that we are adding the correct amount of rows/cols
         let n = 3;
-        let n_rows: usize = 23;
+        let n_rows: usize = 5;
 
         let a_val: Float = 2.0;
         let mut a = Matrix::new(0.0, n_rows, n_rows);
+        let mut diag_a = NDiagGenericMatrix::<3, Float>::new(0.0, n_rows, n_rows);
+
         for r in 0..n_rows {
             for c in 0..n_rows {
                 if r == c || r + 1 == c || r == c + 1 {
                     a.set(r, c, a_val)?;
+                    diag_a.set(r, c, a_val)?;
                 }
             }
         }
 
-        let b = Matrix::new(1.0, n_rows, 3);
+        let b = Matrix::new(1.0, n_rows, 1);
 
         let c = a.from_prod_n_diag(&b, n)?;
-
+        let mut into = vec![0.; n_rows];
+        let s = b.as_slice();
+        let diag_c = diag_a.column_prod_into(s, &mut into).unwrap();
+        dbg!(into);
         for i in 0..n_rows {
             if i == 0 || i == n_rows - 1 {
                 assert_eq!(2.0 * a_val, c.get(i, 0)?);
@@ -1213,6 +1224,8 @@ mod tests {
         let other_c = &a * &b;
 
         assert!(c.compare(&other_c));
+
+        println!("{}", other_c);
 
         Ok(())
     }
