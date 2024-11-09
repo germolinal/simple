@@ -103,13 +103,19 @@ impl Scene {
     /// uniformly. Returns None if there are no lights. Returns
     /// the probability of sampling this light.
     pub fn sample_light_uniform(&self, rng: &mut RandGen) -> Option<(&Object, Float)> {
-        if self.lights.is_empty() {
+        if self.lights.is_empty() && self.distant_lights.is_empty() {
             return None;
         }
         let mut i: usize = rng.gen();
-        i %= self.lights.len();
-        let pdf = 1. / self.lights.len() as Float;
-        Some((&self.lights[i], pdf))
+        let nlights = self.lights.len() + self.distant_lights.len();
+        i %= nlights;
+        let pdf = 1. / nlights as Float;
+        if i < self.lights.len() {
+            Some((&self.lights[i], pdf))
+        } else {
+            let i = i - self.lights.len();
+            Some((&self.distant_lights[i], pdf))
+        }
     }
 
     /// Adds the elements describing a Perez sky to the scene.

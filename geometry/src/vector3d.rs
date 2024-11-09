@@ -31,7 +31,7 @@ use crate::Point3D;
 use std::fmt;
 
 /// A 3-dimensional Vector
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Vector3D {
     /// the X component
     pub x: Float,

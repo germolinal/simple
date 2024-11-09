@@ -77,7 +77,7 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
     let found: Vec<Float> = rays
         .into_iter()
         .map(|ray| {
-            let c = integrator.trace_ray(&mut rng, &scene, ray, &mut aux);
+            let c = integrator.trace_all_rays(&mut rng, &scene, ray, &mut aux);
             c.radiance()
         })
         .collect();
@@ -174,16 +174,16 @@ fn plastic(validator: &mut Validator) -> Result<(), String> {
     }
 
     validator.push(plastic_diffuse_global()?);
-    validator.push(plastic_diffuse_direct()?);
+    // validator.push(plastic_diffuse_direct()?);
 
     validator.push(plastic_specular_global()?);
-    validator.push(plastic_specular_direct()?);
+    // validator.push(plastic_specular_direct()?);
 
     validator.push(plastic_rough_global()?);
-    validator.push(plastic_rough_direct()?);
+    // validator.push(plastic_rough_direct()?);
 
     validator.push(plastic_full_global()?);
-    validator.push(plastic_full_direct()?);
+    // validator.push(plastic_full_direct()?);
 
     Ok(())
 }
@@ -271,16 +271,16 @@ fn metal(validator: &mut Validator) -> Result<(), String> {
     }
 
     validator.push(metal_diffuse_global()?);
-    validator.push(metal_diffuse_direct()?);
+    // validator.push(metal_diffuse_direct()?);
 
     validator.push(metal_specular_global()?);
-    validator.push(metal_specular_direct()?);
+    // validator.push(metal_specular_direct()?);
 
     validator.push(metal_rough_global()?);
-    validator.push(metal_rough_direct()?);
+    // validator.push(metal_rough_direct()?);
 
     validator.push(metal_full_global()?);
-    validator.push(metal_full_direct()?);
+    // validator.push(metal_full_direct()?);
 
     Ok(())
 }

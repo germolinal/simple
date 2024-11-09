@@ -322,17 +322,9 @@ impl ImageBuffer {
             }
         };
 
-        let scale = match scale {
-            Colourmap::Inferno => crate::colourmap::inferno::INFERNO_COLOURMAP.as_slice(),
-            Colourmap::Magma => crate::colourmap::magma::MAGMA_COLOURMAP.as_slice(),
-            Colourmap::Plasma => crate::colourmap::plasma::PLASMA_COLOURMAP.as_slice(),
-            Colourmap::Radiance => crate::colourmap::radiance::RADIANCE_COLOURMAP.as_slice(),
-            Colourmap::Viridis => crate::colourmap::viridis::VIRIDIS_COLOURMAP.as_slice(),
-        };
-
         let mut data: Vec<u8> = Vec::with_capacity(self.width * self.height * 3);
         log_luminance.iter().for_each(|x| {
-            let s = crate::colourmap::map_linear_colour(*x, log_min, log_max, scale);
+            let s = scale.map_linear(*x, log_min, log_max);
             data.push((s[0] * 256.).round() as u8);
             data.push((s[1] * 256.).round() as u8);
             data.push((s[2] * 256.).round() as u8);
@@ -392,17 +384,9 @@ impl ImageBuffer {
             }
         };
 
-        let scale = match scale {
-            Colourmap::Inferno => crate::colourmap::inferno::INFERNO_COLOURMAP.as_slice(),
-            Colourmap::Magma => crate::colourmap::magma::MAGMA_COLOURMAP.as_slice(),
-            Colourmap::Plasma => crate::colourmap::plasma::PLASMA_COLOURMAP.as_slice(),
-            Colourmap::Radiance => crate::colourmap::radiance::RADIANCE_COLOURMAP.as_slice(),
-            Colourmap::Viridis => crate::colourmap::viridis::VIRIDIS_COLOURMAP.as_slice(),
-        };
-
         let mut data: Vec<u8> = Vec::with_capacity(self.width * self.height * 3);
         luminance.iter().for_each(|x| {
-            let s = crate::colourmap::map_linear_colour(*x, min, max, scale);
+            let s = scale.map_linear(*x, min, max);
             data.push((s[0] * 256.).round() as u8);
             data.push((s[1] * 256.).round() as u8);
             data.push((s[2] * 256.).round() as u8);

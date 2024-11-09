@@ -41,6 +41,7 @@ pub const N_CHANNELS: usize = 3;
 // Core
 pub mod bvh;
 pub mod camera;
+pub use camera::{Camera, CameraSample, Film, Pinhole, View};
 mod colour;
 pub use colour::Spectrum;
 pub mod colourmap;

@@ -70,10 +70,12 @@ pub use matrix::Matrix;
 pub use model;
 pub use model::{Model, SimulationState, SimulationStateElement, SimulationStateHeader, *};
 pub use polynomial::*;
+pub use rendering;
 pub use rendering::{
-    rand::get_rng, rand::RandGen, rand::Rng, samplers, Scene, SceneElement, SimpleModelReader,
-    Wavelengths,
+    colourmap::Colourmap,
+    rand::{get_rng, Rng},
 };
+
 pub use schedule::*;
 pub use weather::{
     CurrentWeather, EPWWeather, EPWWeatherLine, Location, PerezSky, SkyUnits, Solar,
