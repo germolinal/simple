@@ -1211,7 +1211,7 @@ mod tests {
         let c = a.from_prod_n_diag(&b, n)?;
         let mut into = vec![0.; n_rows];
         let s = b.as_slice();
-        let diag_c = diag_a.column_prod_into(s, &mut into).unwrap();
+        let _diag_c = diag_a.column_prod_into(s, &mut into).unwrap();
         dbg!(into);
         for i in 0..n_rows {
             if i == 0 || i == n_rows - 1 {

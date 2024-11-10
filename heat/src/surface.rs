@@ -107,14 +107,18 @@ impl ChunkMemory {
 #[derive(Debug, Clone)]
 pub struct SurfaceMemory {
     /// Memory for each massive chunk
-    pub massive_chunks: Vec<ChunkMemory>,
+    pub(crate)massive_chunks: Vec<ChunkMemory>,
     /// Memory for each no-mass chunk
-    pub nomass_chunks: Vec<ChunkMemory>,
+    pub(crate) nomass_chunks: Vec<ChunkMemory>,
     /// The temperatures
-    pub temperatures: Matrix,
-
-    /// The solar absorption on each node
-    pub q: Matrix,
+    pub(crate) temperatures: Matrix,
+    /// The absorbed solar radiation in the nodes
+    pub(crate) solar_radiation: Matrix,
+    /// Necessary for storyting a temporary variable when calculating 
+    /// absorbed solar radiation in the nodes
+    pub(crate) solar_radiation_aux: Matrix,
+    
+    
 }
 
 fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
@@ -362,14 +366,17 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let ini = self.parent.first_node_temperature_index();
         let fin = self.parent.last_node_temperature_index() + 1;
         let n_nodes = fin - ini;
-        let q = Matrix::new(0.0, n_nodes, 1);
         let temperatures = Matrix::new(0.0, n_nodes, 1);
+
+        let solar_radiation = temperatures.clone();
+        let solar_radiation_aux= temperatures.clone();
 
         SurfaceMemory {
             massive_chunks,
             nomass_chunks,
             temperatures,
-            q,
+            solar_radiation,
+            solar_radiation_aux,
         }
     }
 
@@ -1271,9 +1278,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         /////////////////////
         // 1st: Calculate the solar radiation absorbed by each node
         /////////////////////
-        // Allocation here!
-        let mut solar_radiation = &self.front_alphas * solar_front;
-        solar_radiation += &(&self.back_alphas * solar_back);
+        
+        // let mut solar_radiation = &self.front_alphas * solar_front;
+        // solar_radiation += &(&self.back_alphas * solar_back);
+        self.front_alphas.scale_into(solar_front, &mut memory.solar_radiation)?;
+        self.back_alphas.scale_into(solar_back, &mut memory.solar_radiation_aux)?;
+        memory.solar_radiation += &memory.solar_radiation_aux;
 
         /////////////////////
         // 2nd: Calculate the temperature in all no-mass nodes.
@@ -1294,7 +1304,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         for (chunk_i, (ini, fin)) in self.nomass_chunks.iter().enumerate() {
             self.march_nomass(
                 &mut memory.temperatures,
-                &solar_radiation, 
+                &memory.solar_radiation, 
                 t_front,
                 t_back,
                 front_rad_hs,
@@ -1328,7 +1338,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         for (chunk_i, (ini, fin)) in self.massive_chunks.iter().enumerate() {
             self.march_mass(
                 &mut memory.temperatures,
-                &solar_radiation, 
+                &memory.solar_radiation, 
                 dt,
                 t_front,
                 t_back,
