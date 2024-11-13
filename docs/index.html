@@ -1,102 +1,191 @@
 <!-- An HTML website that sais Hello SIMPLE! -->
 <html>
-    <head>
-        <title>SIMPLE validation report</title>
-    </head>
 
-    <body>
-        <h1>Welcome to the <code>SIMPLE</code> validation report</h1>
-        <p>
-            <code>SIMPLE</code> aims to be as reliable and transparent as
-            possible. This report is a crucial piece of that effort.
-        </p>
-        <p>
-            Most of this report is automatically produced as part of
-            <code>SIMPLE</code>'s quality control protocols. This means that a
-            new version of this document is produced every time a new version of
-            <code>SIMPLE</code> is deployed. Even more, several of these tests
-            are required for a new version to be deployed, meaning that; if any
-            change reduced accuracy, these tests should prevent that change to
-            ever be deployed.
-        </p>
+<head>
+    <title>SIMPLE validation report</title>
+    <style>
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+        }
 
-        <h2>Input Output reference</h2>
-        <p>Find it <a href="./ioreference/book/index.html">HERE</a>.</p>
-        <p>
-            This documentation can give you an idea of what is and how
-            <code>SIMPLE</code> works.
-        </p>
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
 
-        <h2>Validation reports</h2>
-        <h3>Algorithms in use</h3>
-        <ul>
-            <li>
-                <a href="./validation/cold_wellington_apartment.html"
-                    >Full apartment simulation - Comparison between SIMPLE and
-                    EnergyPlus</a
-                >
-            </li>
-            <li>
-                <a href="./validation/cold_wellington_box.html"
-                    >Simple room (i.e., a box) - Comparison between SIMPLE and
-                    EnergyPlus</a
-                >
-            </li>
-            <li>
-                <a href="./validation/convection_coefficients.html"
-                    >Convection coefficient comparison - Comparison between
-                    SIMPLE and EnergyPlus</a
-                >
-            </li>
-            <li>
-                <a href="./validation/incident_ir_radiation.html"
-                    >Infrared Radiation incident on surfaces - Comparison
-                    between SIMPLE and EnergyPlus</a
-                >
-            </li>
-            <li>
-                <a href="./validation/incident_solar_radiation.html"
-                    >Incident solar radiation - Comparison between SIMPLE and
-                    EnergyPlus</a
-                >
-            </li>
-            <li>
-                <a href="./validation/infiltration.html"
-                    >Infiltrations validation - Comparison between SIMPLE and
-                    EnergyPlus</a
-                >
-            </li>
-            <li>
-                <a href="./validation/walls.html"
-                    >Heat transfer through walls - Comparison between SIMPLE and
-                    both Theoretical Equations and EnergyPlus</a
-                >
-            </li>
-            <li>
-                <a href="./validation/weather.html"
-                    >Simple check to see whether SIMPLE and EnergyPlus are
-                    sampling weather files in the same way</a
-                >
-            </li>
-            <li>
-                <a href="./validation/daylight_coefficient.html"
-                    >Daylight Coefficient validation - Comparison between SIMPLE
-                    and Radiance</a
-                >
-            </li>
-        </ul>
+        body {
+            padding: 1em;
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 3em;
+            background-color: rgb(245, 245, 245);
+        }
 
-        <h3>Algorithms in development</h3>
-        <ul>
-            <!-- <li><a href="./validation/ray_tracer.html">Ray tracing algorithms - Comparison between SIMPLE and
+        ul {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        ul>li {
+            list-style: none;
+            margin: 0.2em;
+            width: 200px;
+            background-color: white;
+            border-radius: 0.4em;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+            transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+        }
+
+        ul>li a {
+            display: block;
+            padding: 0.6em;            
+        }
+
+        ul>li a  h1 {
+            font-size: 1rem;            
+        }
+        ul>li a  p {
+            font-size: 0.9rem;            
+            opacity: 0.6;
+        }
+        .danger {
+            color:red;
+        }
+        ul>li a  p.danger {
+            font-size: 0.8rem;                        
+        }
+        li:hover {
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>Welcome to the <code>SIMPLE</code> validation report</h1>
+    <p>
+        <code>SIMPLE</code> aims to be as reliable and transparent as
+        possible. This report is a crucial piece of that effort.
+    </p>
+    <p>
+        Most of this report is automatically produced as part of
+        <code>SIMPLE</code>'s quality control protocols. This means that a
+        new version of this document is produced every time a new version of
+        <code>SIMPLE</code> is deployed. Even more, several of these tests
+        are required for a new version to be deployed, meaning that; if any
+        change reduced accuracy, these tests should prevent that change to
+        ever be deployed.
+    </p>
+
+    <h2>Input Output reference</h2>
+    <p>Find it <a href="./ioreference/book/index.html">HERE</a>.</p>
+    <p>
+        This documentation can give you an idea of what is and how
+        <code>SIMPLE</code> works.
+    </p>
+
+    <h2>Validation reports</h2>
+    <p>
+        We are quite transparent in our efforts to make SIMPLE reliable. We are not 
+        perfect, but these are some of the tests we run every time we attempt to publish
+        a new verion. Also, this report is updated EVERY TIME we publish a new version.
+        Feel free to comment and—if you think you can make the results better—let us know
+        and we can work together.
+    </p>
+    <h3>Algorithms in use</h3>
+    <ul>
+        <li>
+            <a href="./validation/cold_wellington_apartment.html">
+                <h1>Full apartment simulation</h1>
+                <p>Comparison between and EnergyPlus</p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/cold_wellington_box.html">
+                <h1>Simple room (i.e., a box)</h1>
+                <p>Comparison between SIMPLE and EnergyPlus</p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/convection_coefficients.html">
+                <h1>Convection coefficient comparison</h1>
+                <p>
+                    Comparison between SIMPLE and EnergyPlus
+                </p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/incident_ir_radiation.html">
+                <h1>
+                    Infrared Radiation incident on surfaces
+                </h1>
+                <p>
+                    Comparison between SIMPLE and EnergyPlus
+                </p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/incident_solar_radiation.html">
+                <h1>
+                    Incident solar radiation
+                </h1>
+                <p>
+                    Comparison between SIMPLE and EnergyPlus
+                </p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/infiltration.html">
+                <h1>Infiltrations validation</h1>
+                <p>Comparison between SIMPLE and EnergyPlus</p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/walls.html">
+                <h1>Heat transfer through walls</h1>
+                <p>Comparison between SIMPLE and
+                    both Theoretical Equations and EnergyPlus</p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/weather.html">
+                <h1>Retrieved weather from EPW file</h1>
+                <p>
+                    Check if SIMPLE and EnergyPlus are
+                    sampling weather files in the same way
+                </p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/daylight_coefficient.html">
+                <h1>Daylight Coefficients</h1>
+                <p>Comparison between SIMPLE
+                    and Radiance</p>
+            </a>
+        </li>
+        <li>
+            <a href="./validation/ray_tracer.html">
+                <h1>Ray tracing</h1>
+                <p>
+                    Check if ray-tracing works well.
+                </p>
+                <p class="danger">The ray-tracer works, but we need to improve how some materials are modelled.</p>
+            </a>
+        </li>
+    </ul>
+
+    <h3>Algorithms in development</h3>
+    <ul>
+        <!-- <li><a href="./validation/ray_tracer.html">Ray tracing algorithms - Comparison between SIMPLE and
                                 Radiance</a>
                 </li> -->
-            <li>
-                <a href="./validation/global_horizontal_from_cloud_cover.html"
-                    >Algorithms used to estimate solar radiation based on cloud
-                    cover data</a
-                >
-            </li>
-        </ul>
-    </body>
+        <li>
+            <a href="./validation/global_horizontal_from_cloud_cover.html">
+                <h1>Derive solar radiation from cloud cover</h1>
+                <p class="danger">This does not work too well, but is not currently in use</p>
+            </a>
+        </li>
+    </ul>
+</body>
+
 </html>
