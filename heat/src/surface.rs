@@ -107,14 +107,18 @@ impl ChunkMemory {
 #[derive(Debug, Clone)]
 pub struct SurfaceMemory {
     /// Memory for each massive chunk
-    pub massive_chunks: Vec<ChunkMemory>,
+    pub(crate)massive_chunks: Vec<ChunkMemory>,
     /// Memory for each no-mass chunk
-    pub nomass_chunks: Vec<ChunkMemory>,
+    pub(crate) nomass_chunks: Vec<ChunkMemory>,
     /// The temperatures
-    pub temperatures: Matrix,
-
-    /// The solar absorption on each node
-    pub q: Matrix,
+    pub(crate) temperatures: Matrix,
+    /// The absorbed solar radiation in the nodes
+    pub(crate) solar_radiation: Matrix,
+    /// Necessary for storyting a temporary variable when calculating 
+    /// absorbed solar radiation in the nodes
+    pub(crate) solar_radiation_aux: Matrix,
+    
+    
 }
 
 fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
@@ -176,7 +180,7 @@ fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
 /// * $`k_1 = \Delta t \times f(t,T)`$
 /// * $`k_2 = \Delta t \times f(t+\frac{\Delta t}{2}, T+\frac{k_1}{2})`$
 /// * $`k_3 = \Delta t \times f(t+\frac{\Delta t}{2}, T+\frac{k_2}{2})`$
-/// * $`k_4 = \Delta t \times f(t+\delta t, T+k_3 )`$
+/// * $`k_4 = \Delta t \times f(t+\Delta t, T+k_3 )`$
 pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
     #[cfg(debug_assertions)]
     {
@@ -199,17 +203,12 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
             krows, krows, qrows
         );
     }
-
-    // I am not sure why I need to clean... I thought this was not necessary.
-    memory.k1.fill(0.0);
-    memory.k2.fill(0.0);
-    memory.k3.fill(0.0);
-    memory.k4.fill(0.0);
-    memory.aux.fill(0.0);
-
-    // get k1
+    
+    
+    // k1 = 0
+    // k1 = k*temps
     memory.k.column_prod_into(&memory.temps, &mut memory.k1)?;
-    // equivalent of memory.k1 += &memory.q;
+    // k1 = k*temps + q --> f(t, T)
     add_assign(&mut memory.k1, &memory.q);
 
     // returning "temperatures + k1" is Euler... continuing is
@@ -218,53 +217,55 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
     memory.temps += &memory.k1;
     return Ok(());
     */
-
-    // eq. to memory.k1.scale_into(0.5, &mut memory.aux)?;
+    
+    // k2 = 0
+    // aux = k1*0.5 
     memory.aux.iter_mut().zip(memory.k1.iter()).for_each(|(a,b)| *a = 0.5*b);
-
-    // memory.aux += &memory.temps;
+    // aux = k1*0.5 + temps; --> we now need f(t, aux)
     add_assign(&mut memory.aux, &memory.temps);
-
-    // k2
+    // k2 = k*aux = k * ( k1*0.5 + temps )
     memory.k.column_prod_into(&memory.aux, &mut memory.k2)?;
-    // memory.k2 += &memory.q;
+    // k2 = k*aux + q = k * ( k1*0.5 + temps ) + q
     add_assign(&mut memory.k2, &memory.q);
-
-    // k3
-    // memory.k2.scale_into(0.5, &mut memory.aux)?;
-    // memory.aux = memory.k2.iter().map(|v| 0.5 * v).collect();
+    
+    
+    // k3 = 0
+    // aux = k2 / 2
     memory.aux.iter_mut().zip(memory.k2.iter()).for_each(|(a,b)| *a = 0.5*b);
-    // memory.aux += &memory.temps;
+    // aux = k2 / 2 + temps;
     add_assign(&mut memory.aux, &memory.temps);
-
+    // k3 = k2*(k2 / 2 + temps)
     memory.k.column_prod_into(&memory.aux, &mut memory.k3)?;
-    // memory.k3 += &memory.q;
+    // k3 = k2*(k2 / 2 + temps) + q;
     add_assign(&mut memory.k3, &memory.q);
 
-    // k4
-    // memory.aux.copy_from(&memory.k3);
+
+    
+
+
+    // k4 = 0
+    // aux = k3
     memory.aux.copy_from_slice(&memory.k3);
-    // memory.aux += &memory.temps;
+    // aux = k3 + temps;
     add_assign(&mut memory.aux, &memory.temps);
+    // k4 = k*(k3 + temps);
     memory.k.column_prod_into(&memory.aux, &mut memory.k4)?;
-    // memory.k4 += &memory.q;
+    // k4 = k*(k3 + temps) + q;
     add_assign(&mut memory.k4, &memory.q);
 
+
     // Scale them and add them all up
-    // memory.k1 /= 6.;
+    // k1 /= 6.;
     scale(&mut memory.k1, 1. / 6.);
-    // memory.k2 /= 3.;
+    // k2 /= 3.;
     scale(&mut memory.k2, 1. / 3.);
-    // memory.k3 /= 3.;
+    // k3 /= 3.;
     scale(&mut memory.k3, 1. / 3.);
-    // memory.k4 /= 6.;
+    // k4 /= 6.;
     scale(&mut memory.k4, 1. / 6.);
 
     // Let's add it all and return
-    // memory.temps += &memory.k1;
-    // memory.temps += &memory.k2;
-    // memory.temps += &memory.k3;
-    // memory.temps += &memory.k4;
+    // temps = k1/6 + k2/3 + k3/3 + k4/6
     add_assign(&mut memory.temps, &memory.k1);
     add_assign(&mut memory.temps, &memory.k2);
     add_assign(&mut memory.temps, &memory.k3);
@@ -362,14 +363,17 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let ini = self.parent.first_node_temperature_index();
         let fin = self.parent.last_node_temperature_index() + 1;
         let n_nodes = fin - ini;
-        let q = Matrix::new(0.0, n_nodes, 1);
         let temperatures = Matrix::new(0.0, n_nodes, 1);
+
+        let solar_radiation = temperatures.clone();
+        let solar_radiation_aux= temperatures.clone();
 
         SurfaceMemory {
             massive_chunks,
             nomass_chunks,
             temperatures,
-            q,
+            solar_radiation,
+            solar_radiation_aux,
         }
     }
 
@@ -1271,9 +1275,12 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         /////////////////////
         // 1st: Calculate the solar radiation absorbed by each node
         /////////////////////
-        // Allocation here!
-        let mut solar_radiation = &self.front_alphas * solar_front;
-        solar_radiation += &(&self.back_alphas * solar_back);
+        
+        // let mut solar_radiation = &self.front_alphas * solar_front;
+        // solar_radiation += &(&self.back_alphas * solar_back);
+        self.front_alphas.scale_into(solar_front, &mut memory.solar_radiation)?;
+        self.back_alphas.scale_into(solar_back, &mut memory.solar_radiation_aux)?;
+        memory.solar_radiation += &memory.solar_radiation_aux;
 
         /////////////////////
         // 2nd: Calculate the temperature in all no-mass nodes.
@@ -1294,7 +1301,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         for (chunk_i, (ini, fin)) in self.nomass_chunks.iter().enumerate() {
             self.march_nomass(
                 &mut memory.temperatures,
-                &solar_radiation, 
+                &memory.solar_radiation, 
                 t_front,
                 t_back,
                 front_rad_hs,
@@ -1328,7 +1335,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         for (chunk_i, (ini, fin)) in self.massive_chunks.iter().enumerate() {
             self.march_mass(
                 &mut memory.temperatures,
-                &solar_radiation, 
+                &memory.solar_radiation, 
                 dt,
                 t_front,
                 t_back,
