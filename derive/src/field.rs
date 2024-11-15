@@ -228,7 +228,7 @@ impl Field {
             let new_mod = std::sync::Arc::clone(model);
             let new_state = std::sync::Arc::clone(state);
             engine.register_get_result(#api_fieldname, move |this: &mut std::sync::Arc<#object_name>| {
-                let state_ptr = & *new_state.borrow();
+                let state_ptr = & *new_state.lock().unwrap();
                 match this.#fieldname(state_ptr){
                     Some(v)=> {return Ok(v)},
                     None => {return Err(format!(#value_not_available_err, this.name).into());}
@@ -262,7 +262,7 @@ impl Field {
             engine.register_set(#api_fieldname, move |this: &mut std::sync::Arc<#object_name>, v: crate::Float | -> Result<_, Box<rhai::EvalAltResult>> {
                 match this.#index_ident(){
                     Some(_)=>{
-                        let state_ptr = &mut *new_state.borrow_mut();
+                        let state_ptr = &mut *new_state.lock().unwrap();
                         this.#rust_fn(state_ptr, v)?;
                     },
                     None => {
@@ -278,7 +278,7 @@ impl Field {
             engine.register_set(#api_fieldname, move |this: &mut std::sync::Arc<#object_name>, v: rhai::INT | -> Result<_, Box<rhai::EvalAltResult>> {
                 match this.#index_ident(){
                     Some(_)=>{
-                        let state_ptr = &mut *new_state.borrow_mut();
+                        let state_ptr = &mut *new_state.lock().unwrap();
                         this.#rust_fn(state_ptr, v as crate::Float)?;
                     },
                     None => {

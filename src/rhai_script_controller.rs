@@ -17,16 +17,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::control_trait::SimpleControl;
-use crate::MultiphysicsModel;
+
 use model::rhai_api::register_control_api;
 use model::{Model, SimulationState};
 use rhai::{Engine, AST};
-use std::borrow::Borrow;
-use std::cell::RefCell;
 use std::fs::{self};
-// use std::sync::RwLock;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// A controller that adapts the state of the building based on a user-defined
 /// script written in [Rhai](https://rhai.rs) programming language.
@@ -45,8 +41,8 @@ impl RhaiControlScript {
         state: SimulationState,
         control_file: &String,
         research_mode: bool,
-    ) -> Result<(Self, Arc<RefCell<SimulationState>>), String> {
-        let control_script = match fs::read_to_string(&control_file) {
+    ) -> Result<(Self, Arc<Mutex<SimulationState>>), String> {
+        let control_script = match fs::read_to_string(control_file) {
             Ok(v) => v,
             Err(_) => return Err(format!("Could not read Rhai script '{}'", control_file)),
         };
@@ -59,11 +55,11 @@ impl RhaiControlScript {
         state: SimulationState,
         control_script: impl AsRef<str>, //&String,
         research_mode: bool,
-    ) -> Result<(Self, Arc<RefCell<SimulationState>>), String> {
+    ) -> Result<(Self, Arc<Mutex<SimulationState>>), String> {
         // Register API
         let mut engine = rhai::Engine::new();
 
-        let state = Arc::new(RefCell::new(state));
+        let state = Arc::new(Mutex::new(state));
         let model = Arc::new(model);
         register_control_api(&mut engine, &model, &state, research_mode);
         let ast = match engine.compile(control_script) {
@@ -73,15 +69,9 @@ impl RhaiControlScript {
 
         Ok((Self { ast, engine }, state))
     }
-}
 
-impl SimpleControl for RhaiControlScript {
-    fn control<M: Borrow<Model>>(
-        &self,
-        _simple_model: M,
-        _physics_model: &MultiphysicsModel,
-        _state: &mut SimulationState,
-    ) -> Result<(), String> {
+    /// Runs a control script
+    pub fn control(&self) -> Result<(), String> {
         // Control
         if let Err(e) = self.engine.eval_ast::<()>(&self.ast) {
             return Err(format!("Rhai {}", e));
