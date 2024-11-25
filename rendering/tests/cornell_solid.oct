@@ -1,4 +1,0 @@
-#?RADIANCE
-oconv cornell_solid.rad
-FORMAT=Radiance_octree
-

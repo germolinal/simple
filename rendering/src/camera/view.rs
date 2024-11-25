@@ -21,12 +21,14 @@ SOFTWARE.
 use crate::Float;
 use geometry::{Point3D, Vector3D};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct View {
+    /// The point of view
     pub view_point: Point3D,
+    /// The view direction
     pub view_direction: Vector3D,
-    pub view_up: Vector3D,
-
+    /// The "up", according to the camera
+    pub view_up: Vector3D,    
     /// Horizontal angle of the Field of View (i.e., frustum) in degrees
     pub field_of_view: Float,
 }
@@ -40,4 +42,27 @@ impl Default for View {
             field_of_view: 60.,
         }
     }
+}
+
+impl View {
+    
+
+    /// Checks that the view direction, view up, and view right are
+    /// unit vectors and orthogonal to each other, and that
+    /// `view_right = view_direction.cross(view_up)`
+    pub fn normalize(&mut self) {
+        self.view_direction.normalize();
+        self.view_up.normalize();        
+    }
+
+    pub fn view_right(&mut self)->Vector3D{
+        let view_right = self.view_direction.cross(self.view_up);
+        self.view_up = view_right.cross(self.view_direction);
+        self.normalize();
+        view_right.get_normalized()
+    }
+
+    
+
+    
 }
