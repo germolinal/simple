@@ -115,4 +115,4 @@ float = [
     "model/float",
     "weather/float",
 ]
-wasm = ["model/wasm", "utils/wasm"]
+wasm = ["model/wasm", "utils/wasm", "rhai/wasm-bindgen"]

@@ -8,9 +8,12 @@ pre_commit: #test validate
 build:
 	cargo build --features parallel --release
 
+wasm:
+	cargo build --features wasm --release --target wasm32-unknown-unknown
+
 test:
-	cargo test --features parallel  --workspace 
-	cargo test --release --features parallel  -p simple -- --ignored 
+	cargo test --features parallel  --workspace
+	cargo test --release --features parallel  -p simple -- --ignored
 
 neighbours:
 	cargo test --features parallel --release --package simple --test neighbours -- neighbours_sim --exact --nocapture --ignored
@@ -23,8 +26,8 @@ validate: cold box convection dc cloud_to_sun solar_irradiance infiltration
 cold:
 	cargo test $(VALIDATION_FEATURES) --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
 
-box: 
-	cargo test $(VALIDATION_FEATURES) --package simple --test box -- box_sim --exact --nocapture	
+box:
+	cargo test $(VALIDATION_FEATURES) --package simple --test box -- box_sim --exact --nocapture
 
 convection:
 	cargo test $(VALIDATION_FEATURES) --package heat --test validate_convection -- validate --exact --nocapture
@@ -33,7 +36,7 @@ dc:
 	cargo test $(VALIDATION_FEATURES) --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture
 
 cloud_to_sun:
-	cargo test $(VALIDATION_FEATURES) --package weather --lib -- solar::tests::test_cloud_cover_to_global_rad_generic --exact --nocapture 
+	cargo test $(VALIDATION_FEATURES) --package weather --lib -- solar::tests::test_cloud_cover_to_global_rad_generic --exact --nocapture
 
 solar_irradiance:
 	cargo test $(VALIDATION_FEATURES) --package light --test validate_solar_radiation -- validate_solar_radiation --exact --nocapture
@@ -44,8 +47,8 @@ infiltration:
 versailles:
 	cargo test $(VALIDATION_FEATURES) --package simple --test versailles -- versailles_sim --exact --nocapture --ignored
 
-walls: 
-	cargo test  --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture	
+walls:
+	cargo test  --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture
 
 weather:
 	cargo test $(VALIDATION_FEATURES) --package weather --test go_through -- test_go_through --exact --nocapture
