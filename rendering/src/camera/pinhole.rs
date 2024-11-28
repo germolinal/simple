@@ -28,20 +28,18 @@ pub struct Pinhole {
     view: View,
     film: Film,
     film_distance: Float,
-
-    /// A [`Vector3D`] which is the result of view_direction.cross(view_up)
-    u: Vector3D,
+    view_right: Vector3D,
 }
 
 impl Pinhole {
-    pub fn new(view: View, film: Film) -> Self {
+    pub fn new(mut view: View, film: Film) -> Self {
+        let view_right = view.view_right();
         let film_distance = 1. / (view.field_of_view.to_radians() / 2.0).tan();
-        let u = view.view_direction.cross(view.view_up);
         Pinhole {
             view,
+            view_right,
             film,
             film_distance,
-            u,
         }
     }
 }
@@ -57,7 +55,7 @@ impl Camera for Pinhole {
     }
 
     fn pixel_from_ray(&self, ray: &Ray3D) -> ((usize, usize), Float) {
-        if (ray.origin - self.view.view_point).length_squared() > 1e-24 {
+        if ray.origin.squared_distance(self.view.view_point) > 1e-24 {
             panic!("Trying to get a pixel of a camera through a ray that does not start at its view point... ViewPoint = {}, ray.origin = {} | distance = {}", self.view.view_point, ray.origin, (self.view.view_point-ray.origin).length());
         }
 
@@ -76,7 +74,7 @@ impl Camera for Pinhole {
         // Let's get the intersection point centered at the origin
         let intersection_pt = direction * ray_length;
         // Transform that point to be aligned with u and up and normal
-        let x = intersection_pt * self.u;
+        let x = intersection_pt * self.view_right;
         #[cfg(debug_assertions)]
         {
             let y = intersection_pt * normal;
@@ -124,8 +122,8 @@ impl Camera for Pinhole {
         let x = dx / 2. + x_pixel as Float * dx - xlim / 2.;
         let y = dy / 2. + y_pixel as Float * dy - ylim / 2.;
 
-        let direction =
-            self.view.view_direction * self.film_distance + self.u * x - self.view.view_up * y;
+        let direction = self.view.view_direction * self.film_distance + self.view_right * x
+            - self.view.view_up * y;
 
         let ray = Ray3D {
             direction: direction.get_normalized(),
@@ -148,7 +146,7 @@ impl Camera for Pinhole {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use geometry::Point3D;
+    use geometry::{Point3D, Vector3D};
 
     #[test]
     fn test_ray_pixel() {

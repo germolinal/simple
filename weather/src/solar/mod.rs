@@ -254,12 +254,9 @@ impl Solar {
         let z = cos_zenith;
 
         // Equation 1.6.6 for Azimuth
-        let mut cos_azimuth = (cos_zenith * sin_phi - sin_delta) / (sin_zenith * cos_phi);
-        if cos_azimuth > 1. {
-            cos_azimuth = 1.0;
-        } else if cos_azimuth < -1. {
-            cos_azimuth = -1.;
-        }
+        let cos_azimuth = (cos_zenith * sin_phi - sin_delta) / (sin_zenith * cos_phi);
+        let cos_azimuth = cos_azimuth.clamp(-1., 1.);
+
         let sin_azimuth = cos_azimuth.acos().sin();
 
         debug_assert!(

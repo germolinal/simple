@@ -234,14 +234,6 @@ fn laptop() -> Result<(), String> {
         ..View::default()
     };
 
-    // let view_point = Point3D::new(0.6, 0.9, 0.3);
-    // let view_direction = (Point3D::new(0., WIDTH / 2., DEPTH) - view_point).get_normalized();
-    // let view = View {
-    //     view_direction,
-    //     view_point,
-    //     ..View::default()
-    // };
-
     // Create camera
     let camera = Pinhole::new(view, film);
 
@@ -293,12 +285,15 @@ fn sponza() -> Result<(), String> {
     // Create view
     let view_point = Point3D::new(0.0, 5., 0.0);
     let view_direction = Vector3D::new(1., 0., 0.).get_normalized();
-    let view = View {
+    let view_up = Vector3D::new(0., 1., 0.);
+    let mut view = View {
         view_direction,
         view_point,
-        view_up: Vector3D::new(0., 1., 0.),
+        view_up,
         ..View::default()
     };
+    view.normalize();
+    // view.infer_basis();
 
     // Create camera
     let camera = Pinhole::new(view, film);
@@ -329,10 +324,13 @@ fn scene_0() -> Result<(), String> {
         resolution: (512, 512),
     };
 
+    let view_point = Point3D::new(2.25, 0.375, 1.);
+    let view_direction = Vector3D::new(-0.25, 0.125, -0.125).get_normalized();
+
     // Create view
     let view = View {
-        view_point: Point3D::new(2.25, 0.375, 1.),
-        view_direction: Vector3D::new(-0.25, 0.125, -0.125),
+        view_point,
+        view_direction,
         field_of_view: 45.,
         ..View::default()
     };
@@ -343,7 +341,6 @@ fn scene_0() -> Result<(), String> {
     let integrator = RayTracer {
         n_ambient_samples: 20,
         n_shadow_samples: 1,
-        max_depth: 8,
         ..RayTracer::default()
     };
 
@@ -497,35 +494,33 @@ fn dining() -> Result<(), String> {
 
     scene.add_from_obj("./tests/scenes//casa2.obj".to_string(), gray, gray);
 
-    scene.add_perez_sky(
-        calendar::Date {
-            month: 6,
-            day: 1,
-            hour: 12.,
-        },
-        -33.,
-        70.,
-        65.,
-        200.,
-        500.,
-    );
+    let glow = scene.push_material(Material::Light(Light(Spectrum([1., 1., 1.]) * 200.)));
+
+    let s = Sphere3D::new(0.1, Point3D::new(-2., 3.3, -1.));
+    scene.push_object(glow, glow, Primitive::Sphere(s));
+    let s = Sphere3D::new(0.1, Point3D::new(-2., 3.3, -1.));
+    scene.push_object(glow, glow, Primitive::Sphere(s));
+    let s = Sphere3D::new(0.1, Point3D::new(-0., 3.3, 1.));
+    scene.push_object(glow, glow, Primitive::Sphere(s));
+    let s = Sphere3D::new(0.1, Point3D::new(-0., 3.3, 1.));
+    scene.push_object(glow, glow, Primitive::Sphere(s));
 
     scene.build_accelerator();
 
     // Create film
     let film = Film {
-        resolution: (830, 550),
+        resolution: (250, 250),
     };
 
     // Create view
     let view_point = Point3D::new(-4.0, 1.3, 0.);
     let view_direction = Vector3D::new(1., -0.12, 0.).get_normalized();
+    let view_up = Vector3D::new(0., 1., 0.);
     let view = View {
         view_direction,
         view_point,
+        view_up,
         field_of_view: 48.,
-
-        view_up: Vector3D::new(0., 1., 0.),
         ..View::default()
     };
 
@@ -533,7 +528,7 @@ fn dining() -> Result<(), String> {
     let camera = Pinhole::new(view, film);
 
     let integrator = RayTracer {
-        n_ambient_samples: 60,
+        n_ambient_samples: 20,
         n_shadow_samples: 1,
         max_depth: 1,
         ..RayTracer::default()

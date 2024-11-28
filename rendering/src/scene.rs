@@ -237,7 +237,7 @@ impl Scene {
         self.lights.len() + self.distant_lights.len()
     }
 
-    /// Casts a [`Ray`] and returns an `Option<usize>` indicating the index
+    /// Casts a `Ray` and returns an `Option<usize>` indicating the index
     /// of the first primitive hit by the ray, if any. The `ray` passed will now contain
     /// the Interaction
     pub fn cast_ray<const N: usize>(

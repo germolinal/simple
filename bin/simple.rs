@@ -101,8 +101,11 @@ fn main() {
 
     let options = SimOptions::parse();
     // let options = SimOptions {
-    //     input_file: "somefile".to_string(),
-    //     check:true,
+    //     input_file: "./tests/cold_apartment/cold.spl".to_string(),
+    //     control_file: Some("./test_control.rhai".to_string()),
+    //     n: 1,
+    //     weather_file: Some("./tests/wellington.epw".to_string()),
+    //     // check:true,
     //     .. SimOptions::default()
     // };
     let filename = options.input_file.to_string();
