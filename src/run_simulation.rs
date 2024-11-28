@@ -324,16 +324,16 @@ where
     /* SIMULATE THE WHOLE SIMULATION PERIOD */
     /* ************************************ */
     let mut last_reported_month: u8 = 99;
-    for date in pre_process_data.sim_period {
-        let mut state = (*state).borrow_mut();
 
+    for date in pre_process_data.sim_period {
         if date.month != last_reported_month {
             last_reported_month = date.month;
             eprintln!("  ... Simulating month {}", last_reported_month);
         }
 
-        controller.control(model.borrow(), &pre_process_data.model, &mut state)?;
+        controller.control()?;
 
+        let mut state_lock = (*state).lock().unwrap();
         // Physics
         // let model = model.as_ref();
         // let mut state = (*state).borrow_mut();
@@ -341,7 +341,7 @@ where
             date,
             &pre_process_data.weather,
             model.borrow(),
-            &mut state,
+            &mut state_lock,
             &mut memory,
         )?;
 
@@ -353,14 +353,15 @@ where
 
         for (index, i) in pre_process_data.report_indexes.iter().enumerate() {
             let st = if index < report_len - 1 {
-                format!("{:.3},", state[*i])
+                format!("{:.3},", state_lock[*i])
             } else {
-                format!("{:.3}", state[*i])
+                format!("{:.3}", state_lock[*i])
             };
             let _u = out
                 .write(st.as_bytes())
                 .expect("Could not write to output file (data)");
         }
+        std::mem::drop(state_lock); // drop mutex
         let _u = out
             .write(b"\n")
             .expect("Could not write to output file (newline)");

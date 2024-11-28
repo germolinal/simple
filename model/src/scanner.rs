@@ -272,7 +272,7 @@ impl<'a> SimpleScanner<'a> {
         ];
 
         for ident in read_order {
-            if data.get(ident).is_none() {
+            if !data.contains_key(ident) {
                 continue;
             }
 

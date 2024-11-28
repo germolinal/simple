@@ -22,8 +22,7 @@ use crate::{
     hvac::{ElectricHeater, IdealHeaterCooler, HVAC},
     Fenestration, Luminaire, Model, SimulationState, Space, Surface,
 };
-use std::cell::RefCell;
-// use std::sync::RwLock;
+use std::sync::Mutex;
 
 use std::sync::Arc;
 
@@ -31,7 +30,7 @@ use std::sync::Arc;
 pub fn register_control_api(
     engine: &mut rhai::Engine,
     model: &Arc<Model>,
-    state: &Arc<RefCell<SimulationState>>,
+    state: &Arc<Mutex<SimulationState>>,
     research_mode: bool,
 ) {
     Space::register_api(engine, model, state, research_mode);

@@ -69,11 +69,11 @@ pub struct ChunkMemory {
     pub k4: Vec<Float>,
 }
 
-fn add_assign(a: &mut Vec<Float>, b: &[Float]) {
+fn add_assign(a: &mut [Float], b: &[Float]) {
     a.iter_mut().zip(b).for_each(|(x, y)| *x += y)
 }
 
-fn scale(a: &mut Vec<Float>, v: Float) {
+fn scale(a: &mut [Float], v: Float) {
     a.iter_mut().for_each(|x| *x *= v);
 }
 
@@ -107,18 +107,16 @@ impl ChunkMemory {
 #[derive(Debug, Clone)]
 pub struct SurfaceMemory {
     /// Memory for each massive chunk
-    pub(crate)massive_chunks: Vec<ChunkMemory>,
+    pub(crate) massive_chunks: Vec<ChunkMemory>,
     /// Memory for each no-mass chunk
     pub(crate) nomass_chunks: Vec<ChunkMemory>,
     /// The temperatures
     pub(crate) temperatures: Matrix,
     /// The absorbed solar radiation in the nodes
     pub(crate) solar_radiation: Matrix,
-    /// Necessary for storyting a temporary variable when calculating 
+    /// Necessary for storyting a temporary variable when calculating
     /// absorbed solar radiation in the nodes
     pub(crate) solar_radiation_aux: Matrix,
-    
-    
 }
 
 fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
@@ -203,8 +201,7 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
             krows, krows, qrows
         );
     }
-    
-    
+
     // k1 = 0
     // k1 = k*temps
     memory.k.column_prod_into(&memory.temps, &mut memory.k1)?;
@@ -217,31 +214,34 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
     memory.temps += &memory.k1;
     return Ok(());
     */
-    
+
     // k2 = 0
-    // aux = k1*0.5 
-    memory.aux.iter_mut().zip(memory.k1.iter()).for_each(|(a,b)| *a = 0.5*b);
+    // aux = k1*0.5
+    memory
+        .aux
+        .iter_mut()
+        .zip(memory.k1.iter())
+        .for_each(|(a, b)| *a = 0.5 * b);
     // aux = k1*0.5 + temps; --> we now need f(t, aux)
     add_assign(&mut memory.aux, &memory.temps);
     // k2 = k*aux = k * ( k1*0.5 + temps )
     memory.k.column_prod_into(&memory.aux, &mut memory.k2)?;
     // k2 = k*aux + q = k * ( k1*0.5 + temps ) + q
     add_assign(&mut memory.k2, &memory.q);
-    
-    
+
     // k3 = 0
     // aux = k2 / 2
-    memory.aux.iter_mut().zip(memory.k2.iter()).for_each(|(a,b)| *a = 0.5*b);
+    memory
+        .aux
+        .iter_mut()
+        .zip(memory.k2.iter())
+        .for_each(|(a, b)| *a = 0.5 * b);
     // aux = k2 / 2 + temps;
     add_assign(&mut memory.aux, &memory.temps);
     // k3 = k2*(k2 / 2 + temps)
     memory.k.column_prod_into(&memory.aux, &mut memory.k3)?;
     // k3 = k2*(k2 / 2 + temps) + q;
     add_assign(&mut memory.k3, &memory.q);
-
-
-    
-
 
     // k4 = 0
     // aux = k3
@@ -252,7 +252,6 @@ pub fn rk4(memory: &mut ChunkMemory) -> Result<(), String> {
     memory.k.column_prod_into(&memory.aux, &mut memory.k4)?;
     // k4 = k*(k3 + temps) + q;
     add_assign(&mut memory.k4, &memory.q);
-
 
     // Scale them and add them all up
     // k1 /= 6.;
@@ -366,7 +365,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let temperatures = Matrix::new(0.0, n_nodes, 1);
 
         let solar_radiation = temperatures.clone();
-        let solar_radiation_aux= temperatures.clone();
+        let solar_radiation_aux = temperatures.clone();
 
         SurfaceMemory {
             massive_chunks,
@@ -1275,11 +1274,13 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         /////////////////////
         // 1st: Calculate the solar radiation absorbed by each node
         /////////////////////
-        
+
         // let mut solar_radiation = &self.front_alphas * solar_front;
         // solar_radiation += &(&self.back_alphas * solar_back);
-        self.front_alphas.scale_into(solar_front, &mut memory.solar_radiation)?;
-        self.back_alphas.scale_into(solar_back, &mut memory.solar_radiation_aux)?;
+        self.front_alphas
+            .scale_into(solar_front, &mut memory.solar_radiation)?;
+        self.back_alphas
+            .scale_into(solar_back, &mut memory.solar_radiation_aux)?;
         memory.solar_radiation += &memory.solar_radiation_aux;
 
         /////////////////////
@@ -1301,7 +1302,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         for (chunk_i, (ini, fin)) in self.nomass_chunks.iter().enumerate() {
             self.march_nomass(
                 &mut memory.temperatures,
-                &memory.solar_radiation, 
+                &memory.solar_radiation,
                 t_front,
                 t_back,
                 front_rad_hs,
@@ -1335,7 +1336,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         for (chunk_i, (ini, fin)) in self.massive_chunks.iter().enumerate() {
             self.march_mass(
                 &mut memory.temperatures,
-                &memory.solar_radiation, 
+                &memory.solar_radiation,
                 dt,
                 t_front,
                 t_back,
@@ -1914,7 +1915,7 @@ mod testing {
     #[test]
     fn test_rk4() -> Result<(), String> {
         // Setup
-        let c = vec![1.,  1.];
+        let c = vec![1., 1.];
         let mut k = NDiagMatrix::new(0.0, 2, 2);
         // vec![1., -3., 4., -6.]
         k.set(0, 0, 1.)?;

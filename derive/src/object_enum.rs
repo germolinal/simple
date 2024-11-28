@@ -343,7 +343,7 @@ impl EnumObject {
         quote!(
             impl #object_name {
                 #[doc = #api_doc_string]
-                pub fn register_api(engine : &mut rhai::Engine, model: &std::sync::Arc<Model>, state: &std::sync::Arc<std::cell::RefCell<crate::SimulationState>>, research_mode: bool){
+                pub fn register_api(engine : &mut rhai::Engine, model: &std::sync::Arc<Model>, state: &std::sync::Arc<std::sync::Mutex<crate::SimulationState>>, research_mode: bool){
 
                     // By name
                     let new_mod = std::sync::Arc::clone(model);

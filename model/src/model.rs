@@ -75,7 +75,7 @@ pub struct Model {
     /// is missing (e.g., asking for temperature in node 192)
     pub outputs: Vec<Output>,
 
-    /// Some information about the site in which the building(s) of the 
+    /// Some information about the site in which the building(s) of the
     /// model are located.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub site_details: Option<SiteDetails>,
@@ -1914,7 +1914,7 @@ mod testing {
 
     use crate::rhai_api::*;
     use crate::simulation_state_element::SimulationStateElement;
-    use std::cell::RefCell;
+    use std::sync::Mutex;
 
     #[test]
     fn test_api() -> Result<(), String> {
@@ -1946,7 +1946,7 @@ mod testing {
         }
 
         // Wrap and send to the Heap
-        let state = Arc::new(RefCell::new(state));
+        let state = Arc::new(Mutex::new(state));
         let model = Arc::new(model);
         let mut engine = rhai::Engine::new();
 

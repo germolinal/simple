@@ -287,7 +287,7 @@ impl RayTracer {
         camera: &dyn Camera,
         width: usize,
         height: usize,
-        pixels: &mut Vec<Spectrum>,
+        pixels: &mut [Spectrum],
     ) {
         let chunk_len = 128;
         let i: Vec<&mut [Spectrum]> = pixels.chunks_mut(chunk_len).collect();

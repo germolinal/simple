@@ -552,7 +552,7 @@ impl StructObject {
             impl #object_name {
 
                 #[doc = #register_api_docs]
-                pub fn register_api(engine : &mut rhai::Engine, model: &std::sync::Arc<Model>, state: &std::sync::Arc<std::cell::RefCell<crate::simulation_state::SimulationState>>, research_mode: bool){
+                pub fn register_api(engine : &mut rhai::Engine, model: &std::sync::Arc<Model>, state: &std::sync::Arc<std::sync::Mutex<crate::simulation_state::SimulationState>>, research_mode: bool){
 
                     #register_type
 

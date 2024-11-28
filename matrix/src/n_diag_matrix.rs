@@ -16,8 +16,8 @@ impl<const N: usize> NDiagMatrix<N> {
     ///
     /// # Note
     /// It mutates both `self` and `b`. If this is not what you want, call `n_diag_gaussian()` instead
-    pub fn mut_gaussian(&mut self, b: &mut Vec<Float>) -> Result<(), String> {
-        let mut b_aux = Matrix::from_data(b.len(), 1, b.clone());
+    pub fn mut_gaussian(&mut self, b: &mut [Float]) -> Result<(), String> {
+        let mut b_aux = Matrix::from_data(b.len(), 1, b.to_owned());
         let mut self_aux = Matrix::new(0.0, self.ncols, self.nrows);
         for r in 0..self.nrows {
             for c in 0..self.ncols {
