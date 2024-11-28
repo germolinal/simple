@@ -151,6 +151,7 @@ fn sanitize_docs(docs: &str) -> TokenStream2 {
     let mut clean_docs = quote!();
     docs.lines().for_each(|ln| {
         let ln = ln.trim();
+        let ln = format!("! {}", ln);        
         clean_docs = quote!(
             #clean_docs
 
@@ -274,15 +275,15 @@ pub fn derive_output(
         }
     }
 
-    let output_enum_doc_str = r"!Possible outputs to request from the simulation     
-
+    let output_enum_doc_str = r"Possible outputs to request from the simulation     
+    
     ## Example   
 
-    !```json
-    !{{ #include ../../../model/tests/box.spl:bedroom }}
-    !
-    !{{ #include ../../../model/tests/box.spl:bedroom_output }}
-    !```
+    ```json
+    {{ #include ../../../model/tests/box.spl:bedroom }}
+    
+    {{ #include ../../../model/tests/box.spl:bedroom_output }}
+    ```
     ";
 
     let output_enum_doc = sanitize_docs(output_enum_doc_str);
