@@ -225,7 +225,7 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
 
         let mut acc = 0;
         // for row in 0..vec.len() {
-        for (row,item) in into.iter_mut().enumerate().take(vec.len()){
+        for (row, item) in into.iter_mut().enumerate().take(vec.len()) {
             let non_zeroes = Self::n_in_row(row, self.ncols);
             *item = T::zero();
             if non_zeroes > 0 {
