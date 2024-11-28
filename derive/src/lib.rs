@@ -18,7 +18,7 @@ use crate::simulation_state_behaviour::*;
 use std::collections::HashMap;
 
 fn get_attributes(ast: &DeriveInput) -> Vec<String> {
-    let allowed_attributes = vec!["inline_enum".to_string()];
+    let allowed_attributes = ["inline_enum".to_string()];
 
     ast.attrs
         .iter()

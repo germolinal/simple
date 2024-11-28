@@ -151,7 +151,7 @@ fn sanitize_docs(docs: &str) -> TokenStream2 {
     let mut clean_docs = quote!();
     docs.lines().for_each(|ln| {
         let ln = ln.trim();
-        let ln = format!("! {}", ln);        
+        let ln = format!("! {}", ln);
         clean_docs = quote!(
             #clean_docs
 

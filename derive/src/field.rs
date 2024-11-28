@@ -134,7 +134,7 @@ impl Field {
             let mut api_alias: Option<String> = None;
             for a in attributes.iter() {
                 if a.name == "physical" || a.name == "operational" {
-                    api_alias = a.value.clone();
+                    api_alias.clone_from(&a.value); 
                     break;
                 }
             }

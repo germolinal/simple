@@ -207,7 +207,7 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
     }
 
     /// Multiplies this column with a column vector.
-    pub fn column_prod_into(&self, vec: &[T], into: &mut Vec<T>) -> Result<(), String> {
+    pub fn column_prod_into(&self, vec: &[T], into: &mut [T]) -> Result<(), String> {
         if vec.len() != self.ncols {
             return Err(format!(
                 "Size mismatch. Column vector has {} elements, matrix has {} columns",
@@ -224,9 +224,10 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
         }
 
         let mut acc = 0;
-        for row in 0..vec.len() {
+        // for row in 0..vec.len() {
+        for (row,item) in into.iter_mut().enumerate().take(vec.len()){
             let non_zeroes = Self::n_in_row(row, self.ncols);
-            into[row] = T::zero();
+            *item = T::zero();
             if non_zeroes > 0 {
                 let this_data = &self.data[acc..acc + non_zeroes];
                 acc += non_zeroes;
@@ -237,7 +238,7 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
                 let other_data = &vec[ini..fin];
 
                 for i in 0..non_zeroes {
-                    into[row] += this_data[i] * other_data[i];
+                    *item += this_data[i] * other_data[i];
                 }
             }
         }

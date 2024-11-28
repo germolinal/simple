@@ -75,7 +75,7 @@ pub struct Model {
     /// is missing (e.g., asking for temperature in node 192)
     pub outputs: Vec<Output>,
 
-    /// Some information about the site in which the building(s) of the 
+    /// Some information about the site in which the building(s) of the
     /// model are located.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub site_details: Option<SiteDetails>,
