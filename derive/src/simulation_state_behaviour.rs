@@ -274,14 +274,15 @@ pub fn derive_output(
         }
     }
 
-    let output_enum_doc_str = r" Possible outputs to request from the simulation     
+    let output_enum_doc_str = r"!Possible outputs to request from the simulation     
 
     ## Example   
 
-    ```json
-    {{#include ../../../model/tests/box.spl:bedroom}}
-    {{#include ../../../model/tests/box.spl:bedroom_output}}
-    ```
+    !```json
+    !{{ #include ../../../model/tests/box.spl:bedroom }}
+    !
+    !{{ #include ../../../model/tests/box.spl:bedroom_output }}
+    !```
     ";
 
     let output_enum_doc = sanitize_docs(output_enum_doc_str);
