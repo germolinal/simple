@@ -4,6 +4,10 @@
 <head>
     <title>SIMPLE validation report</title>
     <style>
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+        }
         * {
             font-family: Arial, Helvetica, sans-serif;
         }
@@ -11,6 +15,16 @@
         a {
             color: inherit;
             text-decoration: none;
+        }
+
+        a.primary {
+            background-color: #0071e3;
+            color: white;
+            padding: 0.8em 1em;
+            border: none;
+            border-radius: 0.5em;            
+            
+            display: inline-block;
         }
 
         body {
@@ -65,7 +79,7 @@
 </head>
 
 <body>
-    <h1>Welcome to the <code>SIMPLE</code> validation report</h1>
+    <h1>Welcome to <code>SIMPLE</code>'s documentation</h1>
     <p>
         <code>SIMPLE</code> aims to be as reliable and transparent as
         possible. This report is a crucial piece of that effort.
@@ -80,12 +94,9 @@
         ever be deployed.
     </p>
 
-    <h2>Input Output reference</h2>
-    <p>Find it <a href="./ioreference/book/index.html">HERE</a>.</p>
-    <p>
-        This documentation can give you an idea of what is and how
-        <code>SIMPLE</code> works.
-    </p>
+    
+    <a class="primary" href="./ioreference/book/index.html">Go to <code>SIMPLE</code>'s user guide</a>
+    
 
     <h2>Validation reports</h2>
     <p>
