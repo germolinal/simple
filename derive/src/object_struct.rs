@@ -488,7 +488,7 @@ impl StructObject {
         // open docs
         let mut docs = "\n\n## API\n\nThe following properties are available for simulating control algorithms".to_string();
         docs = format!(
-            "{}\n\n| Property | Getter | Setter |\n|----------|--------|--------|",
+            "{}\n\n| Property |\n|----------|",
             docs
         );
 
@@ -507,12 +507,8 @@ impl StructObject {
                 // Docs
                 let api_fieldname = field.api_name()?;
 
-                let mut row = format!("| `{}` | Yes  ", api_fieldname);
-                if att_names.contains(&"physical".to_string()) {
-                    row = format!("{} | Research mode |", row);
-                } else {
-                    row = format!("{} | Yes |", row);
-                }
+                let row = format!("| `{}` |  ", api_fieldname);
+
                 docs = format!("{}\n{}", docs, row);
 
                 // Extend getters and setters
