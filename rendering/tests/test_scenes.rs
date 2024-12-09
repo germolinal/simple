@@ -357,10 +357,13 @@ fn cornell_glass() -> Result<(), String> {
 
     scene.build_accelerator();
 
+    let width = 367;
+    let height = (512 / 367) * width;
+
     // Create camera
     let film = Film {
         // resolution: (320, 240),
-        resolution: (512, 367),
+        resolution: (width, height),
         // resolution: (1024, 768),
         // resolution: (512, 512),
     };
