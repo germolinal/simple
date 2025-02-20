@@ -55,11 +55,8 @@ Also, feel free to  [**CHECK THE DOCS**](https://germolinal.github.io/simple_doc
 
 ## License
 
-This project aims to make the world better. Use it as much as you can and want. 
-Just respect the license and do not blame me if there is anything wrong, or
-incomplete, or anything else... I developed this whole code myself, so do not 
-expect it to be perfect (although there are many great people who have helped
-me a great deal in this).
+The official legal document is the MIT license. I chose it because 
+`SIMPLE` aims to make the world better and I want to encourage use. 
 
 ## Code of conduct
 
