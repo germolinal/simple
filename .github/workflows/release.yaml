@@ -2,7 +2,7 @@ name: Release
 
 on:
   pull_request:
-    branches: [main]
+    # branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,28 +33,28 @@ jobs:
           cargo test --manifest-path simple/Cargo.toml --release --features parallel -p simple -- --ignored
           cargo test --manifest-path simple/Cargo.toml -p model
 
-      - name: Checkout SIMPLE Docs
-        uses: actions/checkout@v4
-        with:
-          repository: germolinal/simple_docs
-          token: ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
-          path: simple_docs
+      # - name: Checkout SIMPLE Docs
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: germolinal/simple_docs
+      #     token: ${{ secrets.SIMPLE_DOCS_WRITE_TOKEN }}
+      #     path: simple_docs
 
-      - name: Copy documentation
-        run: |
-          rm -rf simple_docs/auto_src/*
-          cp -rf simple/docs simple_docs/auto_src/docs
-          mkdir  simple_docs/auto_src/model
-          cp -rf simple/model/tests simple_docs/auto_src/model/tests
+      # - name: Copy documentation
+      #   run: |
+      #     rm -rf simple_docs/auto_src/*
+      #     cp -rf simple/docs simple_docs/auto_src/docs
+      #     mkdir  simple_docs/auto_src/model
+      #     cp -rf simple/model/tests simple_docs/auto_src/model/tests
 
-      - name: Push docs
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions"
-          cd simple_docs
-          git add auto_src
-          git commit -m 'automatic documentation update'
-          git push
+      # - name: Push docs
+      #   run: |
+      #     git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      #     git config --global user.name "github-actions"
+      #     cd simple_docs
+      #     git add auto_src
+      #     git commit -m 'automatic documentation update'
+      #     git push
 
   publish_binaries:
     needs: test_and_docs
