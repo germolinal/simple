@@ -231,6 +231,10 @@ mod tests {
 
         let epw: Weather = EPWScanner::build_weather_file(&source).unwrap().into();
 
+        // Wind direction stays in degrees (first record: 150, second: 0)
+        assert_close!(epw.data[0].wind_direction, 150., 1e-5);
+        assert_close!(epw.data[1].wind_direction, 0., 1e-5);
+
         let ln = epw.find_weather_line(Date {
             month: 1,
             day: 1,

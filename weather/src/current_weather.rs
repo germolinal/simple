@@ -47,7 +47,8 @@ pub struct CurrentWeather {
     /// in m/s
     pub wind_speed: Float,
 
-    /// in radians... north is zero?
+    /// in degrees, clockwise from north (as in EPW files); the heat
+    /// model converts it to radians
     pub wind_direction: Float,
 
     /// in Wh/m2

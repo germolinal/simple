@@ -271,7 +271,7 @@ impl<'a> EPWScanner<'a> {
                 direct_normal_illuminance: EPWScanner::scan_number(self.scan_element())?,
                 diffuse_horizontal_illuminance: EPWScanner::scan_number(self.scan_element())?,
                 zenith_luminance: EPWScanner::scan_number(self.scan_element())?,
-                wind_direction: EPWScanner::scan_number(self.scan_element())?.max(360.), //Missing value is 999
+                wind_direction: EPWScanner::scan_number(self.scan_element())?.min(360.), //Missing value is 999
                 wind_speed: EPWScanner::scan_number(self.scan_element())?,
                 total_sky_cover: EPWScanner::scan_number(self.scan_element())?,
                 opaque_sky_cover: EPWScanner::scan_number(self.scan_element())?,
