@@ -116,7 +116,13 @@ impl Weather {
                     let first_date = self.data[0].date;
                     let last_n = last_date.day_of_year();
                     let first_n = first_date.day_of_year() + 365.;
-                    let date_n = date.day_of_year() + 365.;
+                    // Only dates before the first record wrap into the next year;
+                    // dates after the last record are already in the current one.
+                    let date_n = if i == 0 {
+                        date.day_of_year() + 365.
+                    } else {
+                        date.day_of_year()
+                    };
 
                     let x = (date_n - last_n) / (first_n - last_n);
                     self.data.last().unwrap().interpolate(&self.data[0], x)
@@ -231,6 +237,10 @@ mod tests {
 
         let epw: Weather = EPWScanner::build_weather_file(&source).unwrap().into();
 
+        // Wind direction stays in degrees (first record: 150, second: 0)
+        assert_close!(epw.data[0].wind_direction, 150., 1e-5);
+        assert_close!(epw.data[1].wind_direction, 0., 1e-5);
+
         let ln = epw.find_weather_line(Date {
             month: 1,
             day: 1,
@@ -281,6 +291,42 @@ mod tests {
             (epw.data[1].dry_bulb_temperature + epw.data[0].dry_bulb_temperature) / 2.,
             1e-5
         );
+    }
+
+    #[test]
+    fn test_find_weather_line_wraps_around_new_year() {
+        let line = |month, day, hour, dry_bulb_temperature| CurrentWeather {
+            date: Date { month, day, hour },
+            dry_bulb_temperature,
+            ..CurrentWeather::default()
+        };
+        // Hourly records from 01:00 on January 1st to 23:00 on December 31st
+        let weather = Weather {
+            data: vec![
+                line(1, 1, 1., 10.),
+                line(1, 1, 2., 11.),
+                line(12, 31, 22., 18.),
+                line(12, 31, 23., 20.),
+            ],
+            ..Weather::default()
+        };
+
+        // After the last record: interpolate towards the first one
+        // (23:30 is a quarter of the way from 23:00 to 01:00)
+        let ln = weather.find_weather_line(Date {
+            month: 12,
+            day: 31,
+            hour: 23.5,
+        });
+        assert_close!(ln.dry_bulb_temperature, 20. + 0.25 * (10. - 20.), 1e-5);
+
+        // Before the first record: same interpolation, three quarters of the way
+        let ln = weather.find_weather_line(Date {
+            month: 1,
+            day: 1,
+            hour: 0.5,
+        });
+        assert_close!(ln.dry_bulb_temperature, 20. + 0.75 * (10. - 20.), 1e-5);
     }
 
     #[test]
