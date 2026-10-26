@@ -73,11 +73,24 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
         self.data.copy_from_slice(&other.data)
     }
 
+    /// The number of elements stored before `row` (i.e., the sum of
+    /// `n_in_row()` for all the rows before it), in closed form.
     fn acc_n_in_row(row: usize, ncols: usize) -> usize {
-        let mut n = 0;
-        (0..row).for_each(|r| {
-            n += Self::n_in_row(r, ncols);
-        });
+        let s = one_sided_n!(N);
+
+        // Top padding: rows 0..s have s + 1 + r elements
+        let top = row.min(s);
+        let mut n = top * (s + 1) + top * top.saturating_sub(1) / 2;
+
+        // Every other row has z = r - s zeroes before its first element
+        let rest = row.saturating_sub(s);
+        // Rows that fit the whole n-diag (z + N <= ncols) have N elements...
+        let full = rest.min((ncols + 1).saturating_sub(N));
+        n += full * N;
+        // ... and those in the bottom padding (z < ncols) have ncols - z
+        let bottom_end = rest.min(ncols).max(full);
+        let sum_z = |z: usize| z * z.saturating_sub(1) / 2; // 0 + 1 + ... + (z - 1)
+        n += (bottom_end - full) * ncols - (sum_z(bottom_end) - sum_z(full));
         n
     }
 
@@ -125,6 +138,12 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
                 nrow, ncol, N
             ))
         }
+    }
+
+    /// Like `index()`, for elements known to be within the n-diag.
+    pub(crate) fn band_index(&self, nrow: usize, ncol: usize) -> usize {
+        debug_assert!(Self::is_diag_value(nrow, ncol));
+        Self::acc_n_in_row(nrow, self.ncols) + ncol - Self::zeroes_before(nrow)
     }
 
     /// States whether the element should contain a valid number
@@ -273,5 +292,27 @@ mod tests {
     fn check() {
         let aux = NDiagGenericMatrix::<3, Float>::new(1.0, 8, 5);
         print!("{aux}")
+    }
+
+    fn check_acc_n_in_row<const N: usize>() {
+        for ncols in 0..12 {
+            for row in 0..20 {
+                let expected: usize = (0..row)
+                    .map(|r| NDiagGenericMatrix::<N, Float>::n_in_row(r, ncols))
+                    .sum();
+                assert_eq!(
+                    NDiagGenericMatrix::<N, Float>::acc_n_in_row(row, ncols),
+                    expected,
+                    "N={N}, row={row}, ncols={ncols}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_acc_n_in_row() {
+        check_acc_n_in_row::<1>();
+        check_acc_n_in_row::<3>();
+        check_acc_n_in_row::<5>();
     }
 }
