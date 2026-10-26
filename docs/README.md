@@ -6,9 +6,9 @@ Published at <https://germolinal.github.io/simple/>:
   re-publishes the hand-written docs. The IO reference and validation reports
   still come from the latest `v*` tag, so they always describe a release.
 * **Pushing a `v*` tag** (`.github/workflows/docs-release.yaml`) re-publishes
-  everything from the tag. It fails (and so does `release.yaml`) if any
-  validation report is older than the code it validates; see
-  `check_validation.sh`.
+  everything from the tag. If any validation report is older than the code it
+  validates (see `check_validation.sh`), `make release` asks before tagging,
+  and the release workflows only warn.
 
 | Path | Content | Should you edit? |
 |--|--|--|
