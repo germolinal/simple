@@ -41,7 +41,7 @@ dc:
 	cargo test $(VALIDATION_FEATURES) --features parallel --package rendering --test validate_dc -- validate_dc --exact --nocapture
 
 cloud_to_sun:
-	cargo test $(VALIDATION_FEATURES) --package weather --lib -- solar::tests::test_cloud_cover_to_global_rad_generic --exact --nocapture
+	cargo test --package weather --lib -- solar::tests::test_cloud_cover_to_global_rad_generic --exact --nocapture
 
 solar_irradiance:
 	cargo test $(VALIDATION_FEATURES) --package light --test validate_solar_radiation -- validate_solar_radiation --exact --nocapture
@@ -53,7 +53,8 @@ ray_tracer:
 	cargo test $(VALIDATION_FEATURES) --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture
 
 infiltration:
-	cargo test $(VALIDATION_FEATURES) --package air --test validate_infiltration -- validate --exact --nocapture
+	cargo test --package air --test validate_infiltration -- validate --exact --nocapture
+
 
 versailles:
 	cargo test $(VALIDATION_FEATURES) --package simple --test versailles -- versailles_sim --exact --nocapture --ignored
