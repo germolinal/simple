@@ -548,28 +548,22 @@ impl BoundingVolumeTree {
         *stack_size += 1;
     }
 
-    /// Returns an `Option<usize>`, containing the index of the [`Triangle`]
-    /// to be hit by the ray, if any. The ray given will have the `interaction`
-    ///
+    /// Returns the closest [`Triangle`] hit by the ray, if any.
     pub fn intersect<const N: usize>(
         &self,
         scene: &Scene,
         ray: Ray3D,
         nodes_to_visit: &mut [usize; N], //&mut Vec<usize>,
-    ) -> Option<(usize, Point3D)> {
-        const MIN_T: Float = 0.0000001;
-
+    ) -> Option<TriangleHit> {
         if self.nodes.is_empty() {
             return None;
         }
         let mut stack_size = 0;
 
-        let mut prim_index: Option<(usize, Point3D)> = None;
-        let mut t_squared = Float::MAX;
-        // The closest intersection, in units of `ray.direction` (for skipping
-        // boxes that are farther than it)
+        let mut closest: Option<TriangleHit> = None;
+        let mut closest_t = Float::MAX;
+        // Boxes farther than this are skipped
         let mut max_t = Float::MAX;
-        let dir_squared = ray.direction * ray.direction;
 
         let inv_x = 1. / ray.direction.x;
         let inv_y = 1. / ray.direction.y;
@@ -590,16 +584,12 @@ impl BoundingVolumeTree {
                     let ini = offset as usize;
                     let fin = ini + node.n_prims as usize;
 
-                    if let Some((i, p)) = simple_intersect_triangle_slice(scene, ray, ini, fin) {
-                        // If hit, check the distance.
-                        let this_t_squared = (p - ray.origin).length_squared();
+                    if let Some(hit) = simple_intersect_triangle_slice(scene, ray, ini, fin) {
                         // if the distance is less than the prevous one, update the info
-                        if this_t_squared > MIN_T && this_t_squared < t_squared {
-                            // If the distance is less than what we had, update return data
-                            t_squared = this_t_squared;
-                            prim_index = Some((i, p));
-                            let t = ((p - ray.origin) * ray.direction) / dir_squared;
-                            max_t = t * (1. + PRUNING_MARGIN);
+                        if hit.t < closest_t {
+                            closest_t = hit.t;
+                            closest = Some(hit);
+                            max_t = hit.t * (1. + PRUNING_MARGIN);
                         }
                     }
 
@@ -632,13 +622,7 @@ impl BoundingVolumeTree {
             }
         } // End loop
 
-        // return
-        // if let Some(_index, pt) = prim_index {
-        //     let t = t_squared.sqrt();
-        //     // ray.interaction.point = ray.geometry.project(t);
-        //     // ray.interaction.wo = ray.geometry.direction * -1.;
-        // }
-        prim_index
+        closest
     }
 
     /// Checks if a ray can travel a certain distance without hitting anything
@@ -667,8 +651,8 @@ impl BoundingVolumeTree {
         let dir_is_neg = (inv_dir.x < 0., inv_dir.y < 0., inv_dir.z < 0.);
         let mut current_node = 0;
         // Only boxes closer than the distance can contain an obstruction
-        let max_t =
-            (distance_squared / (ray.direction * ray.direction)).sqrt() * (1. + PRUNING_MARGIN);
+        let dir_squared = ray.direction * ray.direction;
+        let max_t = (distance_squared / dir_squared).sqrt() * (1. + PRUNING_MARGIN);
 
         loop {
             let node = &self.nodes[current_node];
@@ -682,9 +666,9 @@ impl BoundingVolumeTree {
 
                     /* NON_SIMD */
 
-                    if let Some((_, p)) = simple_triangle_intersect(scene, ray, ini, fin) {
+                    if let Some(hit) = simple_triangle_intersect(scene, ray, ini, fin) {
                         // If hit, check the distance.
-                        let this_t_squared = (p - ray.origin).length_squared();
+                        let this_t_squared = hit.t * hit.t * dir_squared;
 
                         if this_t_squared > MIN_T
                             && this_t_squared + MIN_T < distance_squared
@@ -997,11 +981,9 @@ mod tests {
                 let expected = simple_intersect_triangle_slice(&scene, ray, 0, n);
                 match (found, expected) {
                     (None, None) => {}
-                    (Some((_, p)), Some((_, q))) => {
+                    (Some(a), Some(b)) => {
                         hits += 1;
-                        let d1 = (p - ray.origin).length_squared();
-                        let d2 = (q - ray.origin).length_squared();
-                        assert_eq!(d1.to_bits(), d2.to_bits(), "{name}: {d1} != {d2}");
+                        assert_eq!(a.t.to_bits(), b.t.to_bits(), "{name}: {} != {}", a.t, b.t);
                     }
                     (a, b) => panic!("{name}: BVH found {a:?}, brute force {b:?}"),
                 }
@@ -1025,8 +1007,8 @@ mod tests {
                 // Brute force: same criteria as `unobstructed_distance`, any triangle
                 let mut expected = true;
                 for i in 0..n {
-                    if let Some((_, p)) = simple_triangle_intersect(&scene, ray, i, i + 1) {
-                        let t = (p - ray.origin).length_squared();
+                    if let Some(hit) = simple_triangle_intersect(&scene, ray, i, i + 1) {
+                        let t = hit.t * hit.t * (ray.direction * ray.direction);
                         if t > 0.000001
                             && t + 0.000001 < distance_squared
                             && (distance_squared - t).abs() > 0.0001

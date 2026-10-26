@@ -12,6 +12,19 @@ pub(crate) const LEAF_SIZE: usize = 8;
 /// The smallest definition of a Triangle I could think of
 pub type Triangle = [Float; 9];
 
+/// The intersection between a ray and a [`Triangle`] of a [`Scene`]
+#[derive(Debug, Clone, Copy)]
+pub struct TriangleHit {
+    /// The index of the triangle in the scene
+    pub index: usize,
+    /// The intersection is at `ray.project(t)`
+    pub t: Float,
+    /// The first baricentric coordinate of the intersection
+    pub u: Float,
+    /// The second baricentric coordinate of the intersection
+    pub v: Float,
+}
+
 #[macro_export]
 macro_rules! ax {
     ( $n : expr ) => {{
@@ -128,7 +141,7 @@ pub fn simple_intersect_triangle_slice(
     ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
-) -> Option<(usize, Point3D)> {
+) -> Option<TriangleHit> {
     fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
 
@@ -139,7 +152,7 @@ pub fn simple_triangle_intersect(
     ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
-) -> Option<(usize, geometry::Point3D)> {
+) -> Option<TriangleHit> {
     fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
 

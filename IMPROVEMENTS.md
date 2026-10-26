@@ -467,11 +467,20 @@ over all (surface, ray) pairs (B3) to remove the idle time.
 
 Exact (same hits):
 
-1. **Return `t`; build the hit point only for the winner.** For every hit
-   candidate in a leaf, `baricentric_coordinates` builds the point
-   (`ray.project(t)`) and the leaf loop computes its squared distance; only
-   the closest needs a point. Comparing `t` saves ~15 operations per
-   candidate, makes C1's limit free, and enables C2.
+1. **Return `t`; build the hit point only for the winner ✅ (with C2).**
+   `intersect_triangle()` returns `(t, u, v)` (`baricentric_coordinates()` is
+   now a wrapper), the leaf loops and the BVH carry a `TriangleHit { index,
+   t, u, v }` and compare `t`, and `Scene::cast_ray` builds the point and
+   `new_info` once, for the winner, instead of intersecting it again (C2).
+   Checked against the previous code with 20,000 fixed rays in each of the
+   room, Cornell box and Sponza scenes: 59,998 of 60,000 give bit-identical
+   triangle, point and normal; the other 2 hit exactly on the edge shared by
+   two triangles (same point, the neighbouring triangle, a `-0.0` vs `0.0`
+   normal component), a tie that C5.3's tree or the comparison by `t` can
+   resolve either way. **No measurable speed-up**: cold apartment −0.9% CPU,
+   intersection benchmarks within ±4%. The saving applies to accepted
+   candidates only, and most triangle tests are rejections. Kept because the
+   code is simpler (no point → `t` conversions, one intersection per hit).
 2. **Precompute edges.** Each test recomputes `b - a` and `c - a`. Store them
    once, in BVH order, in a separate array used only for intersecting (the
    vertices are still needed for normals, areas and light sampling, and
