@@ -34,29 +34,54 @@ simple -i tests/box/box.spl -w tests/wellington.epw -n 4 -o out.csv
 
 ## Progress
 
-Serial times, Apple M1 Pro. "1 week" is Criterion's `march_one_week`; "1 year"
-is the release binary.
+Each step is checked for byte-identical annual outputs against the step before
+it (unless noted), and benchmarked against it. "vs prev." is the change from the
+previous step; "vs `merged`" is the cumulative change since the `merged`
+baseline. The weather fixes (#129) changed results, so earlier steps are not
+directly comparable; the original code is listed for reference only.
 
-| Step | Box 1 week | Cold apt. 1 week | Box 1 year | Cold apt. 1 year | Outputs |
-|--|--|--|--|--|--|
-| Original (`baseline`) | 181 ms | 405 ms | 8.6 s | 19.7 s | |
-| Edition 2024 + dependency upgrades | ≈ same | ≈ same | | | Identical |
-| Weather fixes #129 (`merged`) | 151 ms | 392 ms | 8.69 s | 19.47 s | Changed (expected) |
-| **A1** lock-free state indices | 134 ms (−11.7%) | 359 ms (−8.4%) | 7.37 s (−15%) | 16.92 s (−13%) | Identical |
-| **A4** O(n) tridiagonal solve | 122 ms (−9.0%) | 354 ms (−1.5%) | 6.66 s (−8.6%) | 16.69 s (−0.7%) | Identical |
+Percentages come from Criterion's point estimates (`march_one_week`) or from
+back-to-back runs of the release binary (1 year). Apple M1 Pro.
 
-Percentages are relative to the previous row. Since `merged`, A1 + A4 made
-`march_one_week` 20.9% (box) and 9.8% (cold apartment) faster, and annual runs
-23% and 14% faster.
+### One week (`march_one_week`), serial
 
-Other effects so far:
+| Step | Box | vs prev. | vs `merged` | Cold apt. | vs prev. | vs `merged` | Outputs |
+|--|--|--|--|--|--|--|--|
+| Original code (`baseline`) | 181 ms | | | 405 ms | | | |
+| Edition 2024 + dependencies | ≈ same | | | ≈ same | | | Identical |
+| Weather fixes #129 (`merged`) | 153.7 ms | | | 391.8 ms | | | Changed (expected) |
+| **A1** lock-free state indices | 133.7 ms | −13.0% | −13.0% | 358.8 ms | −8.4% | −8.4% | Identical |
+| **A4** O(n) tridiagonal solve | 121.6 ms | −9.0% | −20.9% | 353.5 ms | −1.5% | −9.8% | Identical |
+| **A5a** border conditions once per step | 66.4 ms | −45.4% | −56.8% | 321.4 ms | −9.1% | −18.0% | Identical |
+
+### One week (`march_one_week`), `--features parallel`
+
+| Step | Box | vs prev. | vs `merged` | Cold apt. | vs prev. | vs `merged` |
+|--|--|--|--|--|--|--|
+| Original code (`baseline_par`) | 199 ms | | | 349 ms | | |
+| Weather fixes #129 (`merged_par`) | 195.5 ms | | | 340.4 ms | | |
+| **A1** | 172.0 ms | −12.0% | −12.0% | 318.9 ms | −6.3% | −6.3% |
+| **A4** | 165.4 ms | −3.8% | −15.4% | 304.5 ms | −4.5% | −10.5% |
+| **A5a** | 107.1 ms | −35.3% | −45.2% | 272.3 ms | −10.6% | −20.0% |
+
+### One year (release binary, serial)
+
+| Step | Box | vs prev. | vs `merged` | Cold apt. | vs prev. | vs `merged` |
+|--|--|--|--|--|--|--|
+| Original code | 8.6 s | | | 19.7 s | | |
+| Weather fixes #129 (`merged`) | 8.69 s | | | 19.47 s | | |
+| **A1** | 7.37 s | −15.2% | −15.2% | 16.92 s | −13.1% | −13.1% |
+| **A4** | 6.66 s | −8.6% | −23.4% | 16.69 s | −0.7% | −14.3% |
+| **A5a** | 3.92 s | −40.9% | −54.9% | 15.60 s | −5.2% | −19.9% |
+
+### Other effects
 
 - The `rand` 0.10 upgrade made the DC pre-processing 24% (serial) to 41%
-  (`parallel`) faster (see B3).
-- With `parallel`, A1 made `march_one_week` 11.9% (box) and 6.3% (cold
-  apartment) faster, and A4 a further 3.8% and 4.5%.
+  (`parallel`) faster (see B3). No step since has changed it.
 - A4 made `tri_diag_mut_gaussian` 33% (n = 3), 49% (n = 8) and 60% (n = 20)
   faster: 45 / 124 / 356 ns.
+- A5b (`cbrt` instead of `powf(1. / 3.)`) was tried and reverted: 2-4% faster,
+  but it changed the box's zone temperature by up to 1.2 °C. See A5.
 
 ## Baselines
 
@@ -158,6 +183,26 @@ allocation-free.
 
 ### A5. Hoist loop-invariant work out of `march_nomass`
 
+**A5a ✅ Done.** `ThermalSurfaceData::march` now calculates the border
+conditions (and radiative coefficients) once per timestep, in a
+`BorderConditions` struct passed to `march_nomass` and `march_mass`. Before,
+they were recalculated in every iteration of the `march_nomass` loop, twice more
+in `march`, and once per massive chunk, always with the same inputs (the state
+does not change while a surface marches). `march_nomass` also no longer clones
+`k` and `q` on every call: it uses scratch buffers in `ChunkMemory`. Outputs
+are byte-identical; the box is 41-45% faster. See [Progress](#progress).
+
+**A5b ❌ Tried and reverted.** Replacing `powf(1. / 3.)` with `cbrt` in
+`get_tarp_natural_convection_coefficient` (`heat/src/convection.rs`) changes
+each convection coefficient by at most one unit in the last place, and made
+annual runs 2-4% faster. But the box's zone temperature then changed in 15% of
+the timesteps by more than 0.1 °C, and in 187 timesteps by more than 0.5 °C
+(maximum 1.22 °C); the cold apartment barely changed (303 of 280,280 values,
+maximum 0.019 °C). Not worth it until the no-mass solver is made robust; see
+"Sensitivity of `march_nomass`" under Methods.
+
+Originally:
+
 - `calc_border_conditions` runs on every iteration of the `march_nomass` loop,
   but its inputs (read from `state`) do not change inside the loop. Calculate
   it once per call. Most of the box's 29% in `pow` comes from here.
@@ -247,6 +292,11 @@ matters more than explicit SIMD here.
 
 ## D. Small items
 
+- **Bug:** in `ThermalSurfaceData::march` (`heat/src/surface.rs`), the back
+  solar irradiance is clamped with `if solar_back.is_nan() || solar_front < 0.0`;
+  it should test `solar_back < 0.0`. Fixing it may change results, so it was
+  left as is.
+
 - `heat_model::get_boundary_temperature` calls `Model::get_space(name)` per
   surface and per sub-step, which allocates a `String`, compares names
   linearly and clones an `Arc`. Use the space index the surface already stores
@@ -273,6 +323,12 @@ from the profile shares; each change should be checked against the baselines).
 - **`march_nomass` solver.** A fixed-point iteration with 0.5 damping, capped
   at 19,000 iterations. A Newton step, or a direct solve if the nonlinearity is
   mild, should converge much faster.
+- **Sensitivity of `march_nomass`.** A5b showed that changing convection
+  coefficients by one unit in the last place moves the box's zone temperature
+  by up to 1.2 °C. The loop stops on thresholds (`err < 0.01`, or `err` going
+  up), so tiny input changes can change the number of iterations and therefore
+  the result. A solver that converges to a tolerance independent of the path
+  would make results reproducible, and allow optimizations such as A5b.
 - **Stale convection inputs.** Inside `march_nomass`, border conditions use the
   previous timestep's surface temperatures from `state` (related to A5).
 - **`dt_subdivisions *= 2`** (`heat/src/heat_model.rs:375`) is applied to every

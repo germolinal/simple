@@ -67,6 +67,11 @@ pub struct ChunkMemory {
     pub k3: Vec<Float>,
     /// memory for a matrix
     pub k4: Vec<Float>,
+
+    /// Scratch copy of `k`, solved in place by `march_nomass`
+    pub k_aux: NDiagGenericMatrix<3, Float>,
+    /// Scratch copy of `q`, solved in place by `march_nomass`
+    pub q_aux: Vec<Float>,
 }
 
 fn add_assign(a: &mut [Float], b: &[Float]) {
@@ -98,8 +103,24 @@ impl ChunkMemory {
             k2: vec![0.0; n],
             k3: vec![0.0; n],
             k4: vec![0.0; n],
+            k_aux: NDiagMatrix::<3>::new(0.0, n, n),
+            q_aux: vec![0.0; n],
         }
     }
+}
+
+/// The conditions at both sides of a surface during one timestep.
+///
+/// They depend on the [`SimulationState`] and the weather, which do not change
+/// while a surface marches, so they are calculated once per timestep.
+#[derive(Debug, Clone, Copy)]
+struct BorderConditions {
+    front_env: ConvectionParams,
+    back_env: ConvectionParams,
+    front_hs: Float,
+    back_hs: Float,
+    front_rad_hs: Float,
+    back_rad_hs: Float,
 }
 
 /// The memory needed to simulate the marching of
@@ -743,30 +764,21 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         global_temperatures: &mut Matrix,
         solar_radiation: &Matrix,
         dt: Float,
-        t_front: Float,
-        t_back: Float,
-        front_rad_hs: Float,
-        back_rad_hs: Float,
-        wind_direction: Float,
-        wind_speed: Float,
+        border: &BorderConditions,
         ini: usize,
         fin: usize,
         memory: &mut ChunkMemory,
-        state: &SimulationState,
     ) -> Result<(), String> {
-        let (front_env, back_env, front_hs, back_hs) =
-            self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
-
         self.discretization.get_k_q(
             ini,
             fin,
             global_temperatures,
-            &front_env,
-            front_hs,
-            front_rad_hs,
-            &back_env,
-            back_hs,
-            back_rad_hs,
+            &border.front_env,
+            border.front_hs,
+            border.front_rad_hs,
+            &border.back_env,
+            border.back_hs,
+            border.back_rad_hs,
             memory,
         )?;
 
@@ -1033,39 +1045,26 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         &self,
         global_temperatures: &mut Matrix,
         solar_radiation: &Matrix,
-        t_front: Float,
-        t_back: Float,
-        front_rad_hs: Float,
-        back_rad_hs: Float,
-        wind_direction: Float,
-        wind_speed: Float,
+        border: &BorderConditions,
         ini: usize,
         fin: usize,
         memory: &mut ChunkMemory,
-        state: &SimulationState,
     ) -> Result<(), String> {
         let mut old_err = 99999.;
         let mut count = 0;
 
-        let mut temp_k = memory.k.clone();
-        let mut temps = memory.q.clone();
-
         loop {
-            // Update convection coefficients
-            let (front_env, back_env, front_hs, back_hs) =
-                self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
-
             // Calculate q based on heat transfer (convection, IR radiation)
             self.discretization.get_k_q(
                 ini,
                 fin,
                 global_temperatures,
-                &front_env,
-                front_hs,
-                front_rad_hs,
-                &back_env,
-                back_hs,
-                back_rad_hs,
+                &border.front_env,
+                border.front_hs,
+                border.front_rad_hs,
+                &border.back_env,
+                border.back_hs,
+                border.back_rad_hs,
                 memory,
             )?;
 
@@ -1078,15 +1077,15 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             // memory.q *= -1.;
             scale(&mut memory.q, -1.);
 
-            temp_k.copy_from(&memory.k);
-            temps.copy_from_slice(&memory.q);
+            memory.k_aux.copy_from(&memory.k);
+            memory.q_aux.copy_from_slice(&memory.q);
 
-            // FIX THIS!
-            temp_k.mut_gaussian(&mut temps)?; // and just like that, temps is the new temperatures
+            // and just like that, q_aux is the new temperatures
+            memory.k_aux.mut_gaussian(&mut memory.q_aux)?;
 
             let mut err = 0.0;
             for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = temps[local_i];
+                let local_temp = memory.q_aux[local_i];
                 let global_temp = global_temperatures.get(i, 0)?;
                 err += (local_temp - global_temp).abs();
             }
@@ -1127,7 +1126,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             //     err / ((fin - ini) as Float),
             // );
             for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = temps[local_i];
+                let local_temp = memory.q_aux[local_i];
                 // temperatures.set(i, 0, local_temp)?;
                 global_temperatures.add_to_element(i, 0, local_temp)?;
                 global_temperatures.scale_element(i, 0, 0.5)?;
@@ -1283,51 +1282,42 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             .scale_into(solar_back, &mut memory.solar_radiation_aux)?;
         memory.solar_radiation += &memory.solar_radiation_aux;
 
+        // Border conditions depend only on the state and the weather, which
+        // do not change during this timestep.
+        let (front_env, back_env, front_hs, back_hs) =
+            self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
+        let front_rad_hs = 4.
+            * self.front_emissivity
+            * crate::SIGMA
+            * (273.15 + (front_env.rad_temperature + front_env.surface_temperature) / 2.).powi(3);
+        let back_rad_hs = 4.
+            * self.back_emissivity
+            * crate::SIGMA
+            * (273.15 + (back_env.rad_temperature + back_env.surface_temperature) / 2.).powi(3);
+        let border = BorderConditions {
+            front_env,
+            back_env,
+            front_hs,
+            back_hs,
+            front_rad_hs,
+            back_rad_hs,
+        };
+
         /////////////////////
         // 2nd: Calculate the temperature in all no-mass nodes.
         // Also, the heat flow into
         /////////////////////
 
-        let (front_env, back_env, _front_hs, _back_hs) =
-            self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
-        let front_rad_hs = 4.
-            * self.front_emissivity
-            * crate::SIGMA
-            * (273.15 + (front_env.rad_temperature + front_env.surface_temperature) / 2.).powi(3);
-        let back_rad_hs = 4.
-            * self.back_emissivity
-            * crate::SIGMA
-            * (273.15 + (back_env.rad_temperature + back_env.surface_temperature) / 2.).powi(3);
-
         for (chunk_i, (ini, fin)) in self.nomass_chunks.iter().enumerate() {
             self.march_nomass(
                 &mut memory.temperatures,
                 &memory.solar_radiation,
-                t_front,
-                t_back,
-                front_rad_hs,
-                back_rad_hs,
-                wind_direction,
-                wind_speed,
+                &border,
                 *ini,
                 *fin,
                 &mut memory.nomass_chunks[chunk_i],
-                state,
             )?;
         }
-
-        // Calculate final conditions.
-
-        let (front_env, back_env, _front_hs, _back_hs) =
-            self.calc_border_conditions(state, t_front, t_back, wind_direction, wind_speed);
-        let front_rad_hs = 4.
-            * self.front_emissivity
-            * crate::SIGMA
-            * (273.15 + (front_env.rad_temperature + front_env.surface_temperature) / 2.).powi(3);
-        let back_rad_hs = 4.
-            * self.back_emissivity
-            * crate::SIGMA
-            * (273.15 + (back_env.rad_temperature + back_env.surface_temperature) / 2.).powi(3);
 
         /////////////////////
         // 3rd: Calculate K and C matrices for the massive walls, and march
@@ -1338,16 +1328,10 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 &mut memory.temperatures,
                 &memory.solar_radiation,
                 dt,
-                t_front,
-                t_back,
-                front_rad_hs,
-                back_rad_hs,
-                wind_direction,
-                wind_speed,
+                &border,
                 *ini,
                 *fin,
                 &mut memory.massive_chunks[chunk_i],
-                state,
             )?;
         }
         Ok(())
@@ -1942,6 +1926,8 @@ mod testing {
             k2: vec![0.; 2],
             k3: vec![0.; 2],
             k4: vec![0.; 2],
+            k_aux: NDiagMatrix::<3>::new(0.0, 2, 2),
+            q_aux: vec![0.; 2],
         };
         let dt = 0.01;
         rearrange_k(dt, /*&c,*/ &mut memory)?;
