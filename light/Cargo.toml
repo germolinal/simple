@@ -21,6 +21,7 @@ utils = { path = "../utils" }
 
 
 [dev-dependencies]
+criterion = { workspace = true }
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models" }
 
@@ -45,3 +46,7 @@ float = [
     "rendering/float",
     "geometry/float",
 ]
+
+[[bench]]
+name = "dc_matrix"
+harness = false

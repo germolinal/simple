@@ -154,7 +154,7 @@ fn rearrange_k(dt: Float, memory: &mut ChunkMemory) -> Result<(), String> {
         };
         // for ncol in 0..kcols{
         for ncol in ini..=fin {
-            memory.k.scale_element(nrow, ncol, v)?;
+            memory.k[(nrow, ncol)] *= v;
         }
         memory.q[nrow] *= v;
     }
@@ -797,7 +797,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
         // ... here we add solar gains
         for (local_i, global_i) in (ini..fin).enumerate() {
-            let v = solar_radiation.get(global_i, 0)?;
+            let v = solar_radiation[(global_i, 0)];
             memory.q[local_i] += v;
         }
 
@@ -806,7 +806,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         // Use RT4 for updating temperatures of massive nodes.
         // let mut local_temps = Matrix::new(0.0, fin - ini, 1);
         for (local_i, global_i) in (ini..fin).enumerate() {
-            let v = global_temperatures.get(global_i, 0)?;
+            let v = global_temperatures[(global_i, 0)];
             #[cfg(debug_assertions)]
             if v.is_nan() {
                 dbg!(v);
@@ -822,7 +822,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             if v.is_nan() {
                 dbg!(v);
             }
-            global_temperatures.set(global_i, 0, v)?;
+            global_temperatures[(global_i, 0)] = v;
         }
         Ok(())
     }
@@ -1070,7 +1070,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
             // add solar gains
             for (local_i, i) in (ini..fin).enumerate() {
-                let v = solar_radiation.get(i, 0)?;
+                let v = solar_radiation[(i, 0)];
                 // memory.q.add_to_element(local_i, 0, v)?;
                 memory.q[local_i] += v;
             }
@@ -1086,7 +1086,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             let mut err = 0.0;
             for (local_i, i) in (ini..fin).enumerate() {
                 let local_temp = memory.q_aux[local_i];
-                let global_temp = global_temperatures.get(i, 0)?;
+                let global_temp = global_temperatures[(i, 0)];
                 err += (local_temp - global_temp).abs();
             }
             err /= (fin - ini) as Float;
@@ -1128,8 +1128,8 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             for (local_i, i) in (ini..fin).enumerate() {
                 let local_temp = memory.q_aux[local_i];
                 // temperatures.set(i, 0, local_temp)?;
-                global_temperatures.add_to_element(i, 0, local_temp)?;
-                global_temperatures.scale_element(i, 0, 0.5)?;
+                global_temperatures[(i, 0)] += local_temp;
+                global_temperatures[(i, 0)] *= 0.5;
             }
 
             let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };

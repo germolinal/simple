@@ -94,6 +94,9 @@ pub struct ReinhartSky {
 
     /// The number of elements in this sky discretization (including ground)
     pub n_bins: usize,
+
+    /// The direction pointing to the centre of each bin
+    dirs: Vec<Vector3D>,
 }
 
 impl ReinhartSky {
@@ -251,7 +254,23 @@ impl ReinhartSky {
     }
 
     /// Gets a `Vector3D` pointing to the centre the bin.
+    ///
+    /// # Panics
+    /// Panics if `nbin` is out of bounds.
     pub fn bin_dir(&self, nbin: usize) -> Vector3D {
+        if nbin >= self.n_bins {
+            panic!("Trying to get direction to a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+        }
+        self.dirs[nbin]
+    }
+
+    /// The directions pointing to the centre of each bin (see `bin_dir()`)
+    pub fn bin_dirs(&self) -> &[Vector3D] {
+        &self.dirs
+    }
+
+    /// Calculates the `Vector3D` pointing to the centre the bin.
+    fn compute_bin_dir(&self, nbin: usize) -> Vector3D {
         if nbin == 0 {
             // Ground
             return Vector3D::new(0., 0., -1.);
@@ -330,14 +349,17 @@ impl ReinhartSky {
         // Cap + Ground + others
         let n_bins = 1 + acc_bins[n_rows - 1] + 1;
 
-        // Return
-        Self {
+        let mut sky = Self {
             mf,
             n_rows,
             n_bins,
             row_max_sin,
             acc_bins,
-        }
+            dirs: Vec::new(),
+        };
+        // Bin directions are calculated once, as they are used often
+        sky.dirs = (0..n_bins).map(|bin| sky.compute_bin_dir(bin)).collect();
+        sky
     }
 }
 
@@ -4006,5 +4028,20 @@ mod tests {
         );
         assert!((r.bin_dir(577) - Vector3D::new(0., 6.12323e-17, 1.)).length() < 1e-6);
         assert_eq!(577, r.dir_to_bin(Vector3D::new(0., 6.12323e-17, 1.)));
+    }
+
+    #[test]
+    fn test_cached_bin_dirs() {
+        for mf in 1..=4 {
+            let r = ReinhartSky::new(mf);
+            assert_eq!(r.bin_dirs().len(), r.n_bins);
+            for bin in 0..r.n_bins {
+                let cached = r.bin_dir(bin);
+                let computed = r.compute_bin_dir(bin);
+                assert_eq!(cached.x.to_bits(), computed.x.to_bits());
+                assert_eq!(cached.y.to_bits(), computed.y.to_bits());
+                assert_eq!(cached.z.to_bits(), computed.z.to_bits());
+            }
+        }
     }
 }

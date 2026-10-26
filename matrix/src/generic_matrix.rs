@@ -5,8 +5,15 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
 
+/// With the `parallel` feature, products with at least this many
+/// multiplications are calculated in parallel (one row per task).
+#[cfg(feature = "parallel")]
+const MIN_PARALLEL_WORK: usize = 32_768;
+
 /// The main Structure in this library
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[serde(try_from = "RawGenericMatrix<T>")]
+#[serde(bound(deserialize = "T: Deserialize<'de>"))]
 pub struct GenericMatrix<T: Numberish> {
     pub(crate) ncols: usize,
     pub(crate) nrows: usize,
@@ -14,6 +21,35 @@ pub struct GenericMatrix<T: Numberish> {
     // Contains the data ordered by row,
     // Going left to right, and up and down.
     pub(crate) data: Vec<T>,
+}
+
+/// What a [`GenericMatrix`] is deserialized from, before checking that its
+/// size is consistent.
+#[derive(Deserialize)]
+struct RawGenericMatrix<T> {
+    ncols: usize,
+    nrows: usize,
+    data: Vec<T>,
+}
+
+impl<T: Numberish> TryFrom<RawGenericMatrix<T>> for GenericMatrix<T> {
+    type Error = String;
+    fn try_from(raw: RawGenericMatrix<T>) -> Result<Self, String> {
+        if raw.nrows * raw.ncols != raw.data.len() {
+            return Err(format!(
+                "Matrix has {} rows and {} columns, but {} elements (expected {})",
+                raw.nrows,
+                raw.ncols,
+                raw.data.len(),
+                raw.nrows * raw.ncols
+            ));
+        }
+        Ok(Self {
+            ncols: raw.ncols,
+            nrows: raw.nrows,
+            data: raw.data,
+        })
+    }
 }
 
 impl<T: Numberish> std::fmt::Display for GenericMatrix<T> {
@@ -96,15 +132,25 @@ impl<T: Numberish> GenericMatrix<T> {
         }
     }
 
-    /// Checks whether a Matrix has Zero columns and Zero rows
+    /// Checks whether a Matrix has no elements (i.e., zero rows or zero columns)
     #[must_use]
     pub fn is_empty(&self) -> bool {
-        self.nrows == 0 && self.ncols == 0
+        self.nrows == 0 || self.ncols == 0
+    }
+
+    /// Sets all the elements to `v`
+    pub fn fill(&mut self, v: T) {
+        self.data.fill(v);
     }
 
     /// Borrows the data as a slice
     pub fn as_slice(&self) -> &[T] {
         &self.data
+    }
+
+    /// Borrows the data as a mutable slice
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
+        &mut self.data
     }
 
     /// Copies the data from a `GenericMatrix` into `self`.
@@ -229,7 +275,9 @@ impl<T: Numberish> GenericMatrix<T> {
     }
 
     /// Multiplies a matrix by `other`, putting the result into `into`
-    #[allow(clippy::needless_collect)]
+    ///
+    /// Each element of the result is calculated as
+    /// `((0 + a[i][0] * b[0][j]) + a[i][1] * b[1][j]) + ...`, in this order.
     pub fn prod_into(
         &self,
         other: &GenericMatrix<T>,
@@ -245,33 +293,45 @@ impl<T: Numberish> GenericMatrix<T> {
             );
         }
 
-        // Clear
-        *into *= T::zero();
+        into.fill(T::zero());
+        if self.ncols == 0 || other.ncols == 0 {
+            return Ok(());
+        }
 
-        // Multiply.
-        let self_rows: Vec<&[T]> = self.data.chunks_exact(self.ncols).collect();
-        #[cfg(not(feature = "parallel"))]
-        let self_rows = self_rows
-            .into_iter()
-            .zip(into.data.chunks_exact_mut(other.ncols));
-        #[cfg(feature = "parallel")]
-        let self_rows = self_rows
-            .into_par_iter()
-            .zip(into.data.par_chunks_exact_mut(other.ncols));
-
-        self_rows.for_each(|(row_data, into_data)| {
-            for (col, item) in into_data.iter_mut().enumerate().take(other.ncols) {
-                let coldata = other.data.iter().skip(col).step_by(other.ncols);
-                let row_data = row_data.iter();
-                let aux = row_data
-                    .zip(coldata)
-                    .map(|(a, b)| *a * *b)
-                    .fold(T::zero(), |acc, val| acc + val);
-                *item = aux;
+        // Row by row. With a single column in `other` (i.e., a vector), each
+        // element is a dot product. Otherwise, add a[i][k] * (row k of `other`)
+        // for k = 0, 1, ...: this goes through both matrices in the order they
+        // are stored, and still adds the terms of each element in order.
+        let m = other.ncols;
+        let multiply_row = |(a_row, into_row): (&[T], &mut [T])| {
+            if m == 1 {
+                into_row[0] = a_row
+                    .iter()
+                    .zip(&other.data)
+                    .fold(T::zero(), |acc, (a, b)| acc + *a * *b);
+                return;
             }
-        });
+            for (a, b_row) in a_row.iter().zip(other.data.chunks_exact(m)) {
+                for (item, b) in into_row.iter_mut().zip(b_row) {
+                    *item += *a * *b;
+                }
+            }
+        };
 
-        // return
+        #[cfg(feature = "parallel")]
+        if self.nrows * self.ncols * m >= MIN_PARALLEL_WORK {
+            self.data
+                .par_chunks_exact(self.ncols)
+                .zip(into.data.par_chunks_exact_mut(m))
+                .for_each(multiply_row);
+            return Ok(());
+        }
+
+        self.data
+            .chunks_exact(self.ncols)
+            .zip(into.data.chunks_exact_mut(m))
+            .for_each(multiply_row);
+
         Ok(())
     }
 
@@ -305,36 +365,31 @@ impl<T: Numberish> GenericMatrix<T> {
             );
         }
 
-        // Clear
-        *into *= T::zero();
+        into.fill(T::zero());
+        if self.ncols == 0 || other.ncols == 0 {
+            return Ok(());
+        }
 
-        // Multiply.
-        let i = self.data.chunks_exact(self.ncols);
-        let i = i.into_iter().zip(into.data.chunks_exact_mut(other.ncols));
-
+        // Row by row, adding a[i][k] * (row k of `other`) for the columns k
+        // within the n-diag, in order (see `prod_into()`).
         let one_sided_n = one_sided_n!(n);
-        i.enumerate().for_each(|(diag_i, (row_data, into_data))| {
-            // for c in 0..other.ncols {
-            for (c, item) in into_data.iter_mut().enumerate().take(other.ncols) {
-                // dbg!(diag_i, c);
-                let ini = if diag_i >= one_sided_n {
-                    diag_i - one_sided_n
-                } else {
-                    0
-                };
-                let fin = if diag_i + one_sided_n + 1 > self.ncols {
-                    self.ncols
-                } else {
-                    diag_i + one_sided_n + 1
-                };
-
-                for (i, a) in row_data.iter().enumerate().take(fin).skip(ini) {
-                    let other_i = other.index(i, c);
-                    let b = other.data[other_i];
-                    *item += *a * b;
+        let m = other.ncols;
+        for (i, (a_row, into_row)) in self
+            .data
+            .chunks_exact(self.ncols)
+            .zip(into.data.chunks_exact_mut(m))
+            .enumerate()
+        {
+            let ini = i.saturating_sub(one_sided_n);
+            let fin = (i + one_sided_n + 1).min(self.ncols);
+            for k in ini..fin {
+                let a = a_row[k];
+                let b_row = &other.data[k * m..(k + 1) * m];
+                for (item, b) in into_row.iter_mut().zip(b_row) {
+                    *item += a * *b;
                 }
             }
-        });
+        }
 
         // return
         Ok(())
@@ -388,6 +443,39 @@ impl<T: Numberish> GenericMatrix<T> {
         self.data[len_self..final_length].copy_from_slice(&other.data);
 
         Ok(())
+    }
+}
+
+/// Accesses the element in position `(nrow, ncol)`.
+///
+/// # Panics
+/// Panics if the element is out of bounds (use `get()` for a `Result`).
+impl<T: Numberish> std::ops::Index<(usize, usize)> for GenericMatrix<T> {
+    type Output = T;
+    fn index(&self, (nrow, ncol): (usize, usize)) -> &T {
+        assert!(
+            nrow < self.nrows && ncol < self.ncols,
+            "Element ({nrow},{ncol}) is out of bounds of a {}x{} matrix",
+            self.nrows,
+            self.ncols
+        );
+        &self.data[self.ncols * nrow + ncol]
+    }
+}
+
+/// Accesses the element in position `(nrow, ncol)`.
+///
+/// # Panics
+/// Panics if the element is out of bounds (use `set()` for a `Result`).
+impl<T: Numberish> std::ops::IndexMut<(usize, usize)> for GenericMatrix<T> {
+    fn index_mut(&mut self, (nrow, ncol): (usize, usize)) -> &mut T {
+        assert!(
+            nrow < self.nrows && ncol < self.ncols,
+            "Element ({nrow},{ncol}) is out of bounds of a {}x{} matrix",
+            self.nrows,
+            self.ncols
+        );
+        &mut self.data[self.ncols * nrow + ncol]
     }
 }
 
@@ -1436,5 +1524,121 @@ mod tests {
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
 
         Ok(())
+    }
+
+    #[test]
+    fn test_is_empty() {
+        assert!(Matrix::empty().is_empty());
+        assert!(Matrix::new(1.0, 0, 145).is_empty());
+        assert!(Matrix::new(1.0, 3, 0).is_empty());
+        assert!(!Matrix::new(1.0, 1, 1).is_empty());
+    }
+
+    #[test]
+    fn test_products_ignore_previous_contents_of_into() {
+        let a = Matrix::from_data(2, 2, vec![1., 2., 3., 4.]);
+        let b = Matrix::from_data(2, 1, vec![5., 6.]);
+        let expected = [17., 39.];
+
+        let mut into = Matrix::new(Float::NAN, 2, 1);
+        a.prod_into(&b, &mut into).unwrap();
+        assert_eq!(into.as_slice(), &expected);
+
+        let mut into = Matrix::new(Float::INFINITY, 2, 1);
+        a.prod_n_diag_into(&b, 3, &mut into).unwrap();
+        assert_eq!(into.as_slice(), &expected);
+    }
+
+    #[test]
+    fn test_serde_roundtrip() {
+        let m = Matrix::from_data(2, 3, vec![1., 2., 3., 4., 5., 6.]);
+        let s = serde_json::to_string(&m).unwrap();
+        assert_eq!(s, r#"{"ncols":3,"nrows":2,"data":[1.0,2.0,3.0,4.0,5.0,6.0]}"#);
+        let back: Matrix = serde_json::from_str(&s).unwrap();
+        assert!(back.compare(&m));
+    }
+
+    #[test]
+    fn test_deserialize_inconsistent_size() {
+        let r: Result<Matrix, _> =
+            serde_json::from_str(r#"{"ncols":3,"nrows":2,"data":[1.0,2.0,3.0]}"#);
+        assert!(r.is_err());
+    }
+
+    /// The algorithm `prod_into()` used before (one dot product per element)
+    fn reference_prod(a: &Matrix, b: &Matrix) -> Matrix {
+        let mut ret = Matrix::new(0.0, a.nrows, b.ncols);
+        for i in 0..a.nrows {
+            for j in 0..b.ncols {
+                ret.data[i * b.ncols + j] = (0..a.ncols)
+                    .map(|k| a.data[i * a.ncols + k] * b.data[k * b.ncols + j])
+                    .fold(0.0, |acc, v| acc + v);
+            }
+        }
+        ret
+    }
+
+    fn pseudo_random(n: usize, seed: u64) -> Vec<Float> {
+        let mut state = seed;
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 11) as f64 / (1u64 << 53) as f64 * 20. - 10.) as Float
+            })
+            .collect()
+    }
+
+    #[test]
+    fn test_prod_into_same_as_reference() {
+        // The last ones are big enough to be calculated in parallel
+        for (n, k, m) in [(1, 1, 1), (3, 4, 2), (7, 5, 1), (60, 2305, 1), (40, 40, 40)] {
+            let a = Matrix::from_data(n, k, pseudo_random(n * k, 1));
+            let b = Matrix::from_data(k, m, pseudo_random(k * m, 2));
+            let expected = reference_prod(&a, &b);
+            let mut found = Matrix::new(Float::NAN, n, m);
+            a.prod_into(&b, &mut found).unwrap();
+            for (x, y) in found.data.iter().zip(&expected.data) {
+                assert_eq!(x.to_bits(), y.to_bits(), "{n}x{k} * {k}x{m}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_prod_n_diag_into_same_as_reference() {
+        let n = 9;
+        for diag in [1, 3, 5] {
+            let s = (diag - 1) / 2;
+            let mut a = Matrix::from_data(n, n, pseudo_random(n * n, 3));
+            for i in 0..n {
+                for j in 0..n {
+                    if i.abs_diff(j) > s {
+                        a[(i, j)] = 0.0;
+                    }
+                }
+            }
+            let b = Matrix::from_data(n, 3, pseudo_random(n * 3, 4));
+            let expected = reference_prod(&a, &b);
+            let found = a.from_prod_n_diag(&b, diag).unwrap();
+            for (x, y) in found.data.iter().zip(&expected.data) {
+                assert_eq!(x.to_bits(), y.to_bits(), "{diag}-diagonal");
+            }
+        }
+    }
+
+    #[test]
+    fn test_index() {
+        let mut m = Matrix::from_data(2, 3, vec![1., 2., 3., 4., 5., 6.]);
+        assert_eq!(m[(1, 2)], 6.);
+        m[(0, 1)] = 9.;
+        assert_eq!(m.get(0, 1).unwrap(), 9.);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_index_out_of_bounds() {
+        let m = Matrix::new(0.0, 2, 3);
+        let _ = m[(2, 0)];
     }
 }

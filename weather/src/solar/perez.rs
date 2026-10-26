@@ -396,9 +396,9 @@ impl PerezSky {
     ) -> Result<Matrix, String> {
         let r = ReinhartSky::new(mf);
         let mut vec = Matrix::new(0.0, r.n_bins, 1);
-        Self::update_sky_vec(
-            &mut vec,
-            mf,
+        Self::update_sky_vec_for(
+            &r,
+            vec.as_mut_slice(),
             solar,
             date,
             weather_data,
@@ -430,6 +430,40 @@ impl PerezSky {
         if rows != r.n_bins {
             return Err(format!("when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)", rows, mf, r.n_bins));
         }
+        Self::update_sky_vec_for(
+            &r,
+            vec.as_mut_slice(),
+            solar,
+            date,
+            weather_data,
+            units,
+            albedo,
+            add_sky,
+            add_sun,
+        )
+    }
+
+    /// Like `update_sky_vec()`, for an existing [`ReinhartSky`] (so that its
+    /// bin directions do not need to be calculated again) and a slice with one
+    /// element per bin.
+    ///
+    /// As `update_sky_vec()`, during the day it adds to the values in `vec`,
+    /// and at night it sets them to zero.
+    #[allow(clippy::too_many_arguments)]
+    pub fn update_sky_vec_for(
+        r: &ReinhartSky,
+        vec: &mut [Float],
+        solar: &Solar,
+        date: Date,
+        weather_data: CurrentWeather,
+        units: SkyUnits,
+        albedo: Float,
+        add_sky: bool,
+        add_sun: bool,
+    ) -> Result<(), String> {
+        if vec.len() != r.n_bins {
+            return Err(format!("when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)", vec.len(), r.mf, r.n_bins));
+        }
 
         let dew_point = weather_data.dew_point_temperature;
         let diffuse_horizontal_irrad = weather_data.diffuse_horizontal_radiation;
@@ -437,9 +471,7 @@ impl PerezSky {
 
         // If it is nighttime, just fill with zeroes
         if direct_normal_irrad + diffuse_horizontal_irrad < 1e-4 {
-            for bin in 0..r.n_bins {
-                vec.set(bin, 0, 0.0)?;
-            }
+            vec.fill(0.0);
             return Ok(());
         }
 
@@ -453,9 +485,7 @@ impl PerezSky {
             Some(pos) => pos,
             None => {
                 // Vector3D::new(0., 0., -1.) // below the horizon
-                for bin in 0..r.n_bins {
-                    vec.set(bin, 0, 0.0)?;
-                }
+                vec.fill(0.0);
                 return Ok(());
             }
         };
@@ -502,7 +532,7 @@ impl PerezSky {
             }
             let ground = albedo * global_horizontal / PI / WHTEFFICACY;
             if !ground.is_nan() {
-                vec.add_to_element(0, 0, ground)?
+                vec[0] += ground;
             }
         }
 
@@ -520,8 +550,7 @@ impl PerezSky {
                 let dir = r.bin_dir(bin);
                 let v = sky_func(dir);
                 if !v.is_nan() {
-                    // vec.set(bin, 0, v)?;
-                    vec.add_to_element(bin, 0, v)?;
+                    vec[bin] += v;
                 }
             }
         }
@@ -566,7 +595,7 @@ impl PerezSky {
                 // let old = vec.get(bin, 0).unwrap();
                 // vec.set(bin, 0, old + val_add).unwrap();
                 if !val_add.is_nan() {
-                    vec.add_to_element(bin, 0, val_add)?;
+                    vec[bin] += val_add;
                 }
             }
         } // finished adding suns

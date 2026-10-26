@@ -2,15 +2,53 @@ use crate::traits::Numberish;
 use crate::Float;
 use serde::{Deserialize, Serialize};
 
-/// A compact version of an N-Diagonal matrix
+/// A compact version of an N-Diagonal matrix.
+///
+/// The elements are stored in "band storage": each row keeps the `N` elements
+/// around its diagonal, from column `row - s` to column `row + s` (where
+/// `s = (N - 1) / 2`), so element `(row, col)` is at
+/// `row * N + (col + s - row)`. At the top and bottom corners some of those
+/// positions fall outside the matrix; they are kept as padding, and never read.
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[serde(try_from = "RawNDiagGenericMatrix<T>")]
+#[serde(bound(deserialize = "T: Deserialize<'de>"))]
 pub struct NDiagGenericMatrix<const N: usize, T: Numberish> {
     pub(crate) ncols: usize,
     pub(crate) nrows: usize,
 
-    // Contains the data ordered by row,
-    // Going left to right, and up and down.
+    // Contains N elements per row (see above)
     pub(crate) data: Vec<T>,
+}
+
+/// What a [`NDiagGenericMatrix`] is deserialized from, before checking that
+/// its size is consistent.
+#[derive(Deserialize)]
+struct RawNDiagGenericMatrix<T> {
+    ncols: usize,
+    nrows: usize,
+    data: Vec<T>,
+}
+
+impl<const N: usize, T: Numberish> TryFrom<RawNDiagGenericMatrix<T>> for NDiagGenericMatrix<N, T> {
+    type Error = String;
+    fn try_from(raw: RawNDiagGenericMatrix<T>) -> Result<Self, String> {
+        let expected = raw.nrows * N;
+        if raw.data.len() != expected {
+            return Err(format!(
+                "{}-diagonal matrix has {} rows and {} columns, but {} elements (expected {})",
+                N,
+                raw.nrows,
+                raw.ncols,
+                raw.data.len(),
+                expected
+            ));
+        }
+        Ok(Self {
+            ncols: raw.ncols,
+            nrows: raw.nrows,
+            data: raw.data,
+        })
+    }
 }
 
 impl<const N: usize, T: Numberish> std::fmt::Display for NDiagGenericMatrix<N, T> {
@@ -26,41 +64,30 @@ impl<const N: usize, T: Numberish> std::fmt::Display for NDiagGenericMatrix<N, T
 }
 
 impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
+    /// The number of diagonals at each side of the main one
+    const S: usize = one_sided_n!(N);
+
     const fn validate_n() {
         // Assert at runtime that N is non-zero and even
         assert!(N > 0, "N in N-Diagonal matrix must be non-zero.");
         assert!(N % 2 != 0, "N in N-Diagonal matrix must be an odd number.");
     }
 
-    /// Creates a new `NDiagGenericMatrix` of `nrows` and `ncols` full of values `v`
+    /// Creates a new `NDiagGenericMatrix` of `nrows` and `ncols`, with value `v`
+    /// in every element of the n-diag.
     #[must_use]
     pub fn new(v: T, nrows: usize, ncols: usize) -> Self {
         Self::validate_n();
+        Self {
+            nrows,
+            ncols,
+            data: vec![v; nrows * N],
+        }
+    }
 
-        // There is a central set of rows in every n-diag matrix that
-        // has enough room to contain the whole n-diag. However, there
-        // is also a top and bottom padding, where the n-diag does not fit
-        // fully
-        //
-        // E.g.,
-        // | 1, 1, 0, 0, 0 | --> Top padding
-        // | 1, 1, 1, 0, 0 | --> Full on
-        // | 0, 1, 1, 1, 0 | --> Full on
-        // | 0, 0, 1, 1, 1 | --> Full on
-        // | 0, 0, 0, 1, 1 | --> Bottom padding
-        //
-        // Let's count the non-zero elements in this thing, slowly.
-        // This is not very efficient... but let's optimize it
-        // when some profile states we have to.
-        let n = Self::acc_n_in_row(nrows, ncols);
-        let data = vec![v; n];
-        let data = data
-            .iter()
-            .enumerate()
-            .map(|(i, _)| T::one() * i as Float)
-            .collect();
-
-        Self { nrows, ncols, data }
+    /// Sets all the elements within the n-diag to `v`
+    pub fn fill(&mut self, v: T) {
+        self.data.fill(v);
     }
 
     /// Copies the data from a `GenericMatrix` into `self`.
@@ -73,65 +100,17 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
         self.data.copy_from_slice(&other.data)
     }
 
-    /// The number of elements stored before `row` (i.e., the sum of
-    /// `n_in_row()` for all the rows before it), in closed form.
-    fn acc_n_in_row(row: usize, ncols: usize) -> usize {
-        let s = one_sided_n!(N);
-
-        // Top padding: rows 0..s have s + 1 + r elements
-        let top = row.min(s);
-        let mut n = top * (s + 1) + top * top.saturating_sub(1) / 2;
-
-        // Every other row has z = r - s zeroes before its first element
-        let rest = row.saturating_sub(s);
-        // Rows that fit the whole n-diag (z + N <= ncols) have N elements...
-        let full = rest.min((ncols + 1).saturating_sub(N));
-        n += full * N;
-        // ... and those in the bottom padding (z < ncols) have ncols - z
-        let bottom_end = rest.min(ncols).max(full);
-        let sum_z = |z: usize| z * z.saturating_sub(1) / 2; // 0 + 1 + ... + (z - 1)
-        n += (bottom_end - full) * ncols - (sum_z(bottom_end) - sum_z(full));
-        n
-    }
-
-    const fn zeroes_before(row: usize) -> usize {
-        let s = one_sided_n!(N);
-        if row < s {
-            // Top pading... no Zeroes
-            0
-        } else {
-            // this can be infinite, potentially. Handle this value
-            // with care
-            row - s
-        }
-    }
-
-    const fn n_in_row(row: usize, ncols: usize) -> usize {
-        let s = one_sided_n!(N);
-        let n_zeroes_before = Self::zeroes_before(row);
-        if row < s {
-            // top padding
-            s + 1 + row
-        } else if n_zeroes_before + N <= ncols {
-            // somewhere passed the top padding.
-            N
-        } else {
-            // Bottom padding
-            if n_zeroes_before < ncols {
-                // there are some values
-                ncols - n_zeroes_before
-            } else {
-                // just zeroes here.
-                0
-            }
-        }
+    /// The columns of `row` that are within the n-diag (and the matrix)
+    fn columns_in_row(&self, row: usize) -> std::ops::Range<usize> {
+        let ini = row.saturating_sub(Self::S);
+        let fin = (row + Self::S + 1).min(self.ncols);
+        ini..fin.max(ini)
     }
 
     /// Gets the index of an element within the `data` array of the Matrix
     fn index(&self, nrow: usize, ncol: usize) -> Result<usize, String> {
         if Self::is_diag_value(nrow, ncol) {
-            let n = Self::acc_n_in_row(nrow, self.ncols) + ncol - Self::zeroes_before(nrow);
-            Ok(n)
+            Ok(self.band_index(nrow, ncol))
         } else {
             Err(format!(
                 "Trying to access element ({},{}), which is off diagonal of {}-diagonal matrix",
@@ -143,13 +122,12 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
     /// Like `index()`, for elements known to be within the n-diag.
     pub(crate) fn band_index(&self, nrow: usize, ncol: usize) -> usize {
         debug_assert!(Self::is_diag_value(nrow, ncol));
-        Self::acc_n_in_row(nrow, self.ncols) + ncol - Self::zeroes_before(nrow)
+        nrow * N + ncol + Self::S - nrow
     }
 
     /// States whether the element should contain a valid number
     fn is_diag_value(nrow: usize, ncol: usize) -> bool {
-        let s = one_sided_n!(N);
-        ncol + s >= nrow && ncol <= nrow + s
+        ncol + Self::S >= nrow && ncol <= nrow + Self::S
     }
 
     /// Returns a tuple with number of rows and columns
@@ -161,8 +139,7 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
     pub fn get(&self, nrow: usize, ncol: usize) -> Result<T, String> {
         if nrow < self.nrows && ncol < self.ncols {
             if Self::is_diag_value(nrow, ncol) {
-                let i = self.index(nrow, ncol)?;
-                Ok(self.data[i])
+                Ok(self.data[self.band_index(nrow, ncol)])
             } else {
                 Ok(T::zero())
             }
@@ -174,52 +151,31 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
     /// Sets an element from the matrix
     pub fn set(&mut self, nrow: usize, ncol: usize, v: T) -> Result<T, String> {
         if nrow < self.nrows && ncol < self.ncols {
-            if Self::is_diag_value(nrow, ncol) {
-                let i = self.index(nrow, ncol)?;
-                self.data[i] = v;
-                Ok(v)
-            } else {
-                Err(format!(
-                    "Trying to set element ({},{}), which is off diagonal of {}-diagonal matrix",
-                    nrow, ncol, N
-                ))
-            }
+            let i = self.index(nrow, ncol)?;
+            self.data[i] = v;
+            Ok(v)
         } else {
             Err("Row or Column out of bounds.".to_string())
         }
     }
 
-    /// Sets an element from the matrix
-    pub fn add_to_element(&mut self, nrow: usize, ncol: usize, v: T) -> Result<T, String> {
+    /// Adds `v` to the element in position `nrow,ncol`.
+    pub fn add_to_element(&mut self, nrow: usize, ncol: usize, v: T) -> Result<(), String> {
         if nrow < self.nrows && ncol < self.ncols {
-            if Self::is_diag_value(nrow, ncol) {
-                let i = self.index(nrow, ncol)?;
-                self.data[i] += v;
-                Ok(v)
-            } else {
-                Err(format!(
-                    "Trying to set element ({},{}), which is off diagonal of {}-diagonal matrix",
-                    nrow, ncol, N
-                ))
-            }
+            let i = self.index(nrow, ncol)?;
+            self.data[i] += v;
+            Ok(())
         } else {
             Err("Row or Column out of bounds.".to_string())
         }
     }
 
-    /// Sets an element from the matrix
-    pub fn scale_element(&mut self, nrow: usize, ncol: usize, v: T) -> Result<T, String> {
+    /// Multiplies the element in position `nrow,ncol` by `v`.
+    pub fn scale_element(&mut self, nrow: usize, ncol: usize, v: T) -> Result<(), String> {
         if nrow < self.nrows && ncol < self.ncols {
-            if Self::is_diag_value(nrow, ncol) {
-                let i = self.index(nrow, ncol)?;
-                self.data[i] *= v;
-                Ok(v)
-            } else {
-                Err(format!(
-                    "Trying to set element ({},{}), which is off diagonal of {}-diagonal matrix",
-                    nrow, ncol, N
-                ))
-            }
+            let i = self.index(nrow, ncol)?;
+            self.data[i] *= v;
+            Ok(())
         } else {
             Err("Row or Column out of bounds.".to_string())
         }
@@ -242,23 +198,20 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
             ));
         }
 
-        let mut acc = 0;
-        // for row in 0..vec.len() {
-        for (row, item) in into.iter_mut().enumerate().take(vec.len()) {
-            let non_zeroes = Self::n_in_row(row, self.ncols);
+        for (row, item) in into.iter_mut().enumerate() {
             *item = T::zero();
-            if non_zeroes > 0 {
-                let this_data = &self.data[acc..acc + non_zeroes];
-                acc += non_zeroes;
-
-                let zeroes_before = Self::zeroes_before(row);
-                let ini = zeroes_before;
-                let fin = ini + non_zeroes;
-                let other_data = &vec[ini..fin];
-
-                for i in 0..non_zeroes {
-                    *item += this_data[i] * other_data[i];
-                }
+            if row >= self.nrows {
+                continue;
+            }
+            let cols = self.columns_in_row(row);
+            let first = if cols.is_empty() {
+                0
+            } else {
+                self.band_index(row, cols.start)
+            };
+            let this_data = &self.data[first..first + cols.len()];
+            for (a, b) in this_data.iter().zip(&vec[cols]) {
+                *item += *a * *b;
             }
         }
 
@@ -278,6 +231,41 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
     }
 }
 
+/// Accesses an element within the n-diag.
+///
+/// # Panics
+/// Panics if the element is out of bounds, or outside of the n-diag (use
+/// `get()` for reading those as zeroes).
+impl<const N: usize, T: Numberish> std::ops::Index<(usize, usize)> for NDiagGenericMatrix<N, T> {
+    type Output = T;
+    fn index(&self, (nrow, ncol): (usize, usize)) -> &T {
+        assert!(
+            nrow < self.nrows && ncol < self.ncols && Self::is_diag_value(nrow, ncol),
+            "Element ({nrow},{ncol}) is out of bounds or outside the n-diag of a {}x{} {N}-diagonal matrix",
+            self.nrows,
+            self.ncols
+        );
+        &self.data[self.band_index(nrow, ncol)]
+    }
+}
+
+/// Accesses an element within the n-diag.
+///
+/// # Panics
+/// Panics if the element is out of bounds, or outside of the n-diag.
+impl<const N: usize, T: Numberish> std::ops::IndexMut<(usize, usize)> for NDiagGenericMatrix<N, T> {
+    fn index_mut(&mut self, (nrow, ncol): (usize, usize)) -> &mut T {
+        assert!(
+            nrow < self.nrows && ncol < self.ncols && Self::is_diag_value(nrow, ncol),
+            "Element ({nrow},{ncol}) is out of bounds or outside the n-diag of a {}x{} {N}-diagonal matrix",
+            self.nrows,
+            self.ncols
+        );
+        let i = self.band_index(nrow, ncol);
+        &mut self.data[i]
+    }
+}
+
 impl<const N: usize, T: Numberish> std::ops::MulAssign<T> for NDiagGenericMatrix<N, T> {
     fn mul_assign(&mut self, s: T) {
         self.data.iter_mut().for_each(|a| *a *= s);
@@ -294,25 +282,86 @@ mod tests {
         print!("{aux}")
     }
 
-    fn check_acc_n_in_row<const N: usize>() {
-        for ncols in 0..12 {
-            for row in 0..20 {
-                let expected: usize = (0..row)
-                    .map(|r| NDiagGenericMatrix::<N, Float>::n_in_row(r, ncols))
-                    .sum();
-                assert_eq!(
-                    NDiagGenericMatrix::<N, Float>::acc_n_in_row(row, ncols),
-                    expected,
-                    "N={N}, row={row}, ncols={ncols}"
-                );
+    /// Every element within the n-diag gets its own position in `data`, and
+    /// elements outside it read as zero.
+    fn check_index_mapping<const N: usize>() {
+        for (nrows, ncols) in [(1, 1), (2, 2), (5, 5), (8, 5), (5, 8), (12, 12)] {
+            let mut m = NDiagGenericMatrix::<N, Float>::new(0.0, nrows, ncols);
+            let s = (N - 1) / 2;
+            let in_band = |r: usize, c: usize| r.abs_diff(c) <= s;
+            let value = |r: usize, c: usize| (1 + r * 100 + c) as Float;
+            for r in 0..nrows {
+                for c in 0..ncols {
+                    if in_band(r, c) {
+                        m.set(r, c, value(r, c)).unwrap();
+                        assert_eq!(m[(r, c)], value(r, c));
+                    } else {
+                        assert!(m.set(r, c, 1.0).is_err());
+                    }
+                }
+            }
+            for r in 0..nrows {
+                for c in 0..ncols {
+                    let expected = if in_band(r, c) { value(r, c) } else { 0.0 };
+                    assert_eq!(m.get(r, c).unwrap(), expected, "N={N} {nrows}x{ncols} ({r},{c})");
+                }
             }
         }
     }
 
     #[test]
-    fn test_acc_n_in_row() {
-        check_acc_n_in_row::<1>();
-        check_acc_n_in_row::<3>();
-        check_acc_n_in_row::<5>();
+    fn test_index_mapping() {
+        check_index_mapping::<1>();
+        check_index_mapping::<3>();
+        check_index_mapping::<5>();
+    }
+
+    #[test]
+    fn test_column_prod_into() {
+        // [2 1 0; 1 2 1; 0 1 2] * [1 2 3]' = [4 8 8]'
+        let mut m = NDiagGenericMatrix::<3, Float>::new(1.0, 3, 3);
+        for i in 0..3 {
+            m[(i, i)] = 2.0;
+        }
+        let mut into = vec![Float::NAN; 3];
+        m.column_prod_into(&[1., 2., 3.], &mut into).unwrap();
+        assert_eq!(into, vec![4., 8., 8.]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_index_outside_band() {
+        let m = NDiagGenericMatrix::<3, Float>::new(1.0, 5, 5);
+        let _ = m[(0, 3)];
+    }
+
+    #[test]
+    fn test_new_fills_with_value() {
+        let m = NDiagGenericMatrix::<3, Float>::new(2.5, 6, 6);
+        for r in 0..6_usize {
+            for c in 0..6_usize {
+                let expected = if r.abs_diff(c) <= 1 { 2.5 } else { 0.0 };
+                assert_eq!(m.get(r, c).unwrap(), expected, "({r},{c})");
+            }
+        }
+    }
+
+    #[test]
+    fn test_fill() {
+        let mut m = NDiagGenericMatrix::<3, Float>::new(Float::NAN, 4, 4);
+        m.fill(0.0);
+        assert!(m.data.iter().all(|v| *v == 0.0));
+    }
+
+    #[test]
+    fn test_serde() {
+        let m = NDiagGenericMatrix::<3, Float>::new(1.0, 4, 4);
+        let s = serde_json::to_string(&m).unwrap();
+        let back: NDiagGenericMatrix<3, Float> = serde_json::from_str(&s).unwrap();
+        assert_eq!(back.data, m.data);
+
+        let r: Result<NDiagGenericMatrix<3, Float>, _> =
+            serde_json::from_str(r#"{"ncols":4,"nrows":4,"data":[1.0,2.0]}"#);
+        assert!(r.is_err());
     }
 }

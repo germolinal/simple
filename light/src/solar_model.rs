@@ -29,15 +29,25 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use weather::{CurrentWeather, WeatherTrait};
-use weather::{PerezSky, SkyUnits, Solar};
+use weather::{PerezSky, ReinhartSky, SkyUnits, Solar};
 
+use crate::dc_matrix::DCMatrix;
 use crate::optical_info::OpticalInfo;
 
 /// The name of the module
 pub(crate) const MODULE_NAME: &str = "Solar Model";
 
-/// The memory used by this module during simulation
-pub type SolarModelMemory = ();
+/// The memory used by this module during simulation: the solar irradiance
+/// on each surface and fenestration, as calculated in each timestep.
+#[derive(Debug, Clone, Default)]
+pub struct SolarModelMemory {
+    /// The sky vector (one value per sky bin)
+    sky_vec: Vec<Float>,
+    front_surfaces: Vec<Float>,
+    back_surfaces: Vec<Float>,
+    front_fenestrations: Vec<Float>,
+    back_fenestrations: Vec<Float>,
+}
 
 /// The main model
 pub struct SolarModel {
@@ -54,11 +64,31 @@ pub struct SolarModel {
     /// The calculator for solar position and other solar variables
     solar: Solar,
 
-    /// The MF discretization scheme for the sky.
-    solar_sky_discretization: usize,
+    /// The sky discretization (Reinhart, with the MF of the optical data)
+    sky: ReinhartSky,
+
+    /// The daylight coefficients in `optical_info`, prepared for being
+    /// multiplied by the sky vector in every timestep
+    front_surfaces_dc: DCMatrix,
+    back_surfaces_dc: DCMatrix,
+    front_fenestrations_dc: DCMatrix,
+    back_fenestrations_dc: DCMatrix,
 }
 
 impl SolarModel {
+    /// Builds the model, preparing the daylight coefficients in `optical_info`
+    fn from_optical_info(optical_info: OpticalInfo, solar: Solar, mf: usize) -> Self {
+        Self {
+            front_surfaces_dc: DCMatrix::from(&optical_info.front_surfaces_dc),
+            back_surfaces_dc: DCMatrix::from(&optical_info.back_surfaces_dc),
+            front_fenestrations_dc: DCMatrix::from(&optical_info.front_fenestrations_dc),
+            back_fenestrations_dc: DCMatrix::from(&optical_info.back_fenestrations_dc),
+            optical_info,
+            solar,
+            sky: ReinhartSky::new(mf),
+        }
+    }
+
     /// This function makes the IR heat transfer Zero... we will try to fix this soon enough,
     /// just not now
     fn update_ir_radiation(
@@ -208,6 +238,7 @@ impl SolarModel {
         weather_data: CurrentWeather,
         model: &Model,
         state: &mut SimulationState,
+        memory: &mut SolarModelMemory,
     ) -> Result<(), String> {
         let direct_normal_irrad = weather_data.direct_normal_radiation;
         let diffuse_horizontal_irrad = weather_data.diffuse_horizontal_radiation;
@@ -228,8 +259,11 @@ impl SolarModel {
             return Ok(());
         }
 
-        let vec = PerezSky::gen_sky_vec(
-            self.solar_sky_discretization,
+        // Same as PerezSky::gen_sky_vec(), but reusing the sky and the vector
+        memory.sky_vec.fill(0.0);
+        PerezSky::update_sky_vec_for(
+            &self.sky,
+            &mut memory.sky_vec,
             &self.solar,
             date,
             weather_data,
@@ -238,10 +272,13 @@ impl SolarModel {
             true, // add sky
             true, // add sun
         )?;
+        let vec = &memory.sky_vec;
 
         // Process Solar Irradiance in Surfaces
         if !self.optical_info.front_surfaces_dc.is_empty() {
-            let solar_irradiance = &self.optical_info.front_surfaces_dc * &vec;
+            let solar_irradiance = &mut memory.front_surfaces;
+            self.front_surfaces_dc
+                .mul_vec_into(vec, solar_irradiance)?;
 
             for (i, s) in model.surfaces.iter().enumerate() {
                 if !SolarSurface::boundary_receives_sun(&s.front_boundary) {
@@ -249,7 +286,10 @@ impl SolarModel {
                     s.set_front_incident_solar_irradiance(state, 0.0)?;
                 }
                 // Average of the period
-                let mut v = solar_irradiance.get(i, 0)?;
+                let mut v = solar_irradiance
+                    .get(i)
+                    .copied()
+                    .ok_or("Row or Column out of bounds.")?;
                 if v < 0.0 {
                     v = 0.0
                 }
@@ -260,7 +300,9 @@ impl SolarModel {
             }
         }
         if !self.optical_info.back_surfaces_dc.is_empty() {
-            let solar_irradiance = &self.optical_info.back_surfaces_dc * &vec;
+            let solar_irradiance = &mut memory.back_surfaces;
+            self.back_surfaces_dc
+                .mul_vec_into(vec, solar_irradiance)?;
 
             for (i, s) in model.surfaces.iter().enumerate() {
                 if !SolarSurface::boundary_receives_sun(&s.back_boundary) {
@@ -268,7 +310,10 @@ impl SolarModel {
                     s.set_back_incident_solar_irradiance(state, 0.0)?;
                 }
                 // Average of the period
-                let mut v = solar_irradiance.get(i, 0)?;
+                let mut v = solar_irradiance
+                    .get(i)
+                    .copied()
+                    .ok_or("Row or Column out of bounds.")?;
                 if v < 0.0 {
                     v = 0.0
                 }
@@ -281,7 +326,9 @@ impl SolarModel {
 
         // Process Solar Irradiance in Fenestration
         if !self.optical_info.front_fenestrations_dc.is_empty() {
-            let solar_irradiance = &self.optical_info.front_fenestrations_dc * &vec;
+            let solar_irradiance = &mut memory.front_fenestrations;
+            self.front_fenestrations_dc
+                .mul_vec_into(vec, solar_irradiance)?;
 
             for (i, s) in model.fenestrations.iter().enumerate() {
                 if let FenestrationType::Opening = s.category {
@@ -292,7 +339,10 @@ impl SolarModel {
                     s.set_front_incident_solar_irradiance(state, 0.0)?;
                 }
                 // Average of the period
-                let v = solar_irradiance.get(i, 0)?;
+                let v = solar_irradiance
+                    .get(i)
+                    .copied()
+                    .ok_or("Row or Column out of bounds.")?;
                 let old_v = s.front_incident_solar_irradiance(state).ok_or(
                     "Could not get previous front incident solar irradiance (fenestration)",
                 )?;
@@ -300,7 +350,9 @@ impl SolarModel {
             }
         }
         if !self.optical_info.back_fenestrations_dc.is_empty() {
-            let solar_irradiance = &self.optical_info.back_fenestrations_dc * &vec;
+            let solar_irradiance = &mut memory.back_fenestrations;
+            self.back_fenestrations_dc
+                .mul_vec_into(vec, solar_irradiance)?;
             for (i, s) in model.fenestrations.iter().enumerate() {
                 if let FenestrationType::Opening = s.category {
                     continue;
@@ -309,7 +361,10 @@ impl SolarModel {
                     s.set_back_incident_solar_irradiance(state, 0.0)?;
                 }
                 // Average of the period
-                let v = solar_irradiance.get(i, 0)?;
+                let v = solar_irradiance
+                    .get(i)
+                    .copied()
+                    .ok_or("Row or Column out of bounds.")?;
                 let old_v = s.back_incident_solar_irradiance(state).ok_or(
                     "Could not get previous back incident solar irradiance (fenestration)",
                 )?;
@@ -332,7 +387,13 @@ impl SimulationModel for SolarModel {
     type AllocType = SolarModelMemory;
 
     fn allocate_memory(&self, _state: &SimulationState) -> Result<Self::AllocType, String> {
-        Ok(())
+        Ok(SolarModelMemory {
+            sky_vec: vec![0.0; self.sky.n_bins],
+            front_surfaces: vec![0.0; self.front_surfaces_dc.nrows()],
+            back_surfaces: vec![0.0; self.back_surfaces_dc.nrows()],
+            front_fenestrations: vec![0.0; self.front_fenestrations_dc.nrows()],
+            back_fenestrations: vec![0.0; self.back_fenestrations_dc.nrows()],
+        })
     }
 
     fn new<M: Borrow<Model>>(
@@ -402,11 +463,7 @@ impl SimulationModel for SolarModel {
 
         if model.surfaces.is_empty() {
             print_warning(MODULE_NAME, "Model has no surfaces");
-            return Ok(Self {
-                optical_info,
-                solar,
-                solar_sky_discretization: 1, // not really relevant
-            });
+            return Ok(Self::from_optical_info(optical_info, solar, 1)); // MF not really relevant
         }
 
         // derive MF
@@ -429,11 +486,7 @@ impl SimulationModel for SolarModel {
             }
         }
 
-        Ok(Self {
-            optical_info,
-            solar,
-            solar_sky_discretization: mf,
-        })
+        Ok(Self::from_optical_info(optical_info, solar, mf))
     }
 
     fn march<W: WeatherTrait, M: Borrow<Model>>(
@@ -442,7 +495,7 @@ impl SimulationModel for SolarModel {
         weather: &W,
         model: M,
         state: &mut SimulationState,
-        _alloc: &mut SolarModelMemory,
+        alloc: &mut SolarModelMemory,
     ) -> Result<(), String> {
         let model = model.borrow();
         // Handle the solar part
@@ -450,7 +503,7 @@ impl SimulationModel for SolarModel {
         let weather_data = weather.get_weather_data(date);
 
         self.update_ir_radiation(&weather_data, model, state)?;
-        self.update_solar_radiation(date, weather_data, model, state)?;
+        self.update_solar_radiation(date, weather_data, model, state, alloc)?;
 
         Ok(())
     }
@@ -485,7 +538,7 @@ mod testing {
 
         let light_model =
             SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4)?;
-        assert_eq!(light_model.solar_sky_discretization, 1); //this comes in the model
+        assert_eq!(light_model.sky.mf, 1); //this comes in the model
 
         // Step 2: Run it again, with a different option
         let meta_options = MetaOptions {
@@ -499,7 +552,7 @@ mod testing {
         solar_options.set_optical_data_path(optical_data_path.to_string());
         let light_model =
             SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4)?;
-        assert_eq!(light_model.solar_sky_discretization, 1); //this comes from the optical data.
+        assert_eq!(light_model.sky.mf, 1); //this comes from the optical data.
 
         // cleanup
         let path = Path::new(optical_data_path);
@@ -619,6 +672,7 @@ mod testing {
         weather.diffuse_horizontal_radiation = Box::new(ScheduleConstant::new(200.));
 
         let mut state = state_header.take_values().ok_or("Could not take values")?;
+        let mut memory = solar_model.allocate_memory(&state)?;
         solar_model.march(
             Date {
                 month: 1,
@@ -628,7 +682,7 @@ mod testing {
             &weather,
             &model,
             &mut state,
-            &mut (),
+            &mut memory,
         )?;
 
         // This surface should receive NO sun at the front but yes at the back

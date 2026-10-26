@@ -97,7 +97,8 @@ fn get_simple_results(
         let surface = &model.surfaces[0];
 
         // March
-        solar_model.march(date, &weather, &model, &mut state, &mut ())?;
+        let mut memory = solar_model.allocate_memory(&state)?;
+        solar_model.march(date, &weather, &model, &mut state, &mut memory)?;
 
         let front_radiation = surface
             .front_incident_solar_irradiance(&state)

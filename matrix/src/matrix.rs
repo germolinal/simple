@@ -119,7 +119,7 @@ impl Matrix {
         // Now, run substitution upwards (We don't need to iterate the first row)
         for c in (1..self.ncols).rev() {
             let pivot = self.data[self.index(c, c)];
-            debug_assert!((1. - pivot).abs() < 1e-15, "pivot is {}", pivot);
+            debug_assert!((1. - pivot).abs() < 4. * Float::EPSILON, "pivot is {}", pivot);
 
             let ini = if c < one_sided_n { 0 } else { c - one_sided_n };
 
