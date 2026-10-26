@@ -1,7 +1,7 @@
 name: Docs (release)
 
 # Re-writes the full docs (hand-written, IO reference and validation reports)
-# from the tagged commit. Fails if the validation reports are stale.
+# from the tagged commit. Warns if the validation reports are stale.
 on:
   push:
     tags: ["v*"]

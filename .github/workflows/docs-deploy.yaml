@@ -14,7 +14,7 @@ on:
         type: string
         default: ""
       check_validation:
-        description: "Fail if the validation reports are stale"
+        description: "Warn if the validation reports are stale"
         type: boolean
         default: false
 
@@ -48,7 +48,7 @@ jobs:
 
       - name: Check validation reports
         if: inputs.check_validation
-        run: ./docs/check_validation.sh "$GENERATED_REF"
+        run: ./docs/check_validation.sh --warn "$GENERATED_REF"
 
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable

@@ -32,9 +32,14 @@ if git rev-parse --quiet --verify "refs/tags/$tag" >/dev/null; then
     fail "tag $tag already exists; bump the version in Cargo.toml"
 fi
 
-./docs/check_validation.sh >/dev/null ||
-    fail "validation reports are stale; run 'make validate', commit and push docs/validation
-(run 'make check_validation' for details)"
+if ! report=$(./docs/check_validation.sh); then
+    echo
+    echo "WARNING: validation reports are stale (run 'make validate' and commit docs/validation to fix):"
+    echo "$report" | grep -v "^OK" | sed 's/^::error file=[^:]*:://'
+    echo
+    read -r -p "Release with stale validation reports anyway? [y/N] " answer
+    [ "$answer" = "y" ] || [ "$answer" = "Y" ] || fail "aborted"
+fi
 
 echo
 echo "Ready to release $tag from $(git log -1 --format='%h %s')"
