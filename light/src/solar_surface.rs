@@ -315,16 +315,18 @@ impl SolarSurface {
             let e1 = normal.get_perpendicular()?;
             let e2 = normal.cross(e1);
 
+            // Whether a point sees the outside is decided by the ray along its
+            // normal (not by each sampled direction), so it is cast only once.
+            if scene.cast_ray(*ray, &mut node_aux).is_some() {
+                continue;
+            }
             for _ in 0..n_samples {
                 let u = rng.random();
                 let dir = rendering::samplers::uniform_sample_tilted_hemisphere(u, e1, e2, normal);
-
-                if scene.cast_ray(*ray, &mut node_aux).is_none() {
-                    if dir.z > 0.0 {
-                        sky += 1.0;
-                    } else {
-                        ground += 1.;
-                    }
+                if dir.z > 0.0 {
+                    sky += 1.0;
+                } else {
+                    ground += 1.;
                 }
             }
         }

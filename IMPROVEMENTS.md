@@ -448,8 +448,22 @@ matters more than explicit SIMD here.
 
 ### C5. Triangle intersection (review)
 
-From reading `rendering/src/triangle/` and the BVH (not yet profiled; to be
-ranked with a profile of the DC pre-processing).
+From reading `rendering/src/triangle/` and the BVH.
+
+**Profile** (cold apartment's DC pre-processing after B3, C1 and C6, with the
+main functions marked `#[inline(never)]` so they can be told apart), as a
+share of the time threads were busy (they were idle 15-39% of the time):
+
+| Share | What |
+|--|--|
+| 48% | triangle tests (`baricentric_coordinates` 42%, its leaf loop 6%) |
+| 25% | box tests (`BBox3D::entry_exit`) |
+| 12% | BVH traversal (stack, child order) |
+| 3% | `new_info` |
+| ~8% | `trace_ray`, BSDF sampling, directions, sky bins |
+
+Suggested order: 3 (leaf size), 1 (with C2), 2, 4; then use one parallel loop
+over all (surface, ray) pairs (B3) to remove the idle time.
 
 Exact (same hits):
 
@@ -491,14 +505,25 @@ Correctness (fixing them changes results):
 10. **`f32` geometry** would halve data and double SIMD lanes; precise enough
     at building scale (~0.1 mm at 100 m), but changes results.
 
+### C6. Cast the normal ray once in `calc_view_factors` ✅
+
+`SolarSurface::calc_view_factors` (IR view factors, used by
+`SolarModel::update_ir_radiation`) cast the same ray 10,000 times per sensor
+point (see the bug under Methods), which was 53% of the cold apartment's DC
+pre-processing. It now casts it once per point and only samples directions
+to split sky and ground, which is the same calculation: view factors are
+identical where deterministic, and within sampling noise elsewhere (max.
+difference 0.0013). Cold apartment, DCs + 1 year: 12.4 → 9.3 s (43.6 → 24.5
+CPU-seconds).
+
 ## D. Small items
 
-- **Bug: the Versailles validation does not validate Versailles.**
-  `tests/versailles/main.rs` simulates `versailles.spl` (writing
-  `tests/versailles/check.csv`), but then compares
-  `tests/cold_apartment/check.csv` with the cold apartment's EnergyPlus
-  results. `versailles_energy.html` is therefore a copy of the cold apartment
-  comparison (made with whatever the cold apartment run left behind).
+- **Removed: the Versailles validation.** `tests/versailles/main.rs` was meant
+  to compare simulated energy with Germán's electricity bills (`bills.csv`),
+  but was left as a copy of the cold apartment test: it simulated Versailles
+  and then compared the cold apartment's results. The test, its report, and
+  its `make` target were removed; the model and data remain in
+  `tests/versailles/`.
 - `ProgressBar` prints to stdout, so when results go to stdout (no `-o`), a
   DC calculation mixes its progress bar into the results.
 
@@ -677,6 +702,15 @@ from the profile shares; each change should be checked against the baselines).
   up), so tiny input changes can change the number of iterations and therefore
   the result. A solver that converges to a tolerance independent of the path
   would make results reproducible, and allow optimizations such as A5b.
+- **IR view factors only look along the normal.** In
+  `SolarSurface::calc_view_factors`, each sampled direction is used only to
+  classify sky vs. ground; whether a point sees the outside at all is decided
+  by the single ray along its normal (the sampling loop casts that ray, not
+  the sampled one). So a point whose normal ray hits something counts as
+  seeing no sky and no ground, and one whose normal ray is clear counts as
+  fully unobstructed. Casting along each sampled direction would fix it, but
+  changes IR results (and costs 10,000 rays per point again; fewer samples
+  would do).
 - **Stale convection inputs.** Inside `march_nomass`, border conditions use the
   previous timestep's surface temperatures from `state` (related to A5).
 

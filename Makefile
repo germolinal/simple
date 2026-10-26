@@ -25,7 +25,7 @@ neighbours:
 
 
 # Regenerates every report in docs/validation (see `make check_validation`)
-validate: cold box convection dc cloud_to_sun solar_irradiance ir_irradiance ray_tracer infiltration versailles walls weather
+validate: cold box convection dc cloud_to_sun solar_irradiance ir_irradiance ray_tracer infiltration walls weather
 	echo "Validated $$(git rev-parse --short HEAD)$$(git diff --quiet HEAD -- . ':!docs/validation' || echo ' (with uncommitted changes)') on $$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > docs/validation/.last_validated
 	echo Done validating! Commit docs/validation, including .last_validated
 
@@ -56,9 +56,6 @@ ray_tracer:
 infiltration:
 	cargo test --package air --test validate_infiltration -- validate --exact --nocapture
 
-
-versailles:
-	cargo test $(VALIDATION_FEATURES) --package simple --test versailles -- versailles_sim --exact --nocapture --ignored
 
 walls:
 	cargo test  --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture
