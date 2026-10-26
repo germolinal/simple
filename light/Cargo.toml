@@ -35,7 +35,6 @@ simd = ["rendering/simd"]
 parallel = [
     "rayon",
     "rendering/parallel",
-    "matrix/parallel",
     "geometry/parallel",
 ]
 float = [

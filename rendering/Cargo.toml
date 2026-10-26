@@ -33,7 +33,7 @@ harness = false
 [features]
 default = []
 float = ["model/float", "geometry/float", "matrix/float", "weather/float"]
-parallel = ["geometry/parallel", "matrix/parallel", "rayon"]
+parallel = ["geometry/parallel", "rayon"]
 textures = ["geometry/textures"]
 simd = []
 

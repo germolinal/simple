@@ -2,13 +2,6 @@ use crate::traits::Numberish;
 use crate::Float;
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "parallel")]
-use rayon::prelude::*;
-
-/// With the `parallel` feature, products with at least this many
-/// multiplications are calculated in parallel (one row per task).
-#[cfg(feature = "parallel")]
-const MIN_PARALLEL_WORK: usize = 32_768;
 
 /// The main Structure in this library
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -317,15 +310,6 @@ impl<T: Numberish> GenericMatrix<T> {
                 }
             }
         };
-
-        #[cfg(feature = "parallel")]
-        if self.nrows * self.ncols * m >= MIN_PARALLEL_WORK {
-            self.data
-                .par_chunks_exact(self.ncols)
-                .zip(into.data.par_chunks_exact_mut(m))
-                .for_each(multiply_row);
-            return Ok(());
-        }
 
         self.data
             .chunks_exact(self.ncols)
@@ -1592,7 +1576,6 @@ mod tests {
 
     #[test]
     fn test_prod_into_same_as_reference() {
-        // The last ones are big enough to be calculated in parallel
         for (n, k, m) in [(1, 1, 1), (3, 4, 2), (7, 5, 1), (60, 2305, 1), (40, 40, 40)] {
             let a = Matrix::from_data(n, k, pseudo_random(n * k, 1));
             let b = Matrix::from_data(k, m, pseudo_random(k * m, 2));

@@ -669,7 +669,6 @@ name = "matrix"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "rayon",
  "serde",
  "serde_json",
 ]

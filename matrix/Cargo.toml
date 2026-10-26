@@ -5,7 +5,6 @@ authors = ["German Molina <germolinal@gmail.com>"]
 edition = "2024"
 
 [dependencies]
-rayon = { workspace = true, optional = true }
 serde = { version = "1.0.142", features = ["derive"] }
 
 [dev-dependencies]
@@ -15,7 +14,6 @@ criterion = { workspace = true }
 [features]
 default = []
 float = []
-parallel = ["rayon"]
 
 [[bench]]
 name = "generic_matrix_bench"

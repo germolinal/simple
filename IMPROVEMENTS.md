@@ -294,13 +294,42 @@ of runtime.
 
 ## B. Parallelism at the right level
 
-### B1. Remove threading from `matrix`
+### B1. Remove threading from `matrix` ✅
+
+Done: the `matrix` crate no longer has a `parallel` feature (nor depends on
+`rayon`), and `light` and `rendering` no longer enable it. After A2 and E2a,
+nothing in a simulation used it: the DC × sky products go through `DCMatrix`,
+and `prod_into` only used threads for large products. Results cannot change
+(each element is calculated the same way with or without threads).
+`DCMatrix` keeps its own row-parallel path, which only applies to large dense
+DC matrices (none of the test models).
+
+Originally:
 
 The `parallel` feature in `matrix` (pulled in by `light` and `rendering`)
 makes the box 27% slower overall and small products 16× slower. It only helps
 the 60×2305 DC product, which A2 makes cheap anyway.
 
-### B2. March surfaces in parallel in `heat`
+### B2. March surfaces in parallel in `heat` ❌
+
+Tried and reverted. Marching surfaces (and fenestrations) with `rayon` in
+`iterate_surfaces` gave byte-identical results, but made annual runs much
+slower (`--features parallel`, medians of 5):
+
+| | Surfaces serial | Surfaces parallel |
+|--|--|--|
+| Box | 2.49 s | 13.21 s (+430%) |
+| Cold apartment | 5.07 s | 17.42 s (+244%; 26 s of CPU) |
+
+`iterate_surfaces` runs a couple of times per sub-step (hundreds of thousands
+of times per year), each surface takes microseconds, and each fork-join of
+`rayon` costs tens of microseconds (mostly waking threads up). With at most 43
+surfaces per group, there is not enough work per call. Surfaces at each
+sub-step are too fine-grained; parallelism pays off for coarser work (e.g.,
+DC pre-processing, B3, or running several simulations at once). It might pay
+off for very large models, but that would need a large test model to check.
+
+Originally:
 
 `heat_model::iterate_surfaces` already works in two phases: each surface is
 marched with read-only access to `state` and its own `SurfaceMemory`, and the
