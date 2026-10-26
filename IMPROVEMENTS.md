@@ -155,6 +155,11 @@ all of them are kept until they are summed at the end.
 - Flatten into a single parallel loop over all (surface, ray) pairs.
 - Accumulate into one buffer per thread (`fold` + `reduce`), recording the
   single `(bin, value)` each sample contributes.
+- `calc_dc` creates a new RNG for every ray and every ambient sample
+  (`get_rng()`). Moving from `SmallRng::from_entropy()` (an OS syscall each
+  time) to `rand::make_rng()` in the `rand` 0.10 upgrade already made this
+  benchmark 24% (serial) to 41% (`parallel`) faster; create one RNG per thread
+  instead.
 - `ProgressBar::tic` bumps a shared atomic once per sample; tick per chunk
   instead (minor).
 

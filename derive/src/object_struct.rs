@@ -124,7 +124,7 @@ impl StructObject {
                     // states are empty
                     content = quote!(
                         #content
-                        #fname : std::sync::Arc::new(std::sync::Mutex::new(None)),
+                        #fname : std::sync::Arc::new(std::sync::OnceLock::new()),
                     )
                 }
                 Field::Option(_) => {
@@ -259,36 +259,12 @@ impl StructObject {
                         quote!(format!(#err_msg))
                     };
 
-                    let cant_lock_err = if self.has_name() {
-                        let err_msg = format!(
-                            "Field '{}' in {} called '{{}}' cannot be locked for reading and/or writing.",
-                            self.ident, f_ident
-                        );
-                        quote!(#err_msg, self.name())
-                    } else {
-                        let err_msg = format!(
-                            "Field '{}' in {} cannot be locked for reading and/or writing.",
-                            self.ident, f_ident
-                        );
-                        quote!(#err_msg)
-                    };
-
                     sets = quote!(
                         #sets
 
                         #[doc = #sets_index_doc_string]
                         pub fn #set_ident(&self, i: usize)->Result<(), String>{
-                            // todo!();
-                            if let Ok(mut guard) = self.#f_ident.lock(){
-                                if guard.is_some() {
-                                    return Err(#already_there_err);
-                                }
-                                *guard = Some(i);
-                                return Ok(())
-                            }else{
-                                return Err(format!(#cant_lock_err))
-
-                            }
+                            self.#f_ident.set(i).map_err(|_| #already_there_err)
                         }
                     );
 
@@ -306,15 +282,12 @@ impl StructObject {
 
                         #[doc = #sets_doc_string]
                         pub fn #set_ident(&self, state: &mut crate::simulation_state::SimulationState, v : crate::Float) -> Result<(), String>{
-                            if let Ok(guard) = self.#f_ident.lock(){
-                                if let Some(i) = *guard {
+                            match self.#f_ident.get() {
+                                Some(&i) => {
                                     state[i] = v;
-                                    return Ok(());
-                                }else{
-                                    return Err(format!("{}", #err_msg))
+                                    Ok(())
                                 }
-                            }else{
-                                return Err(format!(#cant_lock_err))
+                                None => Err(format!("{}", #err_msg)),
                             }
                         }
                     );
@@ -332,12 +305,7 @@ impl StructObject {
 
                         #[doc = #get_index_doc_string]
                         pub fn #get_index_ident(&self) -> Option<usize> {
-                            if let Ok(guard) = self.#f_ident.lock(){
-                                *guard
-                            }else{
-                                panic!(#cant_lock_err)
-                            }
-
+                            self.#f_ident.get().copied()
                         }
                     );
 
@@ -350,16 +318,7 @@ impl StructObject {
 
                         #[doc = #get_doc_string]
                         pub fn #f_ident(&self, state: &crate::simulation_state::SimulationState) -> Option<crate::Float> {
-
-                            if let Ok(guard) = self.#f_ident.lock(){
-                                if let Some(i) = *guard {
-                                    return Some(state[i]);
-                                }else{
-                                    return None
-                                }
-                            }else{
-                                panic!(#cant_lock_err)
-                            }
+                            self.#f_ident.get().map(|&i| state[i])
                         }
                     );
                 }

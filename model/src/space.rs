@@ -221,8 +221,7 @@ mod testing {
         let i = 91;
         assert!(space
             .dry_bulb_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_none());
         assert!(space.dry_bulb_temperature_index().is_none());
         space
@@ -230,8 +229,7 @@ mod testing {
             .map_err(|e| e.to_string())?;
         assert!(space
             .dry_bulb_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_some());
         assert_eq!(
             space
@@ -243,23 +241,21 @@ mod testing {
         let i = 191;
         assert!(space
             .brightness
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_none());
         assert!(space.brightness_index().is_none());
         space.set_brightness_index(i).map_err(|e| e.to_string())?;
         assert!(space
             .brightness
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_some());
         assert_eq!(space.brightness_index().ok_or("no brightness")?, i);
 
         let i = 111;
-        assert!(space.loudness.lock().map_err(|e| e.to_string())?.is_none());
+        assert!(space.loudness.get().is_none());
         assert!(space.loudness_index().is_none());
         space.set_loudness_index(i).map_err(|e| e.to_string())?;
-        assert!(space.loudness.lock().map_err(|e| e.to_string())?.is_some());
+        assert!(space.loudness.get().is_some());
         assert_eq!(space.loudness_index().ok_or("no loudness")?, i);
 
         Ok(())

@@ -583,14 +583,12 @@ mod testing {
         assert!(matches!(surf.back_boundary, Boundary::Outdoor));
         assert!(surf
             .first_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_none());
         assert!(surf.first_node_temperature_index().is_none());
         assert!(surf
             .last_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_none());
         assert!(surf.last_node_temperature_index().is_none());
 
@@ -600,14 +598,12 @@ mod testing {
 
         assert!(surf
             .first_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_some());
         assert_eq!(surf.first_node_temperature_index(), Some(31));
         assert!(surf
             .last_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
+            .get()
             .is_some());
         assert_eq!(surf.last_node_temperature_index(), Some(39));
 
