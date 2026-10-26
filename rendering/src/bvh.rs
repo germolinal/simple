@@ -61,6 +61,13 @@ fn get_bucket_index(
     bucket_index
 }
 
+/// Boxes are skipped when the ray enters them farther than the closest
+/// intersection found so far (or the distance checked by
+/// `unobstructed_distance`), plus this relative margin. The margin makes sure
+/// that rounding errors never skip a box with an intersection that is just as
+/// close (or closer).
+const PRUNING_MARGIN: Float = 1e-6;
+
 /// A struct that is instrumental for building the  `BoundingVolumeTree`
 struct ObjectInfo {
     index: usize,
@@ -559,6 +566,10 @@ impl BoundingVolumeTree {
 
         let mut prim_index: Option<(usize, Point3D)> = None;
         let mut t_squared = Float::MAX;
+        // The closest intersection, in units of `ray.direction` (for skipping
+        // boxes that are farther than it)
+        let mut max_t = Float::MAX;
+        let dir_squared = ray.direction * ray.direction;
 
         let inv_x = 1. / ray.direction.x;
         let inv_y = 1. / ray.direction.y;
@@ -571,7 +582,7 @@ impl BoundingVolumeTree {
 
         loop {
             let node = &self.nodes[current_node];
-            if node.bounds.intersect(ray, &inv_dir) {
+            if node.bounds.intersect_within(ray, &inv_dir, max_t) {
                 if node.is_leaf() {
                     let offset = node.next;
 
@@ -587,6 +598,8 @@ impl BoundingVolumeTree {
                             // If the distance is less than what we had, update return data
                             t_squared = this_t_squared;
                             prim_index = Some((i, p));
+                            let t = ((p - ray.origin) * ray.direction) / dir_squared;
+                            max_t = t * (1. + PRUNING_MARGIN);
                         }
                     }
 
@@ -653,10 +666,13 @@ impl BoundingVolumeTree {
         );
         let dir_is_neg = (inv_dir.x < 0., inv_dir.y < 0., inv_dir.z < 0.);
         let mut current_node = 0;
+        // Only boxes closer than the distance can contain an obstruction
+        let max_t =
+            (distance_squared / (ray.direction * ray.direction)).sqrt() * (1. + PRUNING_MARGIN);
 
         loop {
             let node = &self.nodes[current_node];
-            if node.bounds.intersect(ray, &inv_dir) {
+            if node.bounds.intersect_within(ray, &inv_dir, max_t) {
                 if node.is_leaf() {
                     let offset = node.next;
 
@@ -713,6 +729,7 @@ impl BoundingVolumeTree {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::rand::RngExt;
     use crate::colour::Spectrum;
     use crate::material::Material;
     use crate::material::Plastic;
@@ -916,5 +933,111 @@ mod tests {
         let (_, interaction) = ret.unwrap();
 
         assert!((interaction.point - Point3D::new(0., -0.5, 1.)).length() < 1e-9);
+    }
+
+    /// Scenes for checking the BVH against testing every triangle
+    fn pruning_scenes() -> Vec<(String, Scene)> {
+        let mut ret = Vec::new();
+        for file in ["room.rad", "cornell_solid.rad"] {
+            let mut scene = Scene::from_radiance(format!("./tests/scenes/{file}")).unwrap();
+            scene.build_accelerator();
+            ret.push((file.to_string(), scene));
+        }
+
+        // A soup of small, overlapping triangles
+        let mut scene = Scene::new();
+        let plastic = scene.push_material(Material::Plastic(Plastic {
+            colour: Spectrum::gray(0.5),
+            specularity: 0.05,
+            roughness: 0.1,
+        }));
+        let mut rng = crate::rand::get_rng();
+        let mut n = 0;
+        while n < 3000 {
+            let (cx, cy, cz): (Float, Float, Float) = rng.random();
+            let mut p = || {
+                let (dx, dy, dz): (Float, Float, Float) = rng.random();
+                Point3D::new(
+                    10. * cx + dx - 0.5,
+                    10. * cy + dy - 0.5,
+                    10. * cz + dz - 0.5,
+                )
+            };
+            let (a, b, c) = (p(), p(), p());
+            if let Ok(tri) = geometry::Triangle3D::new(a, b, c) {
+                scene.push_object(plastic, plastic, Primitive::Triangle(tri));
+                n += 1;
+            }
+        }
+        scene.build_accelerator();
+        ret.push(("soup".to_string(), scene));
+        ret
+    }
+
+    fn random_ray(rng: &mut crate::rand::RandGen, size: Float) -> Ray3D {
+        let (x, y, z): (Float, Float, Float) = rng.random();
+        let origin = Point3D::new(size * x, size * y, size * z);
+        let u: (Float, Float) = rng.random();
+        let p = crate::samplers::uniform_sample_sphere(u);
+        let direction = geometry::Vector3D::new(p.x, p.y, p.z);
+        Ray3D { origin, direction }
+    }
+
+    #[test]
+    fn test_pruned_intersect_same_as_brute_force() {
+        let mut rng = crate::rand::get_rng();
+        for (name, scene) in pruning_scenes() {
+            let bvh = scene.accelerator.as_ref().unwrap();
+            let n = scene.triangles.len();
+            let mut aux = [0; 32];
+            let mut hits = 0;
+            for _ in 0..5000 {
+                let ray = random_ray(&mut rng, 10.);
+                let found = bvh.intersect(&scene, ray, &mut aux);
+                let expected = simple_intersect_triangle_slice(&scene, ray, 0, n);
+                match (found, expected) {
+                    (None, None) => {}
+                    (Some((_, p)), Some((_, q))) => {
+                        hits += 1;
+                        let d1 = (p - ray.origin).length_squared();
+                        let d2 = (q - ray.origin).length_squared();
+                        assert_eq!(d1.to_bits(), d2.to_bits(), "{name}: {d1} != {d2}");
+                    }
+                    (a, b) => panic!("{name}: BVH found {a:?}, brute force {b:?}"),
+                }
+            }
+            assert!(hits > 100, "{name}: only {hits} hits");
+        }
+    }
+
+    #[test]
+    fn test_pruned_unobstructed_same_as_brute_force() {
+        let mut rng = crate::rand::get_rng();
+        for (name, scene) in pruning_scenes() {
+            let bvh = scene.accelerator.as_ref().unwrap();
+            let n = scene.triangles.len();
+            let mut aux = [0; 32];
+            for _ in 0..5000 {
+                let ray = random_ray(&mut rng, 10.);
+                let d: Float = rng.random();
+                let distance_squared = (15. * d).powi(2);
+                let found = bvh.unobstructed_distance(&scene, ray, distance_squared, &mut aux);
+                // Brute force: same criteria as `unobstructed_distance`, any triangle
+                let mut expected = true;
+                for i in 0..n {
+                    if let Some((_, p)) = simple_triangle_intersect(&scene, ray, i, i + 1) {
+                        let t = (p - ray.origin).length_squared();
+                        if t > 0.000001
+                            && t + 0.000001 < distance_squared
+                            && (distance_squared - t).abs() > 0.0001
+                        {
+                            expected = false;
+                            break;
+                        }
+                    }
+                }
+                assert_eq!(found, expected, "{name}");
+            }
+        }
     }
 }

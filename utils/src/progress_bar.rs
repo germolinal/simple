@@ -28,9 +28,19 @@ impl ProgressBar {
         ret
     }
     pub fn tic(&self) {
+        self.tic_n(1)
+    }
+
+    /// Advances the bar by `n` steps at once
+    pub fn tic_n(&self, n: usize) {
+        if n == 0 {
+            return;
+        }
         let c = self
             .counter
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            .fetch_add(n, std::sync::atomic::Ordering::Relaxed)
+            + n
+            - 1;
         let progress = if c >= self.total_count {
             eprintln!(
                 "Progress bar '{}' overflowed... ticked beyond count of {}",

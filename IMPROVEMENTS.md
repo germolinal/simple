@@ -342,7 +342,18 @@ Caveats:
 - One surface step takes microseconds, so this only pays off above some model
   size. Use a threshold, or parallelize larger units of work.
 
-### B3. Coarser parallelism in DC pre-processing
+### B3. Coarser parallelism in DC pre-processing ✅
+
+Done together with C1; see "Validating B3 and C1" below. `DCFactory::calc_dc`
+now runs one task per sensor ray: it traces all its ambient samples serially,
+with one random number generator, adding into a single row (no more
+per-sample matrices, no nested parallelism; the progress bar advances once
+per ray, with the new `ProgressBar::tic_n`). Before, every sample allocated a
+full `1 × n_bins` row of spectra, and all of them were kept until summed: for
+the cold apartment (MF4, 3000 samples) that is ~166 MB per sensor ray. The
+cold apartment's DC pre-processing went from 252 to 45 CPU-seconds.
+
+Originally:
 
 `SolarSurface::calc_solar_dc_matrix` (`light/src/solar_surface.rs`) processes
 surfaces one at a time, and `DCFactory::calc_dc`
@@ -366,7 +377,48 @@ The cold apartment currently takes ~52 s using ~4.4 of 8 cores.
 
 ## C. Ray tracing
 
-### C1. Prune the BVH with the closest hit
+### C1. Prune the BVH with the closest hit ✅
+
+Done: `BBox3D::intersect_within()` only accepts boxes the ray enters before a
+given `t`; `BoundingVolumeTree::intersect` uses the closest hit found so far,
+and `unobstructed_distance` the distance being checked (both with a relative
+margin of 1e-6, so rounding never skips an equally close triangle). New tests
+compare the BVH with testing every triangle, for 5000 random rays in three
+scenes (the Radiance room, the Cornell box, and a soup of 3000 overlapping
+triangles): closest distances are bit-identical, and shadow-ray results
+equal.
+
+#### Validating B3 and C1
+
+DC pre-processing is random (generators are seeded from the system), so
+results cannot be byte-identical. Instead, the validations that calculate DCs
+or trace rays were run from scratch (deleting the cached DC files) in separate
+worktrees, before and after the change, alternating rounds:
+`daylight_coefficient`, `incident_solar_radiation`, `incident_ir_radiation`
+and the cold apartment, 11 rounds each; `ray_tracer`, box and Versailles, 3.
+
+- With 11 rounds per side, **none of 73 indicators changed significantly**
+  (Welch's t-test, |t| > 4 to account for the number of indicators). Two are
+  borderline: Barcelona West solar RMSE (491 ± 22 → 455 ± 22 W/m², t = -3.7),
+  and the R² of the DC room with glass (0.9963 → 0.9955, t = -3.1); they
+  point in opposite directions (closer to and farther from the reference).
+- Three rounds per side are not enough: they underestimate the noise (e.g.,
+  ±7 instead of ±22 W/m² for that RMSE) and flagged 22 "significant" changes
+  that did not reproduce, neither with B3 or C1 alone nor with more rounds.
+
+Timings (medians of warm rounds):
+
+| Validation | Before | After |
+|--|--|--|
+| `daylight_coefficient` | 1.23 s | 0.41 s (−66%) |
+| `incident_solar_radiation` | 1.93 s | 0.76 s (−61%) |
+| `incident_ir_radiation` | 1.98 s | 0.73 s (−63%) |
+| Cold apartment (DCs + 1 year) | 54.7 s | 12.8 s (−77%) |
+| Versailles (DCs + 1 year) | 99.4 s | 34.8 s (−65%) |
+| `ray_tracer` | 5.0 s | 3.8 s (−24%) |
+| Box (DCs + 1 year) | 4.05 s | 3.12 s (−23%) |
+
+Originally:
 
 `BoundingVolumeTree::intersect` (`rendering/src/bvh.rs:547`) tests boxes with
 `BBox3D::intersect` (`geometry/src/bbox3d.rs:243`), which takes no maximum
@@ -394,7 +446,61 @@ matters more than explicit SIMD here.
   them, so these numbers say little about real scenes.
 - `intersect_dining` loads `sponza.obj` again instead of a dining scene.
 
+### C5. Triangle intersection (review)
+
+From reading `rendering/src/triangle/` and the BVH (not yet profiled; to be
+ranked with a profile of the DC pre-processing).
+
+Exact (same hits):
+
+1. **Return `t`; build the hit point only for the winner.** For every hit
+   candidate in a leaf, `baricentric_coordinates` builds the point
+   (`ray.project(t)`) and the leaf loop computes its squared distance; only
+   the closest needs a point. Comparing `t` saves ~15 operations per
+   candidate, makes C1's limit free, and enables C2.
+2. **Precompute edges.** Each test recomputes `b - a` and `c - a`. Store them
+   once, in BVH order, in a separate array used only for intersecting (the
+   vertices are still needed for normals, areas and light sampling, and
+   `a + (b - a)` does not round back to `b`).
+3. **Leaf size.** The SAH counts a box test as 10 triangle tests
+   (`RELATIVE_TRANSVERSAL_COST = 10`), giving leaves of up to 24 triangles
+   (`LEAF_SIZE`); pbrt uses ~1/8 (leaves of ~4). Tune by benchmark: the tree
+   does not change which triangle is closest (except exact ties).
+4. **Box test.** Branch-free slab test, choosing near/far planes from the
+   direction's signs (already computed). Nodes store `f64` boxes (~64 bytes);
+   `f32` boxes rounded outwards would halve that.
+5. **Shadow rays: any hit.** `unobstructed_distance` searches the closest hit
+   in each leaf, but any blocking triangle is enough. This also fixes a rare
+   leak: if the closest hit in a leaf is rejected (e.g., as a
+   self-intersection), other triangles in that leaf that do block are ignored.
+
+Faster, changing results in the last bits or at triangle edges:
+
+6. **Deferred division.** Compare the unscaled `u`, `v`, `t` against `a`, and
+   divide only for accepted hits (and skip hits farther than the best so far).
+7. **4 triangles at a time** (structure-of-arrays within leaves), so the
+   compiler vectorizes: 2 lanes with `f64` on NEON, 4 with `f32`.
+
+Correctness (fixing them changes results):
+
+8. **Small triangles are missed.** A ray is considered parallel when
+   `|a| < 1e-5`, an absolute threshold, but `a` scales with the triangle's
+   area: every ray goes through a ~3 × 3 mm triangle. Use a relative one.
+9. **Not watertight.** Möller–Trumbore with epsilons can leak through shared
+   edges; Woop et al.'s watertight test avoids it.
+10. **`f32` geometry** would halve data and double SIMD lanes; precise enough
+    at building scale (~0.1 mm at 100 m), but changes results.
+
 ## D. Small items
+
+- **Bug: the Versailles validation does not validate Versailles.**
+  `tests/versailles/main.rs` simulates `versailles.spl` (writing
+  `tests/versailles/check.csv`), but then compares
+  `tests/cold_apartment/check.csv` with the cold apartment's EnergyPlus
+  results. `versailles_energy.html` is therefore a copy of the cold apartment
+  comparison (made with whatever the cold apartment run left behind).
+- `ProgressBar` prints to stdout, so when results go to stdout (no `-o`), a
+  DC calculation mixes its progress bar into the results.
 
 - **Bug:** in `ThermalSurfaceData::march` (`heat/src/surface.rs`), the back
   solar irradiance is clamped with `if solar_back.is_nan() || solar_front < 0.0`;

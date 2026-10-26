@@ -60,94 +60,60 @@ impl DCFactory {
         scene: &Scene,
         progress_bar: Option<&ProgressBar>,
     ) -> ColourMatrix {
-        // Initialize matrix
         let n_bins = self.reinhart.n_bins;
 
-        // Process... This can be in parallel, or not.
+        // Each sensor ray traces all its ambient samples, with its own random
+        // number generator, adding their contributions into a single row.
+        // (Rays are processed in parallel or in series, depending on the
+        // compilation options.)
+        let calc_row = |primary_ray: &Ray3D| -> ColourMatrix {
+            let normal = primary_ray.direction;
+            let origin = primary_ray.origin;
+            let e2 = normal.get_perpendicular().unwrap();
+            let e1 = e2.cross(normal);
+
+            let mut rng = get_rng();
+            let mut aux = [0; 32];
+            let mut row = ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
+            for _ in 0..self.n_ambient_samples {
+                let local_ray_dir = sample_cosine_weighted_horizontal_hemisphere(rng.random());
+                let (x, y, z) = crate::samplers::local_to_world(
+                    e1,
+                    e2,
+                    normal,
+                    Point3D::new(0., 0., 0.),
+                    local_ray_dir.x,
+                    local_ray_dir.y,
+                    local_ray_dir.z,
+                );
+                let new_ray_dir = Vector3D::new(x, y, z);
+                debug_assert!(
+                    (1. - new_ray_dir.length()).abs() < 0.0000001,
+                    "length is {}",
+                    new_ray_dir.length()
+                );
+
+                let new_ray = Ray3D {
+                    direction: new_ray_dir,
+                    origin,
+                };
+                self.trace_ray(scene, new_ray, &mut row, &mut rng, &mut aux);
+            }
+            if let Some(progress) = &progress_bar {
+                progress.tic_n(self.n_ambient_samples);
+            }
+            row
+        };
+
         #[cfg(not(feature = "parallel"))]
-        let aux_iter = rays.iter();
+        let rows: Vec<ColourMatrix> = rays.iter().map(calc_row).collect();
         #[cfg(feature = "parallel")]
-        let aux_iter = rays.par_iter();
-        // Iterate the rays
-        let dcs: Vec<ColourMatrix> = aux_iter
-            .map(|primary_ray| -> ColourMatrix {
-                let normal = primary_ray.direction;
-                let origin = primary_ray.origin;
-                let e2 = normal.get_perpendicular().unwrap();
-                let e1 = e2.cross(normal);
-
-                // Run each spawned ray in parallel or series, depending on
-                // the compilation options
-                let mut rng = get_rng();
-                #[allow(clippy::needless_collect)]
-                let aux_iter: Vec<Vector3D> = (0..self.n_ambient_samples)
-                    .map(|_| {
-                        let u = rng.random();
-                        sample_cosine_weighted_horizontal_hemisphere(u)
-                    })
-                    .collect();
-
-                #[cfg(not(feature = "parallel"))]
-                let aux_iter = aux_iter.into_iter();
-
-                #[cfg(feature = "parallel")]
-                let aux_iter = aux_iter.into_par_iter();
-
-                // Iterate primary rays
-                let ray_contributions: Vec<ColourMatrix> = aux_iter
-                    .map(|local_ray_dir: Vector3D| -> ColourMatrix {
-                        let (x, y, z) = crate::samplers::local_to_world(
-                            e1,
-                            e2,
-                            normal,
-                            Point3D::new(0., 0., 0.),
-                            local_ray_dir.x,
-                            local_ray_dir.y,
-                            local_ray_dir.z,
-                        );
-                        let new_ray_dir = Vector3D::new(x, y, z);
-
-                        let mut this_ret = ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
-
-                        debug_assert!(
-                            (1. - new_ray_dir.length()).abs() < 0.0000001,
-                            "length is {}",
-                            new_ray_dir.length()
-                        );
-
-                        let mut aux = [0; 32];
-
-                        let new_ray = Ray3D {
-                            direction: new_ray_dir,
-                            origin,
-                        };
-
-                        let mut rng = get_rng();
-                        self.trace_ray(scene, new_ray, &mut this_ret, &mut rng, &mut aux);
-
-                        if let Some(progress) = &progress_bar {
-                            progress.tic();
-                        }
-                        this_ret
-                    })
-                    .collect(); // End of iterating primary rays
-                let mut ret = ColourMatrix::new(Spectrum::BLACK, 1, n_bins);
-                ray_contributions.iter().for_each(|v| {
-                    ret += v;
-                });
-
-                ret
-            })
-            .collect(); // End of iterating rays
+        let rows: Vec<ColourMatrix> = rays.par_iter().map(calc_row).collect();
 
         // Write down the results
         let mut ret = ColourMatrix::new(Spectrum::BLACK, rays.len(), n_bins);
-        for (sensor_index, contribution) in dcs.iter().enumerate() {
-            // add contribution
-            for patch_index in 0..n_bins {
-                let v = contribution.get(0, patch_index).unwrap();
-                ret.set(sensor_index, patch_index, v).unwrap();
-            }
+        for (row, dest) in rows.iter().zip(ret.as_mut_slice().chunks_exact_mut(n_bins)) {
+            dest.copy_from_slice(row.as_slice());
         }
 
         ret

@@ -241,6 +241,22 @@ impl BBox3D {
     /// assert!(bbox.intersect(ray, &inv_dir));
     /// ```
     pub fn intersect(&self, ray: Ray3D, inv_dir: &Vector3D) -> bool {
+        self.entry_exit(ray, inv_dir).is_some()
+    }
+
+    /// Like `intersect()`, but only if the ray enters the box at a `t` (in
+    /// units of the ray's direction) no greater than `max_t`. This is useful
+    /// for skipping boxes that are farther than an intersection already found.
+    pub fn intersect_within(&self, ray: Ray3D, inv_dir: &Vector3D, max_t: Float) -> bool {
+        match self.entry_exit(ray, inv_dir) {
+            Some((t_in, _)) => t_in <= max_t,
+            None => false,
+        }
+    }
+
+    /// The values of `t` at which `ray` enters and exits the box (see
+    /// `intersect()`), if it intersects it.
+    fn entry_exit(&self, ray: Ray3D, inv_dir: &Vector3D) -> Option<(Float, Float)> {
         let Vector3D {
             x: mut tx_min,
             y: mut ty_min,
@@ -258,7 +274,7 @@ impl BBox3D {
         }
         if tx_max < 0. {
             // We are running away from the box in the X component
-            return false;
+            return None;
         }
 
         if ty_min > ty_max {
@@ -266,7 +282,7 @@ impl BBox3D {
         }
         if ty_max < 0. {
             // We are running away from the box in the Y component
-            return false;
+            return None;
         }
 
         // // Update _tMax_ and _tyMax_ to ensure robust bounds intersection
@@ -274,7 +290,7 @@ impl BBox3D {
         ty_max *= 1. + 2. * gamma!(3.);
         if tx_min > ty_max || ty_min > tx_max {
             // The times do not intersect
-            return false;
+            return None;
         }
         // Narrow down the intersection... Now t_min and t_max
         // represent the intersection between the X an Y dimensions.
@@ -292,14 +308,14 @@ impl BBox3D {
         }
         if tz_max < 0. {
             // We are running away from the box in the Z component
-            return false;
+            return None;
         }
 
         // // Update _tzMax_ to ensure robust bounds intersection
         tz_max *= 1. + 2. * gamma!(3.);
         if tx_min > tz_max || tz_min > tx_max {
             // No intersection
-            return false;
+            return None;
         }
         // Narrow down intersection
         if tz_min > tx_min {
@@ -310,7 +326,11 @@ impl BBox3D {
         }
 
         // return
-        tx_max > tx_min && tx_max > 0.
+        if tx_max > tx_min && tx_max > 0. {
+            Some((tx_min, tx_max))
+        } else {
+            None
+        }
     }
 }
 
