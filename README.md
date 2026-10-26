@@ -20,7 +20,7 @@ and Buildings
 5. Use modern languages, toolset, and aim for clarity of source code (I do my best...)
 
 You can read more about this in the
-["Do we need `SIMPLE`?"](https://germolinal.github.io/simple_docs/ioreference/book/what_is_simple.html)  section of the docs
+["Do we need `SIMPLE`?"](https://germolinal.github.io/simple/book/what_is_simple.html)  section of the docs
 
 
 ## Examples
@@ -50,7 +50,7 @@ one of them, please help me write tutorials and docs and all that. People who do
 Buildings do not often do programming.
 
 
-Also, feel free to  [**CHECK THE DOCS**](https://germolinal.github.io/simple_docs/)
+Also, feel free to  [**CHECK THE DOCS**](https://germolinal.github.io/simple/)
 
 
 ## License

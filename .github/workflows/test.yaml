@@ -2,7 +2,7 @@ name: Tests
 
 on:
   pull_request:
-    branches: [test]
+    branches: [main]
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,11 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Run tests parallel
         run: |
@@ -29,11 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/checkout@v4
       - name: Run tests default
@@ -44,11 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/checkout@v4
       - name: Check float
@@ -58,11 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - uses: actions/checkout@v4
       - name: Check float parallel

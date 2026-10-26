@@ -18,7 +18,7 @@ Find the Rust reference [HERE](https://simple-buildingsimulation.github.io/model
 
 ## Some features
 
-This library includes a macro for generating automatic [user documentation](https://simple-buildingsimulation.github.io/model/ioreference/book/html/index.html) and a highly 
+This library includes a macro for generating automatic [user documentation](https://germolinal.github.io/simple/book/index.html) and a highly 
 consistent [RUST API](https://simple-buildingsimulation.github.io/model/rustdoc/doc/model/index.html). 
 
 This means that a structure—and documentation—written as follows
@@ -83,7 +83,7 @@ engines that are based on the `SIMPLE` Model.
 
 ## `SIMPLE` models from text files
 
-`SIMPLE` models can be creted through the API (written in RUST programming language, check it out [HERE](https://simple-buildingsimulation.github.io/model/rustdoc/doc/model/index.html)), but they can also be written in text files. Check the automatically generated [Input Output reference](https://simple-buildingsimulation.github.io/model/ioreference/book/html/index.html)
+`SIMPLE` models can be creted through the API (written in RUST programming language, check it out [HERE](https://simple-buildingsimulation.github.io/model/rustdoc/doc/model/index.html)), but they can also be written in text files. Check the automatically generated [Input Output reference](https://germolinal.github.io/simple/book/index.html)
 
 
 
