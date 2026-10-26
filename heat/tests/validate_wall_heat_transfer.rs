@@ -63,7 +63,7 @@ struct SingleZoneTestModel {
 }
 
 impl SingleZoneTestModel {
-    fn get_closed_solution(&self) -> Box<impl Fn(Float) -> Float> {
+    fn get_closed_solution(&self) -> Box<impl Fn(Float) -> Float + use<>> {
         // heat balance in the form
         // of C*dT/dt = A - B*T
         let air = heat::gas::AIR;

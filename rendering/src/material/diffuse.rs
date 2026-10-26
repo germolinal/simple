@@ -64,7 +64,7 @@ impl MaterialTrait for Diffuse {
         _transport_mode: TransportMode,
         trans_flags: TransFlag,
     ) -> Option<BSDFSample> {
-        let u = rng.gen();
+        let u = rng.random();
         if trans_flags & TransFlag::Reflection {
             Some(BSDFSample::new_diffuse(self.colour, u))
         } else {

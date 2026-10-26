@@ -2,7 +2,7 @@
 name = "heat"
 version = "1.0.0"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 
 
@@ -22,7 +22,7 @@ rayon = { workspace = true, optional = true}
 validate = { git = "https://github.com/germolinal/validate.git"}
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models"}
-criterion = "0.5.1"
+criterion = { workspace = true }
 
 [[bench]]
 name = "my_benchmark"

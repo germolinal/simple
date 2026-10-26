@@ -1,0 +1,225 @@
+# Performance improvements
+
+A review of where `SIMPLE` spends its time, with baseline measurements and a
+list of candidate improvements. Nothing here has been implemented yet.
+
+## How to measure
+
+Baselines are saved as Criterion baselines named `baseline` (serial) and
+`baseline_par` (`--features parallel`). Compare a change against them with:
+
+```sh
+cargo bench --bench simulation -- --baseline baseline           # full simulations
+cargo bench -p matrix --bench hot_kernels -- --baseline baseline # matrix kernels
+cargo bench -p heat --bench my_benchmark -- --baseline baseline  # rk4
+cargo bench -p rendering --bench benchmark -- --baseline baseline # ray intersection
+```
+
+`benches/simulation.rs` marches the box and cold-apartment validation models
+(`tests/box`, `tests/cold_apartment`) for one week, and times the
+daylight-coefficient pre-processing. Annual runs were timed with the release
+binary:
+
+```sh
+simple -i tests/box/box.spl -w tests/wellington.epw -n 4 -o out.csv
+```
+
+## Baselines
+
+Apple M1 Pro (8 cores), rustc 1.99.1, release profile.
+
+### Full simulations
+
+| Run | Serial | `parallel` |
+|--|--|--|
+| Box, 1 year (DC cached) | 8.6 s | 10.9 s (27% slower) |
+| Cold apartment, 1 year (DC cached) | 19.7 s | 18.1 s (8% faster, 37% more CPU) |
+| Box, DC pre-processing (validation settings) | | ≈ 4 s |
+| Cold apartment, DC pre-processing (MF4, 3000 samples) | | ≈ 52 s, ~4.4 of 8 cores used |
+| `march_one_week/box` | 181 ms | 199 ms |
+| `march_one_week/cold_apartment` | 405 ms | 349 ms |
+| `optical_info/box_10pts_300samples` | 127 ms | 68 ms (1.9× on 8 cores) |
+
+### Kernels
+
+| Benchmark | Time | Note |
+|--|--|--|
+| `dc_times_sky/6x145` (box) | 1.1 µs | 17.4 µs with `parallel` |
+| `dc_times_sky/60x2305` (cold apartment) | 184 µs | ~0.75 GFLOP/s; 71 µs with `parallel` |
+| `tri_diag_mut_gaussian/3`, `/8`, `/20` | 68 / 247 / 880 ns | An O(n) solve should take tens of ns |
+| `rk4` (23 nodes) | 342 ns | |
+| `intersect_room` / `intersect_sponza` | 72 / 623 ns | |
+| `intersect_1200/12k/120k_triangles` | 6.5 µs / 136 µs / 1.86 ms | Scene is degenerate, see C4 |
+
+### Where the time goes
+
+Sampling profile (`sample`) of the serial annual runs:
+
+| Share of runtime | Box | Cold apartment |
+|--|--|--|
+| DC × sky products (`light`) | small | ~35% |
+| Sky-vector generation (`ReinhartSky::bin_dir`, trigonometry) | small | ~13% |
+| Heat march (total) | dominant | ~44% |
+| Mutex lock/unlock in state accessors | 12.5% | 11% |
+| `pow` and other `libm` | 29% | 15% |
+| `malloc` / `free` | 18% | 3% |
+| Output `write` syscalls | 3% | 4.5% |
+
+## A. High impact, results unchanged
+
+### A1. Lock-free state indices
+
+`derive/src/object_struct.rs:127` stores every state index as
+`Arc<Mutex<Option<usize>>>`, and every state read or write
+(`front_ir_irradiance`, `first_node_temperature_index`, ...) locks it. That is
+11-12% of runtime, and it would become contention as soon as surfaces are
+marched in parallel. The indices are written once during setup, so
+`OnceLock<usize>` (or a plain `usize` set while building) needs no lock.
+
+### A2. Fast DC × sky product
+
+`light/src/solar_model.rs` (`update_solar_radiation`) multiplies four dense
+daylight-coefficient matrices by the sky vector every timestep, through the
+generic `GenericMatrix::prod_into`. Its single-accumulator `fold` cannot
+auto-vectorize, because floating-point addition order must be preserved.
+
+- Write a dedicated matrix × vector with 4-8 independent accumulators, so the
+  compiler vectorizes it (no explicit SIMD needed).
+- Skip sky bins whose DC column is zero; any given surface cannot see much of
+  the sky.
+- Optionally store DCs as `f32`, halving memory traffic.
+
+Expected 4-10× on this kernel, which is ~35% of the cold apartment.
+
+### A3. Cache sky-bin directions
+
+`PerezSky::gen_sky_vec` (`weather/src/solar/perez.rs`) recomputes each bin's
+direction with `acos`/`sincos` and allocates a new vector every timestep. The
+directions never change: precompute them once in `SolarModel` and reuse a
+preallocated vector. ~13% of the cold apartment.
+
+### A4. O(n) tridiagonal solve
+
+`NDiagMatrix::mut_gaussian` (`matrix/src/n_diag_matrix.rs:19`) copies the
+compact tridiagonal matrix into a newly allocated dense n×n `Matrix` and runs
+dense Gaussian elimination. `heat` calls it in every iteration of
+`march_nomass` (`heat/src/surface.rs:1085`). This is most of the box's 18% in
+`malloc`/`free`. A Thomas-algorithm solve on the compact storage is O(n) and
+allocation-free.
+
+### A5. Hoist loop-invariant work out of `march_nomass`
+
+- `calc_border_conditions` runs on every iteration of the `march_nomass` loop,
+  but its inputs (read from `state`) do not change inside the loop. Calculate
+  it once per call. Most of the box's 29% in `pow` comes from here.
+- `get_tarp_natural_convection_coefficient` (`heat/src/convection.rs`) uses
+  `powf(1. / 3.)` three times: use `cbrt`.
+- `temp_k` and `temps` are cloned on every call; keep them in `ChunkMemory`.
+
+### A6. Buffered output
+
+`run_simulation::run` writes every value with its own `write` call and a new
+`String`. Files are unbuffered (one syscall per value) and stdout flushes at
+every line. Wrap the writer in a `BufWriter` and use `write!` directly. 3-4.5%
+of runtime.
+
+## B. Parallelism at the right level
+
+### B1. Remove threading from `matrix`
+
+The `parallel` feature in `matrix` (pulled in by `light` and `rendering`)
+makes the box 27% slower overall and small products 16× slower. It only helps
+the 60×2305 DC product, which A2 makes cheap anyway.
+
+### B2. March surfaces in parallel in `heat`
+
+`heat_model::iterate_surfaces` already works in two phases: each surface is
+marched with read-only access to `state` and its own `SurfaceMemory`, and the
+results are written to `state` in a second pass. So no unsafe slicing is
+needed: the commented-out `par_iter` (`heat/src/heat_model.rs:117`) is enough.
+Caveats:
+
+- Do A1 first, otherwise threads contend on the state-index mutexes.
+- One surface step takes microseconds, so this only pays off above some model
+  size. Use a threshold, or parallelize larger units of work.
+
+### B3. Coarser parallelism in DC pre-processing
+
+`SolarSurface::calc_solar_dc_matrix` (`light/src/solar_surface.rs`) processes
+surfaces one at a time, and `DCFactory::calc_dc`
+(`rendering/src/daylight_coefficients.rs`) nests `par_iter` over a few rays and
+then over individual ambient samples. Each sample allocates a full
+`1 × n_bins` `ColourMatrix`, although `trace_ray` writes at most one bin, and
+all of them are kept until they are summed at the end.
+
+- Flatten into a single parallel loop over all (surface, ray) pairs.
+- Accumulate into one buffer per thread (`fold` + `reduce`), recording the
+  single `(bin, value)` each sample contributes.
+- `ProgressBar::tic` bumps a shared atomic once per sample; tick per chunk
+  instead (minor).
+
+The cold apartment currently takes ~52 s using ~4.4 of 8 cores.
+
+## C. Ray tracing
+
+### C1. Prune the BVH with the closest hit
+
+`BoundingVolumeTree::intersect` (`rendering/src/bvh.rs:547`) tests boxes with
+`BBox3D::intersect` (`geometry/src/bbox3d.rs:243`), which takes no maximum
+distance. Once a hit is found, traversal still visits every farther box along
+the ray. Passing the current closest distance to the box test is the standard
+large win for closest-hit queries.
+
+### C2. Do not intersect the winning triangle twice
+
+`Scene::cast_ray` (`rendering/src/scene.rs:243`) recomputes the barycentric
+intersection of the triangle the BVH just found. Return `u`, `v` (and `t`)
+from the BVH instead.
+
+### C3. Triangle layout
+
+Store precomputed edges instead of vertices, and possibly lay out each leaf as
+structure-of-arrays so several triangles are tested at once. This matches the
+observation that limiting rendering to triangles helped most: cache layout
+matters more than explicit SIMD here.
+
+### C4. Fix the benchmarks
+
+- The random-triangle scenes in `rendering/benches/benchmark.rs` use 30-unit
+  triangles in a 30-unit box. They overlap so much that no BVH can separate
+  them, so these numbers say little about real scenes.
+- `intersect_dining` loads `sponza.obj` again instead of a dining scene.
+
+## D. Small items
+
+- `heat_model::get_boundary_temperature` calls `Model::get_space(name)` per
+  surface and per sub-step, which allocates a `String`, compares names
+  linearly and clones an `Arc`. Use the space index the surface already stores
+  (`front_space_index` / `back_space_index`).
+- `iterate_surfaces` and `calculate_zones_abc` allocate several `Vec`s per
+  sub-step; keep them in the model's memory.
+- Hot loops (`get_k_q`, `rearrange_k`) use bounds-checked
+  `get`/`set`/`add_to_element` returning `Result<_, String>`; index the
+  storage directly.
+
+## Suggested order
+
+A1 → A4 → A5 → A6 (simple and safe), then A2 → A3, then B1 → B2 → B3, then C.
+Tier A alone should make annual runs roughly 2× faster or more (an estimate
+from the profile shares; each change should be checked against the baselines).
+
+## Methods (to discuss separately; these change results)
+
+- **Direct + diffuse split in `light`.** Today one DC matrix is used and the
+  sun is binned into a Reinhart patch, which is why the cold apartment needs
+  MF4 (2305 bins). Tracing direct sun exactly from each sensor point and
+  keeping a coarse MF1 (145 bins) DC for the diffuse sky would cut both the
+  pre-processing and the per-step product by about 16×.
+- **`march_nomass` solver.** A fixed-point iteration with 0.5 damping, capped
+  at 19,000 iterations. A Newton step, or a direct solve if the nonlinearity is
+  mild, should converge much faster.
+- **Stale convection inputs.** Inside `march_nomass`, border conditions use the
+  previous timestep's surface temperatures from `state` (related to A5).
+- **`dt_subdivisions *= 2`** (`heat/src/heat_model.rs:375`) is applied to every
+  model to keep the no-mass solve stable; a better solver may make it
+  unnecessary.

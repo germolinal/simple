@@ -157,7 +157,7 @@ impl MaterialTrait for Dielectric {
         if !(trans_flags & TransFlag::Transmission) {
             pt = 0.0;
         }
-        let uc: Float = rng.gen();
+        let uc: Float = rng.random();
         let ret = if uc < pr / (pr + pt) {
             // Prefect specular reflection
             // let wi = Vector3D::new(-wo.x, -wo.y, wo.z);

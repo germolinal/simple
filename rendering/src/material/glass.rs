@@ -137,7 +137,7 @@ impl MaterialTrait for Glass {
             return None;
         }
 
-        let uc: Float = rng.gen();
+        let uc: Float = rng.random();
         if uc <= pr / (pr + pt) {
             // Reflection
 

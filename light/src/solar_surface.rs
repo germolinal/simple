@@ -38,7 +38,7 @@ fn get_sampler(triangles_areas: Vec<Float>) -> impl Fn(&mut RandGen) -> usize {
     let total_area: Float = triangles_areas.iter().sum();
 
     move |rng: &mut RandGen| -> usize {
-        let mut r: Float = rng.gen();
+        let mut r: Float = rng.random();
         r *= total_area;
         let mut acc = 0.0;
         for (i, area) in triangles_areas.iter().enumerate() {
@@ -316,7 +316,7 @@ impl SolarSurface {
             let e2 = normal.cross(e1);
 
             for _ in 0..n_samples {
-                let u = rng.gen();
+                let u = rng.random();
                 let dir = rendering::samplers::uniform_sample_tilted_hemisphere(u, e1, e2, normal);
 
                 if scene.cast_ray(*ray, &mut node_aux).is_none() {

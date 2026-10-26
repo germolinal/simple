@@ -48,13 +48,13 @@ pub fn sample_ward_anisotropic(
     alpha = alpha.max(LOW_ROUGHNESS);
     beta = beta.max(LOW_ROUGHNESS);
 
-    let prob_spec: Float = rng.gen();
+    let prob_spec: Float = rng.random();
 
     if prob_spec < specularity {
         let mut attempts = 0;
         loop {
             attempts += 1;
-            let (xi1, xi2): (Float, Float) = rng.gen();
+            let (xi1, xi2): (Float, Float) = rng.random();
             // incident direction
 
             // From Radiance's https://github.com/NREL/Radiance/blob/2fcca99ace2f2435f32a09525ad31f2b3be3c1bc/src/rt/normal.c#L409
@@ -120,7 +120,7 @@ pub fn sample_ward_anisotropic(
         } // end of loop. If we did not return, try again.
     } else {
         let diff = 1. - specularity;
-        let mut ret = BSDFSample::new_diffuse(Spectrum::gray(diff), rng.gen());
+        let mut ret = BSDFSample::new_diffuse(Spectrum::gray(diff), rng.random());
         ret.pdf *= diff;
         Some(ret)
     }

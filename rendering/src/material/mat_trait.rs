@@ -159,7 +159,7 @@ pub trait MaterialTrait: std::fmt::Debug {
     fn hemispherical_rho(&self, rng: &mut RandGen, nsamples: usize) -> Spectrum {
         let mut rho = Spectrum::BLACK;
         for _ in 0..nsamples {
-            let b = rng.gen();
+            let b = rng.random();
             let wo = sample_uniform_hemisphere(b);
             if let Some(sample) = self.sample_bsdf(
                 wo,

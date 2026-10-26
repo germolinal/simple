@@ -216,7 +216,7 @@ impl StructObject {
         stru: &syn::DataStruct,
     ) -> syn::punctuated::Punctuated<syn::Field, syn::token::Comma> {
         if let syn::DataStruct {
-            fields: syn::Fields::Named(syn::FieldsNamed { ref named, .. }),
+            fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
             ..
         } = stru
         {

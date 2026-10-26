@@ -32,7 +32,7 @@ use calendar::Date;
 
 use geometry::{Ray3D, Vector3D};
 use model::Model;
-use rand::Rng;
+use rand::RngExt;
 
 #[derive(Clone, Default)]
 pub struct Object {
@@ -106,9 +106,8 @@ impl Scene {
         if self.lights.is_empty() && self.distant_lights.is_empty() {
             return None;
         }
-        let mut i: usize = rng.gen();
         let nlights = self.lights.len() + self.distant_lights.len();
-        i %= nlights;
+        let i = rng.random_range(0..nlights);
         let pdf = 1. / nlights as Float;
         if i < self.lights.len() {
             Some((&self.lights[i], pdf))

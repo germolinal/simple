@@ -25,5 +25,5 @@ pub type RandGen = SmallRng;
 /// Gets a random number generator for Montecarlo estimations
 pub fn get_rng() -> RandGen {
     // rand::thread_rng()
-    SmallRng::from_entropy()
+    rand::make_rng()
 }

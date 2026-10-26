@@ -408,7 +408,7 @@ mod tests {
     use std::os::raw::c_double;
     use std::os::raw::c_int;
 
-    extern "C" {
+    unsafe extern "C" {
         fn frexp(x: c_double, exp: *mut c_int) -> c_double;
         fn ldexp(x: c_double, ex: c_int) -> c_double;
     }

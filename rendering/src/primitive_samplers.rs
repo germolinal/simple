@@ -37,7 +37,7 @@ fn uniform_cone_pdf(cos_theta: Float) -> Float {
 /* TRIANGLE */
 
 pub fn sample_triangle_surface(triangle: &Triangle3D, rng: &mut RandGen) -> Point3D {
-    let u = rng.gen();
+    let u = rng.random();
     uniform_sample_triangle(u, triangle.a(), triangle.b(), triangle.c())
 }
 
@@ -86,7 +86,7 @@ pub fn sphere_direction(sphere: &Sphere3D, point: Point3D) -> (Float, Vector3D) 
 
 pub fn sample_sphere_surface(sphere: &Sphere3D, rng: &mut RandGen) -> Point3D {
     // Sample a sphere of radius 1 centered at the origin
-    let u = rng.gen();
+    let u = rng.random();
     let p = uniform_sample_sphere(u);
     let (mut x, mut y, mut z) = (p.x, p.y, p.z);
 

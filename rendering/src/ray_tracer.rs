@@ -177,7 +177,7 @@ impl RayTracer {
 
             // Russian roulette
             let q = (1. - beta.radiance()).max(0.);
-            let aux: Float = rng.gen();
+            let aux: Float = rng.random();
             if aux < q {
                 break;
             }

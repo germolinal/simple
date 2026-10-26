@@ -109,7 +109,7 @@ impl Primitive {
     }
 
     pub fn sample_direction(&self, rng: &mut RandGen, point: Point3D) -> Vector3D {
-        let u: (Float, Float) = rng.gen();
+        let u: (Float, Float) = rng.random();
         let surface_point = match self {
             Self::Sphere(s) => sample_sphere_surface(s, rng),
             Self::Triangle(s) => sample_triangle_surface(s, rng),

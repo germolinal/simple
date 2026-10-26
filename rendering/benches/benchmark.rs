@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use rendering::{rand::Rng, Scene, Spectrum};
+use criterion::{criterion_group, criterion_main, Criterion};
+use std::hint::black_box;
+use rendering::{rand::RngExt, Scene, Spectrum};
 
 // Reference targets: https://github.com/svenstaro/bvh
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -65,7 +66,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 rendering::Float,
                 rendering::Float,
                 rendering::Float,
-            ) = rng.gen();
+            ) = rng.random();
 
             const SCALE: rendering::Float = 30.;
             if let Ok(tri) = geometry::Triangle3D::new(

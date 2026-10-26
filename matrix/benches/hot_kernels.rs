@@ -1,6 +1,7 @@
 //! Benchmarks for the matrix operations that dominate whole-building
 //! simulations (see `benches/simulation.rs` in the workspace root).
-use criterion::{black_box, criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
+use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
+use std::hint::black_box;
 use matrix::{matrix::Matrix, NDiagMatrix};
 
 /// Solving the tridiagonal system of a no-mass chunk (e.g., a window), which

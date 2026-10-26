@@ -82,7 +82,7 @@ impl DCFactory {
                 #[allow(clippy::needless_collect)]
                 let aux_iter: Vec<Vector3D> = (0..self.n_ambient_samples)
                     .map(|_| {
-                        let u = rng.gen();
+                        let u = rng.random();
                         sample_cosine_weighted_horizontal_hemisphere(u)
                     })
                     .collect();
@@ -220,7 +220,7 @@ impl DCFactory {
 
             // Russian roulette
             let q = (1. - beta.radiance()).max(0.);
-            let aux: Float = rng.gen();
+            let aux: Float = rng.random();
             if aux < q {
                 break;
             }

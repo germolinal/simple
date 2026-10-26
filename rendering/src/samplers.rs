@@ -164,7 +164,7 @@ mod tests {
         fn check(radius: Float, centre: Point3D, normal: Vector3D) -> Result<(), String> {
             let mut rng = crate::rand::get_rng();
             let normal = normal.get_normalized();
-            let u = rng.gen();
+            let u = rng.random();
             let p = uniform_sample_tilted_disc(u, radius, centre, normal);
             if ((p - centre) * normal).abs() > 100. * Float::EPSILON {
                 return Err(format!(
@@ -203,7 +203,7 @@ mod tests {
             let e1 = e2.cross(normal);
 
             let mut rng = get_rng();
-            let u = rng.gen();
+            let u = rng.random();
             let dir = uniform_sample_tilted_hemisphere(u, e1, e2, normal);
 
             if (1. - dir.length()).abs() > 1e-5 {
@@ -231,7 +231,7 @@ mod tests {
     fn test_cosine_weighted_sampling() {
         let mut rng = get_rng();
         for _ in 0..99999999 {
-            let u = rng.gen();
+            let u = rng.random();
             let a = sample_cosine_weighted_horizontal_hemisphere(u);
             assert!(a.length().is_finite());
         }
@@ -241,7 +241,7 @@ mod tests {
     fn test_uniform_sample_horizontal_disc() {
         let mut rng = get_rng();
         for _ in 0..100 {
-            let u = rng.gen();
+            let u = rng.random();
             let (x, y) = uniform_sample_horizontal_disc(u, 1.0);
             assert!(!x.is_nan());
             assert!(!y.is_nan());

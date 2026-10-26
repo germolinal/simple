@@ -48,9 +48,8 @@ impl Camera for Pinhole {
     /// Generates a random CameraSample
     fn gen_random_sample(&self, rng: &mut RandGen) -> CameraSample {
         let (width, height) = self.film.resolution;
-        let (x, y): (usize, usize) = rng.gen();
         CameraSample {
-            p_film: (x % width, y % height),
+            p_film: (rng.random_range(0..width), rng.random_range(0..height)),
         }
     }
 
