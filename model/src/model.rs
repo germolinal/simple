@@ -1486,16 +1486,11 @@ mod testing {
             SofaType, SpacePurpose, StorageType, TableShape, TableType,
         };
 
-        let dir = "../docs/ioreference/src";
-
-        // Add automatic documentation
-        // let dir = "../src";
-        let summary_file = format!("{}/SUMMARY.md", dir);
+        // Written next to the hand-written chapters of the book. `make book`
+        // appends IO_SUMMARY.md to docs/book/SUMMARY_TEMPLATE.md
+        let dir = "../docs/book/src";
+        let summary_file = format!("{}/IO_SUMMARY.md", dir);
         let mut summary = String::new();
-
-        // clear summary
-        let f = std::fs::File::create(&summary_file).map_err(|e| e.to_string())?;
-        f.set_len(0).map_err(|e| e.to_string())?;
 
         /////////////////////
 
@@ -1659,10 +1654,7 @@ mod testing {
 
         /////////////////
 
-        let current_summary =
-            fs::read_to_string(summary_file.clone()).expect("Could not read summary file");
-        let whole_summary = format!("{}\n\n{}", current_summary, summary);
-        std::fs::write(summary_file, whole_summary.as_bytes()).map_err(|e| e.to_string())?;
+        std::fs::write(summary_file, summary.as_bytes()).map_err(|e| e.to_string())?;
         Ok(())
     }
 

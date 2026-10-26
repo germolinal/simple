@@ -1,0 +1,23 @@
+name: Docs
+
+# Re-publishes the hand-written docs when they change on main. The IO
+# reference and validation reports keep coming from the latest release.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "!docs/validation/**"
+      - ".github/workflows/docs.yaml"
+      - ".github/workflows/docs-deploy.yaml"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  docs:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs-deploy.yaml

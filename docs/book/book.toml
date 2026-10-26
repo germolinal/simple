@@ -5,6 +5,9 @@ multilingual = false
 src = "src"
 title = "SIMPLE Simulation Official Documentation"
 
+[output.html]
+site-url = "/simple/book/"
+git-repository-url = "https://github.com/germolinal/simple"
 
 [preprocessor.katex]
 after = ["links"]

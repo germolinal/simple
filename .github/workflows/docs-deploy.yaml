@@ -1,0 +1,98 @@
+name: Build and deploy docs
+
+# Reusable workflow behind docs.yaml and docs-release.yaml. Publishes
+# https://germolinal.github.io/simple/ (see `make site`).
+#
+# Hand-written docs (docs/index.html, docs/book) come from the commit that
+# triggered the run. Generated docs (IO reference and validation reports) come
+# from `generated_ref`, so they always describe a released version of SIMPLE.
+on:
+  workflow_call:
+    inputs:
+      generated_ref:
+        description: "Ref to generate the IO reference and take validation reports from. Empty means the latest `v*` tag"
+        type: string
+        default: ""
+      check_validation:
+        description: "Fail if the validation reports are stale"
+        type: boolean
+        default: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags and history are needed to find the release and check reports
+          fetch-depth: 0
+
+      - name: Find release
+        run: |
+          ref="${{ inputs.generated_ref }}"
+          if [ -z "$ref" ]; then
+            ref=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+          fi
+          if [ -z "$ref" ]; then
+            echo "::warning::No release tag found; generating docs from ${{ github.sha }}"
+            ref=${{ github.sha }}
+          fi
+          echo "Generated docs come from $ref"
+          echo "GENERATED_REF=$ref" >> "$GITHUB_ENV"
+
+      - name: Check validation reports
+        if: inputs.check_validation
+        run: ./docs/check_validation.sh "$GENERATED_REF"
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      # mdbook-katex 0.9.x is the last series compatible with mdbook 0.4.x
+      - name: Install mdBook
+        uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook@0.4.52,mdbook-katex@0.9.4
+
+      - name: Generate docs from release
+        run: |
+          release="$RUNNER_TEMP/release"
+          git worktree add --detach "$release" "$GENERATED_REF"
+          CARGO_TARGET_DIR="$PWD/target" make -C "$release" io_reference
+          cp "$release"/docs/book/src/auto-*.md "$release"/docs/book/src/IO_SUMMARY.md docs/book/src/
+          rm -rf docs/validation
+          cp -R "$release"/docs/validation docs/validation
+
+      - name: Build site
+        run: make site
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    # Only one deployment at a time; don't cancel one that is in progress
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
