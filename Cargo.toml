@@ -95,6 +95,11 @@ utils = { path = "utils" }
 
 [dev-dependencies]
 validate = { git = "https://github.com/germolinal/validate" }
+criterion = "0.5.1"
+
+[[bench]]
+name = "simulation"
+harness = false
 
 
 [features]

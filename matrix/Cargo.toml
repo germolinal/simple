@@ -24,3 +24,7 @@ harness = false
 [[bench]]
 name = "prod_n_diag"
 harness = false
+
+[[bench]]
+name = "hot_kernels"
+harness = false
