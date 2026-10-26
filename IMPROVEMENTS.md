@@ -476,10 +476,29 @@ Exact (same hits):
    once, in BVH order, in a separate array used only for intersecting (the
    vertices are still needed for normals, areas and light sampling, and
    `a + (b - a)` does not round back to `b`).
-3. **Leaf size.** The SAH counts a box test as 10 triangle tests
-   (`RELATIVE_TRANSVERSAL_COST = 10`), giving leaves of up to 24 triangles
-   (`LEAF_SIZE`); pbrt uses ~1/8 (leaves of ~4). Tune by benchmark: the tree
-   does not change which triangle is closest (except exact ties).
+3. **Leaf size ✅** (`RELATIVE_TRANSVERSAL_COST` 10 → 1, `LEAF_SIZE` 24 → 8).
+   The SAH counted a box test as 10 triangle tests, giving leaves of up to 24
+   triangles (pbrt uses ~1/8, with leaves of ~4). Sweep (same session; "cold"
+   is the cold apartment from scratch, DCs + 1 year, median of 3):
+
+   | Cost, max leaf | Cold wall | Cold CPU | room | sponza | 1.2k / 12k random |
+   |--|--|--|--|--|--|
+   | 10, 24 (before) | 8.84 s | 24.5 s | 75 ns | 409 ns | 6.2 / 117 µs |
+   | **1, 8 (chosen)** | 8.28 s (−6%) | 20.5 s (−16%) | +10% | −1% | +78% / +72% |
+   | 2, 8 | 8.27 s | 20.6 s | +11% | +5% | +83% / +77% |
+   | 1, 4 | 8.42 s | 20.3 s | +12% | +2% | +84% / +77% |
+   | 0.5, 4 | 8.21 s | 20.7 s | +10% | −1% | +80% / +74% |
+   | 0.125, 4 (pbrt) | 8.36 s | 20.6 s | +13% | 0% | +80% / +81% |
+   | 0.125, 2 | 8.47 s | 20.6 s | +11% | +2% | +82% / +78% |
+
+   The DC pre-processing is ~15% faster (wall time includes a ~5 s annual
+   simulation). The random-triangle benchmarks are slower, but their
+   triangles overlap so much that smaller leaves only add nodes (C4); the
+   single ray of `intersect_room` is ~10% slower. Same closest hits (the
+   brute-force tests pass). Re-sweep after items 1, 2 and 4, which change the
+   relative costs. Note: sets of 4 or fewer triangles are always split in
+   half (`TOO_FEW_TO_BUCKET`), so leaves have either 1 triangle or more than
+   4.
 4. **Box test.** Branch-free slab test, choosing near/far planes from the
    direction's signs (already computed). Nodes store `f64` boxes (~64 bytes);
    `f32` boxes rounded outwards would halve that.
@@ -710,7 +729,15 @@ from the profile shares; each change should be checked against the baselines).
   seeing no sky and no ground, and one whose normal ray is clear counts as
   fully unobstructed. Casting along each sampled direction would fix it, but
   changes IR results (and costs 10,000 rays per point again; fewer samples
-  would do).
+  would do). The fix (pending Germán's decision):
+
+  ```rust
+  let sample = Ray3D { origin: ray.origin, direction: dir };
+  if scene.cast_ray(sample, &mut node_aux).is_none() {
+  ```
+
+  Unobstructed surfaces would barely change; partly shaded ones (overhangs,
+  neighbours, the building itself) would see less sky and ground.
 - **Stale convection inputs.** Inside `march_nomass`, border conditions use the
   previous timestep's surface temperatures from `state` (related to A5).
 

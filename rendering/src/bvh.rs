@@ -237,7 +237,7 @@ impl Node {
 
         const TOO_FEW_TO_BUCKET: usize = 4;
         const N_BUCKETS: usize = 12;
-        const RELATIVE_TRANSVERSAL_COST: Float = 10.;
+        const RELATIVE_TRANSVERSAL_COST: Float = 1.;
         // Now, Proceed
         if len_axis < 1e-8 {
             // All primitives seem to be aligned in all directions (i.e., overlapping)

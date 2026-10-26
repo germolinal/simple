@@ -7,7 +7,7 @@ use geometry::{
 pub mod fallback;
 pub use fallback::baricentric_coordinates;
 
-pub(crate) const LEAF_SIZE: usize = 24;
+pub(crate) const LEAF_SIZE: usize = 8;
 
 /// The smallest definition of a Triangle I could think of
 pub type Triangle = [Float; 9];
