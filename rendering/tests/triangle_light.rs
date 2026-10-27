@@ -45,14 +45,21 @@ fn floor_radiance(
     height: Float,
 ) -> Float {
     let scene = scene(offset, half_side, height);
+    // between the floor and the light
+    let origin = Point3D::new(offset.0, offset.1, offset.2 + height / 2.);
+    trace_down(&scene, origin, n_shadow_samples)
+}
+
+/// The radiance seen looking down from `origin` (average of many estimates
+/// of the ray tracer, with one bounce)
+fn trace_down(scene: &Scene, origin: Point3D, n_shadow_samples: usize) -> Float {
     let tracer = RayTracer {
         max_depth: 1,
         n_shadow_samples,
         n_ambient_samples: 1,
     };
     let ray = Ray3D {
-        // between the floor and the light
-        origin: Point3D::new(offset.0, offset.1, offset.2 + height / 2.),
+        origin,
         direction: Vector3D::new(0., 0., -1.),
     };
     let mut rng = rendering::rand::get_rng();
@@ -60,7 +67,7 @@ fn floor_radiance(
     let n = 4000;
     let mut sum = 0.;
     for _ in 0..n {
-        sum += tracer.trace_ray(&mut rng, &scene, ray, &mut aux).radiance();
+        sum += tracer.trace_ray(&mut rng, scene, ray, &mut aux).radiance();
     }
     sum / n as Float
 }
@@ -78,12 +85,10 @@ fn triangle_light_matches_analytic() {
 }
 
 /// Like `triangle_light_matches_analytic()`, for a large, close light (e.g.,
-/// a ceiling panel). Known issue: light samples are weighted by multiple
-/// importance sampling, but BSDF samples that hit lights in the scene (as
-/// opposed to distant ones) are not added after a non-specular bounce, so
-/// such lights are underestimated (~−23% here).
+/// a ceiling panel). BSDF samples that hit lights in the scene used to be
+/// ignored (while light samples were weighted by multiple importance
+/// sampling), so such lights were underestimated (−23% here).
 #[test]
-#[ignore]
 fn large_triangle_light_matches_analytic() {
     check_light(2., 0.5);
 }
@@ -100,6 +105,35 @@ fn check_light(half_side: Float, height: Float) {
             error < 0.02,
             "light of side {}, at {height}; offset {offset:?}: found {found}, expected {expected} ({:.1}% error)",
             2. * half_side,
+            100. * error
+        );
+    }
+}
+
+/// The floor's radiance below sphere lights, small and far or large and
+/// close, must match the analytic solution: ρ L (r/h)², for a sphere of
+/// radius `r` centred at height `h` (≥ `r`). Sphere lights are sampled on the
+/// sphere, while rays hit the triangles meshing it. With 2 shadow samples,
+/// BSDF samples that hit the large sphere carry ~17% of its light.
+#[test]
+fn sphere_light_matches_analytic() {
+    for (radius, height) in [(0.1, 2.), (1., 1.2)] as [(Float, Float); 2] {
+        let src = format!(
+            "void plastic floor 0 0 5 {RHO} {RHO} {RHO} 0 0
+void light lamp 0 0 3 {L} {L} {L}
+floor polygon f 0 0 12 -50 -50 0 50 -50 0 50 50 0 -50 50 0
+lamp sphere s 0 0 4 0 0 {height} {radius}
+"
+        );
+        let mut scene = Scene::from_radiance_source(src.as_bytes()).unwrap();
+        scene.build_accelerator();
+        let expected = RHO * L * (radius / height).powi(2);
+        let origin = Point3D::new(0., 0., (height - radius) / 2.);
+        let found = trace_down(&scene, origin, 2);
+        let error = (found / expected - 1.).abs();
+        assert!(
+            error < 0.02,
+            "sphere of radius {radius} at {height}: found {found}, expected {expected} ({:.1}% error)",
             100. * error
         );
     }

@@ -53,6 +53,10 @@ pub struct Scene {
 
     pub back_material_indexes: Vec<usize>,
 
+    /// For each triangle, the index of the light (in `lights`) it belongs
+    /// to, if any (e.g., all the triangles of a sphere light)
+    pub light_indexes: Vec<Option<usize>>,
+
     /// The materials in the scene
     pub materials: Vec<Material>,
 
@@ -214,7 +218,16 @@ impl Scene {
         }
         let (bvh, mapping) = BoundingVolumeTree::new(self);
         self.accelerator = Some(bvh);
+        self.reorder_light_indexes(&mapping);
         mapping
+    }
+
+    /// Reorders `light_indexes` as the triangles were reordered when building
+    /// the accelerator
+    fn reorder_light_indexes(&mut self, mapping: &[usize]) {
+        if !mapping.is_empty() {
+            self.light_indexes = mapping.iter().map(|i| self.light_indexes[*i]).collect();
+        }
     }
 
     /// Re-Builds the accelerator
@@ -226,6 +239,7 @@ impl Scene {
     pub fn rebuild_accelerator(&mut self) -> Vec<usize> {
         let (bvh, mapping) = BoundingVolumeTree::new(self);
         self.accelerator = Some(bvh);
+        self.reorder_light_indexes(&mapping);
         mapping
     }
 
@@ -309,6 +323,7 @@ impl Scene {
         }
 
         // If it is light
+        let mut light_index = None;
         let is_light = if self.materials[front_material_index].emits_direct_light()
             || self.materials[back_material_index].emits_direct_light()
         {
@@ -326,6 +341,7 @@ impl Scene {
                 self.distant_lights.push(object);
             } else {
                 // register object as light
+                light_index = Some(self.lights.len());
                 self.lights.push(object);
             }
             true
@@ -352,6 +368,8 @@ impl Scene {
         self.normals.extend_from_slice(&normals);
         self.front_material_indexes.extend_from_slice(&front);
         self.back_material_indexes.extend_from_slice(&back);
+        self.light_indexes
+            .extend(std::iter::repeat_n(light_index, additional));
     }
 }
 

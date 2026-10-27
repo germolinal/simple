@@ -1,5 +1,9 @@
 VALIDATION_FEATURES=--features parallel --release
 
+# None of these targets is a file (`weather` is also a directory, so without
+# this, `make weather` would never run)
+.PHONY: pre_commit build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance ray_tracer infiltration walls weather io_reference summary book site serve_book check_validation documentation
+
 
 pre_commit: #test validate
 	cargo fmt
@@ -61,7 +65,7 @@ walls:
 	cargo test  --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture
 
 weather:
-	cargo test $(VALIDATION_FEATURES) --package weather --test go_through -- test_go_through --exact --nocapture
+	cargo test --release --package weather --test go_through -- test_go_through --exact --nocapture
 
 
 

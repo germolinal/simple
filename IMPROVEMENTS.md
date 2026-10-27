@@ -46,6 +46,49 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **Glossy surfaces reflected lights wrongly; large lights were
+  underestimated** (`rendering`). Three problems, now checked against direct
+  integrations of the BSDF (`rendering/tests/glossy_light.rs`) and analytic
+  solutions (`rendering/tests/triangle_light.rs`, including sphere lights):
+  - Ward sampling did not reflect the ray around the sampled half vector
+    (`v.z += d` instead of Radiance's `rdir + d*h`), retried directions below
+    the surface, and returned a pdf (and spectrum) with an extra `1/cos`;
+    `ward_pdf` did not describe the sampled directions (it integrated to
+    1.1-1.9). Now the true density, `s · p_h(h) / (4 |h·wo|)`, and the
+    BSDF's value. BSDF sampling alone was 3-200% too bright on a glossy
+    metal reflecting a light; now within 0.1%.
+  - Multiple importance sampling was one-sided: BSDF samples hitting lights
+    in the scene were not added, so large, close lights were underestimated
+    (−23% for a 4 × 4 m light 0.5 m above a floor; −17% for a large sphere
+    with 2 shadow samples). Now they are, weighted with the light's pdf
+    (`Scene::light_indexes` tells which light each triangle belongs to;
+    lights are sampled on their primitive, not on their triangles). Both
+    strategies use `Material::pdf()`, and distant lights are weighted
+    considering the number of shadow samples and the probability of
+    choosing the light.
+  - With one shadow sample, shadow rays went to the light's centre (as
+    Radiance with `-dj 0`): +10-19% on glossy surfaces. Now always random.
+
+  Ray tracer validation (11 rounds before/after): specular plastic RMSE 5.63
+  → 0.12 (MBE −0.63 → −0.08), full metal 0.28 → 0.17, specular metal 0.051 →
+  0.049; full plastic 0.0001 → 0.0015 (MBE −0.006 → +0.006); no other change.
+  DC, solar and IR validations: no change (0 of 49 indicators). The Veach
+  MIS scene (`veach_mis` in `rendering/tests/test_scenes.rs`) now shows all
+  16 highlights.
+- **The Perez sky could be negative** (`weather/src/solar/perez.rs`): with the
+  sun close to the horizon and little direct radiation, patches went down to
+  −9e6 in Wellington's year (which, with the back irradiance not clamped,
+  took the cold apartment's bathroom to −3.1 °C). Now as Radiance's
+  `gendaymtx`: negative patches are set to zero, sky brightness is clamped
+  to [0.01, 0.6] (no upper limit before) and clearness to [1, 11.9]. Annual
+  temperatures: box up to 1.6 °C (99.9th percentile 0.8 °C), cold
+  apartment up to 0.04 °C. Validations (11 rounds): Barcelona North solar
+  RMSE 18.54 → 18.24; nothing else changed. Test:
+  `test_sky_vec_is_not_negative`.
+- **`make weather` never ran** (the `weather` directory made Make consider it
+  up to date, so `make validate` never regenerated `weather.html`), and it
+  would have failed (`weather` has no `parallel` feature). All targets are
+  now `.PHONY`.
 - **Back solar irradiance was never clamped**: `ThermalSurfaceData::march`
   (`heat/src/surface.rs`) tested `solar_front < 0.0` instead of `solar_back`.
   It matters because the sky can be negative (open item 2): in the cold
@@ -122,48 +165,16 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 Change results (to fix and validate one by one):
 
-1. **Specular plastic (roughness 0) still differs from Radiance** (ray tracer
-   validation RMSE 5.55). Radiance treats roughness 0 as a pure mirror with a
-   Fresnel term (`SP_PURE`, `FRESNE()` in `normal.c`); we use a Gaussian lobe
-   of roughness 0.001 and no Fresnel.
-1b. **Lights in the scene (triangles, spheres) lack half of multiple
-   importance sampling** (`rendering/src/ray_tracer.rs`). Light samples are
-   weighted by MIS, but BSDF samples that hit such a light after a
-   non-specular bounce are not added, so large, close lights are
-   underestimated: −23% for a 4 × 4 m light 0.5 m above a floor (ignored test
-   `large_triangle_light_matches_analytic`). Visible in Veach's MIS scene (ignored
-   test `veach_mis` in `rendering/tests/test_scenes.rs`): the large lights'
-   reflections on the smoother plates are missing or noisy. Giving light samples a weight
-   of 1 instead was tried and reverted: it fixes that test, but light
-   sampling is a terrible strategy for near-mirror surfaces, and the ray
-   tracer validation got much worse (specular plastic RMSE 21.8 → 13.6
-   million). Needs proper two-sided MIS: add BSDF hits on lights, weighted
-   with the light's pdf, which requires knowing which light a triangle
-   belongs to. Related: the pdf `sample_bsdf` returns for diffuse/specular
-   mixtures differs from `pdf()` (MIS weights then do not add to 1); the
-   escape branch weights distant lights with `power_heuristic(1, ray_prob,
-   1, light_pdf)`, ignoring the number of shadow samples and the
-   probability of choosing the light; and the Ward pdf (as in Radiance's
-   sampling weight) integrates to ~1.1-1.9 at oblique angles.
-
-   With one shadow sample, the shadow ray goes to the light's centre (as
-   Radiance with `-dj 0`); this is intentional.
-2. **The Perez sky can be negative** (`weather/src/solar/perez.rs`): in 12
-   timesteps of Wellington's year (sun close to the horizon, almost no direct
-   radiation), up to 2,112 of the 2,305 patches are negative, down to −9e6.
-   The normalization ignores negative patches, but the returned sky does
-   not. Probably clamp to zero (as the normalization does); compare with
-   Radiance's `gendaylit`.
-3. **`geometry` uses absolute thresholds**: `Triangle3D::new` rejects points
+1. **`geometry` uses absolute thresholds**: `Triangle3D::new` rejects points
    closer than 1 mm and triangles with `|ab × bc| < 1e-5` (right triangles
    with sides below ~3.2 mm, and thin slivers).
-4. **With `--features float`, 18 tests fail** (they compile now): 7 in
+2. **With `--features float`, 18 tests fail** (they compile now): 7 in
    `geometry` (loops, polygons with doors, triangulation, `Segment3D::contains`),
    `heat` `test_9050` (glazing), `model` `test_get_orientation`, 5 in
    `weather` (Reinhart rows, Perez colour matrix, cloud cover, weather lines,
    `go_through`), and the DC, solar, IR and box validations. Probably
    tolerances written for `f64`.
-5. **IR view factors only look along the normal**
+3. **IR view factors only look along the normal**
    (`SolarSurface::calc_view_factors`): it casts the sensor's normal ray, not
    the sampled direction, so a point counts as seeing either no sky and no
    ground, or the full unobstructed hemisphere. Fix:
@@ -189,5 +200,9 @@ Change results (to fix and validate one by one):
 - **Direct + diffuse split** in the solar model: the sun is binned into a
   Reinhart patch, which needs MF4 (2305 bins); tracing direct sun exactly
   would allow MF1 (145 bins) for the diffuse sky.
+- **Roughness 0** (`rendering/src/material/ward.rs`): Radiance treats it as a
+  pure mirror with a Fresnel term (`SP_PURE`, `FRESNE()` in `normal.c`); we
+  use a Ward lobe of roughness 0.001 and no Fresnel term. The validation
+  agrees now (specular plastic RMSE 0.12), but this is a modelling choice.
 - **Watertight triangle intersection** (e.g., Woop et al.), and **`f32`
   geometry** (half the memory, twice the SIMD lanes).

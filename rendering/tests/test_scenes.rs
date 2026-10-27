@@ -279,7 +279,7 @@ fn sponza() -> Result<(), String> {
 
     // Create film
     let film = Film {
-        resolution: (330, 330),
+        resolution: (630, 630),
     };
 
     // Create view
@@ -512,7 +512,7 @@ fn dining() -> Result<(), String> {
 
     // Create film
     let film = Film {
-        resolution: (250, 250),
+        resolution: (650, 650),
     };
 
     // Create view

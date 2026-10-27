@@ -69,11 +69,8 @@ impl PerezSky {
         extraterrestrial_irradiance: Float,
     ) -> Float {
         let ret = diffuse_horizontal_irrad * air_mass / extraterrestrial_irradiance;
-        if ret < 0.01 {
-            0.01 // limit set by Radiance's gendaymtx.c
-        } else {
-            ret
-        }
+        // limits set by Radiance's gendaymtx.c
+        ret.clamp(0.01, 0.6)
     }
 
     /// Precipitable water content based on dew point. If now known, Radiance seems to use
@@ -314,10 +311,10 @@ impl PerezSky {
             air_mass,
             extraterrestrial_irradiance,
         )
-        .clamp(0.01, 9e9); // RADIANCE SETS THESE LIMITS... I don't know if they are in the paper
+        .clamp(0.01, 0.6); // As Radiance's gendaymtx.c
         let sky_clearness =
             Self::sky_clearness(diffuse_horizontal_irrad, direct_normal_irrad, zenith)
-                .clamp(-9e9, 11.9);
+                .clamp(1.0, 11.9); // As Radiance's gendaymtx.c
 
         let index = Self::clearness_category(sky_clearness);
 
@@ -347,7 +344,10 @@ impl PerezSky {
             // to calculate it.
             let ret = (1. + params[0] * (params[1] / cos_zeta).exp())
                 * (1. + params[2] * (params[3] * gamma).exp() + params[4] * cosgamma * cosgamma);
-            if ret.is_nan() {
+            // Perez's model can give negative values (e.g., with the sun
+            // close to the horizon); like Radiance's gendaymtx.c, set them to
+            // zero
+            if ret.is_nan() || ret < 0.0 {
                 0.0
             } else {
                 ret
@@ -508,10 +508,10 @@ impl PerezSky {
             air_mass,
             extraterrestrial_irradiance,
         )
-        .clamp(0.01, 9e9);
+        .clamp(0.01, 0.6); // As Radiance's gendaymtx.c
         let sky_clearness =
             Self::sky_clearness(diffuse_horizontal_irrad, direct_normal_irrad, zenith)
-                .clamp(-9e9, 11.9);
+                .clamp(1.0, 11.9); // As Radiance's gendaymtx.c
 
         let clearness_category = Self::clearness_category(sky_clearness);
         let mut diff_illum = diffuse_horizontal_irrad
@@ -778,6 +778,51 @@ mod tests {
         } else {
             3.33 // %
         }
+    }
+
+    /// With the sun close to the horizon and almost no direct radiation,
+    /// Perez's model used to give negative patches (as low as −9e6 in a year
+    /// of Wellington's weather, and −113 at 18:42 on 10 March here), which
+    /// Radiance's `gendaymtx` sets to zero
+    #[test]
+    fn test_sky_vec_is_not_negative() -> Result<(), String> {
+        let lat = -41.30 * PI / 180.;
+        let lon = -174.78 * PI / 180.;
+        let std_mer = -180. * PI / 180.;
+        let solar = Solar::new(lat, lon, std_mer);
+        for i in 0..200 {
+            let hour = 18.5 + 0.0025 * i as Float;
+            for (direct_normal_radiation, diffuse_horizontal_radiation) in
+                [(1.75, 34.), (0.5, 39.), (0., 34.), (4., 38.), (20., 60.)]
+            {
+                let weather_data = CurrentWeather {
+                    dew_point_temperature: 11.,
+                    direct_normal_radiation,
+                    diffuse_horizontal_radiation,
+                    ..CurrentWeather::default()
+                };
+                let date = Date { month: 3, day: 10, hour };
+                let vec = PerezSky::gen_sky_vec(
+                    4,
+                    &solar,
+                    date,
+                    weather_data,
+                    SkyUnits::Solar,
+                    0.2,
+                    true,
+                    true,
+                )?;
+                let (nrows, _) = vec.size();
+                for bin in 0..nrows {
+                    let v = vec.get(bin, 0)?;
+                    assert!(
+                        v >= 0.0,
+                        "patch {bin} is {v} at {hour}h (direct {direct_normal_radiation}, diffuse {diffuse_horizontal_radiation})"
+                    );
+                }
+            }
+        }
+        Ok(())
     }
 
     #[test]
