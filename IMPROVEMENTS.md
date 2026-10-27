@@ -46,6 +46,23 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **Cached optical data ignored the options**: a file in
+  `SolarOptions.optical_data_path` was used even if it had been calculated
+  with other options (sky discretization, points, rays). It now records
+  them, and is recalculated (and overwritten) when they differ, or when it
+  does not record them (files written before this).
+- **IR view factors** (`SolarSurface::calc_view_factors`): whether a point saw
+  the outside was decided by its normal ray alone (a wall facing another
+  wall saw no sky and no ground; a window under an overhang saw as much sky
+  as an unobstructed one), and directions were uniformly distributed over
+  the hemisphere instead of cosine-weighted (a 45° roof saw 0.75 of sky
+  instead of 0.854). Now `SolarOptions.n_ir_view_factor_rays` (default
+  16,384) rays per side of a surface, each from a random point on it, with stratified cosine-weighted
+  directions; rays that hit the scene count as neither sky nor ground.
+  Standard deviation ≤ 0.002, < 1 ms per side (`view_factor_convergence`;
+  test: `view_factors_tilted_and_obstructed`). Validations (IR, box, cold
+  apartment; 11 rounds): no significant change (0 of 51 indicators); their
+  surfaces are vertical or horizontal, and unobstructed.
 - **`geometry`'s collinearity test was absolute** (`|ab × bc| < 1e-5`, in
   m²): it rejected all triangles smaller than ~3 mm, and accepted very
   different angles for short and long edges. Now on the sine of the angle
@@ -185,17 +202,17 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Open
 
-Change results (to fix and validate one by one):
-
-1. **IR view factors only look along the normal**
-   (`SolarSurface::calc_view_factors`): it casts the sensor's normal ray, not
-   the sampled direction, so a point counts as seeing either no sky and no
-   ground, or the full unobstructed hemisphere. Fix:
-   `cast_ray(Ray3D { origin: ray.origin, direction: dir }, ..)`. Pending
-   Germán's decision (changes IR exchange of partly shaded surfaces).
+None known.
 
 ## Methods (to discuss)
 
+- **No long-wave (IR) exchange between surfaces.** Inside, a surface's
+  radiant temperature is the zone's air temperature (no exchange with the
+  other surfaces of the zone, no mean radiant temperature). Outside, the
+  "air" part of the view (other buildings, the building itself) is assumed
+  to be at the outdoor air temperature. Surface-to-surface view factors
+  could be calculated as the IR view factors now are (random points,
+  stratified rays).
 - **`march_nomass`** (windows, cavities): a fixed-point iteration with 0.5
   damping that stops on thresholds (`err < 0.01`, `err` going up, or 19,000
   iterations). Results depend on rounding noise: changing convection

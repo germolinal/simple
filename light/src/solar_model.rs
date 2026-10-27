@@ -32,7 +32,7 @@ use weather::{CurrentWeather, WeatherTrait};
 use weather::{PerezSky, ReinhartSky, SkyUnits, Solar};
 
 use crate::dc_matrix::DCMatrix;
-use crate::optical_info::OpticalInfo;
+use crate::optical_info::{OpticalInfo, OpticalOptions};
 
 /// The name of the module
 pub(crate) const MODULE_NAME: &str = "Solar Model";
@@ -406,6 +406,22 @@ impl SimulationModel for SolarModel {
         // Make OpticalInfo, or read, as needed
         let optical_info = if let Ok(path_str) = options.optical_data_path() {
             let path = Path::new(path_str);
+            // Calculates the information, and writes it into the file
+            let mut calculate_and_write = || -> Result<OpticalInfo, String> {
+                let info = OpticalInfo::new(&options, model, state)?;
+                let s = match serde_json::to_value(&info) {
+                    Ok(v) => v,
+                    Err(e) => return Err(format!("{}", e)),
+                };
+                let mut file = match File::create(path) {
+                    Ok(v) => v,
+                    Err(e) => return Err(format!("{}", e)),
+                };
+                if let Err(e) = writeln!(&mut file, "{}", s) {
+                    return Err(format!("{}", e));
+                }
+                Ok(info)
+            };
             if path.exists() {
                 // read from file
                 if !path.is_file() {
@@ -432,22 +448,18 @@ impl SimulationModel for SolarModel {
                     }
                 };
 
-                info
-            } else {
-                // write into file
-                let info = OpticalInfo::new(&options, model, state)?;
-                let s = match serde_json::to_value(&info) {
-                    Ok(v) => v,
-                    Err(e) => return Err(format!("{}", e)),
-                };
-                let mut file = match File::create(path) {
-                    Ok(v) => v,
-                    Err(e) => return Err(format!("{}", e)),
-                };
-                if let Err(e) = writeln!(&mut file, "{}", s) {
-                    return Err(format!("{}", e));
+                // Recalculate if it was calculated with other options
+                if info.calculated_with == Some(OpticalOptions::new(&options)) {
+                    info
+                } else {
+                    eprintln!(
+                        "The optical information in '{}' was calculated with other options... recalculating it",
+                        path_str
+                    );
+                    calculate_and_write()?
                 }
-                info
+            } else {
+                calculate_and_write()?
             }
         } else {
             // Forced calculation... not store
@@ -550,8 +562,20 @@ mod testing {
         solar_options.set_solar_sky_discretization(2);
         solar_options.set_optical_data_path(optical_data_path.to_string());
         let light_model =
+            SolarModel::new(&meta_options, solar_options.clone(), &model, &mut state_header, 4)?;
+        // The data in the file was calculated with other options, so it was
+        // recalculated (it used to be used as it was)
+        assert_eq!(light_model.sky.mf, 2);
+        let calculated_with = light_model.optical_info.calculated_with.ok_or("no options")?;
+        assert_eq!(calculated_with.sky_discretization, 2);
+
+        // Step 3: also when changing the number of rays for IR view factors
+        solar_options.set_n_ir_view_factor_rays(64);
+        let light_model =
             SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4)?;
-        assert_eq!(light_model.sky.mf, 1); //this comes from the optical data.
+        let calculated_with = light_model.optical_info.calculated_with.ok_or("no options")?;
+        assert_eq!(calculated_with.n_ir_view_factor_rays, 64);
+        assert_eq!(light_model.sky.mf, 2);
 
         // cleanup
         let path = Path::new(optical_data_path);

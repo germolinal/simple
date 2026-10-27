@@ -68,6 +68,21 @@ pub struct SolarOptions {
     #[serde(skip_serializing_if = "Option::is_none")]
     solar_sky_discretization: Option<usize>,
 
+    /// Number of rays sent from each side of each surface or fenestration
+    /// when calculating the fractions of the sky, the ground and other
+    /// objects (e.g., other buildings) it sees, used for calculating its
+    /// incident long-wave (IR) irradiance. Each ray starts at a random point
+    /// of the surface.
+    ///
+    /// A larger number of rays leads to more accurate results but, as usual,
+    /// it has an impact on the time of the computation. Specifically,
+    /// the time required for creating the model increases linearly with
+    /// the number of rays. The time required to process each timestep
+    /// is not affected. The default (16384) gives errors of about 0.002 in
+    /// these fractions, in less than 1 ms per surface.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    n_ir_view_factor_rays: Option<usize>,
+
     /// A path to the file containing information about solar radiation and other
     /// optical stuff. If the file does not exist, this information will be calculated
     /// and saved in this path. If it does exist, it will be loaded and used directly,

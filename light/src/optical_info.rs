@@ -42,10 +42,42 @@ pub struct IRViewFactorSet {
     pub air: Float,
 }
 
+/// The options an [`OpticalInfo`] was calculated with (so that, when read
+/// from a file, it can be recalculated if they changed)
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OpticalOptions {
+    /// Reinhart's sky subdivision
+    pub sky_discretization: usize,
+    /// Points per surface for solar irradiance
+    pub n_solar_irradiance_points: usize,
+    /// Rays per point for solar irradiance
+    pub solar_ambient_divitions: usize,
+    /// Rays per side of each surface for IR view factors
+    pub n_ir_view_factor_rays: usize,
+}
+
+impl OpticalOptions {
+    /// The options used for `options`, with their defaults
+    pub fn new(options: &SolarOptions) -> Self {
+        let module = crate::solar_model::MODULE_NAME;
+        Self {
+            sky_discretization: options.solar_sky_discretization_or(module, 1),
+            n_solar_irradiance_points: options.n_solar_irradiance_points_or(module, 10),
+            solar_ambient_divitions: options.solar_ambient_divitions_or(module, 300),
+            n_ir_view_factor_rays: options.n_ir_view_factor_rays_or(module, IR_VIEW_FACTOR_RAYS),
+        }
+    }
+}
+
 /// Information about the solar radiation and other optical elements
 /// of the whole model.
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct OpticalInfo {
+    /// The options this was calculated with (`None` in files written before
+    /// they were recorded)
+    #[serde(default)]
+    pub calculated_with: Option<OpticalOptions>,
+
     /// The [`IRViewFactorSet`] for the front side of each surface
     pub front_surfaces_view_factors: Vec<IRViewFactorSet>,
 
@@ -71,6 +103,15 @@ pub struct OpticalInfo {
     pub back_fenestrations_dc: Matrix,
 }
 
+/// Rays sent from each side of a surface to calculate its IR view factors
+/// (see `SolarSurface::calc_view_factors()`), each from a random point.
+///
+/// The view factors' standard deviation is then ≤ 0.002 (an unobstructed
+/// tilted roof, a wall facing another one, and a window under an overhang;
+/// `view_factor_convergence` in `solar_surface.rs`), at < 1 ms per side of a
+/// surface. (With 1024 rays, ≤ 0.007.)
+pub const IR_VIEW_FACTOR_RAYS: usize = 16384;
+
 impl OpticalInfo {
     /// Calculates the new OpticalInformation.
     ///
@@ -81,9 +122,10 @@ impl OpticalInfo {
         state: &mut SimulationStateHeader,
     ) -> Result<Self, String> {
         // Collect calculation options
-        let mf = options.solar_sky_discretization_or(crate::solar_model::MODULE_NAME, 1);
-        let n_solar_rays =
-            options.n_solar_irradiance_points_or(crate::solar_model::MODULE_NAME, 10);
+        let calculated_with = OpticalOptions::new(options);
+        let mf = calculated_with.sky_discretization;
+        let n_solar_rays = calculated_with.n_solar_irradiance_points;
+        let n_ir_rays = calculated_with.n_ir_view_factor_rays;
 
         // Create Surfaces and Fenestrations
         let surfaces = SolarSurface::make_surfaces(&model.surfaces, state, n_solar_rays)?;
@@ -97,8 +139,7 @@ impl OpticalInfo {
         // calculator
         let solar_dc_factory = DCFactory {
             max_depth: 1,
-            n_ambient_samples: options
-                .solar_ambient_divitions_or(crate::solar_model::MODULE_NAME, 300),
+            n_ambient_samples: calculated_with.solar_ambient_divitions,
             reinhart: ReinhartSky::new(mf),
             // ..DCFactory::default()
         };
@@ -161,21 +202,22 @@ impl OpticalInfo {
 
         let front_surfaces_view_factors = surf_iter
             .clone()
-            .map(|s| s.calc_view_factors(&solar_scene, true).unwrap())
+            .map(|s| s.calc_view_factors(&solar_scene, true, n_ir_rays).unwrap())
             .collect();
         let back_surfaces_view_factors = surf_iter
-            .map(|s| s.calc_view_factors(&solar_scene, false).unwrap())
+            .map(|s| s.calc_view_factors(&solar_scene, false, n_ir_rays).unwrap())
             .collect();
 
         let front_fenestrations_view_factors = fen_iter
             .clone()
-            .map(|s| s.calc_view_factors(&solar_scene, true).unwrap())
+            .map(|s| s.calc_view_factors(&solar_scene, true, n_ir_rays).unwrap())
             .collect();
         let back_fenestrations_view_factors = fen_iter
-            .map(|s| s.calc_view_factors(&solar_scene, false).unwrap())
+            .map(|s| s.calc_view_factors(&solar_scene, false, n_ir_rays).unwrap())
             .collect();
 
         Ok(Self {
+            calculated_with: Some(calculated_with),
             front_surfaces_view_factors,
             back_surfaces_view_factors,
             front_fenestrations_view_factors,

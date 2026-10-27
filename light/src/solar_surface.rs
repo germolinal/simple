@@ -60,6 +60,10 @@ pub struct SolarSurface {
     pub normal: Vector3D,
     pub receives_sun_front: bool,
     pub receives_sun_back: bool,
+
+    /// The triangles of the surface, and their areas (for sampling points)
+    triangles: Vec<geometry::Triangle3D>,
+    triangle_areas: Vec<Float>,
 }
 
 impl SolarSurface {
@@ -79,10 +83,10 @@ impl SolarSurface {
         // Triangulate the polygon
         let t: Triangulation3D = polygon.try_into()?;
         let triangles = t.get_trilist();
-        let triangles_areas: Vec<Float> = triangles.iter().map(|t| t.area()).collect();
+        let triangle_areas: Vec<Float> = triangles.iter().map(|t| t.area()).collect();
 
         // Build a triangle sampler
-        let sampler = get_sampler(triangles_areas);
+        let sampler = get_sampler(triangle_areas.clone());
         let mut rng = get_rng();
 
         // sample points
@@ -101,6 +105,8 @@ impl SolarSurface {
             points,
             receives_sun_front,
             receives_sun_back,
+            triangles,
+            triangle_areas,
         })
     }
 
@@ -291,38 +297,56 @@ impl SolarSurface {
         average_matrix(&dc)
     }
 
-    /// Calculates an [`IRViewFactorSet`] for this surface
+    /// Calculates an [`IRViewFactorSet`] for one side of this surface, sending
+    /// about `n_rays` rays (rounded up to a square, as their directions are
+    /// stratified on a grid), each from a new random point on the surface.
+    ///
+    /// Directions are cosine-weighted, so each ray weighs the same in the
+    /// view factor. Rays that hit something in the scene count neither as sky
+    /// nor as ground.
     pub fn calc_view_factors(
         &self,
         scene: &Scene,
         front_side: bool,
+        n_rays: usize,
     ) -> Result<IRViewFactorSet, String> {
         let mut rng = rendering::rand::get_rng();
-
-        let rays = if front_side {
-            self.front_rays()
+        let normal = if front_side {
+            self.normal
         } else {
-            self.back_rays()
+            self.normal * -1.
         };
+        let e1 = normal.get_perpendicular()?;
+        let e2 = normal.cross(e1);
+        let sampler = get_sampler(self.triangle_areas.clone());
 
         let mut ground = 0.0;
         let mut sky = 0.0;
 
-        let n_samples = 10000;
+        // Directions are stratified: a jittered `side × side` grid
+        let side = (n_rays.max(1) as Float).sqrt().ceil() as usize;
         let mut node_aux = [0; 32];
-        for ray in &rays {
-            let normal = ray.direction;
-            let e1 = normal.get_perpendicular()?;
-            let e2 = normal.cross(e1);
+        for i in 0..side {
+            for j in 0..side {
+                // A random point on the surface (the view changes across it,
+                // e.g., under an overhang)
+                let triangle = &self.triangles[sampler(&mut rng)];
+                let origin = sample_triangle_surface(triangle, &mut rng) + normal * Self::DELTA;
 
-            // Whether a point sees the outside is decided by the ray along its
-            // normal (not by each sampled direction), so it is cast only once.
-            if scene.cast_ray(*ray, &mut node_aux).is_some() {
-                continue;
-            }
-            for _ in 0..n_samples {
-                let u = rng.random();
-                let dir = rendering::samplers::uniform_sample_tilted_hemisphere(u, e1, e2, normal);
+                let (du, dv): (Float, Float) = rng.random();
+                let u = (
+                    (i as Float + du) / side as Float,
+                    (j as Float + dv) / side as Float,
+                );
+                let local = rendering::samplers::sample_cosine_weighted_horizontal_hemisphere(u);
+                let dir = e1 * local.x + e2 * local.y + normal * local.z;
+                if scene
+                    .cast_ray(Ray3D { origin, direction: dir }, &mut node_aux)
+                    .is_some()
+                {
+                    // Sees the scene: neither sky nor ground
+                    continue;
+                }
                 if dir.z > 0.0 {
                     sky += 1.0;
                 } else {
@@ -331,7 +355,7 @@ impl SolarSurface {
             }
         }
 
-        let n = n_samples as Float * rays.len() as Float;
+        let n = (side * side) as Float;
         ground /= n;
         sky /= n;
 
@@ -346,6 +370,109 @@ impl SolarSurface {
 #[cfg(test)]
 mod testing {
     use super::*;
+
+    /// A surface from its vertices
+    fn surface(vertices: &[(Float, Float, Float)]) -> Result<SolarSurface, String> {
+        let mut the_loop = Loop3D::new();
+        for (x, y, z) in vertices {
+            the_loop.push(Point3D::new(*x, *y, *z))?;
+        }
+        the_loop.close()?;
+        SolarSurface::new(10, &Polygon3D::new(the_loop)?, true, true)
+    }
+
+    /// A scene made of `polygons` (Radiance syntax)
+    fn scene(polygons: &str) -> Scene {
+        let src = format!("void plastic grey 0 0 5 0.5 0.5 0.5 0 0\n{polygons}");
+        let mut scene = Scene::from_radiance_source(src.as_bytes()).unwrap();
+        scene.build_accelerator();
+        scene
+    }
+
+    /// View factors used to be counted on directions uniformly distributed
+    /// over the hemisphere (not cosine-weighted), and whether a point saw
+    /// the outside was decided by its normal ray alone
+    #[test]
+    fn view_factors_tilted_and_obstructed() -> Result<(), String> {
+        // Unobstructed roof tilted 45°: (1 ± cos 45°) / 2
+        let roof = surface(&[(0., 0., 0.), (1., 0., 0.), (1., 1., 1.), (0., 1., 1.)])?;
+        let front = roof.normal.z > 0.;
+        let v = roof.calc_view_factors(&scene(""), front, 16384)?;
+        let cos = (45. as Float).to_radians().cos();
+        assert_close!(v.sky + v.air, (1. + cos) / 2., 0.005);
+        assert_close!(v.ground, (1. - cos) / 2., 0.005);
+
+        // A wall facing another one sees some sky (its normal ray hits the
+        // other wall)
+        let wall = surface(&[(0., 0., 0.), (0., 1., 0.), (0., 1., 1.), (0., 0., 1.)])?;
+        let canyon = scene("grey polygon w 0 0 12 2 -50 0 2 50 0 2 50 3 2 -50 3\n");
+        let v = wall.calc_view_factors(&canyon, wall.normal.x > 0., 16384)?;
+        assert!(v.sky + v.air > 0.09 && v.sky + v.air < 0.13, "{v:?}");
+
+        // A window under an overhang sees less sky than an unobstructed one
+        // (its normal ray misses the overhang)
+        let window = surface(&[(0., 0., 0.5), (0., 1., 0.5), (0., 1., 1.5), (0., 0., 1.5)])?;
+        let overhang = scene("grey polygon o 0 0 12 0 -0.5 1.6 1 -0.5 1.6 1 1.5 1.6 0 1.5 1.6\n");
+        let v = window.calc_view_factors(&overhang, window.normal.x > 0., 16384)?;
+        assert!(v.sky + v.air > 0.27 && v.sky + v.air < 0.31, "{v:?}");
+        Ok(())
+    }
+
+    /// Bias, spread and time of the view factors for several numbers of rays
+    #[test]
+    #[ignore]
+    fn view_factor_convergence() -> Result<(), String> {
+        // cargo test --release -p light --lib view_factor_convergence -- --ignored --nocapture
+        let cases = [
+            (
+                "A: roof tilted 45°, unobstructed",
+                surface(&[(0., 0., 0.), (1., 0., 0.), (1., 1., 1.), (0., 1., 1.)])?,
+                scene(""),
+                Some((1. + (45. as Float).to_radians().cos()) / 2.),
+            ),
+            (
+                "B: wall facing a 3 m wall, 2 m away",
+                surface(&[(0., 0., 0.), (0., 1., 0.), (0., 1., 1.), (0., 0., 1.)])?,
+                scene("grey polygon w 0 0 12 2 -50 0 2 50 0 2 50 3 2 -50 3\n"),
+                None,
+            ),
+            (
+                "C: window under a 1 m overhang",
+                surface(&[(0., 0., 0.5), (0., 1., 0.5), (0., 1., 1.5), (0., 0., 1.5)])?,
+                scene("grey polygon o 0 0 12 0 -0.5 1.6 1 -0.5 1.6 1 1.5 1.6 0 1.5 1.6\n"),
+                None,
+            ),
+        ];
+        for (name, surface, scene, analytic) in cases {
+            // Which side faces the scene: the one whose normal points to +x
+            // (or up, for the roof)
+            let front = surface.normal.x > 0.5 || surface.normal.z > 0.5;
+            let sky_view = |n: usize| -> Result<(Float, Float), String> {
+                let v = surface.calc_view_factors(&scene, front, n)?;
+                Ok((v.sky + v.air, v.ground))
+            };
+            let reference = match analytic {
+                Some(sky) => sky,
+                None => sky_view(2048 * 2048)?.0,
+            };
+            eprintln!("{name}: sky {reference:.4}");
+            for n in [16, 256, 1024, 4096, 16384, 65536] {
+                let reps = 30;
+                let start = std::time::Instant::now();
+                let values: Vec<Float> = (0..reps).map(|_| sky_view(n).unwrap().0).collect();
+                let ms = start.elapsed().as_secs_f64() * 1000. / reps as f64;
+                let mean = values.iter().sum::<Float>() / reps as Float;
+                let std = (values.iter().map(|v| (v - mean).powi(2)).sum::<Float>()
+                    / (reps - 1) as Float)
+                    .sqrt();
+                eprintln!(
+                    "    {n:5} rays: bias {:+.4}, std {std:.4}, {ms:.2} ms",
+                    mean - reference
+                );
+            }
+        }
+        Ok(())
+    }
     use geometry::Loop3D;
     use validate::assert_close;
 
@@ -366,14 +493,14 @@ mod testing {
         let beta = (0.5 as Float).sqrt();
 
         // Front side
-        let views = s.calc_view_factors(&scene, true)?;
+        let views = s.calc_view_factors(&scene, true, 16384)?;
 
         assert_close!(views.ground, 0.5, 1e-2);
         assert_close!(views.sky, 0.5 * beta, 1e-2);
         assert_close!(views.air, 0.5 * (1. - beta), 1e-2);
 
         // back side
-        let views = s.calc_view_factors(&scene, false)?;
+        let views = s.calc_view_factors(&scene, false, 16384)?;
 
         assert_close!(views.ground, 0.5, 1e-2);
         assert_close!(views.sky, 0.5 * beta, 1e-2);
@@ -397,14 +524,14 @@ mod testing {
         let s = SolarSurface::new(10, &p, true, true)?;
 
         // Front side
-        let views = s.calc_view_factors(&scene, true)?;
+        let views = s.calc_view_factors(&scene, true, 16384)?;
 
         assert_close!(views.ground, 0.0, 1e-4);
         assert_close!(views.sky, 1.0, 1e-4);
         assert_close!(views.air, 0.0, 1e-4);
 
         // back side
-        let views = s.calc_view_factors(&scene, false)?;
+        let views = s.calc_view_factors(&scene, false, 16384)?;
 
         assert_close!(views.ground, 1.0, 1e-4);
         assert_close!(views.sky, 0.0, 1e-4);
