@@ -193,10 +193,7 @@ impl Polygon3D {
 
             let result = lp.test_point(p);
 
-            let is_in = match result {
-                Ok(b) => b,
-                Err(e) => return Err(e),
-            };
+            let is_in = result?;
             // if it is in one of the inner loops, then it is outside
             // the shape.
             if is_in {

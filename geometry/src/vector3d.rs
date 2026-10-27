@@ -280,7 +280,7 @@ impl std::ops::Mul<Vector3D> for Vector3D {
     type Output = Float;
 
     fn mul(self, other: Vector3D) -> Float {
-        { self.x * other.x + self.y * other.y + self.z * other.z }
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 
@@ -296,7 +296,7 @@ impl std::ops::Mul<Point3D> for Vector3D {
     type Output = Float;
 
     fn mul(self, other: Point3D) -> Float {
-        { self.x * other.x + self.y * other.y + self.z * other.z }
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 

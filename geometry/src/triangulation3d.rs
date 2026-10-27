@@ -949,12 +949,11 @@ impl Triangulation3D {
                 for j in 0..3 {
                     let this_edge = Edge::from_i(j);
                     // calculate possible aspect ratio...
-                    if let Some(ar) = self.get_flipped_aspect_ratio(i, this_edge)? {
-                        if current_ar > ar && best_aspect_ratio > ar {
+                    if let Some(ar) = self.get_flipped_aspect_ratio(i, this_edge)?
+                        && current_ar > ar && best_aspect_ratio > ar {
                             best_edge = Some(this_edge);
                             best_aspect_ratio = ar;
                         }
-                    }
                 }
 
                 // Flip if best neighbour actually exists and it is better than

@@ -499,11 +499,10 @@ impl Loop3D {
         // Check the point
         self.valid_to_add(point)?;
 
-        if let Some(last) = self.vertices.last() {
-            if last.compare(point) {
+        if let Some(last) = self.vertices.last()
+            && last.compare(point) {
                 return Ok(());
             }
-        }
 
         let n = self.vertices.len();
 

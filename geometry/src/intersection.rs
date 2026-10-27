@@ -26,6 +26,7 @@ use crate::{Float, Point3D, Ray3D, Transform, Vector3D};
 
 /// Is the [`Ray3D`] intersecting from the Front or Back side?
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Default)]
 pub enum SurfaceSide {
     /// The intersection happens at the front
     Front,
@@ -33,6 +34,7 @@ pub enum SurfaceSide {
     Back,
     /// The intersectionis not possible (e.g., the ray is parallel
     /// to a `Triangle3D` but it still goes through one of its vertices)
+    #[default]
     NonApplicable,
 }
 
@@ -55,11 +57,6 @@ impl SurfaceSide {
     }
 }
 
-impl std::default::Default for SurfaceSide {
-    fn default() -> Self {
-        Self::NonApplicable
-    }
-}
 
 /// Contains more detailed information about the
 /// what is happening at the surface in the intersection point
