@@ -1072,9 +1072,17 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         fin: usize,
         memory: &mut ChunkMemory,
     ) -> Result<(), String> {
-        let mut old_err = 99999.;
-        let mut count = 0;
+        // No-mass nodes are in steady state: K(T)·T + q(T) = 0. The only
+        // non-linearity left is the U-value of gas cavities, which depends
+        // on the temperatures of the panes around them. We iterate until
+        // the temperatures stop changing (EnergyPlus does the same, see
+        // `SolveForWindowTemperatures()` in its `WindowManager.cc`).
+        const MAX_ITERATIONS: usize = 100;
+        const MAX_ALLOWED_ERROR: Float = 0.01;
+        let n_total = self.discretization.segments.len();
+        let nnodes = fin - ini;
 
+        let mut count = 0;
         loop {
             // Calculate q based on heat transfer (convection, IR radiation)
             self.discretization.get_k_q(
@@ -1090,13 +1098,27 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 memory,
             )?;
 
+            // `get_k_q()` leaves the IR exchange of the outer faces in `q`,
+            // evaluated at the current surface temperature, which is what
+            // massive nodes need. Solving for that temperature with it on
+            // the right-hand side diverges when `rad_hs` is larger than
+            // the convection coefficient, so here it goes into `K`:
+            // h_r·(T_rad - T_s) becomes h_r·T_rad in `q` and -h_r in `K`.
+            if ini == 0 {
+                let ts = global_temperatures[(0, 0)];
+                memory.k[(0, 0)] -= border.front_rad_hs;
+                memory.q[0] += border.front_rad_hs * ts;
+            }
+            if fin == n_total {
+                let ts = global_temperatures[(fin - 1, 0)];
+                memory.k[(nnodes - 1, nnodes - 1)] -= border.back_rad_hs;
+                memory.q[nnodes - 1] += border.back_rad_hs * ts;
+            }
+
             // add solar gains
             for (local_i, i) in (ini..fin).enumerate() {
-                let v = solar_radiation[(i, 0)];
-                // memory.q.add_to_element(local_i, 0, v)?;
-                memory.q[local_i] += v;
+                memory.q[local_i] += solar_radiation[(i, 0)];
             }
-            // memory.q *= -1.;
             scale(&mut memory.q, -1.);
 
             memory.k_aux.copy_from(&memory.k);
@@ -1107,69 +1129,35 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
             let mut err = 0.0;
             for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = memory.q_aux[local_i];
-                let global_temp = global_temperatures[(i, 0)];
-                err += (local_temp - global_temp).abs();
+                err += (memory.q_aux[local_i] - global_temperatures[(i, 0)]).abs();
             }
-            err /= (fin - ini) as Float;
-            if err > old_err {
-                // #[cfg(debug_assertions)]
-                if count > 100 {
-                    eprintln!("Breaking after {} iterations... because BAD!", count);
+            err /= nnodes as Float;
+            assert!(!err.is_nan(), "Error is NaN when marching no-mass nodes");
+
+            if err < MAX_ALLOWED_ERROR {
+                for (local_i, i) in (ini..fin).enumerate() {
+                    global_temperatures[(i, 0)] = memory.q_aux[local_i];
                 }
                 break;
             }
 
-            if err.is_nan() {
-                assert!(
-                    !err.is_nan(),
-                    // "Error is NaN... \nfront_env = {:?}| back_env = {:?} \nfront_hc = {} | back_hs = {}. \nError = {}\ntemps={}\nq={}\nsolar_front={}, solar_back={}\nfront_alphas={}\nback_alphas={}\n",
-                    // front_env,
-                    // back_env,
-                    // front_hs,
-                    // back_hs,
-                    // err / ((fin - ini) as Float),
-                    // temps,
-                    // q,
-                    // solar_front,
-                    // solar_back,
-                    // self.front_alphas,
-                    // self.back_alphas,
-                );
-            }
-
-            // assert!(
-            //     count < 900,
-            //     "Excessive number of iterations... \n====\t\tfront_env = {:?}\n\tback_env = {:?}\n\tfront_hc = {}\n\tback_hs = {}.\n\tError = {}\n====\n",
-            //     front_env,
-            //     back_env,
-            //     front_hs,
-            //     back_hs,
-            //     err / ((fin - ini) as Float),
-            // );
+            // Under-relax, so the cavities' U-values do not oscillate
             for (local_i, i) in (ini..fin).enumerate() {
-                let local_temp = memory.q_aux[local_i];
-                // temperatures.set(i, 0, local_temp)?;
-                global_temperatures[(i, 0)] += local_temp;
+                global_temperatures[(i, 0)] += memory.q_aux[local_i];
                 global_temperatures[(i, 0)] *= 0.5;
             }
 
-            let max_allowed_error = if count < 100 { 0.01 } else /*if count < 1000*/ { 0.5 }; // else { 1. };
-
-            if err < max_allowed_error {
-                // #[cfg(debug_assertions)]
-                // eprintln!(
-                //     "Breaking after {} iterations... because err = {}",
-                //     count,
-                //     err / ((fin - ini) as Float)
-                // );
+            count += 1;
+            if count >= MAX_ITERATIONS {
+                static WARNED: std::sync::atomic::AtomicBool =
+                    std::sync::atomic::AtomicBool::new(false);
+                if !WARNED.swap(true, std::sync::atomic::Ordering::Relaxed) {
+                    eprintln!(
+                        "Warning: no-mass nodes did not converge after {MAX_ITERATIONS} iterations (mean change {err:.3} K). Further warnings are silenced."
+                    );
+                }
                 break;
             }
-            if count > 19000 {
-                break; // Sometimes this converges too slowly.
-            }
-            old_err = err;
-            count += 1;
         }
         Ok(())
     }
@@ -1915,6 +1903,93 @@ mod testing {
             (full_qfront + full_qback).abs()
         );
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_march_nomass_strong_radiation() -> Result<(), String> {
+        // Low convection and strong IR exchange: with the IR exchange
+        // evaluated at the previous temperature, this used to diverge.
+        let mut model = Model::default();
+        let polyurethane = add_polyurethane(&mut model)?;
+        let m1 = add_material(&mut model, polyurethane, 3. / 1000.);
+        let mut c = Construction::new("Construction");
+        c.materials.push(m1.name().clone());
+        c.materials.push(m1.name().clone());
+        let c = model.add_construction(c);
+
+        let mut the_loop = Loop3D::new();
+        the_loop.push(Point3D::new(-1., -1., 0.))?;
+        the_loop.push(Point3D::new(1., -1., 0.))?;
+        the_loop.push(Point3D::new(1., 1., 0.))?;
+        the_loop.push(Point3D::new(-1., 1., 0.))?;
+        the_loop.close()?;
+        let p = Polygon3D::new(the_loop)?;
+        let s = Surface::new("WALL", p, c.name(), Boundary::Outdoor, Boundary::Outdoor);
+        let surface = model.add_surface(s)?;
+        let mut state_header = SimulationStateHeader::new();
+
+        let d = Discretization::new(&c, &model, 3., m1.thickness / 7.0, 10., 1., 0.)?;
+        let ts = ThermalSurface::new(
+            &mut state_header,
+            &model,
+            &None,
+            0,
+            &surface,
+            surface.area(),
+            8.,
+            10.,
+            geometry::Vector3D::new(0., 0., 1.),
+            &c,
+            d,
+        )?;
+        assert_eq!(ts.massive_chunks.len(), 0);
+        assert_eq!(ts.nomass_chunks.len(), 1);
+        let (ini, fin) = ts.nomass_chunks[0];
+        let mut memory = ts.allocate_memory();
+        let n = memory.temperatures.size().0;
+
+        let border = BorderConditions {
+            front_env: ConvectionParams {
+                air_temperature: 20.,
+                rad_temperature: 25.,
+                ..ConvectionParams::default()
+            },
+            back_env: ConvectionParams {
+                air_temperature: 5.,
+                rad_temperature: -15.,
+                ..ConvectionParams::default()
+            },
+            front_hs: 0.3,
+            back_hs: 1.,
+            front_rad_hs: 6.,
+            back_rad_hs: 5.,
+        };
+        let mut solar = Matrix::new(0.0, n, 1);
+        solar[(0, 0)] = 30.;
+        solar[(n - 1, 0)] = 80.;
+        let mut temperatures = Matrix::new(10.0, n, 1);
+        ts.march_nomass(
+            &mut temperatures,
+            &solar,
+            &border,
+            ini,
+            fin,
+            &mut memory.nomass_chunks[0],
+        )?;
+
+        // Steady state: everything entering the surface adds up to zero
+        let t_front = temperatures[(0, 0)];
+        let t_back = temperatures[(n - 1, 0)];
+        let q_front = border.front_hs * (border.front_env.air_temperature - t_front)
+            + border.front_rad_hs * (border.front_env.rad_temperature - t_front);
+        let q_back = border.back_hs * (border.back_env.air_temperature - t_back)
+            + border.back_rad_hs * (border.back_env.rad_temperature - t_back);
+        let balance = q_front + q_back + 30. + 80.;
+        assert!(
+            balance.abs() < 0.1,
+            "balance = {balance} W/m2 | temperatures = {temperatures}"
+        );
         Ok(())
     }
 

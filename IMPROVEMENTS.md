@@ -240,7 +240,8 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
    file in `SolarOptions.optical_data_path` is recalculated when the options
    change, but not when the geometry or the materials do, so editing a model
    silently keeps its old daylight coefficients and view factors. Could
-   store a hash of the model's surfaces, fenestrations and materials.
+   store a hash of the model's surfaces, fenestrations and materials
+   ([#132](https://github.com/germolinal/simple/issues/132)).
 2. **RMSE thresholds** (convection 0.1, walls √0.2) only keep the old criteria;
    they may deserve tightening now that the RMSE is right.
 
@@ -253,20 +254,30 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
   to be at the outdoor air temperature. Surface-to-surface view factors
   could be calculated as the IR view factors now are (random points,
   stratified rays).
-- **`march_nomass`** (windows, cavities): a fixed-point iteration with 0.5
-  damping that stops on thresholds (`err < 0.01`, `err` going up, or 19,000
-  iterations). Results depend on rounding noise: changing convection
-  coefficients by one unit in the last place (`cbrt` instead of
-  `powf(1. / 3.)`) moved the box's zone temperature by up to 1.2 °C.
-  **Most of the box's solves do not converge**: over a year, 62% of its 2.94
-  M calls to `march_nomass` stop because the error went up (after 1-3
-  iterations), with node temperatures still changing by 0.73 °C on average
-  (median; 13.5 °C at the 99th percentile, up to 187 °C); 38% converge; 18
-  reach 19,000 iterations. In the cold apartment, 0.2% stop that way. This
-  is probably why many sub-steps are needed.
-  Also: border conditions (convection, radiation) use the previous timestep's
-  surface temperatures; `dt_subdivisions *= 2` is applied to all models for
-  stability.
+- **`march_nomass`** (windows, cavities). *Done:* the outer faces' IR
+  exchange used to be evaluated at the previous iteration's temperature, so
+  the 0.5-damped fixed point diverged whenever `rad_hs` was larger than
+  about three times the convection coefficient plus the U-value (low inside
+  convection), and the loop silently stopped "because the error went up":
+  62% of the box's 2.94 M solves per year ended that way, with node
+  temperatures still changing by 0.73 °C (median; up to 187 °C), and results
+  depended on rounding noise (`cbrt` instead of `powf(1. / 3.)` moved the
+  box's zone by up to 1.2 °C). Now `march_nomass` puts `rad_hs` in `K`
+  (as EnergyPlus' `SolveForWindowTemperatures()` does), iterates to
+  `err < 0.01` with at most 100 iterations, and warns (once) if that is ever
+  reached. All solves now converge (1.6 linear solves per call in the box,
+  1.9 in the cold apartment), and the box simulates twice as fast (2.6 →
+  1.3 s; cold apartment unchanged, 5.5 s). Massive chunks (`march_mass`) are unchanged.
+  Effect: the box's zone is 0.96 °C warmer (cold apartment: within
+  0.06 °C), so the box against EnergyPlus goes from MBE −0.33 / RMSE 0.46 °C
+  to MBE +0.63 / RMSE 0.72 °C: the old, closer agreement came from windows
+  whose solves stopped early. *Left:* find where SIMPLE and EnergyPlus differ
+  for windows: EnergyPlus re-evaluates the inside and outside `h_c` and
+  `h_r` within its iteration (SIMPLE uses the previous timestep's surface
+  temperatures), and uses the room surfaces' IR (SIMPLE: the zone's air
+  temperature, see above). Then check whether `dt_subdivisions *= 2`
+  (applied to all models, "mostly for the no-mass walls and windows") is
+  still needed.
 - **Direct + diffuse split** in the solar model: the sun is binned into a
   Reinhart patch, which needs MF4 (2305 bins); tracing direct sun exactly
   would allow MF1 (145 bins) for the diffuse sky.
