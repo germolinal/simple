@@ -650,11 +650,13 @@ mod testing {
     }
     #[test]
     #[should_panic]
+    #[allow(clippy::neg_multiply)] // (a negative index, on purpose)
     fn test_macro_panic_negative() {
         assert_eq!(elem!(-1, 0), 0);
     }
     #[test]
     #[should_panic]
+    #[allow(clippy::neg_multiply)] // (a negative index, on purpose)
     fn test_macro_panic_negative_2() {
         assert_eq!(elem!(0, -1), 0);
     }
@@ -735,7 +737,7 @@ mod testing {
         fn check(x: Float, y: Float, z: Float) -> Result<(), String> {
             let t = Transform::translate(x, y, z);
 
-            let pt = Point3D::new(3. + 2. * x, -1. * y + 9., z);
+            let pt = Point3D::new(3. + 2. * x, -y + 9., z);
             let vec = Vector3D::new(x, 21. * y, -33. * z);
 
             let pprime = pt + Vector3D::new(x, y, z);
@@ -800,7 +802,7 @@ mod testing {
 
             // shufle them a bit
             let pt = Point3D::new(2. * x, y, z);
-            let vec = Vector3D::new(x, -1. * y, 3. * z);
+            let vec = Vector3D::new(x, -y, 3. * z);
 
             let pprime = Point3D::new(pt.x * x, pt.y * y, pt.z * z);
             let vecprime = Vector3D::new(vec.x * x, vec.y * y, vec.z * z);

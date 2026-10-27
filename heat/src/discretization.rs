@@ -872,7 +872,6 @@ mod testing {
             "Expecting mass to be {exp_mass}... found {mass}"
         );
         if let UValue::Back = d.segments[1].1 {
-            assert!(true)
         } else {
             panic!("Expecting Back!")
         }
@@ -984,7 +983,6 @@ mod testing {
             "Expecting mass to be {exp_mass}... found {mass}"
         );
         if let UValue::Back = d.segments[3].1 {
-            assert!(true)
         } else {
             panic!("Expecting Solid!")
         }
@@ -1101,7 +1099,6 @@ mod testing {
             "Expecting mass to be {exp_mass}... found {mass}"
         );
         if let UValue::Back = d.segments[3].1 {
-            assert!(true)
         } else {
             panic!("Expecting Solid!")
         }
@@ -1155,7 +1152,7 @@ mod testing {
         let front_hs = front_env.get_tarp_natural_convection_coefficient();
         let back_hs = back_env.get_tarp_convection_coefficient(1., 4., false);
 
-        return (d, temperatures, front_env, front_hs, back_env, back_hs);
+        (d, temperatures, front_env, front_hs, back_env, back_hs)
     }
 
     #[test]
@@ -1439,9 +1436,7 @@ mod testing {
         for r in 0..n - 1 {
             // Check q
             let heat_flow = memory.q[r];
-            if r == 0 {
-                assert!(heat_flow > 1e-5);
-            } else if r == n - 2 {
+            if r == 0 || r == n - 2 {
                 assert!(heat_flow > 1e-5);
             } else {
                 assert!(heat_flow.abs() < 1e-29);

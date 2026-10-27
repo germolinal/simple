@@ -226,7 +226,7 @@ mod testing {
         if let Ok(Infiltration::Doe2 { flow }) = model.spaces[0].infiltration() {
             assert!((flow - 0.24).abs() < 1e-9);
         } else {
-            assert!(false, "Incorrect infiltration!")
+            panic!("Incorrect infiltration!")
         }
 
         Ok(())
@@ -311,7 +311,7 @@ mod testing {
         if let Ok(inf) = model.spaces[0].infiltration() {
             assert_eq!(*inf, Infiltration::Doe2 { flow: 0.24 })
         } else {
-            assert!(false)
+            panic!()
         }
 
         Ok(())

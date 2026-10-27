@@ -1241,8 +1241,8 @@ mod tests {
             let solar = Solar::new(0.0, 0., 0.);
 
             let date = Date {
-                month: month,
-                day: day,
+                month,
+                day,
                 hour: 0.,
             };
             let n = date.day_of_year();

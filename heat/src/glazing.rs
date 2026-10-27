@@ -411,7 +411,7 @@ mod testing {
             .collect();
         assert_eq!(props, vec![(0.0, 0.9, 0.8)]);
         let alphas = Glazing::alphas(&glazings);
-        let exp = vec![0.1];
+        let exp = [0.1];
         for (found, exp) in alphas.iter().zip(exp.iter()) {
             validate::assert_close!(*exp, *found);
         }

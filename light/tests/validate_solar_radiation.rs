@@ -9,8 +9,8 @@ use weather::SyntheticWeather;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
-        x_label: Some("Timestep".into()),
-        y_label: Some("Solar Irradiance".into()),
+        x_label: Some("Timestep"),
+        y_label: Some("Solar Irradiance"),
         y_units: Some("W/m2"),
         expected_legend: Some("EnergyPlus"),
         found_legend: Some("SIMPLE"),
@@ -86,8 +86,10 @@ fn get_simple_results(
         diffuse_horizontal_rad.iter().zip(direct_normal_rad.iter())
     {
         // Set outdoor temp
-        let mut weather = SyntheticWeather::default();
-        weather.direct_normal_radiation = Box::new(ScheduleConstant::new(*direct_normal as Float));
+        let mut weather = SyntheticWeather {
+            direct_normal_radiation: Box::new(ScheduleConstant::new(*direct_normal as Float)),
+            ..SyntheticWeather::default()
+        };
         weather.diffuse_horizontal_radiation =
             Box::new(ScheduleConstant::new(*diffuse_horizontal as Float));
         weather.dew_point_temperature = Box::new(ScheduleConstant::new(11.)); // 11C is what Radiance uses by default.
@@ -112,7 +114,7 @@ fn get_simple_results(
 }
 
 fn barcelona(validator: &mut Validator) -> Result<(), String> {
-    const CITY: &'static str = "barcelona";
+    const CITY: &str = "barcelona";
 
     #[valid("Exterior Incident Solar Radiation - Barcelona, South")]
     fn validate_barcelona_south() -> Result<ValidFunc, String> {
@@ -151,7 +153,7 @@ fn barcelona(validator: &mut Validator) -> Result<(), String> {
 }
 
 fn wellington(validator: &mut Validator) -> Result<(), String> {
-    const CITY: &'static str = "wellington";
+    const CITY: &str = "wellington";
 
     #[valid(Exterior Incident Solar Radiation - Wellington, South)]
     fn validate_wellington_south() -> Result<ValidFunc, String> {

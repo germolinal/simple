@@ -9,8 +9,8 @@ fn aux() -> Box<dyn Validate> {
     let found = vec![5., 6., 6.];
 
     let v = SeriesValidator {
-        x_label: Some("time step".into()),
-        y_label: Some("Zone Temperature".into()),
+        x_label: Some("time step"),
+        y_label: Some("Zone Temperature"),
         y_units: Some("C"),
         expected,
         found,

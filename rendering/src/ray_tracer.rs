@@ -95,19 +95,15 @@ impl RayTracer {
                 // Check distant lights
                 for light in &scene.distant_lights {
                     if let Some((light_colour, light_pdf)) = intersect_light(scene, light, ray, aux)
-                        && light_pdf > 1e-18 {
-                            let w = if depth == 0 || specular_bounce {
-                                1.0
-                            } else {
-                                power_heuristic(
-                                    1,
-                                    ray_prob,
-                                    n_prev_shadow_samples,
-                                    light_pdf * p_light,
-                                )
-                            };
-                            spectrum += beta * w * light_colour;
-                        }
+                        && light_pdf > 1e-18
+                    {
+                        let w = if depth == 0 || specular_bounce {
+                            1.0
+                        } else {
+                            power_heuristic(1, ray_prob, n_prev_shadow_samples, light_pdf * p_light)
+                        };
+                        spectrum += beta * w * light_colour;
+                    }
                 }
 
                 // and also the let's check the sky
@@ -241,7 +237,6 @@ impl RayTracer {
     /// Calculates the luminance produced by the direct sources in the
     /// scene
     #[allow(clippy::too_many_arguments)]
-
     fn get_local_illumination<const N: usize>(
         &self,
         scene: &Scene,
@@ -326,19 +321,17 @@ impl RayTracer {
         let progress = utils::ProgressBar::new("Rendering".to_string(), width * height);
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
-            let mut pindex = first_p * chunk_len;
             let mut aux = [0; 32];
 
             let mut rng = get_rng();
 
-            for pixel in chunk {
+            for (pindex, pixel) in (first_p * chunk_len..).zip(chunk.iter_mut()) {
                 let y = (pindex as Float / width as Float).floor() as usize;
                 let x = pindex - y * width;
                 let (ray, _weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
                 *pixel = self.trace_all_rays(&mut rng, scene, ray, &mut aux);
 
                 progress.tic();
-                pindex += 1;
             }
         });
 

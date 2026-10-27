@@ -654,20 +654,20 @@ mod testing {
         if let Boundary::Space { space } = &hardcoded_ref.back_boundary {
             assert_eq!(space, "Space 1")
         } else {
-            assert!(false, "Incorrect fenestration operat")
+            panic!("Incorrect fenestration operat")
         }
 
-        println!("=====\n{}\n=====\n", &hardcoded_ref);
+        println!("=====\n{}\n=====\n", hardcoded_ref);
 
         if let Some(FenestrationPosition::Fixed { fraction }) = &hardcoded_ref.operation {
             assert!(fraction.is_none())
         } else {
-            assert!(false, "Incorrect fenestration operat")
+            panic!("Incorrect fenestration operat")
         }
 
         assert_eq!(FenestrationType::Window, hardcoded_ref.category);
 
-        assert_eq!(&hardcoded_ref.vertices.outer().len(), &(4 as usize));
+        assert_eq!(&hardcoded_ref.vertices.outer().len(), &4_usize);
 
         // Read json file (used in DOC), Deserialize, and compare
         let filename = "./tests/scanner/fenestration";

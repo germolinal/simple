@@ -66,7 +66,8 @@ path = "bin/scompare.rs"
 [workspace.dependencies]
 rayon = { version = "1.10" }
 serde = { version = "1.0", features = ["derive", "rc"] }
-serde_json = { version = "1.0" }
+# (`float_roundtrip`: floats read back exactly, e.g., from cached optical data)
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
 rhai = { version = "1.20" }
 json5 = { version = "0.4" }
 rand = { version = "0.10" }

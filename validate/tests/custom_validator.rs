@@ -29,7 +29,7 @@ impl Validate for CustomValidator {
                 ret, self.title, self.expected, self.found
             );
         };
-        if err.len() > 0 {
+        if !err.is_empty() {
             ValidationResult::Err(err, ret)
         } else {
             ValidationResult::Ok(ret)

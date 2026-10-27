@@ -25,8 +25,7 @@ SOFTWARE.
 use crate::{Float, Point3D, Ray3D, Transform, Vector3D};
 
 /// Is the [`Ray3D`] intersecting from the Front or Back side?
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Default)]
 pub enum SurfaceSide {
     /// The intersection happens at the front
     Front,
@@ -56,7 +55,6 @@ impl SurfaceSide {
         }
     }
 }
-
 
 /// Contains more detailed information about the
 /// what is happening at the surface in the intersection point

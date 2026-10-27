@@ -142,7 +142,6 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
         n_ambient_samples: 60,
         n_shadow_samples: 1,
         max_depth: 1,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);

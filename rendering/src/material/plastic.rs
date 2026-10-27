@@ -76,9 +76,10 @@ impl MaterialTrait for Plastic {
             trans_flags,
         );
         if let Some(sample) = &mut ret
-            && let MatFlag::DiffuseReflection = sample.flags {
-                sample.spectrum *= self.colour();
-            }
+            && let MatFlag::DiffuseReflection = sample.flags
+        {
+            sample.spectrum *= self.colour();
+        }
         ret
     }
 

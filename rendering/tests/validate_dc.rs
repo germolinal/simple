@@ -35,7 +35,6 @@ fn load_rays(filename: &str) -> Vec<Ray3D> {
         .map(|line| {
             let a: Vec<Float> = line
                 .split_ascii_whitespace()
-                .into_iter()
                 .map(|x| x.parse::<Float>().unwrap())
                 .collect();
 

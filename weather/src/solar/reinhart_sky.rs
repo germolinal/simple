@@ -511,17 +511,14 @@ mod tests {
     fn test_rnaz() {
         let test_rnaz = |mf: usize| {
             const TNAZ: [usize; 7] = [30, 30, 24, 24, 18, 12, 6];
-            for main_row in 0..=7 {
+            for (main_row, n) in TNAZ.iter().enumerate() {
                 for i in 0..mf {
                     let row = mf * main_row + i;
-                    if main_row == 7 {
-                        assert_eq!(bins_in_row(mf, row), 1);
-                        return; // stop test here
-                    } else {
-                        assert_eq!(bins_in_row(mf, row), TNAZ[main_row] * mf);
-                    }
+                    assert_eq!(bins_in_row(mf, row), n * mf);
                 }
             }
+            // The zenith is a single bin
+            assert_eq!(bins_in_row(mf, mf * 7), 1);
         };
 
         test_rnaz(1);

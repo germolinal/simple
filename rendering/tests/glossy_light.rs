@@ -138,11 +138,11 @@ fn glossy_strategies() {
             let mut it = interaction;
             let mut eta = 1.0;
             let ray = view_ray();
-            if let Some(sample) = material.sample_bsdf(ray.direction, &mut it, &mut eta, &mut rng) {
-                if hits_light(p, sample.wi) {
-                    n_hits += 1;
-                    bsdf += sample.spectrum.radiance() * (normal * sample.wi) / sample.pdf * L;
-                }
+            if let Some(sample) = material.sample_bsdf(ray.direction, &mut it, &mut eta, &mut rng)
+                && hits_light(p, sample.wi)
+            {
+                n_hits += 1;
+                bsdf += sample.spectrum.radiance() * (normal * sample.wi) / sample.pdf * L;
             }
         }
         let bsdf = bsdf / n as Float;

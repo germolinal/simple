@@ -241,7 +241,6 @@ fn laptop() -> Result<(), String> {
         n_ambient_samples: 220,
         n_shadow_samples: 1,
         max_depth: 4,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -302,7 +301,6 @@ fn sponza() -> Result<(), String> {
         n_ambient_samples: 180,
         n_shadow_samples: 1,
         max_depth: 2,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -311,7 +309,6 @@ fn sponza() -> Result<(), String> {
 
 #[test]
 #[ignore]
-
 fn scene_0() -> Result<(), String> {
     // cargo test --package rendering --test test_scenes -- --ignored scene_0 --exact --nocapture
 
@@ -358,7 +355,7 @@ fn cornell_glass() -> Result<(), String> {
     scene.build_accelerator();
 
     let width = 367;
-    let height = (512 / 367) * width;
+    let height = width;
 
     // Create camera
     let film = Film {
@@ -384,7 +381,6 @@ fn cornell_glass() -> Result<(), String> {
         n_ambient_samples: 300,
         n_shadow_samples: 1,
         max_depth: 8,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -426,7 +422,6 @@ fn cornell_solid() -> Result<(), String> {
         n_ambient_samples: 300,
         n_shadow_samples: 1,
         max_depth: 8,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -476,7 +471,6 @@ fn room() -> Result<(), String> {
         n_ambient_samples: 320,
         n_shadow_samples: 1,
         max_depth: 3,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -524,7 +518,6 @@ fn dining() -> Result<(), String> {
         view_point,
         view_up,
         field_of_view: 48.,
-        ..View::default()
     };
 
     // Create camera
@@ -534,7 +527,6 @@ fn dining() -> Result<(), String> {
         n_ambient_samples: 20,
         n_shadow_samples: 1,
         max_depth: 1,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -621,7 +613,6 @@ fn veach_mis() -> Result<(), String> {
         n_ambient_samples: 64,
         n_shadow_samples: 4,
         max_depth: 1,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);

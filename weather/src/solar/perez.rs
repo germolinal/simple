@@ -557,11 +557,11 @@ impl PerezSky {
                 direct_normal_irrad,
             );
 
-            for bin in 1..r.n_bins {
+            for (bin, item) in vec.iter_mut().enumerate().take(r.n_bins).skip(1) {
                 let dir = r.bin_dir(bin);
                 let v = sky_func(dir);
                 if !v.is_nan() {
-                    vec[bin] += v;
+                    *item += v;
                 }
             }
         }
@@ -635,7 +635,7 @@ mod tests {
         for line in content.lines() {
             header_lines += 1;
             // If we reach a blank line, we are over with the header.
-            if line.len() == 0 || line.as_bytes()[0].is_ascii_whitespace() {
+            if line.is_empty() || line.as_bytes()[0].is_ascii_whitespace() {
                 break;
             }
 
@@ -770,7 +770,7 @@ mod tests {
             }
         }
 
-        return Ok(matrix);
+        Ok(matrix)
     }
 
     #[test]

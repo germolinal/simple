@@ -176,9 +176,8 @@ mod testing {
 
         assert_eq!(model.buildings[0].name, "Main Building");
         if let Some(ShelterClass::Urban) = model.buildings[0].shelter_class {
-            assert!(true)
         } else {
-            assert!(false, "Wrong shelter class")
+            panic!("Wrong shelter class")
         }
 
         Ok(())
@@ -234,9 +233,8 @@ mod testing {
 
         assert_eq!(model.buildings[0].name, "Main Building");
         if let Some(ShelterClass::Urban) = model.buildings[0].shelter_class {
-            assert!(true)
         } else {
-            assert!(false, "Wrong shelter class")
+            panic!("Wrong shelter class")
         }
 
         Ok(())

@@ -264,9 +264,9 @@ mod testing {
     fn test_new() {
         let state = SimulationStateHeader::new();
         assert_eq!(state.n_individual, 0);
-        assert_eq!(state.passed_personal, false);
+        assert!(!state.passed_personal);
         assert_eq!(state.n_operational, 0);
-        assert_eq!(state.passed_operational, false);
+        assert!(!state.passed_operational);
         assert_eq!(state.elements.len(), 0);
     }
 
@@ -287,7 +287,7 @@ mod testing {
         if let Some(values) = &state.default_values {
             assert_eq!(values[0], 1.0);
         } else {
-            assert!(false)
+            panic!()
         }
 
         assert_eq!(
@@ -300,7 +300,7 @@ mod testing {
         if let Some(values) = &state.default_values {
             assert_eq!(values[1], 12.0);
         } else {
-            assert!(false)
+            panic!()
         }
 
         // push a physical one
@@ -314,7 +314,7 @@ mod testing {
         if let Some(values) = &state.default_values {
             assert_eq!(values[2], 2.0);
         } else {
-            assert!(false)
+            panic!()
         }
         Ok(())
     }

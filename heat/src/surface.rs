@@ -1775,7 +1775,7 @@ mod testing {
             .parent
             .get_node_temperatures(&state, &mut temperatures)?;
 
-        println!(" T == {}", &temperatures);
+        println!(" T == {}", temperatures);
         assert!(
             (temperatures.get(0, 0)? - 10.0).abs() < 0.2,
             "T = {}",
@@ -1899,7 +1899,7 @@ mod testing {
             .parent
             .get_node_temperatures(&state, &mut temperatures)?;
 
-        println!(" T == {}", &temperatures);
+        println!(" T == {}", temperatures);
 
         assert!(q_front > -3e-2, "q_in = {}", q_front);
         assert!(q_back < 3e-2, "q_out = {}", q_back);

@@ -103,7 +103,9 @@ fn get_simple_results(
             gain / surface_area / emmisivity + SIGMA * (ts as Float + 273.15).powi(4);
 
         // Set outdoor temp
-        let mut weather = SyntheticWeather::default();
+        let mut weather = SyntheticWeather {
+            ..SyntheticWeather::default()
+        };
         weather.dew_point_temperature = Box::new(ScheduleConstant::new(11.)); //11C is what Radiance uses by default.
         weather.horizontal_infrared_radiation_intensity =
             Box::new(ScheduleConstant::new(horizontal_ir[index]));
@@ -132,7 +134,7 @@ fn get_simple_results(
 }
 
 fn barcelona(validator: &mut Validator) -> Result<(), String> {
-    const CITY: &'static str = "barcelona";
+    const CITY: &str = "barcelona";
 
     #[valid("Exterior Incident Long Wave Radiation - Barcelona, South")]
     fn validate_barcelona_south() -> Result<ValidFunc, String> {
@@ -166,7 +168,7 @@ fn barcelona(validator: &mut Validator) -> Result<(), String> {
 }
 
 fn wellington(validator: &mut Validator) -> Result<(), String> {
-    const CITY: &'static str = "wellington";
+    const CITY: &str = "wellington";
 
     #[valid("Exterior Incident Long Wave Radiation - Wellington, South")]
     fn validate_wellington_south() -> Result<ValidFunc, String> {

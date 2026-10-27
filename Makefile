@@ -2,12 +2,22 @@ VALIDATION_FEATURES=--features parallel --release
 
 # None of these targets is a file (`weather` is also a directory, so without
 # this, `make weather` would never run)
-.PHONY: pre_commit build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference summary book site serve_book check_validation documentation
+.PHONY: pre_commit ci build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference summary book site serve_book check_validation documentation
 
 
 pre_commit: #test validate
 	cargo fmt
-	cargo clippy
+	cargo clippy --workspace --all-targets
+
+# The checks CI runs on every pull request (see .github/workflows/test.yaml),
+# except the tests
+ci:
+	cargo fmt --all -- --check
+	RUSTFLAGS="-D warnings" cargo clippy --workspace --all-targets --locked -- -D warnings
+	RUSTFLAGS="-D warnings" cargo clippy --workspace --all-targets --locked --features parallel -- -D warnings
+	RUSTFLAGS="-D warnings" cargo check --workspace --all-targets --locked --features float
+	RUSTFLAGS="-D warnings" cargo check --workspace --all-targets --locked --features float --features parallel
+	RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --locked
 
 build:
 	cargo build --features parallel --release

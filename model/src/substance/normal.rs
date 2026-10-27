@@ -196,7 +196,7 @@ mod testing {
 
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&normal).map_err(|e| e.to_string())?;
-        println!("{}", &rust_json);
+        println!("{}", rust_json);
         let rust_again: Normal = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", normal), format!("{:?}", rust_again));
 
@@ -208,7 +208,7 @@ mod testing {
             assert_eq!("the substance", g.name());
             assert!((12. - g.thermal_conductivity.ok_or("No thermal conductivity")?).abs() < 1e-9);
         } else {
-            assert!(false, "Wrong substance")
+            panic!("Wrong substance")
         }
 
         Ok(())

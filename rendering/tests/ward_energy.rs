@@ -42,10 +42,10 @@ fn reflectances(material: Material, degrees: Float) -> (Float, Float) {
     for _ in 0..n {
         let mut it = interaction;
         let mut eta = 1.0;
-        if let Some(s) = material.sample_bsdf(ray.direction, &mut it, &mut eta, &mut rng) {
-            if s.pdf > 0. {
-                sampled += s.spectrum.radiance() * (normal * s.wi).abs() / s.pdf;
-            }
+        if let Some(s) = material.sample_bsdf(ray.direction, &mut it, &mut eta, &mut rng)
+            && s.pdf > 0.
+        {
+            sampled += s.spectrum.radiance() * (normal * s.wi).abs() / s.pdf;
         }
     }
 

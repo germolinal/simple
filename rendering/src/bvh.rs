@@ -744,19 +744,19 @@ mod tests {
         let mut scene = Scene::new();
         let (bvh, _) = BoundingVolumeTree::new(&mut scene);
         let mut stack_size = 0;
-        let mut stack = [0; 10];
-        assert!(bvh.pop_node(&mut stack_size, &mut stack).is_none());
+        let stack = [0; 10];
+        assert!(bvh.pop_node(&mut stack_size, &stack).is_none());
 
         let mut stack_size = 1;
-        let mut stack = [1, 2, 3, 13, 14];
-        let node = bvh.pop_node(&mut stack_size, &mut stack);
+        let stack = [1, 2, 3, 13, 14];
+        let node = bvh.pop_node(&mut stack_size, &stack);
         assert!(node.is_some());
         assert_eq!(node.unwrap(), 1);
         assert_eq!(stack_size, 0);
 
         let mut stack_size = 3;
-        let mut stack = [1, 2, 3, 13, 14];
-        let node = bvh.pop_node(&mut stack_size, &mut stack);
+        let stack = [1, 2, 3, 13, 14];
+        let node = bvh.pop_node(&mut stack_size, &stack);
         assert!(node.is_some());
         assert_eq!(node.unwrap(), 3);
         assert_eq!(stack_size, 2);
@@ -795,7 +795,6 @@ mod tests {
     /// * The main one, being an interior node (e.g., n_prims == 0)
     /// * First child --> Leaf with one element
     /// * Second child --> Leaf with one element
-
     fn get_horizontal_scene() -> Scene {
         let mut scene = Scene::new();
 

@@ -72,7 +72,7 @@ fn sim(inf: Infiltration, dir: &str) -> Result<(Vec<Float>, Vec<Float>), String>
     let weather: Weather = weather.into();
     let physics = AirFlowModel::new(&meta_options, options, &model, &mut state_header, 1)?;
     let mut state = state_header.take_values().expect("could not take values");
-    let mut mem = physics.allocate_memory(&state)?;
+    physics.allocate_memory(&state)?;
 
     let mut exp = Vec::with_capacity(weather.data.len());
     let mut found = Vec::with_capacity(weather.data.len());
@@ -95,7 +95,7 @@ fn sim(inf: Infiltration, dir: &str) -> Result<(Vec<Float>, Vec<Float>), String>
     for (i, date) in sim_period.into_iter().enumerate() {
         // Set interior temperature
         model.spaces[0].set_dry_bulb_temperature(&mut state, temp[i])?;
-        physics.march(date, &weather, &model, &mut state, &mut mem)?;
+        physics.march(date, &weather, &model, &mut state, &mut ())?;
 
         let inf = model.spaces[0]
             .infiltration_volume(&state)
@@ -108,7 +108,7 @@ fn sim(inf: Infiltration, dir: &str) -> Result<(Vec<Float>, Vec<Float>), String>
 }
 
 fn effective_air_leakage_area(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "EnergyPlus";
+    const EXPECTED_LEGEND: &str = "EnergyPlus";
 
     /// This test intends to test non-vertical convection coefficients and their correct placement
     #[valid("Effective Air Leakage Area")]
@@ -126,7 +126,7 @@ fn effective_air_leakage_area(validations: &mut Validator) -> Result<(), String>
 }
 
 fn design_flow_rate(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "EnergyPlus";
+    const EXPECTED_LEGEND: &str = "EnergyPlus";
 
     /// This test intends to test non-vertical convection coefficients and their correct placement
     ///

@@ -70,7 +70,10 @@ impl<const N: usize, T: Numberish> NDiagGenericMatrix<N, T> {
     const fn validate_n() {
         // Assert at runtime that N is non-zero and even
         assert!(N > 0, "N in N-Diagonal matrix must be non-zero.");
-        assert!(!N.is_multiple_of(2), "N in N-Diagonal matrix must be an odd number.");
+        assert!(
+            !N.is_multiple_of(2),
+            "N in N-Diagonal matrix must be an odd number."
+        );
     }
 
     /// Creates a new `NDiagGenericMatrix` of `nrows` and `ncols`, with value `v`

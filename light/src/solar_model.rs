@@ -698,12 +698,14 @@ mod testing {
 
         let solar_model = SolarModel::new(&meta_options, options, &model, &mut state_header, n)?;
 
-        let mut weather = SyntheticWeather::default();
-        weather.dew_point_temperature = Box::new(ScheduleConstant::new(11.));
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(24.));
-        weather.opaque_sky_cover = Box::new(ScheduleConstant::new(0.));
-        weather.direct_normal_radiation = Box::new(ScheduleConstant::new(400.));
-        weather.diffuse_horizontal_radiation = Box::new(ScheduleConstant::new(200.));
+        let weather = SyntheticWeather {
+            dew_point_temperature: Box::new(ScheduleConstant::new(11.)),
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(24.)),
+            opaque_sky_cover: Box::new(ScheduleConstant::new(0.)),
+            direct_normal_radiation: Box::new(ScheduleConstant::new(400.)),
+            diffuse_horizontal_radiation: Box::new(ScheduleConstant::new(200.)),
+            ..SyntheticWeather::default()
+        };
 
         let mut state = state_header.take_values().ok_or("Could not take values")?;
         let mut memory = solar_model.allocate_memory(&state)?;

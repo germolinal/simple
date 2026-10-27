@@ -36,6 +36,12 @@ solutions: `view_factors` (tilted surfaces, street canyons, overhangs) and
 `light_sources` (square and sphere lights over a floor, glossy reflections
 of lights).
 
+CI (`.github/workflows/test.yaml`, on pull requests and pushes to `main`):
+formatting, clippy on all targets with warnings denied (default and
+`parallel`), tests, `check --all-targets` for every feature set (including
+`float`), docs with warnings denied, `--locked`, and a warning when the
+validation reports are stale; `make ci` runs the same checks locally.
+
 Also: edition 2024 and up-to-date dependencies; no threading inside
 `matrix` (B1); `make validate` regenerates all reports, and a stamp file
 tells when they are stale.
@@ -53,6 +59,18 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **Results changed when the optical data came from its cache**: `serde_json`
+  parses floats without guaranteeing a correct rounding, so daylight
+  coefficients read from `optical_data_path` could differ by one ulp from
+  the calculated ones, which moved the box's temperatures by up to 1 °C
+  (0.04 °C in the cold apartment). The workspace now enables
+  `float_roundtrip`: a run that calculates the data and one that reads it
+  are byte-identical.
+- **Clippy** is clean on all targets (tests included), with and without
+  `parallel`; `make pre_commit` now checks all targets. On the way:
+  `test_iterate_full_year` (`calendar`) broke out of its loop after the
+  first time step (now tests all six); constant assertions in tests are
+  `panic!`s or `assert_eq!`s.
 - **`validate` reported the mean squared error as the RMSE**
   (`root_mean_squared_error` lacked the square root; its examples only had
   errors of ±1). Every "Root Mean Squared Error" in the reports so far, and
@@ -223,10 +241,7 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
    change, but not when the geometry or the materials do, so editing a model
    silently keeps its old daylight coefficients and view factors. Could
    store a hash of the model's surfaces, fenestrations and materials.
-2. **`cargo clippy --all-targets` fails** on tests in `calendar` (equal
-   operands to `==` in `date.rs`, a loop that never loops in `period.rs`);
-   `pre_commit` and CI only run clippy on libraries.
-3. **RMSE thresholds** (convection 0.1, walls √0.2) only keep the old criteria;
+2. **RMSE thresholds** (convection 0.1, walls √0.2) only keep the old criteria;
    they may deserve tightening now that the RMSE is right.
 
 ## Methods (to discuss)

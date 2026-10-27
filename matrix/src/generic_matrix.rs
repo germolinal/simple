@@ -367,8 +367,7 @@ impl<T: Numberish> GenericMatrix<T> {
         {
             let ini = i.saturating_sub(one_sided_n);
             let fin = (i + one_sided_n + 1).min(self.ncols);
-            for k in ini..fin {
-                let a = a_row[k];
+            for (k, &a) in (ini..fin).zip(&a_row[ini..fin]) {
                 let b_row = &other.data[k * m..(k + 1) * m];
                 for (item, b) in into_row.iter_mut().zip(b_row) {
                     *item += a * *b;
@@ -588,7 +587,7 @@ mod tests {
         println!("{}", json);
 
         let m2: Matrix = serde_json::from_str(&json).map_err(|e| e.to_string())?;
-        println!("{}", &m2);
+        println!("{}", m2);
 
         Ok(())
     }
@@ -655,7 +654,7 @@ mod tests {
                         }
                     }
                     Err(_e) => {
-                        assert!(false)
+                        panic!()
                     }
                 }
             }
@@ -678,10 +677,10 @@ mod tests {
 
         let n = v.len();
 
-        for c in 0..n {
+        for (c, vc) in v.iter().enumerate() {
             for r in 0..n {
                 if r == c {
-                    assert_eq!(m.get(c, r)?, v[c])
+                    assert_eq!(m.get(c, r)?, *vc)
                 } else {
                     assert_eq!(m.get(c, r)?, 0.0)
                 }
@@ -753,7 +752,7 @@ mod tests {
                         count += 1.0;
                     }
                     Err(_e) => {
-                        assert!(false)
+                        panic!()
                     }
                 }
             }
@@ -1182,7 +1181,7 @@ mod tests {
                         assert_eq!(v, b_val * a_val * b_rows as Float);
                     }
                     Err(_e) => {
-                        assert!(false)
+                        panic!()
                     }
                 }
             }
@@ -1216,7 +1215,7 @@ mod tests {
                         assert_eq!(v, b_val * a_val * b_rows as Float);
                     }
                     Err(_e) => {
-                        assert!(false)
+                        panic!()
                     }
                 }
             }
@@ -1244,7 +1243,7 @@ mod tests {
                         assert_eq!(v, b_val * a_val * b_rows as Float);
                     }
                     Err(_e) => {
-                        assert!(false)
+                        panic!()
                     }
                 }
             }
@@ -1284,7 +1283,7 @@ mod tests {
         let c = a.from_prod_n_diag(&b, n)?;
         let mut into = vec![0.; n_rows];
         let s = b.as_slice();
-        let _diag_c = diag_a.column_prod_into(s, &mut into).unwrap();
+        diag_a.column_prod_into(s, &mut into).unwrap();
         dbg!(into);
         for i in 0..n_rows {
             if i == 0 || i == n_rows - 1 {
@@ -1429,8 +1428,8 @@ mod tests {
 
         a.clone().mut_n_diag_gaussian(&mut x, 3)?;
         println!("delta = {}", &x - &exp_x);
-        println!("b = {}", &b);
-        println!("x = {}", &x);
+        println!("b = {}", b);
+        println!("x = {}", x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
         let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
@@ -1443,8 +1442,8 @@ mod tests {
         let mut x = b.clone();
         a.clone().mut_n_diag_gaussian(&mut x, 4)?;
         println!("delta = {}", &x - &exp_x);
-        println!("b = {}", &b);
-        println!("x = {}", &x);
+        println!("b = {}", b);
+        println!("x = {}", x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
         let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
@@ -1464,8 +1463,8 @@ mod tests {
         let mut x = b.clone();
         a.clone().mut_n_diag_gaussian(&mut x, 3)?;
         println!("delta = {}", &x - &exp_x);
-        println!("b = {}", &b);
-        println!("x = {}", &x);
+        println!("b = {}", b);
+        println!("x = {}", x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
         let other_x = a.n_diag_gaussian(&b, 3)?;
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
@@ -1485,11 +1484,11 @@ mod tests {
         let mut x = b.clone();
         a.clone().mut_n_diag_gaussian(&mut x, 5)?;
         println!("delta = {}", &x - &exp_x);
-        println!("x = {}", &x);
-        println!("b = {}", &b);
+        println!("x = {}", x);
+        println!("b = {}", b);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
         let other_x = a.n_diag_gaussian(&b, 5)?;
-        println!("other_x -- {}", &other_x);
+        println!("other_x -- {}", other_x);
         println!("other -- {}", &other_x - &exp_x);
         assert!(!(&other_x - &exp_x).data.iter().any(|x| x.abs() > TINY));
 
@@ -1501,8 +1500,8 @@ mod tests {
         let mut x = b.clone();
         a.clone().mut_n_diag_gaussian(&mut x, 3)?;
         println!("delta = {}", &x - &exp_x);
-        println!("b = {}", &b);
-        println!("x = {}", &x);
+        println!("b = {}", b);
+        println!("x = {}", x);
         println!("x - exp_x = {}", &x - &exp_x);
         assert!(!(&x - &exp_x).data.iter().any(|x| x.abs() > TINY));
         let other_x = a.n_diag_gaussian(&b, 3)?;

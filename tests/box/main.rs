@@ -56,11 +56,7 @@ fn box_sim() -> Result<(), String> {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
-            expected: expected[0]
-                .iter()
-                .skip(skip)
-                .take(take).copied()
-                .collect(),
+            expected: expected[0].iter().skip(skip).take(take).copied().collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
             found: found[0].iter().skip(skip).take(take).copied().collect(),
 

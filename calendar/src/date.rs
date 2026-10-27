@@ -481,8 +481,10 @@ mod tests {
         assert!(before < after);
         assert!(!(after < before));
 
-        assert!(before == before);
-        assert!(after == after);
+        // (equal to themselves)
+        let (before_copy, after_copy) = (before, after);
+        assert!(before == before_copy);
+        assert!(after == after_copy);
     }
 
     #[test]
@@ -833,7 +835,7 @@ mod tests {
 
     #[test]
     fn test_search() {
-        let sorted = vec![
+        let sorted = [
             Date {
                 month: 1,
                 day: 1,
@@ -903,7 +905,7 @@ mod tests {
             "day": 4, 
             "hour": 21
         }"#;
-        let d: Date = serde_json::from_str(&v).map_err(|e| format!("{}", e))?;
+        let d: Date = serde_json::from_str(v).map_err(|e| format!("{}", e))?;
         assert_eq!(d.month, 9);
         assert_eq!(d.day, 4);
         assert!((d.hour - 21.).abs() < 1e-5);
@@ -917,7 +919,7 @@ mod tests {
 
         let v = "2014-11-28T21:00:09+09:00";
         let chrono_datetime =
-            NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").map_err(|e| e.to_string())?;
+            NaiveDateTime::parse_from_str(v, "%Y-%m-%dT%H:%M:%S%z").map_err(|e| e.to_string())?;
 
         let d: Date = chrono_datetime.into();
         assert_eq!(d.month, 11);
@@ -926,10 +928,10 @@ mod tests {
 
         let v = "2023-06-30T23:59:59+12:00";
         let chrono_datetime =
-            NaiveDateTime::parse_from_str(&v, "%Y-%m-%dT%H:%M:%S%z").map_err(|e| e.to_string())?;
+            NaiveDateTime::parse_from_str(v, "%Y-%m-%dT%H:%M:%S%z").map_err(|e| e.to_string())?;
 
         let d: Date = chrono_datetime.into();
-        assert_eq!(d.month, 06);
+        assert_eq!(d.month, 6);
         assert_eq!(d.day, 30);
         println!("{d}");
         assert!((d.hour - 23.99972).abs() < 1e-5, "hour is {}", d.hour);

@@ -80,8 +80,8 @@ SOFTWARE.
 //!     Box::new(v) // We need a Box.
 //! }
 //!
-//! // Write a test
-//! #[test]
+//! // Write a test (marked with `#[test]`; here, it is not, as tests inside
+//! // documentation do not run)
 //! fn test_custon_validator(){
 //!     let mut validator = Validator::new("Test Validation", "report.html");
 //!     validator.push(check_if_equal());
@@ -448,9 +448,9 @@ mod tests {
 
     #[test]
     fn test_from_csv() {
-        let data = from_csv::<f64>("./tests/test_data/data.csv", &vec![0, 1, 2, 3]);
-        for c in 0..4 {
-            let d = &data[c];
+        let data = from_csv::<f64>("./tests/test_data/data.csv", &[0, 1, 2, 3]);
+        assert_eq!(data.len(), 4);
+        for (c, d) in data.iter().enumerate() {
             assert_eq!(d.len(), 3);
             for (i, found) in d.iter().enumerate() {
                 let exp = 10 * i + c;

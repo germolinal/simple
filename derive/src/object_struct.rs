@@ -29,12 +29,13 @@ impl StructObject {
     pub fn has_name(&self) -> bool {
         for f in self.fields.iter() {
             if let crate::field::Field::String(sf) = f
-                && let Some(i) = &sf.ident {
-                    let ident_str = format!("{}", i);
-                    if ident_str == "name" {
-                        return true;
-                    }
+                && let Some(i) = &sf.ident
+            {
+                let ident_str = format!("{}", i);
+                if ident_str == "name" {
+                    return true;
                 }
+            }
         }
         false
     }

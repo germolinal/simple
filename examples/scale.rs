@@ -9,10 +9,12 @@ fn main() -> Result<(), String> {
     // time cargo run  --release --example scale
 
     const N: usize = 600;
-    let mut options = SimOptions::default();
-    options.output = Some("./tests/cold_apartment/check.csv".into());
-    options.weather_file = Some("./tests/wellington.epw".into());
-    options.n = 4;
+    let options = SimOptions {
+        output: Some("./tests/cold_apartment/check.csv".into()),
+        weather_file: Some("./tests/wellington.epw".into()),
+        n: 4,
+        ..SimOptions::default()
+    };
 
     let mut simple_model = Model::default();
 

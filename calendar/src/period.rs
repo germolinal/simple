@@ -210,7 +210,7 @@ mod tests {
                 assert!(count < 8760 * 10, "Count is {} | n = {}", count, n);
                 count += 1;
             }
-            let aux = (count as i32 - 8760 as i32 * n as i32).abs();
+            let aux = (count - 8760_i32 * n).abs();
             assert!(
                 aux == 0,
                 "... found {} (count = {} | n = {})",
@@ -218,7 +218,6 @@ mod tests {
                 count,
                 n
             );
-            break;
         }
     }
 

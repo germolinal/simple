@@ -183,7 +183,7 @@ mod testing {
             assert_eq!("Bedrooms heater", hvac.name());
             assert_eq!("Bedroom", hvac.target_space()?);
         } else {
-            assert!(false, "Incorrect heater!")
+            panic!("Incorrect heater!")
         }
 
         Ok(())

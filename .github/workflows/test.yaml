@@ -3,51 +3,102 @@ name: Tests
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Read-only: nothing here writes to the repository
+permissions:
+  contents: read
+
+# A newer push to the same branch (or PR) cancels the older run
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
+  # Fail on compiler warnings
+  RUSTFLAGS: -D warnings
 
 jobs:
-  test_parallel:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Run tests parallel
-        run: |
-          cargo test --features parallel --workspace
-          cargo test --release --features parallel -p simple -- --ignored
-
-  check_default:
+  fmt:
     runs-on: ubuntu-latest
     steps:
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
-
       - uses: actions/checkout@v4
-      - name: Run tests default
-        run: |
-          cargo check --workspace
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
-  check_float:
+  clippy:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # (not `float`: some `f64` literals in tests have more precision
+        # than an `f32` can hold, on purpose)
+        features: ["", "--features parallel"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: clippy-${{ matrix.features }}
+      - name: Clippy (all targets)
+        run: cargo clippy --workspace --all-targets --locked ${{ matrix.features }} -- -D warnings
+
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
-
       - uses: actions/checkout@v4
-      - name: Check float
-        run: cargo check --features float --workspace --all-targets
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Run tests (parallel)
+        run: cargo test --workspace --locked --features parallel
+      - name: Run ignored simulation tests (release)
+        run: cargo test --release --locked --features parallel -p simple -- --ignored
 
-  check_float_parallel:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        features:
+          - ""
+          - "--features parallel"
+          - "--features float"
+          - "--features float --features parallel"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: check-${{ matrix.features }}
+      - name: Check (all targets, including tests, benches and examples)
+        run: cargo check --workspace --all-targets --locked ${{ matrix.features }}
+
+  docs:
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build API docs
+        run: cargo doc --workspace --no-deps --locked
+
+  validation_reports:
+    # Warns (does not fail) when code changed after the last `make validate`
     runs-on: ubuntu-latest
     steps:
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
-
       - uses: actions/checkout@v4
-      - name: Check float parallel
-        run: cargo check --features float --features parallel --workspace --all-targets
+        with:
+          fetch-depth: 0
+      - name: Check whether validation reports are stale
+        run: ./docs/check_validation.sh --warn

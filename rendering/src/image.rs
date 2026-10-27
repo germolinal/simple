@@ -282,7 +282,9 @@ impl ImageBuffer {
 
         // Read body
         let pixels = content
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .map(|x| {
                 let (r, g, b, e) = (x[0], x[1], x[2], x[3]);
                 rgbe_to_colour(r, g, b, e)
@@ -422,19 +424,21 @@ mod tests {
         fn ldexp(x: c_double, ex: c_int) -> c_double;
     }
 
+    #[allow(clippy::useless_conversion)] // (not useless with `f32`)
     fn c_frexp(x: Float) -> (Float, i32) {
         let mut exp: c_int = 0;
         let res = unsafe { frexp(x.into(), &mut exp) } as Float;
         (res, exp as i32)
     }
 
+    #[allow(clippy::useless_conversion)] // (not useless with `f32`)
     fn c_ldexp(x: Float, n: i32) -> Float {
         (unsafe { ldexp(x.into(), n) }) as Float
     }
 
     #[test]
     fn test_frexp() {
-        let xs: Vec<Float> = vec![1e6, 2., PI.into(), 123987., 0., 99., 2.3123, 1024., 0.1];
+        let xs: Vec<Float> = vec![1e6, 2., PI, 123987., 0., 99., 2.3123, 1024., 0.1];
         for x in xs.iter() {
             let (c_mantissa, c_exp) = c_frexp(*x);
             let (mantissa, exp) = rusty_frexp(*x);

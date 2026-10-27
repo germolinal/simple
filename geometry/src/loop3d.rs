@@ -500,9 +500,10 @@ impl Loop3D {
         self.valid_to_add(point)?;
 
         if let Some(last) = self.vertices.last()
-            && last.compare(point) {
-                return Ok(());
-            }
+            && last.compare(point)
+        {
+            return Ok(());
+        }
 
         let n = self.vertices.len();
 
@@ -1485,7 +1486,7 @@ mod testing {
 
         let v = Point3D::new(0., 1., 0.);
         let v_cp = v;
-        let v_clone = v.clone();
+        let v_clone = v;
         assert_eq!(v, v_cp);
         assert_eq!(v, v_clone);
     }
@@ -1605,7 +1606,7 @@ mod testing {
             Ok(b) => {
                 assert!(!b);
             }
-            Err(e) => return Err(format!("{}", e)),
+            Err(e) => return Err(e.to_string()),
         }
         Ok(())
     }
@@ -2098,42 +2099,42 @@ mod testing {
         let mut l = Loop3D::new();
         l.push(Point3D {
             x: 0.,
-            y: 1.3500000000000001,
+            y: 1.35,
             z: 0.0,
         })?;
         l.push(Point3D {
             x: 0.,
-            y: 2.0899999999999999,
-            z: 0.82999999999999996,
+            y: 2.09,
+            z: 0.83,
         })?;
         l.push(Point3D {
             x: 0.,
-            y: 2.9900000000000002,
-            z: 0.82999999999999996,
+            y: 2.99,
+            z: 0.83,
         })?;
         l.push(Point3D {
             x: 0.,
-            y: 2.9900000000000002,
+            y: 2.99,
             z: 2.29,
         })?;
         l.push(Point3D {
             x: 0.,
-            y: 2.0899999999999999,
+            y: 2.09,
             z: 2.29,
         })?;
         l.push(Point3D {
             x: 0.,
-            y: 1.3500000000000001,
-            z: 2.7000000000000002,
+            y: 1.35,
+            z: 2.7,
         })?;
         l.push(Point3D {
             x: 0.,
-            y: 3.7400000000000002,
-            z: 2.7000000000000002,
+            y: 3.74,
+            z: 2.7,
         })?;
         l.push(Point3D {
             x: 0.,
-            y: 3.7400000000000002,
+            y: 3.74,
             z: 0.0,
         })?;
 
@@ -2148,22 +2149,22 @@ mod testing {
     fn test_weird_loop_2() -> Result<(), String> {
         let mut outer = Loop3D::new();
         outer.push(Point3D {
-            x: 8.7699999999999996,
-            y: 3.7400000000000002,
+            x: 8.77,
+            y: 3.74,
             z: 0.0,
         })?; // 0
         outer.push(Point3D {
-            x: 8.7699999999999996,
-            y: 3.7400000000000002,
-            z: 2.7000000000000002,
+            x: 8.77,
+            y: 3.74,
+            z: 2.7,
         })?; // 1
         outer.push(Point3D {
-            x: 8.7699999999999996,
+            x: 8.77,
             y: 0.0,
-            z: 2.7000000000000002,
+            z: 2.7,
         })?; // 1
         outer.push(Point3D {
-            x: 8.7699999999999996,
+            x: 8.77,
             y: 0.0,
             z: 0.0,
         })?; // 1
@@ -2172,24 +2173,24 @@ mod testing {
         let mut inner = Loop3D::new();
 
         inner.push(Point3D {
-            x: 8.7699999999999996,
-            y: 1.2649999999999999,
-            z: 0.69999999999999996,
+            x: 8.77,
+            y: 1.265,
+            z: 0.7,
         })?; // 2
         inner.push(Point3D {
-            x: 8.7699999999999996,
-            y: 1.2649999999999999,
+            x: 8.77,
+            y: 1.265,
             z: 2.29,
         })?; // 3
         inner.push(Point3D {
-            x: 8.7699999999999996,
-            y: 2.4750000000000001,
+            x: 8.77,
+            y: 2.475,
             z: 2.29,
         })?; // 4
         inner.push(Point3D {
-            x: 8.7699999999999996,
-            y: 2.4740000000000002,
-            z: 0.69999999999999996,
+            x: 8.77,
+            y: 2.474,
+            z: 0.7,
         })?; // 5
 
         inner.close()?;
@@ -2206,44 +2207,44 @@ mod testing {
         let mut outer = Loop3D::new();
         outer.push(Point3D {
             x: 2.98,
-            y: 1.3500000000000001,
-            z: 2.7000000000000002,
+            y: 1.35,
+            z: 2.7,
         })?; // 0
         outer.push(Point3D {
-            x: 4.0199999999999996,
-            y: 1.3500000000000001,
-            z: 2.7000000000000002,
+            x: 4.02,
+            y: 1.35,
+            z: 2.7,
         })?; // 1
         outer.push(Point3D {
-            x: 4.0199999999999996,
-            y: 6.0300000000000002,
-            z: 2.7000000000000002,
+            x: 4.02,
+            y: 6.03,
+            z: 2.7,
         })?; // 1
         outer.push(Point3D {
             x: 2.98,
-            y: 6.0300000000000002,
-            z: 2.7000000000000002,
+            y: 6.03,
+            z: 2.7,
         })?; // 1
 
         outer.push(Point3D {
             x: 2.98,
-            y: 5.7599999999999998,
-            z: 2.7000000000000002,
+            y: 5.76,
+            z: 2.7,
         })?; // 2
         outer.push(Point3D {
-            x: 1.9199999999999999,
-            y: 5.7599999999999998,
-            z: 2.7000000000000002,
+            x: 1.92,
+            y: 5.76,
+            z: 2.7,
         })?; // 3
         outer.push(Point3D {
-            x: 1.9199999999999999,
-            y: 4.7999999999999998,
-            z: 2.7000000000000002,
+            x: 1.92,
+            y: 4.8,
+            z: 2.7,
         })?; // 4
         outer.push(Point3D {
             x: 2.98,
-            y: 4.7999999999999998,
-            z: 2.7000000000000002,
+            y: 4.8,
+            z: 2.7,
         })?; // 5
 
         outer.close()?;
@@ -2454,7 +2455,7 @@ mod testing {
         let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
         let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
-        let res = this_loop.snap(&other_loop.vertices(), 0.1);
+        let res = this_loop.snap(other_loop.vertices(), 0.1);
         assert!(res.is_none());
         Ok(())
     }
@@ -2477,7 +2478,7 @@ mod testing {
         let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
         let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
-        let res = this_loop.snap(&other_loop.vertices(), 0.1);
+        let res = this_loop.snap(other_loop.vertices(), 0.1);
         assert_eq!(res, Some(3));
 
         assert_eq!(this_loop.len(), other_loop.len());
@@ -2505,7 +2506,7 @@ mod testing {
         let mut this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
         let other_loop: Loop3D = serde_json::from_str(other_str).map_err(|e| e.to_string())?;
 
-        let res = this_loop.snap(&other_loop.vertices(), 0.1);
+        let res = this_loop.snap(other_loop.vertices(), 0.1);
         assert_eq!(res, Some(2));
         Ok(())
     }
@@ -3146,7 +3147,7 @@ mod testing {
         assert_eq!(v.len(), 2);
 
         let left = &v[0];
-        let left_exp_pts = vec![
+        let left_exp_pts = [
             Point3D::new(0., 0., 0.),
             Point3D::new(0.5, 0., 0.),
             Point3D::new(0.5, 1., 0.),
@@ -3160,7 +3161,7 @@ mod testing {
 
         let right = &v[1];
         println!("Right");
-        let right_exp_pts = vec![
+        let right_exp_pts = [
             Point3D::new(0.5, 0., 0.),
             Point3D::new(1., 0., 0.),
             Point3D::new(1., 1., 0.),
@@ -3190,7 +3191,7 @@ mod testing {
         assert_eq!(v.len(), 2);
 
         let left = &v[0];
-        let left_exp_pts = vec![
+        let left_exp_pts = [
             Point3D::new(0., 0., 0.),
             Point3D::new(1.0, 0., 0.),
             Point3D::new(1.0, 0.5, 0.),
@@ -3204,7 +3205,7 @@ mod testing {
 
         let right = &v[1];
         println!("Right");
-        let right_exp_pts = vec![
+        let right_exp_pts = [
             Point3D::new(1.0, 0.5, 0.),
             Point3D::new(1., 1., 0.),
             Point3D::new(0., 1., 0.),
@@ -3234,7 +3235,7 @@ mod testing {
         assert_eq!(v.len(), 1);
 
         let left = &v[0];
-        let left_exp_pts = vec![
+        let left_exp_pts = [
             Point3D::new(0., 0., 0.),
             Point3D::new(1.0, 0., 0.),
             Point3D::new(1.0, 1.0, 0.),
@@ -3284,7 +3285,7 @@ mod testing {
         assert_eq!(v.len(), 1);
 
         let left = &v[0];
-        let left_exp_pts = vec![
+        let left_exp_pts = [
             Point3D::new(0., 0., 0.),
             Point3D::new(1.0, 0., 0.),
             Point3D::new(1.0, 1.0, 0.),
@@ -3308,13 +3309,13 @@ mod testing {
 
         let this_loop: Loop3D = serde_json::from_str(this_str).map_err(|e| e.to_string())?;
 
-        let v = this_loop.split_from_slice(&vec![
+        let v = this_loop.split_from_slice(&[
             Segment3D::new(Point3D::new(0.5, -1.0, 0.0), Point3D::new(0.5, 2.0, 0.0)),
             Segment3D::new(Point3D::new(-0.5, 0.5, 0.0), Point3D::new(1.5, 0.5, 0.0)),
         ])?;
         assert_eq!(v.len(), 4);
 
-        let exp = vec![
+        let exp = [
             vec![
                 Point3D::new(0.00000, 0.00000, 0.00000),
                 Point3D::new(0.50000, 0.00000, 0.00000),
@@ -3367,7 +3368,7 @@ mod testing {
 
         assert_eq!(segments.len(), 4);
 
-        let expected = vec![
+        let expected = [
             Segment3D::new(Point3D::new(0., 0., 0.), Point3D::new(1., 0., 0.)),
             Segment3D::new(Point3D::new(1., 0., 0.), Point3D::new(1., 1., 0.)),
             Segment3D::new(Point3D::new(1., 1., 0.), Point3D::new(0., 1., 0.)),
@@ -3467,17 +3468,17 @@ mod testing {
                 Ok(())
             } else {
                 if contained.is_none() && exp.is_some() {
-                    return Err("Expecting point to be in a segment".to_string());
+                    Err("Expecting point to be in a segment".to_string())
                 } else if contained.is_some() && exp.is_none() {
-                    return Err("NOT expecting point to be in a segment".to_string());
+                    Err("NOT expecting point to be in a segment".to_string())
                 } else {
                     // the number does not agree.
                     let foundi = contained.unwrap();
                     let expi = exp.unwrap();
-                    return Err(format!(
+                    Err(format!(
                         "Expecting segment to be {}... found {}",
                         expi, foundi
-                    ));
+                    ))
                 }
             }
         }

@@ -702,14 +702,14 @@ mod tests {
             modifiers: vec!["some_plastic".into()],
             ..RadianceReader::default()
         };
-        assert_eq!(scanner.get_modifier_index("some_plastic".into()), 0);
+        assert_eq!(scanner.get_modifier_index("some_plastic"), 0);
     }
 
     #[test]
     #[should_panic]
     fn test_unknown_modifier_index() {
         let scanner = RadianceReader::default();
-        scanner.get_modifier_index("some_plastic".into());
+        scanner.get_modifier_index("some_plastic");
     }
 
     #[test]
@@ -726,7 +726,7 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
         assert_eq!(scanner.modifiers[0], "red".to_string());
-        assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
+        assert_eq!(0, scanner.get_modifier_index("red"));
         if let Material::Plastic(m) = &scene.materials[0] {
             assert_close!(m.colour.0[0], 0.3);
             assert_close!(m.colour.0[1], 0.05);
@@ -754,7 +754,7 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
         assert_eq!(scanner.modifiers[0], "red".to_string());
-        assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
+        assert_eq!(0, scanner.get_modifier_index("red"));
         if let Material::Metal(m) = &scene.materials[0] {
             assert_close!(m.colour.0[0], 0.3);
             assert_close!(m.colour.0[1], 0.05);
@@ -782,7 +782,7 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
         assert_eq!(scanner.modifiers[0], "red".to_string());
-        assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
+        assert_eq!(0, scanner.get_modifier_index("red"));
         if let Material::Light(m) = &scene.materials[0] {
             assert_close!(m.0.0[0], 0.3);
             assert_close!(m.0.0[1], 0.05);
@@ -808,7 +808,7 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
         assert_eq!(scanner.modifiers[0], "red".to_string());
-        assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
+        assert_eq!(0, scanner.get_modifier_index("red"));
         if let Material::Mirror(m) = &scene.materials[0] {
             assert_close!(m.0.0[0], 0.3);
             assert_close!(m.0.0[1], 0.05);
@@ -834,7 +834,7 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
         assert_eq!(scanner.modifiers[0], "red".to_string());
-        assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
+        assert_eq!(0, scanner.get_modifier_index("red"));
         if let Material::Dielectric(m) = &scene.materials[0] {
             assert_close!(m.colour.0[0], 0.3);
             assert_close!(m.colour.0[1], 0.05);
@@ -861,7 +861,7 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
         assert_eq!(scanner.modifiers[0], "red".to_string());
-        assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
+        assert_eq!(0, scanner.get_modifier_index("red"));
         if let Material::Glass(m) = &scene.materials[0] {
             assert_close!(m.colour.0[0], 0.3);
             assert_close!(m.colour.0[1], 0.05);
@@ -888,7 +888,7 @@ mod tests {
         assert_eq!(scene.materials.len(), 1);
         assert_eq!(scanner.modifiers.len(), 1);
         assert_eq!(scanner.modifiers[0], "red".to_string());
-        assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
+        assert_eq!(0, scanner.get_modifier_index("red"));
         if let Material::Glass(m) = &scene.materials[0] {
             assert_close!(m.colour.0[0], 0.3);
             assert_close!(m.colour.0[1], 0.05);

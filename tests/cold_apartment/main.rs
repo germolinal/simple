@@ -61,15 +61,9 @@ fn apartment_sim() -> Result<(), String> {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
-            expected: expected[i]
-                .iter()
-                .skip(skip).copied()
-                .collect(),
+            expected: expected[i].iter().skip(skip).copied().collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[i]
-                .iter()
-                .skip(skip).copied()
-                .collect(),
+            found: found[i].iter().skip(skip).copied().collect(),
 
             // allowed_r2: Some(0.93),
             // allowed_intersect_delta: Some(0.8),

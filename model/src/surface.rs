@@ -463,7 +463,7 @@ mod testing {
     use super::*;
 
     use geometry::{Loop3D, Point3D};
-    use json5;
+
     use std::fs;
 
     #[test]

@@ -472,7 +472,7 @@ mod testing {
 
         let (ini, fin) = scan.object()?;
         let object = &source[ini..fin];
-        let obj_str = std::str::from_utf8(&object).map_err(|e| e.to_string())?;
+        let obj_str = std::str::from_utf8(object).map_err(|e| e.to_string())?;
         println!("'{}'", obj_str);
         assert_eq!(object, b"{ data data }");
         Ok(())

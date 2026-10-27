@@ -233,7 +233,6 @@ impl OpticalInfo {
 #[cfg(test)]
 mod testing {
 
-    use json5;
     use model::{
         Construction, Fenestration, Material, Model, SimulationStateHeader, SolarOptions, Surface,
         substance::Normal,

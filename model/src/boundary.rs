@@ -203,7 +203,7 @@ mod testing {
         if let Boundary::Space { space } = &model.surfaces[0].front_boundary {
             assert_eq!(space, "Some Space")
         } else {
-            assert!(false, "Wrong space!")
+            panic!("Wrong space!")
         }
 
         Ok(())

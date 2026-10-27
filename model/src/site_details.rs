@@ -43,7 +43,6 @@ pub enum TerrainClass {
     Urban,
 }
 
-
 impl TerrainClass {
     /// Calculates the value by which
     /// the weather file wind speed needs to be multiplied in order to estimate the wind
@@ -248,10 +247,10 @@ mod testing {
             if let Some(terrain) = d.terrain {
                 assert_eq!(terrain, TerrainClass::Urban);
             } else {
-                assert!(false, "No terrain!")
+                panic!("No terrain!")
             }
         } else {
-            assert!(false, "No site details!")
+            panic!("No site details!")
         }
         Ok(())
     }

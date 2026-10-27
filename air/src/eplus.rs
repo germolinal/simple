@@ -135,9 +135,11 @@ mod tests {
         */
 
         // Summer
-        let mut weather = SyntheticWeather::default();
-        // 0 C of temperature difference
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(2.));
+        let mut weather = SyntheticWeather {
+            // 0 C of temperature difference
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(2.)),
+            ..SyntheticWeather::default()
+        };
         let state = vec![2.];
         //
         weather.wind_speed = Box::new(ScheduleConstant::new(3.35));
@@ -158,9 +160,11 @@ mod tests {
         assert!((1. - flow).abs() < 0.02);
 
         // WINTER
-        let mut weather = SyntheticWeather::default();
-        // 40 C of temperature difference
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(-38.));
+        let mut weather = SyntheticWeather {
+            // 40 C of temperature difference
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(-38.)),
+            ..SyntheticWeather::default()
+        };
         let state = vec![2.];
         //
         weather.wind_speed = Box::new(ScheduleConstant::new(6.));
@@ -193,9 +197,11 @@ mod tests {
         */
 
         // Summer
-        let mut weather = SyntheticWeather::default();
-        // 0 C of temperature difference
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(2.));
+        let mut weather = SyntheticWeather {
+            // 0 C of temperature difference
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(2.)),
+            ..SyntheticWeather::default()
+        };
         let state = vec![2.];
         //
         weather.wind_speed = Box::new(ScheduleConstant::new(3.35));
@@ -216,9 +222,11 @@ mod tests {
         assert!((0.75 - flow).abs() < 0.02);
 
         // WINTER
-        let mut weather = SyntheticWeather::default();
-        // 40 C of temperature difference
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(42.));
+        let mut weather = SyntheticWeather {
+            // 40 C of temperature difference
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(42.)),
+            ..SyntheticWeather::default()
+        };
         let state = vec![2.];
         //
         weather.wind_speed = Box::new(ScheduleConstant::new(6.));
@@ -239,9 +247,11 @@ mod tests {
         assert!((1.34 - flow).abs() < 0.02);
 
         // ... A windspeed of 4.47 m/s (10 mph) gives a factor of 1.0.
-        let mut weather = SyntheticWeather::default();
-        // 40 C of temperature difference
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(42.));
+        let mut weather = SyntheticWeather {
+            // 40 C of temperature difference
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(42.)),
+            ..SyntheticWeather::default()
+        };
         let state = vec![2.];
         //
         weather.wind_speed = Box::new(ScheduleConstant::new(4.47));
@@ -279,8 +289,10 @@ mod tests {
         let wind_speed = 6.7;
         let t_in = 20.0;
 
-        let mut weather = SyntheticWeather::default();
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(t_out));
+        let mut weather = SyntheticWeather {
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(t_out)),
+            ..SyntheticWeather::default()
+        };
         let state = vec![t_in];
         //
         weather.wind_speed = Box::new(ScheduleConstant::new(wind_speed));
