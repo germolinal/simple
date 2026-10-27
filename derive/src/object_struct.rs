@@ -28,14 +28,13 @@ impl StructObject {
 
     pub fn has_name(&self) -> bool {
         for f in self.fields.iter() {
-            if let crate::field::Field::String(sf) = f {
-                if let Some(i) = &sf.ident {
+            if let crate::field::Field::String(sf) = f
+                && let Some(i) = &sf.ident {
                     let ident_str = format!("{}", i);
                     if ident_str == "name" {
                         return true;
                     }
                 }
-            }
         }
         false
     }
@@ -506,7 +505,7 @@ impl StructObject {
 
     fn get_api(&self, access_from_model: TokenStream2) -> Result<TokenStream2, String> {
         let object_name = self.ident.clone();
-        let name_str = format!("{}", &object_name);
+        let name_str = format!("{}", object_name);
 
         // Register type in API... always within an RC
         let register_type = quote!(
@@ -561,13 +560,13 @@ impl StructObject {
 
     pub fn gen_object_api(&self) -> Result<TokenStream2, String> {
         let object_name = self.ident.clone();
-        let name_str = format!("{}", &object_name);
+        let name_str = format!("{}", object_name);
         let name_str_lower = name_str.to_lowercase();
 
         let location_str = crate::object_location(name_str).unwrap_or_else(|| {
             panic!(
                 "Cannot set API for object '{}' which is not stored in the Model",
-                &object_name
+                object_name
             )
         });
         let location = syn::Ident::new(location_str, proc_macro2::Span::call_site());
