@@ -25,7 +25,6 @@ use crate::interaction::Interaction;
 use crate::material::Material;
 use crate::rand::*;
 
-use crate::primitive::Primitive;
 use crate::scene::{Object, Scene};
 use crate::Float;
 use geometry::intersection::SurfaceSide;
@@ -234,12 +233,6 @@ impl RayTracer {
 
         let n_shadow_samples = n as Float;
         if let Some((light, p_light)) = scene.sample_light_uniform(rng) {
-            // When a BSDF sample hits a light in the scene (unlike a distant
-            // one) after a non-specular bounce, `trace_ray()` does not add
-            // it, so the light sampled here is its only contribution, and it
-            // gets the whole weight. Distant lights are added by both, and
-            // weighted by multiple importance sampling.
-            let is_distant = matches!(light.primitive, Primitive::Source(_));
             let mut i = 0;
             while i < n {
                 let wi = if n > 1 {
@@ -267,12 +260,9 @@ impl RayTracer {
                     let bsdf = material.eval_bsdf(normal, e1, e2, wo, wi, eta);
                     let fx = light_colour * cos_theta * bsdf;
 
-                    let weight = if is_distant {
-                        let bsdf_pdf = material.pdf(normal, e1, e2, wi, wo, eta);
-                        power_heuristic(n, light_pdf * p_light, 1, bsdf_pdf)
-                    } else {
-                        1.0
-                    };
+                    let bsdf_pdf = material.pdf(normal, e1, e2, wi, wo, eta);
+
+                    let weight = power_heuristic(n, light_pdf * p_light, 1, bsdf_pdf);
 
                     local_illum += weight * fx / (light_pdf * p_light);
                 }

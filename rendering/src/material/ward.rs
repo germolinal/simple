@@ -173,18 +173,21 @@ pub fn evaluate_ward_anisotropic(
         alpha = alpha.max(LOW_ROUGHNESS);
         beta = beta.max(LOW_ROUGHNESS);
 
-        let h = (wo + wi).get_normalized();
-        let h_n = h.z;
-        // Eq. 17
-        let c1 = specularity * (h * h) / (PI * alpha * beta * h_n.powi(4));
-        let c2 = -((h.x / alpha).powi(2) + (h.y / beta).powi(2)) / (h_n.powi(2));
+        // As in Radiance's `dirnorm()` (src/rt/normal.c), the "W-G-M-D"
+        // model (Ward; Geisler-Moroder & Dür): the half vector is NOT
+        // normalized (h·h = 4 cos²θd), and the result is not divided by
+        // cos(θo).
+        let h = wo + wi;
+        let h_n2 = h.z * h.z;
+        let c1 = specularity * (h * h) / (PI * alpha * beta * h_n2 * h_n2);
+        let c2 = -((h.x / alpha).powi(2) + (h.y / beta).powi(2)) / h_n2;
         c1 * c2.exp()
     } else {
         0.0
     };
 
     let diff = (1. - specularity) / PI;
-    (spec / wo.z.abs(), diff)
+    (spec, diff)
 }
 
 #[cfg(test)]
