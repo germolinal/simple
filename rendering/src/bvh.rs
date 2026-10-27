@@ -25,6 +25,7 @@ https://pbr-book.org/3ed-2018/Primitives_and_Intersection_Acceleration/Bounding_
  */
 
 use crate::scene::Scene;
+use crate::triangle::fallback::intersect_triangle;
 use crate::triangle::*;
 use crate::Float;
 use geometry::{BBox3D, BBoxAxis, Point3D, Ray3D, Vector3D};
@@ -682,15 +683,18 @@ impl BoundingVolumeTree {
 
                     /* NON_SIMD */
 
-                    if let Some(hit) = simple_triangle_intersect(scene, ray, ini, fin) {
-                        // If hit, check the distance.
-                        let this_t_squared = hit.t * hit.t * dir_squared;
+                    // Any triangle in the leaf may block, not only the closest
+                    // one (which may be rejected as a self-intersection)
+                    for triangle in &scene.triangles[ini..fin] {
+                        if let Some((t, _, _)) = intersect_triangle(ray, triangle) {
+                            let this_t_squared = t * t * dir_squared;
 
-                        if this_t_squared > MIN_T
-                            && this_t_squared + MIN_T < distance_squared
-                            && (distance_squared - this_t_squared).abs() > 0.0001
-                        {
-                            return false;
+                            if this_t_squared > MIN_T
+                                && this_t_squared + MIN_T < distance_squared
+                                && (distance_squared - this_t_squared).abs() > 0.0001
+                            {
+                                return false;
+                            }
                         }
                     }
 

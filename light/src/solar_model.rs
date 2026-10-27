@@ -260,7 +260,6 @@ impl SolarModel {
         }
 
         // Same as PerezSky::gen_sky_vec(), but reusing the sky and the vector
-        memory.sky_vec.fill(0.0);
         PerezSky::update_sky_vec_for(
             &self.sky,
             &mut memory.sky_vec,

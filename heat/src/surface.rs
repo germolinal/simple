@@ -560,8 +560,15 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         })
     }
 
-    /// Sets the front boundary
-    pub fn set_front_boundary(&mut self, b: Boundary, model: &Model) {
+    /// Sets the front boundary. Fails for `Boundary::Ground`, which is not
+    /// supported yet.
+    pub fn set_front_boundary(&mut self, b: Boundary, model: &Model) -> Result<(), String> {
+        if let Boundary::Ground = b {
+            return Err(format!(
+                "{}: ground boundaries are not supported yet",
+                crate::heat_model::MODULE_NAME
+            ));
+        }
         self.front_boundary = b;
         if let Boundary::Space { space } = &self.front_boundary {
             for (i, s) in model.spaces.iter().enumerate() {
@@ -571,10 +578,18 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 }
             }
         }
+        Ok(())
     }
 
-    /// Sets the back boundary
-    pub fn set_back_boundary(&mut self, b: Boundary, model: &Model) {
+    /// Sets the back boundary. Fails for `Boundary::Ground`, which is not
+    /// supported yet.
+    pub fn set_back_boundary(&mut self, b: Boundary, model: &Model) -> Result<(), String> {
+        if let Boundary::Ground = b {
+            return Err(format!(
+                "{}: ground boundaries are not supported yet",
+                crate::heat_model::MODULE_NAME
+            ));
+        }
         self.back_boundary = b;
         if let Boundary::Space { space } = &self.back_boundary {
             for (i, s) in model.spaces.iter().enumerate() {
@@ -584,6 +599,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
                 }
             }
         }
+        Ok(())
     }
 
     /// Calculates the border conditions
@@ -1266,7 +1282,7 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
             solar_front = 0.0;
         }
         let mut solar_back = self.parent.back_solar_irradiance(state);
-        if solar_back.is_nan() || solar_front < 0.0 {
+        if solar_back.is_nan() || solar_back < 0.0 {
             solar_back = 0.0;
         }
 

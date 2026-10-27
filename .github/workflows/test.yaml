@@ -40,7 +40,7 @@ jobs:
 
       - uses: actions/checkout@v4
       - name: Check float
-        run: cargo check --features float --workspace
+        run: cargo check --features float --workspace --all-targets
 
   check_float_parallel:
     runs-on: ubuntu-latest
@@ -50,4 +50,4 @@ jobs:
 
       - uses: actions/checkout@v4
       - name: Check float parallel
-        run: cargo check --features float --features parallel --workspace
+        run: cargo check --features float --features parallel --workspace --all-targets

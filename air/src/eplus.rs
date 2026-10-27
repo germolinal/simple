@@ -297,10 +297,10 @@ mod tests {
 
         let current_weather = weather.get_weather_data(date);
 
-        let a_cm2 = 500.0;
+        let a_cm2: Float = 500.0;
         let a_m2 = a_cm2 / 10000.0;
 
-        assert!((a_m2 - 0.05 as f64).abs() < 1e-8);
+        assert!((a_m2 - 0.05).abs() < 1e-8);
 
         // for 1 storey
         let cs = 0.000290;

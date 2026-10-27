@@ -1221,7 +1221,8 @@ mod tests {
 
         let solar = Solar::new(latitude, longitude, standard_meridian);
 
-        const EPS: Float = 0.5 / 60.; // Half a minute precision
+        // Half a minute precision (`assert_close!` takes an `f64` tolerance)
+        const EPS: f64 = 0.5 / 60.;
 
         // Standard to solar
         let standard_time = Date {

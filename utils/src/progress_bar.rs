@@ -72,15 +72,17 @@ impl ProgressBar {
             0
         };
         let empty = " ".repeat(n_empty);
-        print!(
+        // On stderr, so that it does not get mixed with results written to
+        // stdout
+        eprint!(
             "\r    {} [{}{}] {:.2}%",
             self.title, filled, empty, progress
         );
-        std::io::stdout().flush().unwrap();
+        std::io::stderr().flush().unwrap();
     }
 
     pub fn done(&self) {
         #[cfg(not(feature = "wasm"))]
-        println!("\nDone after {} seconds", self.start.elapsed().as_secs());
+        eprintln!("\nDone after {} seconds", self.start.elapsed().as_secs());
     }
 }

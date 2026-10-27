@@ -447,8 +447,7 @@ impl PerezSky {
     /// bin directions do not need to be calculated again) and a slice with one
     /// element per bin.
     ///
-    /// As `update_sky_vec()`, during the day it adds to the values in `vec`,
-    /// and at night it sets them to zero.
+    /// As `update_sky_vec()`, it overwrites the values in `vec`.
     #[allow(clippy::too_many_arguments)]
     pub fn update_sky_vec_for(
         r: &ReinhartSky,
@@ -469,9 +468,11 @@ impl PerezSky {
         let diffuse_horizontal_irrad = weather_data.diffuse_horizontal_radiation;
         let direct_normal_irrad = weather_data.direct_normal_radiation;
 
-        // If it is nighttime, just fill with zeroes
+        // The sky and the sun are added below
+        vec.fill(0.0);
+
+        // If it is nighttime, just leave zeroes
         if direct_normal_irrad + diffuse_horizontal_irrad < 1e-4 {
-            vec.fill(0.0);
             return Ok(());
         }
 
@@ -485,7 +486,6 @@ impl PerezSky {
             Some(pos) => pos,
             None => {
                 // Vector3D::new(0., 0., -1.) // below the horizon
-                vec.fill(0.0);
                 return Ok(());
             }
         };

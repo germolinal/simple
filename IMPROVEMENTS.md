@@ -46,6 +46,41 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **Back solar irradiance was never clamped**: `ThermalSurfaceData::march`
+  (`heat/src/surface.rs`) tested `solar_front < 0.0` instead of `solar_back`.
+  It matters because the sky can be negative (open item 2): in the cold
+  apartment, the bathroom went from 25.8 °C to −3.1 °C on 03/10 at 18:45
+  (back irradiance of −1.3e4 W/m² on a surface); now 25.9 °C. Elsewhere,
+  differences in zone and surface temperatures are small (99th percentile
+  0.3-0.5 °C).
+- **Rays missed small triangles and slivers**: Möller–Trumbore treated rays as
+  parallel when `|a| < 1e-5`, but `a` scales with the edges' lengths
+  (rays at 60° missed a 4 × 4 mm triangle, and 1 m × 15 µm slivers). Now
+  relative to `|edge1| |edge2| |direction|`; hits are rejected by distance
+  (as before) instead of also by `t > 1e-5`. With the next fix, checked with
+  10 rounds of the validations before/after: 1 of 94 indicators changed
+  significantly (diffuse metal MBE 0.0037 → −0.0007).
+- **Shadow rays could leak**: `unobstructed_distance` only checked the closest
+  hit in each BVH leaf; when that one was rejected as a self-intersection,
+  other triangles in the leaf that block were ignored. Now any blocking
+  triangle in the leaf stops the ray. Tests for both:
+  `rendering/tests/intersection.rs`.
+- Progress bars printed to stdout, mixing DC progress into results written to
+  stdout; now stderr.
+- With `--features float`, several test targets did not compile (`weather`
+  solar tests, `air/src/eplus.rs`, `rendering/tests/validate_dc.rs`); CI
+  now checks all targets (`--all-targets`) with `float`.
+- Ground boundaries panicked (`unimplemented!()`, `unwrap()`); now setting one
+  returns an error ("not supported yet").
+- `PerezSky::update_sky_vec` added to the vector during the day but set it to
+  zero at night; now it always overwrites it (all callers zeroed it first, so
+  results do not change).
+- The root `Cargo.toml` had `[[examples]]` (ignored by Cargo, and naming
+  `cold_apartment.rs` "box"); removed, as Cargo finds the examples by itself.
+  `rendering` benchmarks: random triangles were ~30 m wide and all
+  overlapped (now ≤ ~1 m); "intersect_dining" loaded Sponza (now
+  `intersect_sponza_oblique`); all rays had a zero direction component (only
+  `intersect_sponza` keeps one).
 - **Glossy highlights of light sources were up to 4× too bright**:
   `evaluate_ward_anisotropic` (`rendering/src/material/ward.rs`, used when
   sampling lights) normalized the half vector and divided by cos θo, unlike
@@ -111,16 +146,21 @@ Change results (to fix and validate one by one):
 
    With one shadow sample, the shadow ray goes to the light's centre (as
    Radiance with `-dj 0`); this is intentional.
-2. **Back solar irradiance is never clamped**: in
-   `ThermalSurfaceData::march` (`heat/src/surface.rs`),
-   `if solar_back.is_nan() || solar_front < 0.0` should test `solar_back`.
-3. **Small triangles are missed**: the triangle test treats rays as parallel
-   when `|a| < 1e-5`, an absolute threshold, but `a` scales with the
-   triangle's area (all rays miss a ~3 × 3 mm triangle). Likewise, hits closer
-   than `t = 1e-5` are ignored, in units of the ray direction.
-4. **Shadow rays can leak**: `unobstructed_distance` only checks the closest
-   hit in each leaf; if that one is rejected (e.g., as a self-intersection),
-   other triangles in the same leaf that do block are ignored.
+2. **The Perez sky can be negative** (`weather/src/solar/perez.rs`): in 12
+   timesteps of Wellington's year (sun close to the horizon, almost no direct
+   radiation), up to 2,112 of the 2,305 patches are negative, down to −9e6.
+   The normalization ignores negative patches, but the returned sky does
+   not. Probably clamp to zero (as the normalization does); compare with
+   Radiance's `gendaylit`.
+3. **`geometry` uses absolute thresholds**: `Triangle3D::new` rejects points
+   closer than 1 mm and triangles with `|ab × bc| < 1e-5` (right triangles
+   with sides below ~3.2 mm, and thin slivers).
+4. **With `--features float`, 18 tests fail** (they compile now): 7 in
+   `geometry` (loops, polygons with doors, triangulation, `Segment3D::contains`),
+   `heat` `test_9050` (glazing), `model` `test_get_orientation`, 5 in
+   `weather` (Reinhart rows, Perez colour matrix, cloud cover, weather lines,
+   `go_through`), and the DC, solar, IR and box validations. Probably
+   tolerances written for `f64`.
 5. **IR view factors only look along the normal**
    (`SolarSurface::calc_view_factors`): it casts the sensor's normal ray, not
    the sampled direction, so a point counts as seeing either no sky and no
@@ -128,32 +168,20 @@ Change results (to fix and validate one by one):
    `cast_ray(Ray3D { origin: ray.origin, direction: dir }, ..)`. Pending
    Germán's decision (changes IR exchange of partly shaded surfaces).
 
-Do not change results:
-
-6. `ProgressBar` prints to stdout, so DC progress gets mixed into the results
-   when they go to stdout (no `-o`).
-7. With `--features float`, several test targets do not compile (`weather`
-   solar tests, `air/src/eplus.rs`, `rendering/tests/validate_dc.rs`,
-   `test_models`); CI only checks the libraries.
-8. Ground boundaries panic (`unimplemented!()` in
-   `get_boundary_temperature`, `unreachable!()` in
-   `calc_border_conditions`) instead of returning an error;
-   `get_boundary_temperature(..).unwrap()` in `iterate_surfaces`.
-9. `PerezSky::update_sky_vec` adds to the vector during the day but sets it
-   to zero at night.
-10. The root `Cargo.toml` has `[[examples]]` (ignored by Cargo; should be
-    `[[example]]`); the `intersect_dining` benchmark loads Sponza; the
-    random-triangle benchmarks are degenerate (overlapping triangles), and
-    all intersection benchmarks use rays with a zero direction component.
-
 ## Methods (to discuss)
 
 - **`march_nomass`** (windows, cavities): a fixed-point iteration with 0.5
   damping that stops on thresholds (`err < 0.01`, `err` going up, or 19,000
   iterations). Results depend on rounding noise: changing convection
   coefficients by one unit in the last place (`cbrt` instead of
-  `powf(1. / 3.)`) moved the box's zone temperature by up to 1.2 °C. Also:
-  border conditions (convection, radiation) use the previous timestep's
+  `powf(1. / 3.)`) moved the box's zone temperature by up to 1.2 °C.
+  **Most of the box's solves do not converge**: over a year, 62% of its 2.94
+  M calls to `march_nomass` stop because the error went up (after 1-3
+  iterations), with node temperatures still changing by 0.73 °C on average
+  (median; 13.5 °C at the 99th percentile, up to 187 °C); 38% converge; 18
+  reach 19,000 iterations. In the cold apartment, 0.2% stop that way. This
+  is probably why many sub-steps are needed.
+  Also: border conditions (convection, radiation) use the previous timestep's
   surface temperatures; `dt_subdivisions *= 2` is applied to all models for
   stability.
 - **Direct + diffuse split** in the solar model: the sun is binned into a

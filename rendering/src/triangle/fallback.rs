@@ -31,11 +31,15 @@ pub fn intersect_triangle(ray: Ray3D, t: &Triangle) -> Option<(Float, Float, Flo
     let edge1 = Vector3D::new(edge1_x, edge1_y, edge1_z);
     let edge2 = Vector3D::new(edge2_x, edge2_y, edge2_z);
 
+    // `a` is |edge1| |edge2| |direction| times the sine of the angle between
+    // the ray and the triangle (roughly), so the ray is considered parallel
+    // based on that sine; an absolute threshold missed all rays hitting
+    // small triangles (e.g., 3 × 3 mm).
     const TINY: Float = 1e-5;
     let h = ray.direction.cross(edge2);
     let a = edge1 * h;
-
-    if a < TINY && a > -TINY {
+    let scale = (edge1 * edge1) * (edge2 * edge2) * (ray.direction * ray.direction);
+    if a * a < TINY * TINY * scale {
         return None; // ray is parallel
     }
     let f = 1. / a;
@@ -54,7 +58,8 @@ pub fn intersect_triangle(ray: Ray3D, t: &Triangle) -> Option<(Float, Float, Flo
         return None; // intersection is outside
     }
     let t = f * (edge2 * q);
-    if t > TINY { Some((t, u, v)) } else { None }
+    // Hits too close to the origin are rejected by distance, by the callers
+    if t > 0. { Some((t, u, v)) } else { None }
 }
 
 pub(crate) fn intersect_triangle_slice(

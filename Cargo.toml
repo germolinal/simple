@@ -61,10 +61,6 @@ name = "scompare"
 path = "bin/scompare.rs"
 
 
-[[examples]]
-name = "box"
-path = "examples/cold_apartment.rs"
-
 [workspace.dependencies]
 rayon = { version = "1.10" }
 serde = { version = "1.0", features = ["derive", "rc"] }

@@ -93,7 +93,7 @@ fn get_boundary_temperature(
                 .dry_bulb_temperature(state)
                 .ok_or_else(|| "Space at the back of surface has no temperature!".into())
         }
-        Boundary::Ground => unimplemented!(),
+        Boundary::Ground => Err("Ground boundaries are not supported yet".into()),
         Boundary::AmbientTemperature { temperature } => Ok(*temperature),
         Boundary::Outdoor => Ok(t_out),
     }
@@ -119,20 +119,20 @@ pub(crate) fn iterate_surfaces<T: SurfaceTrait + Send + Sync>(
     // Collect boundary temperatures
     let boundary_temps: Vec<(Float, Float)> = surfaces
         .iter()
-        .map(|s| {
+        .map(|s| -> Result<(Float, Float), String> {
             let t_front = match &s.front_boundary {
                 Boundary::Adiabatic => s.parent.back_temperature(state),
-                _ => get_boundary_temperature(&s.front_boundary, t_out, model, state).unwrap(),
+                _ => get_boundary_temperature(&s.front_boundary, t_out, model, state)?,
             };
 
             let t_back = match &s.back_boundary {
                 Boundary::Adiabatic => t_front,
-                _ => get_boundary_temperature(&s.back_boundary, t_out, model, state).unwrap(),
+                _ => get_boundary_temperature(&s.back_boundary, t_out, model, state)?,
             };
 
-            (t_front, t_back)
+            Ok((t_front, t_back))
         })
-        .collect();
+        .collect::<Result<_, _>>()?;
 
     // Perform calculations in parallel
     let results: Vec<Result<(), String>> = surface_iter
@@ -323,8 +323,8 @@ impl SimulationModel for ThermalModel {
                 d,
             )?;
             // Match surface and zones
-            tsurf.set_front_boundary(surf.front_boundary.clone(), model);
-            tsurf.set_back_boundary(surf.back_boundary.clone(), model);
+            tsurf.set_front_boundary(surf.front_boundary.clone(), model)?;
+            tsurf.set_back_boundary(surf.back_boundary.clone(), model)?;
 
             surfaces.push(tsurf);
         }
@@ -366,8 +366,8 @@ impl SimulationModel for ThermalModel {
                 d,
             )?;
             // Match surface and zones
-            tsurf.set_front_boundary(surf.front_boundary.clone(), model);
-            tsurf.set_back_boundary(surf.back_boundary.clone(), model);
+            tsurf.set_front_boundary(surf.front_boundary.clone(), model)?;
+            tsurf.set_back_boundary(surf.back_boundary.clone(), model)?;
 
             fenestrations.push(tsurf);
         }

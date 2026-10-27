@@ -4,10 +4,10 @@ use rendering::{rand::RngExt, Scene, Spectrum};
 
 // Reference targets: https://github.com/svenstaro/bvh
 pub fn criterion_benchmark(c: &mut Criterion) {
-    // Setup
+    // Setup (no component of the direction is zero, as in most rays)
     let mut aux = [0; 32];
     let ray = black_box(geometry::Ray3D {
-        direction: geometry::Vector3D::new(0., 1., 2.).get_normalized(),
+        direction: geometry::Vector3D::new(0.3, 1., 2.).get_normalized(),
         origin: geometry::Point3D::new(1., 2., 1.),
     });
 
@@ -68,12 +68,19 @@ pub fn criterion_benchmark(c: &mut Criterion) {
                 rendering::Float,
             ) = rng.random();
 
+            // Triangles of up to ~1 m, centred anywhere in a 30 m cube (if
+            // their vertices could be anywhere in the cube, they would all
+            // overlap each other)
             const SCALE: rendering::Float = 30.;
-            if let Ok(tri) = geometry::Triangle3D::new(
-                geometry::Point3D::new((x1 - 0.5) * SCALE, (y1 - 0.5) * SCALE, (z1 - 0.5) * SCALE),
-                geometry::Point3D::new((x2 - 0.5) * SCALE, (y2 - 0.5) * SCALE, (z2 - 0.5) * SCALE),
-                geometry::Point3D::new((x3 - 0.5) * SCALE, (y3 - 0.5) * SCALE, (z3 - 0.5) * SCALE),
-            ) {
+            let (cx, cy, cz): (rendering::Float, rendering::Float, rendering::Float) =
+                rng.random();
+            let centre = geometry::Point3D::new((cx - 0.5) * SCALE, (cy - 0.5) * SCALE, (cz - 0.5) * SCALE);
+            let vertex = |x: rendering::Float, y: rendering::Float, z: rendering::Float| {
+                centre + geometry::Vector3D::new(x - 0.5, y - 0.5, z - 0.5)
+            };
+            if let Ok(tri) =
+                geometry::Triangle3D::new(vertex(x1, y1, z1), vertex(x2, y2, z2), vertex(x3, y3, z3))
+            {
                 i += 1;
                 triangles.push_object(
                     plastic,
@@ -129,10 +136,11 @@ pub fn criterion_benchmark(c: &mut Criterion) {
         b.iter(|| scene.cast_ray(ray, &mut aux))
     });
 
-    // DINING
+    // SPONZA, with no component of the direction being zero (this was
+    // called "dining", but it loaded Sponza too)
 
     let ray = black_box(geometry::Ray3D {
-        direction: geometry::Vector3D::new(1., 0., 0.).get_normalized(),
+        direction: geometry::Vector3D::new(1., 0.1, 0.05).get_normalized(),
         origin: geometry::Point3D::new(-4.0, 1., 0.),
     });
 
@@ -147,7 +155,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     scene.add_from_obj("./tests/scenes/sponza.obj".to_string(), gray, gray);
     scene.build_accelerator();
 
-    c.bench_function("intersect_dining", |b| {
+    c.bench_function("intersect_sponza_oblique", |b| {
         b.iter(|| scene.cast_ray(ray, &mut aux))
     });
 }
