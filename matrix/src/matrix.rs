@@ -128,7 +128,7 @@ impl Matrix {
                 pivot
             );
 
-            let ini = if c < one_sided_n { 0 } else { c - one_sided_n };
+            let ini = c.saturating_sub(one_sided_n);
 
             for r in (ini..c).rev() {
                 if let Ok(other) = self.get(r, c) {
