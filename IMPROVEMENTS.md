@@ -46,6 +46,18 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **Triangle lights gave no direct light**: `triangle_solid_angle_pdf`
+  (`rendering/src/primitive_samplers.rs`, and an unused copy in
+  `rendering/src/triangle/mod.rs`) used `ray.origin · normal` instead of the
+  cosine between the light's normal and the ray direction. Light samples
+  with a pdf of 0 are skipped, so triangle lights contributed no direct
+  light wherever that dot product was ≤ 0 (e.g., at the coordinates' origin),
+  and wrong amounts elsewhere. A new test
+  (`rendering/tests/triangle_light.rs`) compares a diffuse floor under a
+  1 × 1 m light 2 m away with the analytic solution, with the scene at the
+  origin and moved to (1000, 1000, 0): the old code gave 0 (−100%) in both
+  places; now +0.1% (16 shadow samples). The validations do not use triangle
+  lights (which is also why this went unnoticed).
 - **BVH missed hits** of rays exactly parallel to an axis that start on the
   plane of a box face (`0 * inf = NaN` made the box test reject the box in
   x). Wrong for 1,698 of 18,000 such test rays; right for all after C5.4.
@@ -65,12 +77,23 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 Change results (to fix and validate one by one):
 
-1. **Triangle light pdf uses the ray's origin instead of its direction.**
-   `rendering/src/primitive_samplers.rs` (`triangle_solid_angle_pdf`):
-   `cos_theta = ray.origin * info.normal` should be
-   `ray.direction * info.normal`. Affects ray-traced images with triangle
-   lights (`spict`, the ray tracer validation); not the DCs. The copy in
-   `rendering/src/triangle/mod.rs` has the same bug and is unused.
+1. **Area lights are underestimated** (`rendering/src/ray_tracer.rs`), in
+   two ways, found while testing the fix above:
+   - (1b) Light sampling (`get_local_illumination`) weights each sample with
+     multiple importance sampling (`power_heuristic`, < 1), but when a BSDF
+     sample hits a triangle or sphere light after a non-specular bounce,
+     `trace_ray` adds nothing; the other half of the combination is missing.
+     (Distant lights do have both halves.)
+   - (1c) With one shadow sample (the default), the shadow ray goes in a
+     fixed direction (`light.primitive.direction`, towards the light's
+     centre) instead of to a random point of the light, while dividing by
+     the pdf of sampling it randomly.
+
+   For a 4 × 4 m light 0.5 m above a diffuse floor, the ray tracer gives
+   −80.9% (1 shadow sample) and −23.4% (16 samples) of the analytic value;
+   for a 1 × 1 m light 2 m away, +4.8% and +0.1%. Affects ray-traced images
+   with triangle and sphere lights (including the ray tracer validation,
+   which uses sphere lights); not the DCs.
 2. **Back solar irradiance is never clamped**: in
    `ThermalSurfaceData::march` (`heat/src/surface.rs`),
    `if solar_back.is_nan() || solar_front < 0.0` should test `solar_back`.

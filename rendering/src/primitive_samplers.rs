@@ -56,8 +56,10 @@ pub fn triangle_solid_angle_pdf(
     ray: &Ray3D,
 ) -> Float {
     let d2 = (info.p - ray.origin).length_squared();
-    let cos_theta = ray.origin * info.normal;
-    // debug_assert!(cos_theta > 0.);
+    // The cosine of the angle between the light's normal and the direction
+    // towards the light (`info.normal` faces against the ray, so their dot
+    // product is negative)
+    let cos_theta = -(ray.direction * info.normal) / ray.direction.length();
     if cos_theta < 1e-7 {
         return 0.0;
     }
