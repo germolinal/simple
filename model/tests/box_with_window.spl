@@ -154,7 +154,11 @@ Surface {
         0.548000,0,0.5000,  // X,Y,Z ==> Vertex 2 {m}
         0.548000,0,2.5000,  // X,Y,Z ==> Vertex 1 {m}
         
-        5.548000,0,2.5000  // X,Y,Z ==> Vertex 4 {m}
+        5.548000,0,2.5000,  // X,Y,Z ==> Vertex 4 {m}
+
+        // Back to the outer loop (otherwise, the loop closes straight to
+        // Vertex 1, leaving a triangular hole above the window)
+        15.24000,   0,  4.572000,    // X,Y,Z ==> Vertex 4 {m}
 
     ]
 

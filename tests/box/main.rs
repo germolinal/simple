@@ -48,7 +48,8 @@ fn box_sim() -> Result<(), String> {
 
         // Load produced data
         let found = validate::from_csv::<simple::Float>(res, &[1]);
-        let expected = validate::from_csv::<simple::Float>("tests/box/cold_box_eplus.csv", &[0]);
+        // (column 29 is EnergyPlus' "ZONE ONE:Zone Mean Air Temperature")
+        let expected = validate::from_csv::<simple::Float>("tests/box/eplusout.csv", &[29]);
 
         let skip = 100;
         let take = 8760 * 4 - 120;

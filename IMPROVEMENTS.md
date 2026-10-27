@@ -233,6 +233,21 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 - `make validate` missed 5 of the 12 reports; reports that came out
   byte-identical could never be marked as up to date (now a stamp file).
 - `ReinhartSky::bin_dir` accepted `nbin == n_bins` (out of bounds).
+- **The box validation compared SIMPLE's zone air temperature with
+  EnergyPlus' inside surface temperature of `ZN001:WALL001`**
+  (`tests/box/cold_box_eplus.csv` is that column of `eplusout.csv`). It now
+  reads `ZONE ONE:Zone Mean Air Temperature` from `eplusout.csv`.
+- **The box had a 15.8 m² hole above its window**: `Zn001:Wall001`'s loop
+  went around the window and closed straight to the outer loop's first
+  vertex instead of returning to the one it came from, cutting out the
+  triangle between the top corners and the window (area 43.9 instead of
+  59.7 m²). 2.2% of the rays from inside the box escaped to the sky, so the
+  inside faces absorbed 2.3 times the solar radiation the window transmits
+  (same in `model/tests/box_with_window.spl`). `light/tests/closed_box.rs`
+  now checks that rays do not leave the box. With both fixes (and the
+  converged `march_nomass`), the box against EnergyPlus' zone air went from
+  MBE +0.55 / RMSE 0.72 °C to MBE −0.25 / RMSE 0.47 °C; every face is within
+  −0.3 to +0.5 °C on average.
 
 ### Open
 
@@ -249,7 +264,15 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 - **No long-wave (IR) exchange between surfaces.** Inside, a surface's
   radiant temperature is the zone's air temperature (no exchange with the
-  other surfaces of the zone, no mean radiant temperature). Outside, the
+  other surfaces of the zone, no mean radiant temperature), and the IR it
+  exchanges is not added to the zone's air either, so it is not conserved
+  (in the box, ±1.5 kW at the 5th/95th percentiles, ~0 over a year).
+  Tried: one radiant temperature per zone (the area×emissivity-weighted mean
+  of its inside faces, from the previous step), which conserves it: the box
+  went from RMSE 0.38 to 0.64 °C and the cold apartment's zones warmed by
+  0.7-1 °C (mean RMSE 0.80 → 1.45 °C), so it was not kept. EnergyPlus uses
+  view factors (`ScriptF`) solved together with the inside heat balance.
+  Outside, the
   "air" part of the view (other buildings, the building itself) is assumed
   to be at the outdoor air temperature. Surface-to-surface view factors
   could be calculated as the IR view factors now are (random points,
@@ -271,13 +294,24 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
   Effect: the box's zone is 0.96 °C warmer (cold apartment: within
   0.06 °C), so the box against EnergyPlus goes from MBE −0.33 / RMSE 0.46 °C
   to MBE +0.63 / RMSE 0.72 °C: the old, closer agreement came from windows
-  whose solves stopped early. *Left:* find where SIMPLE and EnergyPlus differ
-  for windows: EnergyPlus re-evaluates the inside and outside `h_c` and
-  `h_r` within its iteration (SIMPLE uses the previous timestep's surface
-  temperatures), and uses the room surfaces' IR (SIMPLE: the zone's air
-  temperature, see above). Then check whether `dt_subdivisions *= 2`
+  whose solves stopped early. That +0.63 °C came from the box's wall hole
+  and a wrong reference column (see Fixed). *Left:* EnergyPlus re-evaluates
+  the inside and outside `h_c` and `h_r` within its iteration (SIMPLE uses
+  the previous timestep's surface temperatures); check whether
+  `dt_subdivisions *= 2`
   (applied to all models, "mostly for the no-mass walls and windows") is
   still needed.
+- **Interior reflections of solar radiation are ignored** (on purpose, to
+  stay comparable with EnergyPlus; left for research): the solar
+  daylight coefficients use `max_depth: 1` (`light/src/optical_info.rs`), so
+  light entering through a window is absorbed (α) by the first surface it
+  hits and the rest (ρ) is lost: in the box, 2,385 of 3,386 kWh/year
+  transmitted are absorbed, and a wall coplanar with its window gets none.
+  (To check how far EnergyPlus' `FullInteriorAndExterior` goes.) Letting Russian
+  roulette end the paths (`max_depth: 190`): box MBE −0.16 / RMSE 0.38 °C
+  (2,724 kWh absorbed), but the cold apartment's zones warm by 0.5-0.65 °C
+  (mean RMSE 0.64 → 0.80 °C); exterior incident solar does not change.
+  (Changing it would need the optical caches recalculated, see #132.)
 - **Direct + diffuse split** in the solar model: the sun is binned into a
   Reinhart patch, which needs MF4 (2305 bins); tracing direct sun exactly
   would allow MF1 (145 bins) for the diffuse sky.
