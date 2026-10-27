@@ -437,7 +437,9 @@ mod tests {
                 // Tests the values
                 let (min, max) = r.row_altitude(row);
 
-                if (min - exp_min).abs() > 1e-9 {
+                // (with `f32`, 1e-9 is below rounding errors)
+                let tolerance = (1e-9 as Float).max(10. * Float::EPSILON);
+                if (min - exp_min).abs() > tolerance {
                     return Err(format!(
                         "MIN does not match: row = {} | Exp_min = {} min = {} ",
                         row,
@@ -445,7 +447,7 @@ mod tests {
                         min * 180. / PI
                     ));
                 }
-                if (max - exp_max).abs() > 1e-9 {
+                if (max - exp_max).abs() > tolerance {
                     return Err(format!(
                         "MAX does not match: row = {} | Exp_max = {} | max = {}",
                         row,

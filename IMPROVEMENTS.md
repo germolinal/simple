@@ -46,6 +46,28 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **`geometry`'s collinearity test was absolute** (`|ab × bc| < 1e-5`, in
+  m²): it rejected all triangles smaller than ~3 mm, and accepted very
+  different angles for short and long edges. Now on the sine of the angle
+  (`< 1e-5`). Annual results: byte-identical. (Points closer than 1 mm are
+  still considered equal: a modelling tolerance, used in ~190 places.)
+- **`--features float` (`f32`) was broken**: 18 tests failed, and `f32`
+  debug builds could panic.
+  - `Segment3D::get_intersection_pt` chose the projection plane with an
+    absolute threshold on an unnormalized normal, so a vertical wall could
+    be projected onto XY (wrong intersections; e.g., points of a door
+    "outside" its wall), and its coplanarity check was below the rounding
+    error of long segments. Thresholds are now relative to the segments'
+    lengths. Annual results (`f64`): byte-identical.
+  - Thresholds below `f32`'s precision (1e-7 to 1e-15) in `geometry`, in
+    `debug_assert!`s of the sun's position and of DC ray directions, and in
+    tests, are now `max(threshold, k ε)`: the same for `f64`.
+  - `float` features did not reach every dependency (e.g., `cargo test -p
+    model --features float` did not compile): `model`, `communication`,
+    `heat`, `light`, `rendering` and the root crate now enable `float` in
+    all their dependencies.
+  - Tests at exact boundaries (orientations at 22.5°, a period ending at
+    23.99999999 h, which is 24 h in `f32`) now keep a margin.
 - **Glossy surfaces reflected lights wrongly; large lights were
   underestimated** (`rendering`). Three problems, now checked against direct
   integrations of the BSDF (`rendering/tests/glossy_light.rs`) and analytic
@@ -165,16 +187,7 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 Change results (to fix and validate one by one):
 
-1. **`geometry` uses absolute thresholds**: `Triangle3D::new` rejects points
-   closer than 1 mm and triangles with `|ab × bc| < 1e-5` (right triangles
-   with sides below ~3.2 mm, and thin slivers).
-2. **With `--features float`, 18 tests fail** (they compile now): 7 in
-   `geometry` (loops, polygons with doors, triangulation, `Segment3D::contains`),
-   `heat` `test_9050` (glazing), `model` `test_get_orientation`, 5 in
-   `weather` (Reinhart rows, Perez colour matrix, cloud cover, weather lines,
-   `go_through`), and the DC, solar, IR and box validations. Probably
-   tolerances written for `f64`.
-3. **IR view factors only look along the normal**
+1. **IR view factors only look along the normal**
    (`SolarSurface::calc_view_factors`): it casts the sensor's normal ray, not
    the sampled direction, so a point counts as seeing either no sky and no
    ground, or the full unobstructed hemisphere. Fix:

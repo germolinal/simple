@@ -116,5 +116,8 @@ float = [
     "light/float",
     "model/float",
     "weather/float",
+    "geometry/float",
+    "matrix/float",
+    "rendering/float",
 ]
 wasm = ["model/wasm", "utils/wasm", "rhai/wasm-bindgen"]

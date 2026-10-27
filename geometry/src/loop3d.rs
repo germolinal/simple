@@ -572,8 +572,9 @@ impl Loop3D {
             let intersects = s.intersect(&poly_s, &mut inter);
 
             // If they are contained and are the same length, then they are the same segment
-            const TINY: Float = 1e-7;
-            let different_length = (s.length() - poly_s.length()).abs() > TINY;
+            // (with `f32`, 1e-7 is below the rounding error of lengths)
+            let tiny = (1e-7 as Float).max(100. * Float::EPSILON);
+            let different_length = (s.length() - poly_s.length()).abs() > tiny;
             let contains = s.contains(&poly_s)? && different_length;
             let is_equal = s.compare(&poly_s);
             if intersects || contains || is_equal {
@@ -701,7 +702,9 @@ impl Loop3D {
         let d = first_point - p;
 
         let aux = (self.normal * d).abs();
-        Ok(aux < 1e-7)
+        // (with `f32`, 1e-7 m is below the rounding error of coordinates of a
+        // few metres)
+        Ok(aux < (1e-7 as Float).max(1000. * Float::EPSILON))
     }
 
     /// Tests whether a [`Point3D`] dwells inside of the [`Loop3D`].

@@ -44,6 +44,8 @@ float = [
     "model/float",
     "rendering/float",
     "geometry/float",
+    "matrix/float",
+    "test_models/float",
 ]
 
 [[bench]]

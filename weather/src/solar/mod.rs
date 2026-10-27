@@ -259,8 +259,10 @@ impl Solar {
 
         let sin_azimuth = cos_azimuth.acos().sin();
 
+        // (with `f32`, 1e-7 is below rounding errors)
         debug_assert!(
-            (1.0 - (cos_azimuth * cos_azimuth + sin_azimuth * sin_azimuth)).abs() < 0.0000001
+            (1.0 - (cos_azimuth * cos_azimuth + sin_azimuth * sin_azimuth)).abs()
+                < (1e-7 as Float).max(10. * Float::EPSILON)
         );
 
         // Trigonometry

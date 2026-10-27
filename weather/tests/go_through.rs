@@ -23,7 +23,7 @@ fn test_go_through() -> Result<(), String> {
         let end = Date {
             day: 31,
             month: 12,
-            hour: 23.99999999,
+            hour: 23.99, // (23.99999999 is 24 with `f32`)
         };
 
         let dt = 60. * 60. / 20.;

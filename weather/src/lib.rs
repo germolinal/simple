@@ -295,6 +295,9 @@ mod tests {
 
     #[test]
     fn test_find_weather_line_wraps_around_new_year() {
+        // With `f32`, the time of the year (in days) has a resolution of a few
+        // seconds, which moves interpolated values by ~0.002 °C
+        let tolerance = f64::from((1e-5 as Float).max(1e5 * Float::EPSILON));
         let line = |month, day, hour, dry_bulb_temperature| CurrentWeather {
             date: Date { month, day, hour },
             dry_bulb_temperature,
@@ -318,7 +321,7 @@ mod tests {
             day: 31,
             hour: 23.5,
         });
-        assert_close!(ln.dry_bulb_temperature, 20. + 0.25 * (10. - 20.), 1e-5);
+        assert_close!(ln.dry_bulb_temperature, 20. + 0.25 * (10. - 20.), tolerance);
 
         // Before the first record: same interpolation, three quarters of the way
         let ln = weather.find_weather_line(Date {
@@ -326,7 +329,7 @@ mod tests {
             day: 1,
             hour: 0.5,
         });
-        assert_close!(ln.dry_bulb_temperature, 20. + 0.75 * (10. - 20.), 1e-5);
+        assert_close!(ln.dry_bulb_temperature, 20. + 0.75 * (10. - 20.), tolerance);
     }
 
     #[test]

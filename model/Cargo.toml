@@ -19,5 +19,5 @@ json5 = { workspace = true }
 
 [features]
 default = []
-float = ["geometry/float", "rhai/f32_float"]
+float = ["geometry/float", "calendar/float", "matrix/float", "rhai/f32_float"]
 wasm = ["rhai/wasm-bindgen"]

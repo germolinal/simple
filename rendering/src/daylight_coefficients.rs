@@ -87,8 +87,9 @@ impl DCFactory {
                     local_ray_dir.z,
                 );
                 let new_ray_dir = Vector3D::new(x, y, z);
+                // (with `f32`, 1e-7 is below rounding errors)
                 debug_assert!(
-                    (1. - new_ray_dir.length()).abs() < 0.0000001,
+                    (1. - new_ray_dir.length()).abs() < (1e-7 as Float).max(10. * Float::EPSILON),
                     "length is {}",
                     new_ray_dir.length()
                 );

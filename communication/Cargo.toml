@@ -14,4 +14,4 @@ calendar = { path = "../calendar" }
 
 [features]
 default = []
-float = []
+float = ["model/float", "weather/float", "calendar/float"]

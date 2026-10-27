@@ -48,5 +48,7 @@ float = [
     "weather/float", 
     "calendar/float", 
     "geometry/float", 
-    "polynomial/float"
+    "polynomial/float",
+    "communication/float",
+    "test_models/float",
 ]

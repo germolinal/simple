@@ -766,7 +766,8 @@ mod tests {
         for (nrow, expected) in exp.iter().enumerate() {
             let found = matrix.get(nrow, 0)?;
             let err = (found - expected).abs();
-            assert!(err < 1e-8)
+            // (relative rounding error, with `f32`)
+            assert!(err < (1e-8 as Float).max(10. * Float::EPSILON * expected.abs()))
         }
 
         Ok(())
