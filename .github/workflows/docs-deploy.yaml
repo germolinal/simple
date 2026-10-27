@@ -65,7 +65,7 @@ jobs:
         run: |
           release="$RUNNER_TEMP/release"
           git worktree add --detach "$release" "$GENERATED_REF"
-          CARGO_TARGET_DIR="$PWD/target" make -C "$release" io_reference
+          CARGO_TARGET_DIR="$PWD/target" make -C "$release" io_reference api_docs
           cp "$release"/docs/book/src/auto-*.md "$release"/docs/book/src/IO_SUMMARY.md docs/book/src/
           rm -rf docs/validation
           cp -R "$release"/docs/validation docs/validation

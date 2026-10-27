@@ -2,7 +2,7 @@ VALIDATION_FEATURES=--features parallel --release
 
 # None of these targets is a file (`weather` is also a directory, so without
 # this, `make weather` would never run)
-.PHONY: pre_commit ci build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference summary book site serve_book check_validation documentation
+.PHONY: pre_commit ci build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference api_docs summary book site serve_book check_validation documentation
 
 
 pre_commit: #test validate
@@ -90,11 +90,16 @@ weather:
 #   /             -> docs/index.html (landing page + validation reports)
 #   /validation/  -> docs/validation/*.html (written by `make validate`)
 #   /book/        -> docs/book (hand-written chapters + auto-generated IO reference)
+#   /api/         -> Rust API reference (`make api_docs`, copied if present)
 SITE_DIR=$(CURDIR)/target/site
 
 # Writes docs/book/src/auto-*.md and IO_SUMMARY.md
 io_reference:
 	cargo test -p model --lib -- model::testing::write_io_doc --exact
+
+# Writes the Rust API reference into target/doc
+api_docs:
+	cargo doc --workspace --no-deps
 
 summary:
 	cat docs/book/SUMMARY_TEMPLATE.md docs/book/src/IO_SUMMARY.md > docs/book/src/SUMMARY.md
@@ -107,6 +112,7 @@ site: summary
 	mdbook build docs/book --dest-dir $(SITE_DIR)/book
 	cp docs/index.html $(SITE_DIR)/index.html
 	cp -R docs/validation $(SITE_DIR)/validation
+	if [ -d target/doc ]; then cp -R target/doc $(SITE_DIR)/api; fi
 
 serve_book: io_reference summary
 	mdbook serve docs/book --open

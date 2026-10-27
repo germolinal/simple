@@ -31,7 +31,10 @@ fn closed_box_does_not_leak() {
         let r = (1. - z * z).sqrt();
         let direction = Vector3D::new(r * phi.cos(), r * phi.sin(), z);
 
-        if scene.cast_ray(Ray3D { origin, direction }, &mut aux).is_none() {
+        if scene
+            .cast_ray(Ray3D { origin, direction }, &mut aux)
+            .is_none()
+        {
             escaped += 1;
         }
     }

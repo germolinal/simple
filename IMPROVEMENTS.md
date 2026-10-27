@@ -17,7 +17,13 @@ validations before and after (no significant change in 73 indicators).
 | A6: buffered output | 3.37 s | 14.93 s |
 | A2: sparse/dense DC × sky product | 3.39 s | 8.15 s |
 | E1 + E2: `matrix` fixes, band storage, products, direct indexing | 2.69 s | 7.50 s |
-| A3: sky bin directions calculated once | **2.49 s (−71%)** | **5.04 s (−74%)** |
+| A3: sky bin directions calculated once | 2.49 s | 5.04 s |
+| `march_nomass` converges (IR in `K`; changed results)¹ | **1.28 s (−85%)** | **5.24 s (−73%)** |
+
+¹ Same-day comparison with the previous commit: box 2.58 → 1.28 s, cold
+apartment 5.18 → 5.24 s (+1%: 1.89 instead of 1.87 linear solves per call).
+`cargo bench --bench simulation`, one week: box 49.1 → 26.4 ms, cold
+apartment 102.9 → 105.6 ms.
 
 Pre-processing (daylight coefficients and IR view factors), cold apartment
 from scratch (DCs + 1 year), `--features parallel`:
