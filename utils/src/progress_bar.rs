@@ -55,7 +55,7 @@ impl ProgressBar {
             .last_progress
             .load(std::sync::atomic::Ordering::Relaxed);
 
-        let delta = if progress > lp { progress - lp } else { 0 };
+        let delta = progress.saturating_sub(lp);
         if delta >= 100 / BAR_LENGTH {
             self.last_progress
                 .fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
@@ -66,11 +66,7 @@ impl ProgressBar {
     fn show_progress(&self, progress: usize) {
         let filled_length = (BAR_LENGTH as f64 * (progress as f64 / 100.0)).round() as usize;
         let filled = "=".repeat(filled_length);
-        let n_empty = if BAR_LENGTH >= filled_length {
-            BAR_LENGTH - filled_length
-        } else {
-            0
-        };
+        let n_empty = BAR_LENGTH.saturating_sub(filled_length);
         let empty = " ".repeat(n_empty);
         // On stderr, so that it does not get mixed with results written to
         // stdout
