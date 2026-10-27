@@ -143,7 +143,7 @@ impl Weather {
 
     /// Sorts the data by date
     pub fn sort_data(&mut self) {
-        self.data.sort_by(|a, b| a.date.cmp(&b.date));
+        self.data.sort_by_key(|a| a.date);
     }
 
     /// Calculates the solar data (direct_normal, diffuse_horizontal, global_horizontal)
