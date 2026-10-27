@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 /// the boundary will be assumed to be outside.
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model. It is always
-/// embedded on a `Surface`
+/// > embedded on a `Surface`
 ///
 /// ## Examples
 ///

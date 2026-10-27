@@ -526,14 +526,13 @@ impl Model {
     /// assert!(model.add_object(obj).is_ok());
     /// ````
     pub fn add_object(&mut self, add: Object) -> Result<(), String> {
-        if let Ok(space_name) = add.space() {
-            if self.get_space(space_name).is_err() {
+        if let Ok(space_name) = add.space()
+            && self.get_space(space_name).is_err() {
                 return Err(format!(
                     "Space called '{}' was not found in the model",
                     space_name
                 ));
             }
-        }
 
         self.objects.push(add);
         Ok(())
@@ -913,8 +912,8 @@ impl Model {
     /// Adds a [`Fenestration`] to the [`Model`]
     ///
     /// > Note: It returns a `Result` because  this method can fail.
-    /// Specifically, when the [`Fenestration`] has a `parent_surface`
-    /// that does not exist of it does not fit within it.
+    /// > Specifically, when the [`Fenestration`] has a `parent_surface`
+    /// > that does not exist of it does not fit within it.
     ///
     /// ```rust
     /// use model::{Space, Model, Fenestration, SurfaceTrait, Construction};

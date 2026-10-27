@@ -64,9 +64,9 @@ pub struct ElectricHeater {
     /// this value, the heater starts heating.
     ///
     /// > Note: This assumes automatic control; that is to say, this
-    /// condition will be evaluated every timestep of the heat model
-    /// simulation (as opposed to the occupant/people control timestep,
-    /// which is the one set by the user witht the simulation options)
+    /// > condition will be evaluated every timestep of the heat model
+    /// > simulation (as opposed to the occupant/people control timestep,
+    /// > which is the one set by the user witht the simulation options)
     heating_setpoint: Option<Float>,
 
     /// The heating or cooling power consumption (not delivered to the `Space`)    

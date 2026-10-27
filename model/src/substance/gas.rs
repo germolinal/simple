@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Substance` of type `Gas`
+/// > as it is always embeded on a `Substance` of type `Gas`
 ///
 #[derive(Debug, Copy, Clone, ObjectIO, Serialize, Deserialize)]
 #[inline_enum]

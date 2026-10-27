@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 /// {{#include ../../../model/tests/scanner/infiltration_constant.json}}
 /// ```
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Space`
+/// > as it is always embeded on a `Space`
 #[derive(Debug, PartialEq, Clone, ObjectIO, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(deny_unknown_fields)]

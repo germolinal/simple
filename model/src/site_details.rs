@@ -24,11 +24,13 @@ use serde::{Deserialize, Serialize};
 /// This class modifies the wind speed in the site
 #[derive(Debug, Eq, PartialEq, Clone, Copy, ObjectIO, Serialize, Deserialize)]
 #[inline_enum]
+#[derive(Default)]
 pub enum TerrainClass {
     /// Describes a Flat, Open Country
     Country,
 
     /// Describes a Rough, Wooded Country or Suburb
+    #[default]
     Suburbs,
 
     /// Describes Towns, City Outskirts, and centers of large cities
@@ -41,11 +43,6 @@ pub enum TerrainClass {
     Urban,
 }
 
-impl std::default::Default for TerrainClass {
-    fn default() -> Self {
-        Self::Suburbs
-    }
-}
 
 impl TerrainClass {
     /// Calculates the value by which

@@ -39,7 +39,7 @@ use crate::{SimulationState, SimulationStateElement, SimulationStateHeader};
 /// ```
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Fenestration` object
+/// > as it is always embeded on a `Fenestration` object
 ///
 #[derive(Debug, Copy, Clone, ObjectIO, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -80,7 +80,7 @@ pub enum FenestrationPosition {
 /// ```
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Fenestration` object
+/// > as it is always embeded on a `Fenestration` object
 ///
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, ObjectIO, Serialize, Deserialize)]
 #[inline_enum]
@@ -169,12 +169,12 @@ pub struct Fenestration {
     /// for wall.
     ///
     /// > Note: This field will not be serialized. This is beacuse there is
-    /// no quarantee that the `surfaces` will be there before the `fenestrations`
-    /// and thus there would be errors when deserializing. In any case, it is assumed that
-    /// JSON models are read/written by machines—e.g., either by
-    /// serializing a Model or by another kind of machine—and therefore
-    /// the convenience of not having to write down the vertices around
-    /// holes is not much needed.
+    /// > no quarantee that the `surfaces` will be there before the `fenestrations`
+    /// > and thus there would be errors when deserializing. In any case, it is assumed that
+    /// > JSON models are read/written by machines—e.g., either by
+    /// > serializing a Model or by another kind of machine—and therefore
+    /// > the convenience of not having to write down the vertices around
+    /// > holes is not much needed.
     #[serde(skip_serializing)]
     parent_surface: Option<String>,
 

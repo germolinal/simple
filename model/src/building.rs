@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 /// {{#include ../../../model/tests/scanner/shelter_class.json}}
 /// ```
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Building` object
+/// > as it is always embeded on a `Building` object
 #[derive(Copy, Clone, ObjectIO, Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 #[inline_enum]

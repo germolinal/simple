@@ -39,10 +39,10 @@ use std::sync::Arc;
 /// thicknesses to reference the same material.
 ///
 /// > Note: Glazing substances are `Normal` substances with `solar_transmitance`
-/// and `visible_transmittance`. However, contrary to all other properties, this property
-/// does depend on the thickness of the substance. So, in order
-/// to build a coherent Glazing, you'll need to match this Substance
-/// with an appropriate Material
+/// > and `visible_transmittance`. However, contrary to all other properties, this property
+/// > does depend on the thickness of the substance. So, in order
+/// > to build a coherent Glazing, you'll need to match this Substance
+/// > with an appropriate Material
 ///
 /// ## Examples
 ///
