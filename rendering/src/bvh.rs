@@ -571,12 +571,20 @@ impl BoundingVolumeTree {
 
         let inv_dir = Vector3D::new(inv_x, inv_y, inv_z);
         let dir_is_neg = (inv_dir.x < 0., inv_dir.y < 0., inv_dir.z < 0.);
+        // Boxes are tested faster when no component of the direction is zero
+        let nonzero_dir =
+            ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.;
 
         let mut current_node = 0;
 
         loop {
             let node = &self.nodes[current_node];
-            if node.bounds.intersect_within(ray, &inv_dir, max_t) {
+            let hits_box = if nonzero_dir {
+                node.bounds.intersect_within_nonzero(ray, &inv_dir, max_t)
+            } else {
+                node.bounds.intersect_within(ray, &inv_dir, max_t)
+            };
+            if hits_box {
                 if node.is_leaf() {
                     let offset = node.next;
 
@@ -649,6 +657,9 @@ impl BoundingVolumeTree {
             1. / ray.direction.z,
         );
         let dir_is_neg = (inv_dir.x < 0., inv_dir.y < 0., inv_dir.z < 0.);
+        // Boxes are tested faster when no component of the direction is zero
+        let nonzero_dir =
+            ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.;
         let mut current_node = 0;
         // Only boxes closer than the distance can contain an obstruction
         let dir_squared = ray.direction * ray.direction;
@@ -656,7 +667,12 @@ impl BoundingVolumeTree {
 
         loop {
             let node = &self.nodes[current_node];
-            if node.bounds.intersect_within(ray, &inv_dir, max_t) {
+            let hits_box = if nonzero_dir {
+                node.bounds.intersect_within_nonzero(ray, &inv_dir, max_t)
+            } else {
+                node.bounds.intersect_within(ray, &inv_dir, max_t)
+            };
+            if hits_box {
                 if node.is_leaf() {
                     let offset = node.next;
 

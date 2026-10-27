@@ -254,80 +254,58 @@ impl BBox3D {
         }
     }
 
+    /// Like `intersect_within()`, faster, for rays whose direction has no
+    /// component equal to zero (it gives the same results for them, but not
+    /// for other rays).
+    pub fn intersect_within_nonzero(
+        &self,
+        ray: Ray3D,
+        inv_dir: &Vector3D,
+        max_t: Float,
+    ) -> bool {
+        debug_assert!(ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.);
+        let lo = (self.min - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
+        let hi = (self.max - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
+        // With no zero components, `inv_dir` is finite, so there are no NaN
+        // values here, and `min`/`max` are the same as comparing (but
+        // faster).
+        let robust = 1. + 2. * gamma!(3.);
+        let t_in = lo.x.min(hi.x).max(lo.y.min(hi.y)).max(lo.z.min(hi.z));
+        let t_out = (lo.x.max(hi.x) * robust)
+            .min(lo.y.max(hi.y) * robust)
+            .min(lo.z.max(hi.z) * robust);
+        t_out > t_in && t_out > 0. && t_in <= max_t
+    }
+
     /// The values of `t` at which `ray` enters and exits the box (see
     /// `intersect()`), if it intersects it.
     fn entry_exit(&self, ray: Ray3D, inv_dir: &Vector3D) -> Option<(Float, Float)> {
-        let Vector3D {
-            x: mut tx_min,
-            y: mut ty_min,
-            z: mut tz_min,
-        } = (self.min - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
-        //.scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
-        let Vector3D {
-            x: mut tx_max,
-            y: mut ty_max,
-            z: mut tz_max,
-        } = (self.max - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
+        // The values of `t` at which the ray crosses the planes of each pair
+        // of faces
+        let lo = (self.min - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
+        let hi = (self.max - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
 
-        if tx_min > tx_max {
-            std::mem::swap(&mut tx_min, &mut tx_max);
-        }
-        if tx_max < 0. {
-            // We are running away from the box in the X component
-            return None;
-        }
-
-        if ty_min > ty_max {
-            std::mem::swap(&mut ty_min, &mut ty_max);
-        }
-        if ty_max < 0. {
-            // We are running away from the box in the Y component
-            return None;
+        // The ray is inside the box after entering all three slabs, and until
+        // it leaves any of them. Exit times are enlarged to ensure robust
+        // bounds intersection.
+        //
+        // This is written without branches (comparisons become conditional
+        // moves). A ray parallel to a pair of faces and starting on one of
+        // their planes gives `0 * inf = NaN`; comparisons with NaN are false,
+        // so that pair of faces is ignored (i.e., the box is not rejected
+        // because of it).
+        let robust = 1. + 2. * gamma!(3.);
+        let mut t_in = Float::NEG_INFINITY;
+        let mut t_out = Float::INFINITY;
+        for (a, b) in [(lo.x, hi.x), (lo.y, hi.y), (lo.z, hi.z)] {
+            let (near, far) = if a > b { (b, a) } else { (a, b) };
+            let far = far * robust;
+            t_in = if near > t_in { near } else { t_in };
+            t_out = if far < t_out { far } else { t_out };
         }
 
-        // // Update _tMax_ and _tyMax_ to ensure robust bounds intersection
-        tx_max *= 1. + 2. * gamma!(3.);
-        ty_max *= 1. + 2. * gamma!(3.);
-        if tx_min > ty_max || ty_min > tx_max {
-            // The times do not intersect
-            return None;
-        }
-        // Narrow down the intersection... Now t_min and t_max
-        // represent the intersection between the X an Y dimensions.
-        if ty_min > tx_min {
-            tx_min = ty_min;
-        }
-        if ty_max < tx_max {
-            tx_max = ty_max;
-        }
-
-        // let mut tz_min = (self.min.z - ray.origin.z) * inv_dir.z;
-        // let mut tz_max = (self.max.z - ray.origin.z) * inv_dir.z;
-        if tz_min > tz_max {
-            std::mem::swap(&mut tz_min, &mut tz_max);
-        }
-        if tz_max < 0. {
-            // We are running away from the box in the Z component
-            return None;
-        }
-
-        // // Update _tzMax_ to ensure robust bounds intersection
-        tz_max *= 1. + 2. * gamma!(3.);
-        if tx_min > tz_max || tz_min > tx_max {
-            // No intersection
-            return None;
-        }
-        // Narrow down intersection
-        if tz_min > tx_min {
-            tx_min = tz_min;
-        }
-        if tz_max < tx_max {
-            tx_max = tz_max;
-        }
-
-        // return
-        if tx_max > tx_min && tx_max > 0. {
-            Some((tx_min, tx_max))
+        if t_out > t_in && t_out > 0. {
+            Some((t_in, t_out))
         } else {
             None
         }

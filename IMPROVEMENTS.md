@@ -329,6 +329,17 @@ sub-step are too fine-grained; parallelism pays off for coarser work (e.g.,
 DC pre-processing, B3, or running several simulations at once). It might pay
 off for very large models, but that would need a large test model to check.
 
+Grouping surfaces would not help by itself: `rayon` already splits the
+surfaces into about one chunk per thread; the cost is per parallel region
+(waking threads and waiting for them), and there must be one per sub-step,
+because zones couple all surfaces. What could help: (a) bigger models (a
+few hundred surfaces, estimated); (b) one region for surfaces and
+fenestrations instead of two (halves the cost); (c) long-lived workers, each
+owning a group of surfaces, synchronized by a spinning barrier (~1 µs
+instead of tens), at the price of keeping all cores busy for the whole run.
+The largest model in the repository (Versailles: 66 surfaces, 14
+fenestrations) is too small to test this.
+
 Originally:
 
 `heat_model::iterate_surfaces` already works in two phases: each surface is
@@ -374,6 +385,13 @@ all of them are kept until they are summed at the end.
   instead (minor).
 
 The cold apartment currently takes ~52 s using ~4.4 of 8 cores.
+
+Also tried after C5.3, and reverted: tracing all surfaces' rays in a single
+parallel loop (instead of one per surface). No measurable change (cold
+apartment −0.4%). The DC ray tracing is only ~2-3 s of a ~8.5 s run from
+scratch (the annual simulation is ~5 s), and the loop was not badly
+balanced: the idle threads seen in profiles were parked during serial
+parts of the run.
 
 ## C. Ray tracing
 
@@ -445,6 +463,9 @@ matters more than explicit SIMD here.
   triangles in a 30-unit box. They overlap so much that no BVH can separate
   them, so these numbers say little about real scenes.
 - `intersect_dining` loads `sponza.obj` again instead of a dining scene.
+- All the intersection benchmarks cast rays with a zero direction component
+  (`(0, 1, 2)` and `(1, 0, 0)`), which take the slower box test since C5.4;
+  rays in DC calculations rarely do.
 
 ### C5. Triangle intersection (review)
 
@@ -481,10 +502,11 @@ Exact (same hits):
    intersection benchmarks within ±4%. The saving applies to accepted
    candidates only, and most triangle tests are rejections. Kept because the
    code is simpler (no point → `t` conversions, one intersection per hit).
-2. **Precompute edges.** Each test recomputes `b - a` and `c - a`. Store them
-   once, in BVH order, in a separate array used only for intersecting (the
-   vertices are still needed for normals, areas and light sampling, and
-   `a + (b - a)` does not round back to `b`).
+2. **Precompute edges ❌ (tried, reverted).** Storing each triangle's edges
+   in the BVH (instead of computing `b - a` and `c - a` in every test) gave
+   bit-identical hits but no measurable speed-up (cold apartment −0.1% CPU,
+   benchmarks ±2%): loading 48 more bytes per triangle costs about as much as
+   six subtractions.
 3. **Leaf size ✅** (`RELATIVE_TRANSVERSAL_COST` 10 → 1, `LEAF_SIZE` 24 → 8).
    The SAH counted a box test as 10 triangle tests, giving leaves of up to 24
    triangles (pbrt uses ~1/8, with leaves of ~4). Sweep (same session; "cold"
@@ -508,9 +530,29 @@ Exact (same hits):
    relative costs. Note: sets of 4 or fewer triangles are always split in
    half (`TOO_FEW_TO_BUCKET`), so leaves have either 1 triangle or more than
    4.
-4. **Box test.** Branch-free slab test, choosing near/far planes from the
-   direction's signs (already computed). Nodes store `f64` boxes (~64 bytes);
-   `f32` boxes rounded outwards would halve that.
+4. **Box test ✅** (`BBox3D::intersect_within_nonzero`). The old test had a
+   chain of early exits (redundant with its final check) and swaps. For rays
+   whose direction has no zero component, the BVH now uses a branch-free
+   version with `min`/`max` (single instructions; no NaN is possible because
+   `1 / dir` is finite), which gives exactly the same results. Other rays
+   use `intersect_within`, rewritten (as in pbrt) so that NaN slabs are
+   ignored. Cold apartment, DCs + 1 year: −8.9% CPU. The intersection
+   benchmarks do not change, because all their rays have a zero component
+   (see C4).
+
+   **This fixed a BVH bug.** A ray exactly parallel to an axis that starts on
+   the plane of a box's face gives `0 * inf = NaN` in the box test. The old
+   test ignored such slabs in y and z, but rejected the box if it was in x,
+   missing hits. Compared with testing every triangle, 18,000 axis-parallel
+   rays starting at triangle vertices (room, Cornell box, Sponza): the new
+   BVH finds the same hit point for all of them, the old one was wrong for
+   1,698. 60,000 random rays give bit-identical results before and after. In
+   simulations this case should be rare (e.g., the normal rays of
+   `calc_view_factors` are axis-parallel for axis-aligned walls, but start at
+   random points).
+
+   Nodes still store `f64` boxes (~64 bytes); `f32` boxes rounded outwards
+   would halve that.
 5. **Shadow rays: any hit.** `unobstructed_distance` searches the closest hit
    in each leaf, but any blocking triangle is enough. This also fixes a rare
    leak: if the closest hit in a leaf is rejected (e.g., as a
@@ -532,6 +574,16 @@ Correctness (fixing them changes results):
    edges; Woop et al.'s watertight test avoids it.
 10. **`f32` geometry** would halve data and double SIMD lanes; precise enough
     at building scale (~0.1 mm at 100 m), but changes results.
+
+#### Validating C5
+
+C5.3, C5.1 (with C2) and C5.4 together, against the code before them
+(`960c6da`), as for B3/C1: 11 alternating rounds per side of
+`daylight_coefficient`, `incident_solar_radiation`, `incident_ir_radiation`
+and the cold apartment, from scratch. **None of 73 indicators changed**
+(|t| > 4); the largest was |t| = 2.8 (Barcelona North solar RMSE,
+18.51 → 18.63 W/m²). Cold apartment, DCs + 1 year: 9.53 → 8.60 s (−10%),
+24.5 → 18.7 CPU-seconds (−24%); `daylight_coefficient`: −17% CPU.
 
 ### C6. Cast the normal ray once in `calc_view_factors` ✅
 
