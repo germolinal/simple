@@ -63,16 +63,12 @@ fn apartment_sim() -> Result<(), String> {
             expected_legend: Some("EnergyPlus-calculated temperature"),
             expected: expected[i]
                 .iter()
-                .skip(skip)
-                // .take(take)
-                .map(|v| *v)
+                .skip(skip).copied()
                 .collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
             found: found[i]
                 .iter()
-                .skip(skip)
-                // .take(take)
-                .map(|v| *v)
+                .skip(skip).copied()
                 .collect(),
 
             // allowed_r2: Some(0.93),

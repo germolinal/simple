@@ -59,11 +59,10 @@ fn box_sim() -> Result<(), String> {
             expected: expected[0]
                 .iter()
                 .skip(skip)
-                .take(take)
-                .map(|v| *v)
+                .take(take).copied()
                 .collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[0].iter().skip(skip).take(take).map(|v| *v).collect(),
+            found: found[0].iter().skip(skip).take(take).copied().collect(),
 
             // allowed_r2: Some(0.93),
             // allowed_intersect_delta: Some(0.5),
