@@ -23,6 +23,8 @@ members = [
     "weather",
     "derive",
     "utils",
+    "validate",
+    "validate/derive",
 ]
 
 
@@ -91,7 +93,7 @@ schedule = { path = "schedule" }
 utils = { path = "utils" }
 
 [dev-dependencies]
-validate = { git = "https://github.com/germolinal/validate" }
+validate = { path = "validate" }
 criterion = { workspace = true }
 
 [[bench]]

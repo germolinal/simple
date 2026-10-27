@@ -25,7 +25,7 @@ criterion = { workspace = true }
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models" }
 
-validate = { git = "https://github.com/germolinal/validate" }
+validate = { path = "../validate" }
 json5 = { workspace = true }
 
 

@@ -29,6 +29,13 @@ from scratch (DCs + 1 year), `--features parallel`:
 | C6: IR view factors cast their ray once (not 10,000 times) | 9.3 s | 24.5 s |
 | C5: BVH leaf size, `t`-based hits, branch-free box test | **8.6 s** | **18.7 s** |
 
+Validations: the `validate` crate is now part of the workspace
+(`validate/`, its proc-macro renamed `validate_derive`; history in its own
+repository), and `make validate` has two new reports comparing with analytic
+solutions: `view_factors` (tilted surfaces, street canyons, overhangs) and
+`light_sources` (square and sphere lights over a floor, glossy reflections
+of lights).
+
 Also: edition 2024 and up-to-date dependencies; no threading inside
 `matrix` (B1); `make validate` regenerates all reports, and a stamp file
 tells when they are stale.
@@ -46,6 +53,14 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **`validate` reported the mean squared error as the RMSE**
+  (`root_mean_squared_error` lacked the square root; its examples only had
+  errors of ±1). Every "Root Mean Squared Error" in the reports so far, and
+  in this file, is a mean squared error (e.g., the ray tracer's specular
+  metal "RMSE 59.5" was an RMSE of 7.7). RMSE thresholds were converted to
+  keep the same criteria (convection 0.01 → 0.1, walls 0.2 → √0.2).
+  Scatter reports now also show the mean bias error, the RMSE and the
+  maximum absolute error, with units.
 - **Cached optical data ignored the options**: a file in
   `SolarOptions.optical_data_path` was used even if it had been calculated
   with other options (sky discretization, points, rays). It now records

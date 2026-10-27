@@ -412,17 +412,6 @@ dependencies = [
 
 [[package]]
 name = "derive"
-version = "0.1.0"
-source = "git+https://github.com/germolinal/validate#6e4fa69a4a5c4e797ab54d69f2e5432a2779dc03"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "derive"
 version = "1.1.4"
 dependencies = [
  "proc-macro2",
@@ -684,7 +673,7 @@ name = "model"
 version = "1.1.4"
 dependencies = [
  "calendar",
- "derive 1.1.4",
+ "derive",
  "geometry",
  "json5",
  "matrix",
@@ -1302,12 +1291,21 @@ version = "0.1.0"
 [[package]]
 name = "validate"
 version = "0.1.0"
-source = "git+https://github.com/germolinal/validate#6e4fa69a4a5c4e797ab54d69f2e5432a2779dc03"
 dependencies = [
  "csv",
- "derive 0.1.0",
  "poloto",
  "pulldown-cmark",
+ "validate_derive",
+]
+
+[[package]]
+name = "validate_derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

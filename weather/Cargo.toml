@@ -15,7 +15,7 @@ matrix = { path = "../matrix" }
 serde = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]
-validate = { git = "https://github.com/germolinal/validate" }
+validate = { path = "../validate" }
 serde_json = { workspace = true }
 
 

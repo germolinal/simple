@@ -57,8 +57,11 @@ fn get_sampler(triangles_areas: Vec<Float>) -> impl Fn(&mut RandGen) -> usize {
 /// randomly sampled in each surface.
 pub struct SolarSurface {
     pub(crate) points: Vec<Point3D>,
+    /// The normal of the surface (its front side)
     pub normal: Vector3D,
+    /// Whether the front side receives sun
     pub receives_sun_front: bool,
+    /// Whether the back side receives sun
     pub receives_sun_back: bool,
 
     /// The triangles of the surface, and their areas (for sampling points)

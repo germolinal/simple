@@ -26,7 +26,9 @@ fn get_validator(
         found,
 
         allowed_mean_bias_error: Some(0.2),
-        allowed_root_mean_squared_error: Some(0.2),
+        // (0.2 when the mean squared error was reported as the RMSE; this is
+        // the same criterion)
+        allowed_root_mean_squared_error: Some(0.2_f64.sqrt()),
         ..validate::SeriesValidator::default()
     })
 }

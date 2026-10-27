@@ -23,7 +23,7 @@ jpeg-encoder = "0.7"
 
 [dev-dependencies]
 criterion = { workspace = true }
-validate = { git = "https://github.com/germolinal/validate" }
+validate = { path = "../validate" }
 
 [[bench]]
 name = "benchmark"

@@ -2,7 +2,7 @@ VALIDATION_FEATURES=--features parallel --release
 
 # None of these targets is a file (`weather` is also a directory, so without
 # this, `make weather` would never run)
-.PHONY: pre_commit build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance ray_tracer infiltration walls weather io_reference summary book site serve_book check_validation documentation
+.PHONY: pre_commit build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference summary book site serve_book check_validation documentation
 
 
 pre_commit: #test validate
@@ -29,7 +29,7 @@ neighbours:
 
 
 # Regenerates every report in docs/validation (see `make check_validation`)
-validate: cold box convection dc cloud_to_sun solar_irradiance ir_irradiance ray_tracer infiltration walls weather
+validate: cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather
 	echo "Validated $$(git rev-parse --short HEAD)$$(git diff --quiet HEAD -- . ':!docs/validation' || echo ' (with uncommitted changes)') on $$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > docs/validation/.last_validated
 	echo Done validating! Commit docs/validation, including .last_validated
 
@@ -54,8 +54,14 @@ solar_irradiance:
 ir_irradiance:
 	cargo test $(VALIDATION_FEATURES) --package light --test validate_ir_radiation -- validate_ir_radiation --exact --nocapture
 
+view_factors:
+	cargo test $(VALIDATION_FEATURES) --package light --test validate_view_factors -- validate_view_factors --exact --nocapture
+
 ray_tracer:
 	cargo test $(VALIDATION_FEATURES) --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture
+
+light_sources:
+	cargo test $(VALIDATION_FEATURES) --package rendering --test validate_light_sources -- validate_light_sources --exact --nocapture
 
 infiltration:
 	cargo test --package air --test validate_infiltration -- validate --exact --nocapture

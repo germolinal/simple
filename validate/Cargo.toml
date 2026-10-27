@@ -1,0 +1,22 @@
+
+[package]
+name = "validate"
+version = "0.1.0"
+authors = ["German Molina <germolinal@gmail.com>"]
+edition = "2021"
+description = "A crate for validating scientific computing"
+repository  = "https://github.com/SIMPLE-BuildingSimulation/validate"
+readme      = "README.md"
+keywords    = ["validate", "science"]
+categories  = ["development-tools::testing"]
+license     = "MIT"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# (named `validate_derive`, as `simple` has its own `derive` crate)
+derive = { package = "validate_derive", path = "derive", version = "0.1.0" }
+csv = "1"
+poloto = "15.2.0"
+pulldown-cmark = "0.9.1"

@@ -13,7 +13,7 @@ calendar = { path = "../calendar" }
 
 [dev-dependencies]
 schedule = { path = "../schedule" }
-validate = { git = "https://github.com/germolinal/validate.git" }
+validate = { path = "../validate" }
 
 [features]
 default = []

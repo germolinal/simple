@@ -53,5 +53,7 @@ pub use solar_model::SolarModel;
 pub mod dc_matrix;
 pub use dc_matrix::DCMatrix;
 mod optical_info;
-mod solar_surface;
-pub use optical_info::{IRViewFactorSet, OpticalInfo};
+/// Surfaces and fenestrations, as seen by the solar model: points sampled
+/// on them, and their view factors
+pub mod solar_surface;
+pub use optical_info::{IRViewFactorSet, OpticalInfo, IR_VIEW_FACTOR_RAYS};
