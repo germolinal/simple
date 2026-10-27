@@ -60,8 +60,8 @@ impl UValue {
 /// calculation purposes.
 ///
 /// > **Note:** This object contains all the [`Cavity`] objects in it, which
-/// contain information not only about their thickness but also their orientation.
-/// This means that one `Discretization` should exist per `Surface`, not just by `Construction`.
+/// > contain information not only about their thickness but also their orientation.
+/// > This means that one `Discretization` should exist per `Surface`, not just by `Construction`.
 #[derive(Clone, Debug)]
 pub struct Discretization {
     /// Contains the node's mass and the `UValue` of each segment
