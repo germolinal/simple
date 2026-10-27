@@ -282,7 +282,7 @@ impl ImageBuffer {
 
         // Read body
         let pixels = content
-            .chunks_exact(4)
+            .as_chunks::<4>().0.iter()
             .map(|x| {
                 let (r, g, b, e) = (x[0], x[1], x[2], x[3]);
                 rgbe_to_colour(r, g, b, e)

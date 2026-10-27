@@ -95,8 +95,7 @@ impl RayTracer {
                 // Check distant lights
                 for light in &scene.distant_lights {
                     if let Some((light_colour, light_pdf)) = intersect_light(scene, light, ray, aux)
-                    {
-                        if light_pdf > 1e-18 {
+                        && light_pdf > 1e-18 {
                             let w = if depth == 0 || specular_bounce {
                                 1.0
                             } else {
@@ -109,7 +108,6 @@ impl RayTracer {
                             };
                             spectrum += beta * w * light_colour;
                         }
-                    }
                 }
 
                 // and also the let's check the sky
