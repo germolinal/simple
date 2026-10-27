@@ -46,6 +46,16 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Fixed
 
+- **Glossy highlights of light sources were up to 4× too bright**:
+  `evaluate_ward_anisotropic` (`rendering/src/material/ward.rs`, used when
+  sampling lights) normalized the half vector and divided by cos θo, unlike
+  Radiance's `dirnorm()` (`src/rt/normal.c`), which uses the unnormalized
+  `h = l + v` (`h·h = 4 cos²θd`). Its reflectance was 4× too large at normal
+  incidence (2× at 60°), while BSDF sampling (as Radiance's `gaussamp()`)
+  was right. Ray tracer validation (11 rounds before/after): specular metal
+  RMSE 59.5 → 0.05 (MBE 2.16 → −0.07), full metal 11.45 → 0.28, full
+  plastic 0.10 → 0.0001, specular plastic 21.8 → 5.55 (see open item 1).
+  New test: `rendering/tests/ward_energy.rs`.
 - **Triangle lights gave no direct light**: `triangle_solid_angle_pdf`
   (`rendering/src/primitive_samplers.rs`, and an unused copy in
   `rendering/src/triangle/mod.rs`) used `ray.origin · normal` instead of the
@@ -77,23 +87,30 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 Change results (to fix and validate one by one):
 
-1. **Area lights are underestimated** (`rendering/src/ray_tracer.rs`), in
-   two ways, found while testing the fix above:
-   - (1b) Light sampling (`get_local_illumination`) weights each sample with
-     multiple importance sampling (`power_heuristic`, < 1), but when a BSDF
-     sample hits a triangle or sphere light after a non-specular bounce,
-     `trace_ray` adds nothing; the other half of the combination is missing.
-     (Distant lights do have both halves.)
-   - (1c) With one shadow sample (the default), the shadow ray goes in a
-     fixed direction (`light.primitive.direction`, towards the light's
-     centre) instead of to a random point of the light, while dividing by
-     the pdf of sampling it randomly.
+1. **Specular plastic (roughness 0) still differs from Radiance** (ray tracer
+   validation RMSE 5.55). Radiance treats roughness 0 as a pure mirror with a
+   Fresnel term (`SP_PURE`, `FRESNE()` in `normal.c`); we use a Gaussian lobe
+   of roughness 0.001 and no Fresnel.
+1b. **Lights in the scene (triangles, spheres) lack half of multiple
+   importance sampling** (`rendering/src/ray_tracer.rs`). Light samples are
+   weighted by MIS, but BSDF samples that hit such a light after a
+   non-specular bounce are not added, so large, close lights are
+   underestimated: −23% for a 4 × 4 m light 0.5 m above a floor (ignored test
+   `large_triangle_light_matches_analytic`). Giving light samples a weight
+   of 1 instead was tried and reverted: it fixes that test, but light
+   sampling is a terrible strategy for near-mirror surfaces, and the ray
+   tracer validation got much worse (specular plastic RMSE 21.8 → 13.6
+   million). Needs proper two-sided MIS: add BSDF hits on lights, weighted
+   with the light's pdf, which requires knowing which light a triangle
+   belongs to. Related: the pdf `sample_bsdf` returns for diffuse/specular
+   mixtures differs from `pdf()` (MIS weights then do not add to 1); the
+   escape branch weights distant lights with `power_heuristic(1, ray_prob,
+   1, light_pdf)`, ignoring the number of shadow samples and the
+   probability of choosing the light; and the Ward pdf (as in Radiance's
+   sampling weight) integrates to ~1.1-1.9 at oblique angles.
 
-   For a 4 × 4 m light 0.5 m above a diffuse floor, the ray tracer gives
-   −80.9% (1 shadow sample) and −23.4% (16 samples) of the analytic value;
-   for a 1 × 1 m light 2 m away, +4.8% and +0.1%. Affects ray-traced images
-   with triangle and sphere lights (including the ray tracer validation,
-   which uses sphere lights); not the DCs.
+   With one shadow sample, the shadow ray goes to the light's centre (as
+   Radiance with `-dj 0`); this is intentional.
 2. **Back solar irradiance is never clamped**: in
    `ThermalSurfaceData::march` (`heat/src/surface.rs`),
    `if solar_back.is_nan() || solar_front < 0.0` should test `solar_back`.

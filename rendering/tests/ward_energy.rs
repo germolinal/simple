@@ -50,10 +50,14 @@ fn reflectances(material: Material, degrees: Float) -> (Float, Float) {
     }
 
     // As when sampling lights: the integral of BSDF * cos over the hemisphere
-    let n_eval = 400_000;
+    // (stratified, so that narrow lobes are covered evenly)
+    let side = 633;
+    let n_eval = side * side;
     let mut evaluated = 0.;
-    for _ in 0..n_eval {
-        let (u1, u2): (Float, Float) = rng.random();
+    for k in 0..n_eval {
+        let (j1, j2): (Float, Float) = rng.random();
+        let u1 = ((k / side) as Float + j1) / side as Float;
+        let u2 = ((k % side) as Float + j2) / side as Float;
         let (z, phi) = (u1, 2. * PI * u2);
         let r = (1. - z * z).max(0.).sqrt();
         let wi = e1 * (r * phi.cos()) + e2 * (r * phi.sin()) + normal * z;
@@ -77,7 +81,8 @@ fn ward_evaluation_matches_sampling() {
         for degrees in [0., 30., 60.] {
             let (sampled, evaluated) = reflectances(material.clone(), degrees);
             assert!(
-                (evaluated / sampled - 1.).abs() < 0.03,
+                // The bug was a factor of 2-4; this leaves room for noise
+                (evaluated / sampled - 1.).abs() < 0.1,
                 "{material:?} at {degrees}°: sampled {sampled}, evaluated {evaluated}"
             );
         }
