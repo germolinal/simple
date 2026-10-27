@@ -79,7 +79,7 @@ use crate::docs::get_docs;
 use object::Object;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 #[proc_macro_derive(StateElements, attributes(personal, operational, physical, references))]
 pub fn derive_simulation_state_behaviour(input: TokenStream) -> TokenStream {

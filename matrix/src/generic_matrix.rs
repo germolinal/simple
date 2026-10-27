@@ -1,7 +1,6 @@
-use crate::traits::Numberish;
 use crate::Float;
+use crate::traits::Numberish;
 use serde::{Deserialize, Serialize};
-
 
 /// The main Structure in this library
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
@@ -62,7 +61,13 @@ impl<T: Numberish> GenericMatrix<T> {
     #[must_use]
     pub fn from_data(nrows: usize, ncols: usize, data: Vec<T>) -> Self {
         if nrows * ncols != data.len() {
-            panic!("When creating Matrix: Number of rows (nrows = {}) and cols (ncols = {}) does not match length of data (data.len() = {})... (nrows * ncols = {})", nrows, ncols, data.len(), nrows*ncols)
+            panic!(
+                "When creating Matrix: Number of rows (nrows = {}) and cols (ncols = {}) does not match length of data (data.len() = {})... (nrows * ncols = {})",
+                nrows,
+                ncols,
+                data.len(),
+                nrows * ncols
+            )
         }
         // return
         Self { nrows, ncols, data }
@@ -105,11 +110,7 @@ impl<T: Numberish> GenericMatrix<T> {
                 .map(|i| {
                     let col = i % n;
                     let row = (i - col) / n;
-                    if row == col {
-                        T::one()
-                    } else {
-                        T::zero()
-                    }
+                    if row == col { T::one() } else { T::zero() }
                 })
                 .collect(),
         }
@@ -576,7 +577,7 @@ impl<T: Numberish> std::ops::DivAssign<T> for GenericMatrix<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{n_diag_generic_matrix::NDiagGenericMatrix, Float, GenericMatrix, Matrix};
+    use crate::{Float, GenericMatrix, Matrix, n_diag_generic_matrix::NDiagGenericMatrix};
 
     #[test]
     fn test_serde() -> Result<(), String> {
@@ -1537,7 +1538,10 @@ mod tests {
     fn test_serde_roundtrip() {
         let m = Matrix::from_data(2, 3, vec![1., 2., 3., 4., 5., 6.]);
         let s = serde_json::to_string(&m).unwrap();
-        assert_eq!(s, r#"{"ncols":3,"nrows":2,"data":[1.0,2.0,3.0,4.0,5.0,6.0]}"#);
+        assert_eq!(
+            s,
+            r#"{"ncols":3,"nrows":2,"data":[1.0,2.0,3.0,4.0,5.0,6.0]}"#
+        );
         let back: Matrix = serde_json::from_str(&s).unwrap();
         assert!(back.compare(&m));
     }

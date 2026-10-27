@@ -1,7 +1,7 @@
 use geometry::{Point3D, Ray3D, Vector3D};
-use rendering::{colour_matrix, ColourMatrix, DCFactory, Float, Scene};
+use rendering::{ColourMatrix, DCFactory, Float, Scene, colour_matrix};
 use utils::ProgressBar;
-use validate::{valid, ScatterValidator, Validate, Validator};
+use validate::{ScatterValidator, Validate, Validator, valid};
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidator<Float>> {
     Box::new(ScatterValidator {

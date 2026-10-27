@@ -18,9 +18,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
-use crate::Float;
 use serde::{Deserialize, Serialize};
 
 use derive::{GroupMemberAPI, ObjectIO};

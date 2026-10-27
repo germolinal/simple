@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::intersection::{IntersectionInfo, SurfaceSide};
 use crate::RefCount;
+use crate::intersection::{IntersectionInfo, SurfaceSide};
 
 use crate::Float;
 use crate::{BBox3D, Point3D, Ray3D, Segment3D, Transform, Vector3D};

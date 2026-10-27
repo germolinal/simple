@@ -21,7 +21,7 @@ fn time_series_test() -> Result<ValidFunc, String> {
 }
 
 #[test]
-fn test_series_validator() -> Result<(),String> {
+fn test_series_validator() -> Result<(), String> {
     let mut validator = Validator::new("Validate Time series", "report.html");
 
     let v = time_series_test()?;
@@ -34,8 +34,3 @@ fn test_series_validator() -> Result<(),String> {
 
     Ok(())
 }
-
-
-
-
-

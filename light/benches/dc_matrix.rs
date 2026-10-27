@@ -1,6 +1,6 @@
 //! Multiplying daylight coefficient matrices by a sky vector, as `SolarModel`
 //! does in every timestep: the generic `Matrix` product against `DCMatrix`.
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
 use light::{DCMatrix, Float};
 use matrix::Matrix;
 use std::hint::black_box;
@@ -49,9 +49,17 @@ fn compare(c: &mut Criterion, name: &str, m: &Matrix) {
 
 pub fn real(c: &mut Criterion) {
     let cold = "../tests/cold_apartment/cold_optical_data.json";
-    compare(c, "cold_front_surfaces", &read_dc(cold, "front_surfaces_dc"));
+    compare(
+        c,
+        "cold_front_surfaces",
+        &read_dc(cold, "front_surfaces_dc"),
+    );
     compare(c, "cold_back_surfaces", &read_dc(cold, "back_surfaces_dc"));
-    compare(c, "cold_front_fenestrations", &read_dc(cold, "front_fenestrations_dc"));
+    compare(
+        c,
+        "cold_front_fenestrations",
+        &read_dc(cold, "front_fenestrations_dc"),
+    );
     let bx = "../tests/box/optical_data.json";
     compare(c, "box_front_surfaces", &read_dc(bx, "front_surfaces_dc"));
 }

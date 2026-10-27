@@ -23,7 +23,7 @@ use std::sync::Arc;
 use crate::Float;
 
 use matrix::Matrix;
-use rendering::{colour_matrix::*, DCFactory, Scene};
+use rendering::{DCFactory, Scene, colour_matrix::*};
 
 use model::{Boundary, Fenestration, SimulationStateElement, SimulationStateHeader, Surface};
 
@@ -344,7 +344,13 @@ impl SolarSurface {
                 let local = rendering::samplers::sample_cosine_weighted_horizontal_hemisphere(u);
                 let dir = e1 * local.x + e2 * local.y + normal * local.z;
                 if scene
-                    .cast_ray(Ray3D { origin, direction: dir }, &mut node_aux)
+                    .cast_ray(
+                        Ray3D {
+                            origin,
+                            direction: dir,
+                        },
+                        &mut node_aux,
+                    )
                     .is_some()
                 {
                     // Sees the scene: neither sky nor ground

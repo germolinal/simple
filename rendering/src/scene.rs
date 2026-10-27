@@ -19,6 +19,7 @@ SOFTWARE.
 */
 
 // use std::rc::RefCount;
+use crate::Float;
 use crate::bvh::BoundingVolumeTree;
 use crate::colour::Spectrum;
 use crate::from_simple_model::SimpleModelReader;
@@ -27,7 +28,6 @@ use crate::material::{Light, Material};
 use crate::primitive::Primitive;
 use crate::rand::RandGen;
 use crate::triangle::Triangle;
-use crate::Float;
 use calendar::Date;
 
 use geometry::{Ray3D, Vector3D};
@@ -214,7 +214,9 @@ impl Scene {
     /// 21 was moved to the first position, then the mapping will be `vec![21, ...]`)
     pub fn build_accelerator(&mut self) -> Vec<usize> {
         if self.accelerator.is_some() {
-            panic!("Trying to re-build accelerator structure. If you really want this, use rebuild_accelerator")
+            panic!(
+                "Trying to re-build accelerator structure. If you really want this, use rebuild_accelerator"
+            )
         }
         let (bvh, mapping) = BoundingVolumeTree::new(self);
         self.accelerator = Some(bvh);
@@ -291,7 +293,9 @@ impl Scene {
         if let Some(a) = &self.accelerator {
             a.unobstructed_distance(self, ray, distance_squared, node_aux)
         } else {
-            panic!("Trying to check if unobstructed_distance() in a scene without an acceleration structure")
+            panic!(
+                "Trying to check if unobstructed_distance() in a scene without an acceleration structure"
+            )
         }
     }
 

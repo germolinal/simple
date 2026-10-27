@@ -1,5 +1,5 @@
-use crate::generic_matrix::GenericMatrix;
 use crate::Float;
+use crate::generic_matrix::GenericMatrix;
 
 /// A shorthand for `GenericMatrix<Float>`; i.e., a normal
 /// matrix. Note that `Float` is defined as `f32` if the feature `float`
@@ -90,7 +90,10 @@ impl Matrix {
             // Get value, and check that it has content
             let pivot = self.data[self.index(c, c)];
             if pivot.abs() < TINY {
-                return Err(format!("Found a (nearly) zero element in the diagonal: {}. Maybe the matrix is not invertible...?", pivot));
+                return Err(format!(
+                    "Found a (nearly) zero element in the diagonal: {}. Maybe the matrix is not invertible...?",
+                    pivot
+                ));
             }
 
             // Make the pivot equals to 1.
@@ -119,7 +122,11 @@ impl Matrix {
         // Now, run substitution upwards (We don't need to iterate the first row)
         for c in (1..self.ncols).rev() {
             let pivot = self.data[self.index(c, c)];
-            debug_assert!((1. - pivot).abs() < 4. * Float::EPSILON, "pivot is {}", pivot);
+            debug_assert!(
+                (1. - pivot).abs() < 4. * Float::EPSILON,
+                "pivot is {}",
+                pivot
+            );
 
             let ini = if c < one_sided_n { 0 } else { c - one_sided_n };
 
@@ -146,13 +153,22 @@ impl Matrix {
     ) -> Result<(), String> {
         // Check dimensions
         if self.ncols != self.nrows {
-            return Err(format!("Gauss-Seidel algorithm (for solving Ax=b) only works for squared matrices A... found A to be {} by {}", self.nrows, self.ncols));
+            return Err(format!(
+                "Gauss-Seidel algorithm (for solving Ax=b) only works for squared matrices A... found A to be {} by {}",
+                self.nrows, self.ncols
+            ));
         }
         if self.ncols != b.nrows {
-            return Err(format!("Gauss-Seidel algorithm (for solving Ax=b) requires A to have the same number of columns as b has rows... found {} and {}, respectively", self.ncols, b.nrows));
+            return Err(format!(
+                "Gauss-Seidel algorithm (for solving Ax=b) requires A to have the same number of columns as b has rows... found {} and {}, respectively",
+                self.ncols, b.nrows
+            ));
         }
         if self.ncols != x.nrows {
-            return Err(format!("Gauss-Seidel algorithm (for solving Ax=b) requires A to have the same number of columns as b has rows... found {} and {}, respectively", self.ncols, x.nrows));
+            return Err(format!(
+                "Gauss-Seidel algorithm (for solving Ax=b) requires A to have the same number of columns as b has rows... found {} and {}, respectively",
+                self.ncols, x.nrows
+            ));
         }
 
         let mut max_err = -Float::MAX;
@@ -197,9 +213,7 @@ impl Matrix {
 
         Err(format!(
             "Gauss-Seidel algorithm did not converge after {} iterations. Expecting error {}... found {}",
-            max_iter,
-            conv_check,
-            max_err,
+            max_iter, conv_check, max_err,
         ))
     }
 }

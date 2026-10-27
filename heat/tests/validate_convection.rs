@@ -1,8 +1,8 @@
 use geometry::Vector3D;
+use heat::Float;
 use heat::convection::ConvectionParams;
 use heat::surface::is_windward;
-use heat::Float;
-use validate::{valid, SeriesValidator, ValidFunc, Validator};
+use validate::{SeriesValidator, ValidFunc, Validator, valid};
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> ValidFunc {
     Box::new(SeriesValidator {
@@ -47,15 +47,15 @@ fn calc_convection(
 
     // let site_wind_speed = &cols[0];             // 1	Environment:Site Wind Speed [m/s](TimeStep)
     let site_wind_direction = &cols[1]; // 2	Environment:Site Wind Direction [deg](TimeStep)
-                                        // let incident_solar_radiation = &cols[2];    // 3	WALL EXTERIOR:Surface Outside Face Incident Solar Radiation Rate per Area [W/m2](TimeStep)
+    // let incident_solar_radiation = &cols[2];    // 3	WALL EXTERIOR:Surface Outside Face Incident Solar Radiation Rate per Area [W/m2](TimeStep)
     let inside_surface_temp = &cols[3]; // 4	WALL EXTERIOR:Surface Inside Face Temperature [C](TimeStep)
     let outside_surface_temp = &cols[4]; // 5	WALL EXTERIOR:Surface Outside Face Temperature [C](TimeStep)
     let exp_hs_in = &cols[5]; // 6	WALL EXTERIOR:Surface Inside Face Convection Heat Transfer Coefficient [W/m2-K](TimeStep)
-                              // let indoor_thermal_heat_gain = &cols[6];    // 7	WALL EXTERIOR:Surface Inside Face Net Surface Thermal Radiation Heat Gain Rate [W](TimeStep)
+    // let indoor_thermal_heat_gain = &cols[6];    // 7	WALL EXTERIOR:Surface Inside Face Net Surface Thermal Radiation Heat Gain Rate [W](TimeStep)
     let outdoor_temp = &cols[7]; // 8	WALL EXTERIOR:Surface Outside Face Outdoor Air Drybulb Temperature [C](TimeStep)
     let surface_wind_speed = &cols[8]; // 9	WALL EXTERIOR:Surface Outside Face Outdoor Air Wind Speed [m/s](TimeStep)
     let exp_hs_out = &cols[9]; // 10	WALL EXTERIOR:Surface Outside Face Convection Heat Transfer Coefficient [W/m2-K](TimeStep)
-                               // let outdoor_thermal_heat_gain = &cols[10];   // 11	WALL EXTERIOR:Surface Outside Face Net Thermal Radiation Heat Gain Rate [W](TimeStep)
+    // let outdoor_thermal_heat_gain = &cols[10];   // 11	WALL EXTERIOR:Surface Outside Face Net Thermal Radiation Heat Gain Rate [W](TimeStep)
     let zone_air_temp = &cols[11]; // 12	INTERIOR SPACE:Zone Mean Air Temperature [C](TimeStep)
 
     let cos_tilt = normal * Vector3D::new(0., 0., 1.);

@@ -42,9 +42,7 @@ type Float = f64;
 /// A macro indicating how many non-zero elements exist on each side of
 /// an n-diagonal matrix
 macro_rules! one_sided_n {
-    ( $n : expr ) => {{
-        ($n - 1) / 2
-    }};
+    ( $n : expr ) => {{ ($n - 1) / 2 }};
 }
 
 /// Contains a structure that allows performing mathematical operations over

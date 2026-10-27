@@ -1,7 +1,7 @@
 use geometry::{Point3D, Ray3D, Vector3D};
 
 use rendering::{Float, RayTracer, Scene};
-use validate::{valid, SeriesValidator, ValidFunc, Validator};
+use validate::{SeriesValidator, ValidFunc, Validator, valid};
 const MAX_DEPTH: usize = 30;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {

@@ -1,8 +1,8 @@
 //! Benchmarks for the matrix operations that dominate whole-building
 //! simulations (see `benches/simulation.rs` in the workspace root).
-use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
+use criterion::{BatchSize, BenchmarkId, Criterion, criterion_group, criterion_main};
+use matrix::{NDiagMatrix, matrix::Matrix};
 use std::hint::black_box;
-use matrix::{matrix::Matrix, NDiagMatrix};
 
 /// Solving the tridiagonal system of a no-mass chunk (e.g., a window), which
 /// `heat` does in every iteration of `march_nomass`.

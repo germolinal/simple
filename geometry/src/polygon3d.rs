@@ -419,11 +419,7 @@ impl Polygon3D {
             }
         }
 
-        if count == 0 {
-            None
-        } else {
-            Some(count)
-        }
+        if count == 0 { None } else { Some(count) }
     }
 }
 

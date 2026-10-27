@@ -4,7 +4,7 @@ use light::{Float, SolarModel};
 use model::SolarOptions;
 use schedule::ScheduleConstant;
 use test_models::*;
-use validate::{valid, SeriesValidator, ValidFunc, Validator};
+use validate::{SeriesValidator, ValidFunc, Validator, valid};
 use weather::SyntheticWeather;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {

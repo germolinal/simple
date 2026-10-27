@@ -4,7 +4,7 @@ use geometry::{Point3D, Ray3D, Triangle3D, Vector3D};
 use rendering::material::{Material, Metal, Plastic};
 use rendering::primitive::Primitive;
 use rendering::rand::RngExt;
-use rendering::{Float, Scene, Spectrum, PI};
+use rendering::{Float, PI, Scene, Spectrum};
 
 /// A large horizontal plane made of `material`
 fn plane(material: Material) -> Scene {
@@ -73,9 +73,21 @@ fn reflectances(material: Material, degrees: Float) -> (Float, Float) {
 #[test]
 fn ward_evaluation_matches_sampling() {
     let materials = [
-        Material::Metal(Metal { colour: Spectrum::gray(0.5), specularity: 0.95, roughness: 0.05 }),
-        Material::Metal(Metal { colour: Spectrum::gray(0.5), specularity: 0.9, roughness: 0.1 }),
-        Material::Plastic(Plastic { colour: Spectrum::gray(0.45), specularity: 0.05, roughness: 0.1 }),
+        Material::Metal(Metal {
+            colour: Spectrum::gray(0.5),
+            specularity: 0.95,
+            roughness: 0.05,
+        }),
+        Material::Metal(Metal {
+            colour: Spectrum::gray(0.5),
+            specularity: 0.9,
+            roughness: 0.1,
+        }),
+        Material::Plastic(Plastic {
+            colour: Spectrum::gray(0.45),
+            specularity: 0.05,
+            roughness: 0.1,
+        }),
     ];
     for material in materials {
         for degrees in [0., 30., 60.] {

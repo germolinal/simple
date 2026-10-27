@@ -1,5 +1,5 @@
 use crate::{Float, Scene};
-use geometry::{intersection::IntersectionInfo, Point3D, Ray3D, Vector3D};
+use geometry::{Point3D, Ray3D, Vector3D, intersection::IntersectionInfo};
 
 use super::{Triangle, TriangleHit};
 use crate::{ax, ay, az, bx, by, bz, cx, cy, cz};

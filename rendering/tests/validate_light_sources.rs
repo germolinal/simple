@@ -2,8 +2,8 @@
 //! as calculated by the ray tracer, compared with analytic solutions
 use geometry::{Point3D, Ray3D, Vector3D};
 use rendering::rand::RngExt;
-use rendering::{Float, RayTracer, Scene, PI};
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use rendering::{Float, PI, RayTracer, Scene};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 
 const RHO: Float = 0.5; // reflectance of the floor
 const L: Float = 100.; // radiance of the lights

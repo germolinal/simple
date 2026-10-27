@@ -1,5 +1,5 @@
-use crate::n_diag_generic_matrix::NDiagGenericMatrix;
 use crate::Float;
+use crate::n_diag_generic_matrix::NDiagGenericMatrix;
 
 /// A compact version of an N-diagonal matrix, for floating point numbers
 pub type NDiagMatrix<const N: usize> = NDiagGenericMatrix<N, Float>;
@@ -38,7 +38,10 @@ impl<const N: usize> NDiagMatrix<N> {
             let pivot_i = self.band_index(c, c);
             let pivot = self.data[pivot_i];
             if pivot.abs() < TINY {
-                return Err(format!("Found a (nearly) zero element in the diagonal: {}. Maybe the matrix is not invertible...?", pivot));
+                return Err(format!(
+                    "Found a (nearly) zero element in the diagonal: {}. Maybe the matrix is not invertible...?",
+                    pivot
+                ));
             }
 
             // Make the pivot equals to 1. Row c is stored contiguously from

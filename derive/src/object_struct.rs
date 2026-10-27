@@ -243,7 +243,10 @@ impl StructObject {
                     let set_ident = format!("set_{}_index", f_ident);
                     let set_ident = syn::Ident::new(&set_ident, f_ident.span());
                     // doc of the 'set_index_' method
-                    let sets_index_doc_string = format!(" Sets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`]. Returns an error if the object already has an index assigned for this field.", f_ident);
+                    let sets_index_doc_string = format!(
+                        " Sets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`]. Returns an error if the object already has an index assigned for this field.",
+                        f_ident
+                    );
 
                     let already_there_err = if self.has_name() {
                         let err_msg = format!(
@@ -272,7 +275,10 @@ impl StructObject {
                     let set_ident = format!("set_{}", f_ident);
                     let set_ident = syn::Ident::new(&set_ident, f_ident.span());
                     // doc of the 'set_' method
-                    let sets_doc_string = format!(" Changes the value of the [`SimulationStateElement`] associated with the `{}` within the [`SimulationState`] .", f_ident);
+                    let sets_doc_string = format!(
+                        " Changes the value of the [`SimulationStateElement`] associated with the `{}` within the [`SimulationState`] .",
+                        f_ident
+                    );
                     let err_msg = format!(
                         " Impossible to change the state of object because `{}` has no value",
                         f_ident
@@ -298,7 +304,10 @@ impl StructObject {
                     let get_index_ident = syn::Ident::new(&get_index_ident, f_ident.span());
 
                     // doc of the 'get_index_' method
-                    let get_index_doc_string = format!(" Gets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].", f_ident);
+                    let get_index_doc_string = format!(
+                        " Gets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].",
+                        f_ident
+                    );
 
                     gets = quote!(
                         #gets
@@ -312,7 +321,10 @@ impl StructObject {
                     /* GET THE STATE OF THE OBJECT */
 
                     // doc of the 'get_index_' method
-                    let get_doc_string = format!(" Gets the value of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].", f_ident);
+                    let get_doc_string = format!(
+                        " Gets the value of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].",
+                        f_ident
+                    );
                     gets = quote!(
                         #gets
 
@@ -371,7 +383,10 @@ impl StructObject {
                     // Name of the 'set_' method
                     let get_or_ident = format!("{}_or", f_ident);
                     let get_or_ident = syn::Ident::new(&get_or_ident, f_ident.span());
-                    let gets_or_doc_string = format!(" Gets the content of `{}` field or a default value given if the field is `None`. If no default is logical, use `self.{}()` instead, which returns an error", f_ident, f_ident);
+                    let gets_or_doc_string = format!(
+                        " Gets the content of `{}` field or a default value given if the field is `None`. If no default is logical, use `self.{}()` instead, which returns an error",
+                        f_ident, f_ident
+                    );
                     // let gets_or_warning = if self.has_name() {
                     //     quote!(
                     //         crate::error_msgs::print_warning(module_name,
@@ -405,7 +420,10 @@ impl StructObject {
                     }
 
                     // the ident of this method is the name of the field itself
-                    let gets_doc_string = format!(" Gets the `{}` field. Returns a `Result` because this field is optional and thus it might not be there.", f_ident);
+                    let gets_doc_string = format!(
+                        " Gets the `{}` field. Returns a `Result` because this field is optional and thus it might not be there.",
+                        f_ident
+                    );
                     let gets_err = if self.has_name() {
                         quote!(
                             format!("{} called '{}' has not been assigned any value for field '{}'", self.object_type(), self.name, #f_ident_str)
@@ -446,10 +464,7 @@ impl StructObject {
         let mut field_setters = quote!();
         // open docs
         let mut docs = "\n\n## API\n\nThe following properties are available for simulating control algorithms".to_string();
-        docs = format!(
-            "{}\n\n| Property |\n|----------|",
-            docs
-        );
+        docs = format!("{}\n\n| Property |\n|----------|", docs);
 
         for field in self.fields.iter() {
             if let Field::State(_) = field {

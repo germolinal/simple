@@ -1,4 +1,4 @@
-use validate::{valid, Validate, ValidationResult, Validator, ValidFunc};
+use validate::{valid, ValidFunc, Validate, ValidationResult, Validator};
 
 // This checks that two numbers are equal
 struct CustomValidator {

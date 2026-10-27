@@ -27,7 +27,7 @@ use geometry::{Point3D, Vector3D};
 use std::fs;
 
 use obj::raw::object::Polygon;
-use obj::{load_obj, FromRawVertex, Obj, ObjResult};
+use obj::{FromRawVertex, Obj, ObjResult, load_obj};
 
 #[allow(dead_code)]
 struct ObjTriangle {

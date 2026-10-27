@@ -17,9 +17,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::control_trait::SimpleControl;
 use crate::Float;
 use crate::RhaiControlScript;
+use crate::control_trait::SimpleControl;
 use calendar::{Date, Period};
 use clap::Parser;
 use communication::{MetaOptions, SimulationModel};
@@ -94,7 +94,10 @@ fn pre_process(
 ) -> Result<PreProcessData, String> {
     const MAX_N: usize = 60;
     let n = if options.n > MAX_N {
-        eprintln!("The maximum allowed value for -n param is {}... n has been automatically limited to that value", MAX_N);
+        eprintln!(
+            "The maximum allowed value for -n param is {}... n has been automatically limited to that value",
+            MAX_N
+        );
         MAX_N
     } else if options.n == 0 {
         return Err("Parameter 'n' should be larger than 0".to_string());

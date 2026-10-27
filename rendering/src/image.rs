@@ -28,9 +28,9 @@ SOFTWARE.
  written by Bruce Walter  (bjw@graphics.cornell.edu)  5/26/95
  based on code written by Greg Ward
 */
+use crate::Float;
 use crate::colour::Spectrum;
 use crate::colourmap::Colourmap;
-use crate::Float;
 use jpeg_encoder::{ColorType, Encoder};
 use std::io::Write;
 use std::path::Path;
@@ -155,7 +155,13 @@ impl ImageBuffer {
     /// Creates a new empty [`ImageBuffer`]
     pub fn from_pixels(width: usize, height: usize, pixels: Vec<Spectrum>) -> Self {
         if pixels.len() != width * height {
-            panic!("Width ({}) and Height ({}) does not match the number of pixels (n_pixels is {}... expecting width*height={})", width, height, pixels.len(), width*height)
+            panic!(
+                "Width ({}) and Height ({}) does not match the number of pixels (n_pixels is {}... expecting width*height={})",
+                width,
+                height,
+                pixels.len(),
+                width * height
+            )
         }
         Self {
             width,
@@ -197,7 +203,7 @@ impl ImageBuffer {
                     filename
                         .to_str()
                         .ok_or("Could not transform filename into string")?
-                ))
+                ));
             }
         };
         let mut content = content.as_slice();
@@ -220,7 +226,10 @@ impl ImageBuffer {
             if line.starts_with(b"-Y") {
                 let errmsg = {
                     let l = std::str::from_utf8(line).map_err(|e| e.to_string())?;
-                    Err(format!("When reading file '{}' : Expecting SIZE line to be in the format '-Y number +X number'... found '{}'",filename, l))
+                    Err(format!(
+                        "When reading file '{}' : Expecting SIZE line to be in the format '-Y number +X number'... found '{}'",
+                        filename, l
+                    ))
                 };
 
                 // Size

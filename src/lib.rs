@@ -73,7 +73,7 @@ pub use polynomial::*;
 pub use rendering;
 pub use rendering::{
     colourmap::Colourmap,
-    rand::{get_rng, Rng},
+    rand::{Rng, get_rng},
 };
 
 pub use schedule::*;

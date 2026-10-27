@@ -1,6 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion};
-use std::hint::black_box;
+use criterion::{Criterion, criterion_group, criterion_main};
 use matrix::matrix::Matrix;
+use std::hint::black_box;
 
 pub fn add_into(c: &mut Criterion) {
     let ncols = 25;

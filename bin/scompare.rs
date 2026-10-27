@@ -1,8 +1,8 @@
 use clap::{Parser, ValueEnum};
 use rendering::colourmap::Colourmap;
 
-use rendering::image::ImageBuffer;
 use rendering::Float;
+use rendering::image::ImageBuffer;
 
 #[derive(Parser, Debug, Clone, ValueEnum)]
 enum ArgColourMap {

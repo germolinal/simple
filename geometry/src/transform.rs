@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::gamma;
 use crate::Float;
+use crate::gamma;
 use crate::{BBox3D, Point3D, Ray3D, Vector3D};
 
 macro_rules! elem {

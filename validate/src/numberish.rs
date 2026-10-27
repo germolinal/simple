@@ -108,7 +108,7 @@ impl OneZero for u128 {
 }
 
 impl OneZero for usize {
-    fn zero() -> Self {        
+    fn zero() -> Self {
         0
     }
     fn one() -> Self {
@@ -122,17 +122,17 @@ pub trait Nanish {
 
 impl Nanish for f64 {
     fn is_it_nan(&self) -> bool {
-        self.is_nan()        
+        self.is_nan()
     }
 }
 impl Nanish for f32 {
     fn is_it_nan(&self) -> bool {
-        self.is_nan()        
+        self.is_nan()
     }
 }
 
 impl Nanish for i8 {
-    fn is_it_nan(&self) -> bool {        
+    fn is_it_nan(&self) -> bool {
         false
     }
 }

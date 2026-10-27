@@ -1,7 +1,7 @@
 //! Direct illumination from a polygon (i.e., triangles) light source,
 //! compared with the analytic solution.
 use geometry::{Point3D, Ray3D, Vector3D};
-use rendering::{Float, RayTracer, Scene, PI};
+use rendering::{Float, PI, RayTracer, Scene};
 
 const RHO: Float = 0.5; // floor reflectance
 const L: Float = 100.; // light radiance
@@ -28,8 +28,14 @@ void light lamp 0 0 3 {L} {L} {L}
 floor polygon f 0 0 12 {} {} {} {}
 lamp polygon l 0 0 12 {} {} {} {}
 ",
-        p(-50., -50., 0.), p(50., -50., 0.), p(50., 50., 0.), p(-50., 50., 0.),
-        p(-s, -s, h), p(-s, s, h), p(s, s, h), p(s, -s, h),
+        p(-50., -50., 0.),
+        p(50., -50., 0.),
+        p(50., 50., 0.),
+        p(-50., 50., 0.),
+        p(-s, -s, h),
+        p(-s, s, h),
+        p(s, s, h),
+        p(s, -s, h),
     );
     let mut scene = Scene::from_radiance_source(src.as_bytes()).unwrap();
     scene.build_accelerator();

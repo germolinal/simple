@@ -121,7 +121,10 @@ impl ReinhartSky {
     /// Calculates the row in which a certain bin is located
     fn bins_row(&self, nbin: usize) -> usize {
         if nbin > self.n_bins {
-            panic!("Trying to get the row of a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+            panic!(
+                "Trying to get the row of a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
         }
 
         let mut row = self.n_rows - 1; // If not found, this is the value
@@ -147,7 +150,10 @@ impl ReinhartSky {
         }
         // Error
         if nbin > self.n_bins {
-            panic!("Trying to get direction to a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+            panic!(
+                "Trying to get direction to a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
         }
         // All others
 
@@ -193,7 +199,9 @@ impl ReinhartSky {
     fn sin_altitude_to_row(&self, sin_altitude: Float) -> usize {
         if sin_altitude < 0. {
             // Points ot the ground... This should be handled in the caller function.
-            panic!("Trying to call sin_altitude_to_row() by using a negative sin_altitude (e.g., does not point to the sky")
+            panic!(
+                "Trying to call sin_altitude_to_row() by using a negative sin_altitude (e.g., does not point to the sky"
+            )
         }
         for (row, max_sin) in self.row_max_sin.iter().enumerate() {
             if sin_altitude < *max_sin {
@@ -259,7 +267,10 @@ impl ReinhartSky {
     /// Panics if `nbin` is out of bounds.
     pub fn bin_dir(&self, nbin: usize) -> Vector3D {
         if nbin >= self.n_bins {
-            panic!("Trying to get direction to a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+            panic!(
+                "Trying to get direction to a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
         }
         self.dirs[nbin]
     }
@@ -281,7 +292,10 @@ impl ReinhartSky {
         }
         // Error
         if nbin > self.n_bins {
-            panic!("Trying to get direction to a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+            panic!(
+                "Trying to get direction to a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
         }
 
         /*******************/
@@ -464,7 +478,14 @@ mod tests {
                     let z = angle.sin();
                     let found_row = r.sin_altitude_to_row(z);
                     if row != found_row {
-                        return Err(format!("Row does not match... Exp_min = {}, Exp_max = {}, angle = {} ... expected_row = {}, but found row = {}", exp_min*180./PI, exp_max*180./PI, angle*180./PI, row, found_row));
+                        return Err(format!(
+                            "Row does not match... Exp_min = {}, Exp_max = {}, angle = {} ... expected_row = {}, but found row = {}",
+                            exp_min * 180. / PI,
+                            exp_max * 180. / PI,
+                            angle * 180. / PI,
+                            row,
+                            found_row
+                        ));
                     }
                 }
 

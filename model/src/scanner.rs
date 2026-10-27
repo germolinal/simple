@@ -177,7 +177,10 @@ impl<'a> SimpleScanner<'a> {
         while levels > 0 || !started {
             let next = self.peek();
             if !started && (next == ',') {
-                let errmsg = Self::make_error_msg("Malformed enum object. These should have parentheses (e.g., not 'ShelterClass::Urban' but 'ShelterClass::Urban()' )", self.line);
+                let errmsg = Self::make_error_msg(
+                    "Malformed enum object. These should have parentheses (e.g., not 'ShelterClass::Urban' but 'ShelterClass::Urban()' )",
+                    self.line,
+                );
                 return Err(errmsg);
             }
             if !started && next == '(' {

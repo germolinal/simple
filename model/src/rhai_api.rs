@@ -19,8 +19,8 @@ SOFTWARE.
 */
 
 use crate::{
-    hvac::{ElectricHeater, IdealHeaterCooler, HVAC},
     Fenestration, Luminaire, Model, SimulationState, Space, Surface,
+    hvac::{ElectricHeater, HVAC, IdealHeaterCooler},
 };
 use std::sync::Mutex;
 

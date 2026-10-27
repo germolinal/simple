@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::intersection::IntersectionInfo;
 use crate::RefCount;
+use crate::intersection::IntersectionInfo;
 use crate::{Float, PI};
 
 use crate::round_error::ApproxFloat;
@@ -145,7 +145,10 @@ impl Sphere3D {
         }
         let mut phi_max = phi_max;
         if !(-Float::EPSILON..=360. + Float::EPSILON).contains(&phi_max) {
-            panic!("when creating a 'sphere': given phi_max is not between 0 and 360 degrees (it was {})", phi_max);
+            panic!(
+                "when creating a 'sphere': given phi_max is not between 0 and 360 degrees (it was {})",
+                phi_max
+            );
         }
         phi_max = phi_max.clamp(0., 360.).to_radians();
 
@@ -191,7 +194,11 @@ impl Sphere3D {
             || t0.as_float().is_infinite()
             || t1.as_float().is_infinite()
         {
-            panic!("After solve_quadratic in Sphere intersection: t0.as_float() = {}, t1.as_float() = {}", t0.as_float(), t1.as_float());
+            panic!(
+                "After solve_quadratic in Sphere intersection: t0.as_float() = {}, t1.as_float() = {}",
+                t0.as_float(),
+                t1.as_float()
+            );
         }
 
         // t0 < t1... so, check if they are possitive

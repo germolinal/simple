@@ -457,11 +457,7 @@ impl Solar {
                 + c5 * wind_speed)
             + d;
 
-        if rad > 0.0 {
-            rad
-        } else {
-            0.0
-        }
+        if rad > 0.0 { rad } else { 0.0 }
     }
 
     /// Calculates the hourly clearness index
@@ -485,7 +481,7 @@ impl Solar {
     ) -> Float {
         let kt = self.hourly_clearness_index(n, global_normal_radiation);
         let extra_rad = global_normal_radiation / kt; // extraterrestrial;
-                                                      // dbg!(extra_rad);
+        // dbg!(extra_rad);
         if kt < 0.0 {
             return 0.0;
         }
@@ -525,11 +521,7 @@ impl Solar {
             + 0.000014 * air_mass.powi(4);
 
         let ret = extra_rad * (knc - delta_kn);
-        if ret < 0.0 {
-            0.0
-        } else {
-            ret
-        }
+        if ret < 0.0 { 0.0 } else { ret }
     }
 
     /// Calculates the diffuse fraction from an hourly clearness index using Erb's correlation
@@ -1025,7 +1017,7 @@ mod tests {
     use super::*;
     use crate::{EPWWeather, Weather};
     use calendar::{Date, Period};
-    use validate::{valid, ScatterValidator, ValidFunc, Validator};
+    use validate::{ScatterValidator, ValidFunc, Validator, valid};
 
     #[test]
     fn test_cloud_cover_to_global_rad_generic() -> Result<(), String> {

@@ -207,10 +207,17 @@ mod tests {
             let dir = uniform_sample_tilted_hemisphere(u, e1, e2, normal);
 
             if (1. - dir.length()).abs() > 1e-5 {
-                return Err(format!("Sampled direction (from uniform_sample_hemisphere) was nor normalized... {} (length = {})", dir, dir.length()));
+                return Err(format!(
+                    "Sampled direction (from uniform_sample_hemisphere) was nor normalized... {} (length = {})",
+                    dir,
+                    dir.length()
+                ));
             }
             if dir * normal < -Float::EPSILON * 30. {
-                return Err(format!("Sampled direction (from uniform_sample_hemisphere) is not in hemisphere... Normal = {} | Dir = {}", normal, dir));
+                return Err(format!(
+                    "Sampled direction (from uniform_sample_hemisphere) is not in hemisphere... Normal = {} | Dir = {}",
+                    normal, dir
+                ));
             }
 
             Ok(())

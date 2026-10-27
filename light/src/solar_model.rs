@@ -17,12 +17,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::{solar_surface::SolarSurface, Float};
+use crate::{Float, solar_surface::SolarSurface};
 use calendar::Date;
 use communication::{ErrorHandling, MetaOptions, SimulationModel};
 use model::{
-    print_warning, Boundary, FenestrationType, Model, SimulationState, SimulationStateHeader,
-    SolarOptions,
+    Boundary, FenestrationType, Model, SimulationState, SimulationStateHeader, SolarOptions,
+    print_warning,
 };
 use std::borrow::Borrow;
 use std::fs::File;
@@ -276,8 +276,7 @@ impl SolarModel {
         // Process Solar Irradiance in Surfaces
         if !self.optical_info.front_surfaces_dc.is_empty() {
             let solar_irradiance = &mut memory.front_surfaces;
-            self.front_surfaces_dc
-                .mul_vec_into(vec, solar_irradiance)?;
+            self.front_surfaces_dc.mul_vec_into(vec, solar_irradiance)?;
 
             for (i, s) in model.surfaces.iter().enumerate() {
                 if !SolarSurface::boundary_receives_sun(&s.front_boundary) {
@@ -300,8 +299,7 @@ impl SolarModel {
         }
         if !self.optical_info.back_surfaces_dc.is_empty() {
             let solar_irradiance = &mut memory.back_surfaces;
-            self.back_surfaces_dc
-                .mul_vec_into(vec, solar_irradiance)?;
+            self.back_surfaces_dc.mul_vec_into(vec, solar_irradiance)?;
 
             for (i, s) in model.surfaces.iter().enumerate() {
                 if !SolarSurface::boundary_receives_sun(&s.back_boundary) {
@@ -435,7 +433,7 @@ impl SimulationModel for SolarModel {
                 let data = match std::fs::read_to_string(path) {
                     Ok(v) => v,
                     Err(_) => {
-                        return Err(format!("Unable to read optical_info file '{}'", path_str))
+                        return Err(format!("Unable to read optical_info file '{}'", path_str));
                     }
                 };
                 let info: OpticalInfo = match serde_json::from_str(&data) {
@@ -444,7 +442,7 @@ impl SimulationModel for SolarModel {
                         return Err(format!(
                             "Unable to parse optical_info object in file '{}'",
                             path_str
-                        ))
+                        ));
                     }
                 };
 
@@ -488,7 +486,9 @@ impl SimulationModel for SolarModel {
         let mut mf = 1;
         loop {
             if mf >= 9 || ncols == 0 {
-                return Err(format!("sky discretization seems to be too high ({mf}... If this is a bug, please report it!"));
+                return Err(format!(
+                    "sky discretization seems to be too high ({mf}... If this is a bug, please report it!"
+                ));
             }
             if weather::ReinhartSky::n_bins(mf) == ncols {
                 break;
@@ -523,7 +523,7 @@ impl SimulationModel for SolarModel {
 #[cfg(test)]
 mod testing {
     use super::*;
-    use model::{substance::Normal, Construction, Fenestration, Material, Surface};
+    use model::{Construction, Fenestration, Material, Surface, substance::Normal};
     use schedule::ScheduleConstant;
     use weather::SyntheticWeather;
 
@@ -561,19 +561,30 @@ mod testing {
         let mut solar_options = model.solar_options.clone().ok_or("No solar options 2")?;
         solar_options.set_solar_sky_discretization(2);
         solar_options.set_optical_data_path(optical_data_path.to_string());
-        let light_model =
-            SolarModel::new(&meta_options, solar_options.clone(), &model, &mut state_header, 4)?;
+        let light_model = SolarModel::new(
+            &meta_options,
+            solar_options.clone(),
+            &model,
+            &mut state_header,
+            4,
+        )?;
         // The data in the file was calculated with other options, so it was
         // recalculated (it used to be used as it was)
         assert_eq!(light_model.sky.mf, 2);
-        let calculated_with = light_model.optical_info.calculated_with.ok_or("no options")?;
+        let calculated_with = light_model
+            .optical_info
+            .calculated_with
+            .ok_or("no options")?;
         assert_eq!(calculated_with.sky_discretization, 2);
 
         // Step 3: also when changing the number of rays for IR view factors
         solar_options.set_n_ir_view_factor_rays(64);
         let light_model =
             SolarModel::new(&meta_options, solar_options, &model, &mut state_header, 4)?;
-        let calculated_with = light_model.optical_info.calculated_with.ok_or("no options")?;
+        let calculated_with = light_model
+            .optical_info
+            .calculated_with
+            .ok_or("no options")?;
         assert_eq!(calculated_with.n_ir_view_factor_rays, 64);
         assert_eq!(light_model.sky.mf, 2);
 

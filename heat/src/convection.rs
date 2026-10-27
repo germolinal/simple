@@ -103,11 +103,7 @@ impl ConvectionParams {
             unreachable!()
         };
 
-        if h < MIN_H {
-            MIN_H
-        } else {
-            h
-        }
+        if h < MIN_H { MIN_H } else { h }
     }
 
     /// Calculates the exterior convection coefficient according to the TARP

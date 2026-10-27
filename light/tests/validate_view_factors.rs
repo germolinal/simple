@@ -4,7 +4,7 @@ use geometry::{Loop3D, Point3D, Polygon3D, Vector3D};
 use light::solar_surface::SolarSurface;
 use light::{Float, IR_VIEW_FACTOR_RAYS};
 use rendering::Scene;
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 
 /// The expected and found sky view factors, and the expected and found
 /// ground view factors
@@ -103,7 +103,12 @@ fn canyon() -> Result<ExpectedAndFound, String> {
     const FACADE: Float = 3.;
     let (mut exp_sky, mut found_sky, mut exp_ground, mut found_ground) =
         (vec![], vec![], vec![], vec![]);
-    let facade = surface(&[(0., 0., 0.), (0., 1., 0.), (0., 1., FACADE), (0., 0., FACADE)])?;
+    let facade = surface(&[
+        (0., 0., 0.),
+        (0., 1., 0.),
+        (0., 1., FACADE),
+        (0., 0., FACADE),
+    ])?;
     let half_pi = Float::from(std::f32::consts::FRAC_PI_2);
     for w in [1., 2., 4., 8., 16.] {
         for h in [3., 9., 30.] {

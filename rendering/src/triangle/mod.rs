@@ -1,7 +1,7 @@
 use crate::{Float, Scene};
 use geometry::{
-    intersection::{IntersectionInfo, SurfaceSide},
     BBox3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
+    intersection::{IntersectionInfo, SurfaceSide},
 };
 
 pub mod fallback;
@@ -27,57 +27,39 @@ pub struct TriangleHit {
 
 #[macro_export]
 macro_rules! ax {
-    ( $n : expr ) => {{
-        $n[0]
-    }};
+    ( $n : expr ) => {{ $n[0] }};
 }
 #[macro_export]
 macro_rules! ay {
-    ( $n : expr ) => {{
-        $n[1]
-    }};
+    ( $n : expr ) => {{ $n[1] }};
 }
 #[macro_export]
 macro_rules! az {
-    ( $n : expr ) => {{
-        $n[2]
-    }};
+    ( $n : expr ) => {{ $n[2] }};
 }
 #[macro_export]
 macro_rules! bx {
-    ( $n : expr ) => {{
-        $n[3]
-    }};
+    ( $n : expr ) => {{ $n[3] }};
 }
 #[macro_export]
 macro_rules! by {
-    ( $n : expr ) => {{
-        $n[4]
-    }};
+    ( $n : expr ) => {{ $n[4] }};
 }
 #[macro_export]
 macro_rules! bz {
-    ( $n : expr ) => {{
-        $n[5]
-    }};
+    ( $n : expr ) => {{ $n[5] }};
 }
 #[macro_export]
 macro_rules! cx {
-    ( $n : expr ) => {{
-        $n[6]
-    }};
+    ( $n : expr ) => {{ $n[6] }};
 }
 #[macro_export]
 macro_rules! cy {
-    ( $n : expr ) => {{
-        $n[7]
-    }};
+    ( $n : expr ) => {{ $n[7] }};
 }
 #[macro_export]
 macro_rules! cz {
-    ( $n : expr ) => {{
-        $n[8]
-    }};
+    ( $n : expr ) => {{ $n[8] }};
 }
 
 pub fn triangle_area(t: &Triangle) -> Float {
@@ -347,7 +329,7 @@ pub fn mesh_sphere(s: &Sphere3D) -> (Vec<Triangle>, Vec<(Vector3D, Vector3D, Vec
 
 #[cfg(test)]
 mod testing {
-    use crate::{material::Metal, Spectrum};
+    use crate::{Spectrum, material::Metal};
 
     use super::*;
     use validate::assert_close;

@@ -1,6 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
+use rendering::{Scene, Spectrum, rand::RngExt};
 use std::hint::black_box;
-use rendering::{rand::RngExt, Scene, Spectrum};
 
 // Reference targets: https://github.com/svenstaro/bvh
 pub fn criterion_benchmark(c: &mut Criterion) {
@@ -72,15 +72,17 @@ pub fn criterion_benchmark(c: &mut Criterion) {
             // their vertices could be anywhere in the cube, they would all
             // overlap each other)
             const SCALE: rendering::Float = 30.;
-            let (cx, cy, cz): (rendering::Float, rendering::Float, rendering::Float) =
-                rng.random();
-            let centre = geometry::Point3D::new((cx - 0.5) * SCALE, (cy - 0.5) * SCALE, (cz - 0.5) * SCALE);
+            let (cx, cy, cz): (rendering::Float, rendering::Float, rendering::Float) = rng.random();
+            let centre =
+                geometry::Point3D::new((cx - 0.5) * SCALE, (cy - 0.5) * SCALE, (cz - 0.5) * SCALE);
             let vertex = |x: rendering::Float, y: rendering::Float, z: rendering::Float| {
                 centre + geometry::Vector3D::new(x - 0.5, y - 0.5, z - 0.5)
             };
-            if let Ok(tri) =
-                geometry::Triangle3D::new(vertex(x1, y1, z1), vertex(x2, y2, z2), vertex(x3, y3, z3))
-            {
+            if let Ok(tri) = geometry::Triangle3D::new(
+                vertex(x1, y1, z1),
+                vertex(x2, y2, z2),
+                vertex(x3, y3, z3),
+            ) {
                 i += 1;
                 triangles.push_object(
                     plastic,

@@ -18,10 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::hvac::HVAC;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
-use crate::Float;
 use derive::{GroupMemberAPI, ObjectIO};
 use serde::{Deserialize, Serialize};
 

@@ -22,7 +22,7 @@ use crate::numberish::Numberish;
 
 /// Attempts transform a `usize` into a generic parameter `T`.
 /// Panics if the usize is too large
-pub(crate) fn try_into_t(n_usize: usize) -> f64 {    
+pub(crate) fn try_into_t(n_usize: usize) -> f64 {
     if n_usize > i32::MAX as usize {
         panic!("Too many samples... the limit is {}", i32::MAX)
     }
@@ -95,9 +95,7 @@ pub fn min_max<T: Numberish>(x: &[T]) -> (T, T) {
 /// * If the dataset is empty
 pub fn mean<T: Numberish>(x: &[T]) -> f64 {
     assert_ne!(x.len(), 0, "Trying to calculate mean of empty dataset");
-    let n  = try_into_t(x.len());
-
-    
+    let n = try_into_t(x.len());
 
     let s: f64 = x.iter().fold(0.0, |acc, item| acc + (*item).into());
     s / n
@@ -138,7 +136,7 @@ pub fn linear_coefficients<T: Numberish>(x: &[T], y: &[T]) -> (f64, f64, f64) {
         "Trying to calculate linear coefficients of empty datasets"
     );
 
-    let n  = try_into_t(x.len());    
+    let n = try_into_t(x.len());
 
     let ss_x: f64 = x.iter().fold(0.0, |acc, &item| acc + item.into());
     let ss_xx: f64 = x
@@ -146,9 +144,7 @@ pub fn linear_coefficients<T: Numberish>(x: &[T], y: &[T]) -> (f64, f64, f64) {
         .map(|x| *x * *x)
         .fold(0.0, |acc, item| acc + item.into());
 
-    let ss_y: f64 = y
-        .iter()
-        .fold(0.0, |acc, &item| acc + item.into());
+    let ss_y: f64 = y.iter().fold(0.0, |acc, &item| acc + item.into());
 
     let ss_yy: f64 = y
         .iter()
@@ -223,9 +219,13 @@ pub fn root_mean_squared_error<T: Numberish>(x: &[T], y: &[T]) -> f64 {
         0,
         "Trying to calculate Root Mean Squared Error of empty datasets"
     );
-    let n  = try_into_t(x.len());    
+    let n = try_into_t(x.len());
 
-    let squared_error: f64 = x.iter().zip(y.iter()).map(|(x, y)| (*y - *x)*(*y - *x)).fold(0.0, |acc, item| acc + item.into());
+    let squared_error: f64 = x
+        .iter()
+        .zip(y.iter())
+        .map(|(x, y)| (*y - *x) * (*y - *x))
+        .fold(0.0, |acc, item| acc + item.into());
     (squared_error / n).sqrt()
 }
 
@@ -281,7 +281,11 @@ pub fn mean_bias_error<T: Numberish>(x: &[T], y: &[T]) -> f64 {
         "Trying to calculate Mean Bias Error of empty datasets"
     );
 
-    let n  = try_into_t(x.len());    
-    let bias_error: f64 = x.iter().zip(y.iter()).map(|(x, y)| *y - *x).fold(0.0, |acc, item| acc + item.into());
+    let n = try_into_t(x.len());
+    let bias_error: f64 = x
+        .iter()
+        .zip(y.iter())
+        .map(|(x, y)| *y - *x)
+        .fold(0.0, |acc, item| acc + item.into());
     bias_error / n
 }

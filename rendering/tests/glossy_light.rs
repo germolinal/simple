@@ -40,7 +40,10 @@ fn view_ray() -> Ray3D {
 fn floor_hit(scene: &Scene) -> (Interaction, &Material) {
     let mut aux = [0; 32];
     let (index, interaction) = scene.cast_ray(view_ray(), &mut aux).unwrap();
-    (interaction, &scene.materials[scene.front_material_indexes[index]])
+    (
+        interaction,
+        &scene.materials[scene.front_material_indexes[index]],
+    )
 }
 
 /// Whether a ray from `p` in direction `wi` hits the light
@@ -88,7 +91,9 @@ fn traced(scene: &Scene, n_shadow_samples: usize) -> Float {
     let n = 40_000;
     let mut sum = 0.;
     for _ in 0..n {
-        sum += tracer.trace_ray(&mut rng, scene, view_ray(), &mut aux).radiance();
+        sum += tracer
+            .trace_ray(&mut rng, scene, view_ray(), &mut aux)
+            .radiance();
     }
     sum / n as Float
 }
@@ -133,8 +138,7 @@ fn glossy_strategies() {
             let mut it = interaction;
             let mut eta = 1.0;
             let ray = view_ray();
-            if let Some(sample) = material.sample_bsdf(ray.direction, &mut it, &mut eta, &mut rng)
-            {
+            if let Some(sample) = material.sample_bsdf(ray.direction, &mut it, &mut eta, &mut rng) {
                 if hits_light(p, sample.wi) {
                     n_hits += 1;
                     bsdf += sample.spectrum.radiance() * (normal * sample.wi) / sample.pdf * L;

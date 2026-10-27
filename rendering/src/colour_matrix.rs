@@ -17,8 +17,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::colour::Spectrum;
 use crate::Float;
+use crate::colour::Spectrum;
 use matrix::{GenericMatrix, Matrix};
 use std::fs::File;
 use std::io::Write;
@@ -120,7 +120,7 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
                 filename
                     .to_str()
                     .ok_or("Could not transform filename into str")?
-            ))
+            ));
         }
     };
     let filename = filename
@@ -149,7 +149,10 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
             nrows = match tuple[1].parse::<usize>() {
                 Ok(v) => Some(v),
                 Err(_) => {
-                    return Err(format!("Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'", tuple[1]));
+                    return Err(format!(
+                        "Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'",
+                        tuple[1]
+                    ));
                 }
             };
             continue;
@@ -165,7 +168,10 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
             ncols = match tuple[1].parse::<usize>() {
                 Ok(v) => Some(v),
                 Err(_) => {
-                    return Err(format!("Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'", tuple[1]));
+                    return Err(format!(
+                        "Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'",
+                        tuple[1]
+                    ));
                 }
             };
             continue;
@@ -181,7 +187,10 @@ pub fn read_colour_matrix(filename: &Path) -> Result<ColourMatrix, String> {
             let ncomp = match tuple[1].parse::<usize>() {
                 Ok(fvalue) => fvalue,
                 Err(_) => {
-                    return Err(format!("Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'", tuple[1]));
+                    return Err(format!(
+                        "Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'",
+                        tuple[1]
+                    ));
                 }
             };
             if ncomp != 3 {
@@ -272,7 +281,7 @@ pub fn read_matrix(filename: &Path) -> Result<Matrix, String> {
                 filename
                     .to_str()
                     .ok_or("Could not transform filename into str")?
-            ))
+            ));
         }
     };
     if content.is_empty() {
@@ -308,7 +317,10 @@ pub fn read_matrix(filename: &Path) -> Result<Matrix, String> {
             nrows = match tuple[1].parse::<usize>() {
                 Ok(v) => Some(v),
                 Err(_) => {
-                    return Err(format!("Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'", tuple[1]));
+                    return Err(format!(
+                        "Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'",
+                        tuple[1]
+                    ));
                 }
             };
             continue;
@@ -324,7 +336,10 @@ pub fn read_matrix(filename: &Path) -> Result<Matrix, String> {
             ncols = match tuple[1].parse::<usize>() {
                 Ok(v) => Some(v),
                 Err(_) => {
-                    return Err(format!("Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'", tuple[1]));
+                    return Err(format!(
+                        "Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'",
+                        tuple[1]
+                    ));
                 }
             };
             continue;
@@ -340,7 +355,10 @@ pub fn read_matrix(filename: &Path) -> Result<Matrix, String> {
             let ncomp = match tuple[1].parse::<usize>() {
                 Ok(fvalue) => fvalue,
                 Err(_) => {
-                    return Err(format!("Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'", tuple[1]));
+                    return Err(format!(
+                        "Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'",
+                        tuple[1]
+                    ));
                 }
             };
             if ncomp != 1 {

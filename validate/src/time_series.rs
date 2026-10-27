@@ -111,7 +111,7 @@ impl<T: Numberish> Validate for SeriesValidator<T> {
                 err_msg = format!(
                     "{}\n * Root Mean Squared Error is {:.4}, which is greater than the allowed value of {:.4}",
                     err_msg,  root_mean_squared_error, allowed_root_mean_squared_error
-                );                
+                );
             }
         }
 
@@ -148,9 +148,11 @@ impl<T: Numberish> Validate for SeriesValidator<T> {
 
         let show_err = if nchecks == 0 {
             "No checks performed..."
-        }else if err_msg.is_empty() { 
-            "No errors found" 
-        } else { &err_msg };
+        } else if err_msg.is_empty() {
+            "No errors found"
+        } else {
+            &err_msg
+        };
 
         let file = format!(
             "{}\n#### Errors:\n {}\n#### Data:\n\n{}",

@@ -1,8 +1,8 @@
-use air::{air_model::AirFlowModel, Float};
+use air::{Float, air_model::AirFlowModel};
 use calendar::{Date, Period};
 use communication::{MetaOptions, SimulationModel};
 use model::{Building, Infiltration, Model, SimulationStateHeader, Space};
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 use weather::{EPWWeather, Weather};
 
 fn get_validator(

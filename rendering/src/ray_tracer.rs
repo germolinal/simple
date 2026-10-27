@@ -25,10 +25,10 @@ use crate::interaction::Interaction;
 use crate::material::Material;
 use crate::rand::*;
 
-use crate::scene::{Object, Scene};
 use crate::Float;
-use geometry::intersection::SurfaceSide;
+use crate::scene::{Object, Scene};
 use geometry::Ray3D;
+use geometry::intersection::SurfaceSide;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -150,12 +150,8 @@ impl RayTracer {
                         .primitive
                         .intersect(&ray)
                         .map_or(0.0, |info| light.primitive.solid_angle_pdf(&info, &ray));
-                    let w = power_heuristic(
-                        1,
-                        ray_prob,
-                        n_prev_shadow_samples,
-                        light_pdf * p_light,
-                    );
+                    let w =
+                        power_heuristic(1, ray_prob, n_prev_shadow_samples, light_pdf * p_light);
                     spectrum += beta * w * material.colour();
                 }
                 break;

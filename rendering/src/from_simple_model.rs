@@ -250,8 +250,8 @@ impl SimpleModelReader {
 mod tests {
 
     use super::*;
-    use crate::material::Light;
     use crate::Float;
+    use crate::material::Light;
     use geometry::{DistantSource3D, Loop3D, Point3D, Polygon3D, Vector3D};
     use model::{Construction, Fenestration, Surface};
     use validate::assert_close;

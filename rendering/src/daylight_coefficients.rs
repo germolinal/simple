@@ -22,11 +22,11 @@ use crate::colour::Spectrum;
 use crate::colour_matrix::ColourMatrix;
 use crate::rand::*;
 
+use crate::Float;
 use crate::samplers::sample_cosine_weighted_horizontal_hemisphere;
 use crate::scene::Scene;
-use crate::Float;
-use geometry::intersection::SurfaceSide;
 use geometry::Vector3D;
+use geometry::intersection::SurfaceSide;
 use geometry::{Point3D, Ray3D};
 use utils::ProgressBar;
 use weather::solar::ReinhartSky;

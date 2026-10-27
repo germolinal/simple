@@ -56,4 +56,4 @@ mod optical_info;
 /// Surfaces and fenestrations, as seen by the solar model: points sampled
 /// on them, and their view factors
 pub mod solar_surface;
-pub use optical_info::{IRViewFactorSet, OpticalInfo, IR_VIEW_FACTOR_RAYS};
+pub use optical_info::{IR_VIEW_FACTOR_RAYS, IRViewFactorSet, OpticalInfo};

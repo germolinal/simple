@@ -1,5 +1,5 @@
-use crate::traits::Numberish;
 use crate::Float;
+use crate::traits::Numberish;
 use serde::{Deserialize, Serialize};
 
 /// A compact version of an N-Diagonal matrix.
@@ -303,7 +303,11 @@ mod tests {
             for r in 0..nrows {
                 for c in 0..ncols {
                     let expected = if in_band(r, c) { value(r, c) } else { 0.0 };
-                    assert_eq!(m.get(r, c).unwrap(), expected, "N={N} {nrows}x{ncols} ({r},{c})");
+                    assert_eq!(
+                        m.get(r, c).unwrap(),
+                        expected,
+                        "N={N} {nrows}x{ncols} ({r},{c})"
+                    );
                 }
             }
         }

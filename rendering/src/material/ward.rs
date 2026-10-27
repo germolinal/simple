@@ -18,16 +18,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::material::TransportMode;
 use crate::Spectrum;
+use crate::material::TransportMode;
 use crate::{Float, PI};
 use geometry::Vector3D;
 use rand::*;
 
+use super::RandGen;
 use super::bsdf_sample::BSDFSample;
 use super::local_coordinates_utils::same_heisphere;
 use super::mat_trait::{MatFlag, TransFlag};
-use super::RandGen;
 
 const LOW_ROUGHNESS: Float = 1e-3;
 
@@ -220,7 +220,11 @@ mod tests {
                 TransFlag::default(),
             );
             let Some(sample) = sample else { continue };
-            assert!(sample.wi.z > 0.0, "sampled below the surface: {}", sample.wi);
+            assert!(
+                sample.wi.z > 0.0,
+                "sampled below the surface: {}",
+                sample.wi
+            );
             if let MatFlag::GlossyReflection = sample.flags {
                 assert!(
                     sample.wi * mirror > 0.98,

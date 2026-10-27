@@ -3,7 +3,7 @@
 //!
 //! Run with `cargo bench --bench simulation` (add `--features parallel` to
 //! compare). Models and weather are the ones used by the validation tests.
-use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
+use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 use simple::{
     EPWWeather, MetaOptions, Model, MultiphysicsModel, OpticalInfo, Period, SimulationModel,
     SimulationStateHeader, Weather,

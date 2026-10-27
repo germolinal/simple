@@ -1,4 +1,4 @@
-use simple::{run_simulation::*, Model};
+use simple::{Model, run_simulation::*};
 
 fn main() -> Result<(), String> {
     // cargo instruments --features parallel --template 'CPU Profiler' --release --example cold_apartment

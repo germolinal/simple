@@ -17,8 +17,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::solar_surface::SolarSurface;
 use crate::Float;
+use crate::solar_surface::SolarSurface;
 use matrix::Matrix;
 use model::{Model, SimulationStateHeader, SolarOptions};
 use rendering::{DCFactory, Scene, Wavelengths};
@@ -235,8 +235,8 @@ mod testing {
 
     use json5;
     use model::{
-        substance::Normal, Construction, Fenestration, Material, Model, SimulationStateHeader,
-        SolarOptions, Surface,
+        Construction, Fenestration, Material, Model, SimulationStateHeader, SolarOptions, Surface,
+        substance::Normal,
     };
 
     use crate::OpticalInfo;
@@ -426,7 +426,7 @@ mod testing {
         // assert_eq!(info.back_fenestrations_dc.size(), (1, 146)); // 1 fenestration has no solar radiation at the back
         assert_eq!(info.front_fenestrations_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
         assert_eq!(info.back_surfaces_dc.size(), (2, 146)); // 2 fenestrations, 146 patches
-                                                            // assert_eq!(info.front_surfaces_dc.size(), (1, 146)); // // 1 surface has no solar radiation at the front
+        // assert_eq!(info.front_surfaces_dc.size(), (1, 146)); // // 1 surface has no solar radiation at the front
         assert_eq!(info.front_surfaces_view_factors.len(), 2);
         assert_eq!(info.back_surfaces_view_factors.len(), 2);
         assert_eq!(info.front_fenestrations_view_factors.len(), 2);

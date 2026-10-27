@@ -1,5 +1,5 @@
-use simple::{run_simulation::*, Model};
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use simple::{Model, run_simulation::*};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 
 #[test]
 fn box_sim() -> Result<(), String> {

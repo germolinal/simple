@@ -1,7 +1,7 @@
 use air::Float;
 use geometry::{Loop3D, Point3D, Polygon3D};
-use model::{substance, Construction, Material, SolarOptions, Surface};
-use simple::{run_simulation::*, Model};
+use model::{Construction, Material, SolarOptions, Surface, substance};
+use simple::{Model, run_simulation::*};
 
 fn main() -> Result<(), String> {
     // cargo instruments --features parallel --template 'CPU Profiler' --release --example scale

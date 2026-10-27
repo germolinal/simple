@@ -17,9 +17,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
+use crate::Float;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
-use crate::Float;
 use derive::{ObjectAPI, ObjectIO};
 use serde::{Deserialize, Serialize};
 

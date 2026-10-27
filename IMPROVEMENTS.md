@@ -145,7 +145,7 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
   now `.PHONY`.
 - **Back solar irradiance was never clamped**: `ThermalSurfaceData::march`
   (`heat/src/surface.rs`) tested `solar_front < 0.0` instead of `solar_back`.
-  It matters because the sky can be negative (open item 2): in the cold
+  It matters because the sky could be negative (fixed above): in the cold
   apartment, the bathroom went from 25.8 °C to −3.1 °C on 03/10 at 18:45
   (back irradiance of −1.3e4 W/m² on a surface); now 25.9 °C. Elsewhere,
   differences in zone and surface temperatures are small (99th percentile
@@ -186,7 +186,8 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
   incidence (2× at 60°), while BSDF sampling (as Radiance's `gaussamp()`)
   was right. Ray tracer validation (11 rounds before/after): specular metal
   RMSE 59.5 → 0.05 (MBE 2.16 → −0.07), full metal 11.45 → 0.28, full
-  plastic 0.10 → 0.0001, specular plastic 21.8 → 5.55 (see open item 1).
+  plastic 0.10 → 0.0001, specular plastic 21.8 → 5.55 (fixed later by the
+  Ward sampling fix above).
   New test: `rendering/tests/ward_energy.rs`.
 - **Triangle lights gave no direct light**: `triangle_solid_angle_pdf`
   (`rendering/src/primitive_samplers.rs`, and an unused copy in
@@ -217,7 +218,16 @@ dc_matrix`, `-p rendering --bench benchmark`, `-p heat --bench my_benchmark`.
 
 ### Open
 
-None known.
+1. **Cached optical data is not invalidated when the model changes**: the
+   file in `SolarOptions.optical_data_path` is recalculated when the options
+   change, but not when the geometry or the materials do, so editing a model
+   silently keeps its old daylight coefficients and view factors. Could
+   store a hash of the model's surfaces, fenestrations and materials.
+2. **`cargo clippy --all-targets` fails** on tests in `calendar` (equal
+   operands to `==` in `date.rs`, a loop that never loops in `period.rs`);
+   `pre_commit` and CI only run clippy on libraries.
+3. **RMSE thresholds** (convection 0.1, walls √0.2) only keep the old criteria;
+   they may deserve tightening now that the RMSE is right.
 
 ## Methods (to discuss)
 

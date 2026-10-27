@@ -19,8 +19,8 @@ SOFTWARE.
 */
 
 pub(crate) const MAX_RS: Float = 0.05;
-use crate::convection::ConvectionParams;
 use crate::Float;
+use crate::convection::ConvectionParams;
 use crate::{cavity::Cavity, surface::ChunkMemory};
 use matrix::matrix::Matrix;
 use model::{Construction, Model, Substance};
@@ -225,7 +225,7 @@ impl Discretization {
                                 return Err(format!(
                                     "Substance '{}' does not have a standard gas.",
                                     substance.name()
-                                ))
+                                ));
                             }
                         };
                         if n_layer == 0 {
@@ -239,7 +239,7 @@ impl Discretization {
                             .materials
                             .get(n_layer - 1)
                             .ok_or("No previous layer found")?; // we already checked this
-                                                                // let prev_mat = model.get_material(prev_mat_name)?;
+                        // let prev_mat = model.get_material(prev_mat_name)?;
 
                         let next_mat_name = match construction.materials.get(n_layer + 1) {
                             Some(v) => v,
@@ -247,7 +247,7 @@ impl Discretization {
                                 return Err(format!(
                                     "Construction '{}' has a Gas as its last layer",
                                     construction.name
-                                ))
+                                ));
                             }
                         };
                         // let next_mat = model.get_material(next_mat_name)?;
@@ -255,14 +255,30 @@ impl Discretization {
                         let prev_substance = model.get_material_substance(prev_mat_name)?;
 
                         const DEFAULT_EM: Float = 0.84;
-                        let ein = match &next_substance{
-                            Substance::Normal(s)=>s.front_thermal_absorbtance_or(crate::heat_model::MODULE_NAME,DEFAULT_EM),
-                            Substance::Gas(_)=>return Err(format!("Construction '{}' has two gases without a solid layer between them", construction.name))
+                        let ein = match &next_substance {
+                            Substance::Normal(s) => s.front_thermal_absorbtance_or(
+                                crate::heat_model::MODULE_NAME,
+                                DEFAULT_EM,
+                            ),
+                            Substance::Gas(_) => {
+                                return Err(format!(
+                                    "Construction '{}' has two gases without a solid layer between them",
+                                    construction.name
+                                ));
+                            }
                         };
 
                         let eout = match &prev_substance {
-                            Substance::Normal(s)=>s.back_thermal_absorbtance_or(crate::heat_model::MODULE_NAME,DEFAULT_EM),
-                            Substance::Gas(_)=>return Err(format!("Construction '{}' has two gases without a solid layer between them", construction.name))
+                            Substance::Normal(s) => s.back_thermal_absorbtance_or(
+                                crate::heat_model::MODULE_NAME,
+                                DEFAULT_EM,
+                            ),
+                            Substance::Gas(_) => {
+                                return Err(format!(
+                                    "Construction '{}' has two gases without a solid layer between them",
+                                    construction.name
+                                ));
+                            }
                         };
 
                         let c = Cavity {
@@ -735,7 +751,7 @@ impl Discretization {
 
 #[cfg(test)]
 mod testing {
-    use model::{substance::Normal, Material};
+    use model::{Material, substance::Normal};
 
     use super::*;
 

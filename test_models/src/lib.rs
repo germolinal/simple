@@ -34,10 +34,10 @@ type Float = f64;
 use geometry::{Loop3D, Point3D, Polygon3D};
 
 use model::{
-    hvac::ElectricHeater,
-    substance::{gas::GasSpecification, Gas, Normal as NormalSubstance},
     Boundary, Construction, Fenestration, Infiltration, Luminaire, Material, Model,
     SimulationStateHeader, Space, Surface,
+    hvac::ElectricHeater,
+    substance::{Gas, Normal as NormalSubstance, gas::GasSpecification},
 };
 
 /// The test material

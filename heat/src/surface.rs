@@ -18,10 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::convection::ConvectionParams;
 use crate::discretization::Discretization;
 use crate::glazing::Glazing;
-use crate::Float;
 use geometry::Vector3D;
 use matrix::{Matrix, NDiagGenericMatrix, NDiagMatrix};
 use model::{
@@ -457,7 +457,10 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
         let front_alphas_prev = Glazing::alphas(&front_glazing);
 
         if front_alphas_prev.len() != 1 && front_alphas_prev.len() != construction.materials.len() {
-            eprintln!("Construction '{}' might to have a mixture of transparent and opaque layers. This is not currently supported.", construction.name());
+            eprintln!(
+                "Construction '{}' might to have a mixture of transparent and opaque layers. This is not currently supported.",
+                construction.name()
+            );
         }
         let n_nodes = discretization.segments.len();
         let n_layers = construction.materials.len();
@@ -495,7 +498,10 @@ impl<T: SurfaceTrait + Send + Sync> ThermalSurfaceData<T> {
 
         let back_alphas_prev = Glazing::alphas(&back_glazing);
         if back_alphas_prev.len() != 1 && back_alphas_prev.len() != construction.materials.len() {
-            eprintln!("Construction '{}' might to have a mixture of transparent and opaque layers. This is not currently supported.", construction.name());
+            eprintln!(
+                "Construction '{}' might to have a mixture of transparent and opaque layers. This is not currently supported.",
+                construction.name()
+            );
         }
         let mut back_alphas = Matrix::new(0.0, n_nodes, 1);
         let mut global_i = n_nodes;
@@ -1371,7 +1377,7 @@ mod testing {
     use geometry::{Loop3D, Point3D, Polygon3D};
 
     use model::{
-        substance::Normal as NormalSubstance, Construction, Material, Model, Substance, Surface,
+        Construction, Material, Model, Substance, Surface, substance::Normal as NormalSubstance,
     };
 
     fn add_polyurethane(model: &mut Model) -> Result<Substance, String> {

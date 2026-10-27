@@ -4,7 +4,7 @@ use light::{Float, SolarModel};
 use model::SolarOptions;
 use schedule::ScheduleConstant;
 use test_models::*;
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 use weather::SyntheticWeather;
 const SIGMA: Float = 5.670374419e-8;
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidator<Float>> {

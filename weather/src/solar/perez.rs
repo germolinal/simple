@@ -124,7 +124,11 @@ impl PerezSky {
         sky_brightness: Float,
         index: usize,
     ) -> Float {
-        assert!(index <= 7, "Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}", index);
+        assert!(
+            index <= 7,
+            "Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}",
+            index
+        );
 
         const TABLE: [(Float, Float, Float, Float); 8] = [
             (57.20, -4.55, -2.98, 117.12),
@@ -155,7 +159,10 @@ impl PerezSky {
         index: usize,
     ) -> Float {
         if index > 7 {
-            panic!("Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}", index)
+            panic!(
+                "Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}",
+                index
+            )
         }
 
         const TABLE: [(Float, Float, Float, Float); 8] = [
@@ -347,11 +354,7 @@ impl PerezSky {
             // Perez's model can give negative values (e.g., with the sun
             // close to the horizon); like Radiance's gendaymtx.c, set them to
             // zero
-            if ret.is_nan() || ret < 0.0 {
-                0.0
-            } else {
-                ret
-            }
+            if ret.is_nan() || ret < 0.0 { 0.0 } else { ret }
         };
 
         // Calculate normalization coefficient
@@ -428,7 +431,10 @@ impl PerezSky {
         let (rows, cols) = vec.size();
         debug_assert_eq!(cols, 1);
         if rows != r.n_bins {
-            return Err(format!("when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)", rows, mf, r.n_bins));
+            return Err(format!(
+                "when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)",
+                rows, mf, r.n_bins
+            ));
         }
         Self::update_sky_vec_for(
             &r,
@@ -461,7 +467,12 @@ impl PerezSky {
         add_sun: bool,
     ) -> Result<(), String> {
         if vec.len() != r.n_bins {
-            return Err(format!("when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)", vec.len(), r.mf, r.n_bins));
+            return Err(format!(
+                "when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)",
+                vec.len(),
+                r.mf,
+                r.n_bins
+            ));
         }
 
         let dew_point = weather_data.dew_point_temperature;
@@ -639,7 +650,10 @@ mod tests {
                 nrows = match tuple[1].parse::<usize>() {
                     Ok(v) => Some(v),
                     Err(_) => {
-                        return Err(format!("Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'", tuple[1]));
+                        return Err(format!(
+                            "Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'",
+                            tuple[1]
+                        ));
                     }
                 };
                 continue;
@@ -655,7 +669,10 @@ mod tests {
                 ncols = match tuple[1].parse::<usize>() {
                     Ok(v) => Some(v),
                     Err(_) => {
-                        return Err(format!("Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'", tuple[1]));
+                        return Err(format!(
+                            "Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'",
+                            tuple[1]
+                        ));
                     }
                 };
                 continue;
@@ -671,7 +688,10 @@ mod tests {
                 let ncomp = match tuple[1].parse::<usize>() {
                     Ok(fvalue) => fvalue,
                     Err(_) => {
-                        return Err(format!("Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'", tuple[1]));
+                        return Err(format!(
+                            "Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'",
+                            tuple[1]
+                        ));
                     }
                 };
                 if ncomp != 3 {
@@ -802,7 +822,11 @@ mod tests {
                     diffuse_horizontal_radiation,
                     ..CurrentWeather::default()
                 };
-                let date = Date { month: 3, day: 10, hour };
+                let date = Date {
+                    month: 3,
+                    day: 10,
+                    hour,
+                };
                 let vec = PerezSky::gen_sky_vec(
                     4,
                     &solar,

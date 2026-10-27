@@ -34,28 +34,26 @@ pub fn valid(title: TokenStream, item: TokenStream) -> TokenStream {
     let docs = get_docs(v);
     let span = proc_macro2::Span::call_site();
     let function_name = find_name(item.clone());
-    
+
     let result_type = get_output_type(&item_ast.sig.output);
     let returns_result = format!("{}", result_type).starts_with("Result");
 
     let ret_statement = if returns_result {
         quote!(Ok(Box::new(wrapper)))
-    }else{
+    } else {
         quote!(Box::new(wrapper))
     };
 
-
-
     let wrapper_result_type = if returns_result {
         quote!(#result_type)
-    }else{
+    } else {
         quote!(Result<#result_type, String>)
     };
 
     // Function is all right
     let item = if returns_result {
         quote!(#item)
-    }else{
+    } else {
         // function needs to return a Result
         quote!( fn #function_name()->#wrapper_result_type {
             #item
@@ -84,7 +82,6 @@ pub fn valid(title: TokenStream, item: TokenStream) -> TokenStream {
     output.into()
 }
 
-
 /// Get the output type of a function based on its return type
 fn get_output_type(ret: &syn::ReturnType) -> proc_macro2::TokenStream {
     match ret {
@@ -92,7 +89,6 @@ fn get_output_type(ret: &syn::ReturnType) -> proc_macro2::TokenStream {
         syn::ReturnType::Type(_, ty) => quote!(#ty),
     }
 }
-
 
 fn get_docs(attrs: &[syn::Attribute]) -> String {
     let mut ret = String::new();

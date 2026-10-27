@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::error_msgs::print_warning_no_module;
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
-use crate::{hvac::*, Boundary, FenestrationType, SolarOptions, SurfaceType};
+use crate::{Boundary, FenestrationType, SolarOptions, SurfaceType, hvac::*};
 use crate::{Float, SiteDetails};
 use crate::{Object, SurfaceTrait};
 use crate::{Output, SimulationStateHeader};
@@ -1473,17 +1473,17 @@ mod testing {
     #[cfg(debug_assertions)]
     #[test]
     fn write_io_doc() -> Result<(), String> {
-        use crate::boundary::Boundary;
-        use crate::building::Building;
-        use crate::fenestration::{FenestrationPosition, FenestrationType};
-        use crate::substance;
         use crate::Output;
         use crate::ShelterClass;
         use crate::SolarOptions;
         use crate::TerrainClass;
+        use crate::boundary::Boundary;
+        use crate::building::Building;
+        use crate::fenestration::{FenestrationPosition, FenestrationType};
+        use crate::substance;
         use crate::{
-            hvac, ChairArmType, ChairBackType, ChairLegType, ChairType, Object, ObjectSpecs,
-            SofaType, SpacePurpose, StorageType, TableShape, TableType,
+            ChairArmType, ChairBackType, ChairLegType, ChairType, Object, ObjectSpecs, SofaType,
+            SpacePurpose, StorageType, TableShape, TableType, hvac,
         };
 
         // Written next to the hand-written chapters of the book. `make book`

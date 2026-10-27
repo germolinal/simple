@@ -18,8 +18,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::rand::RandGen;
 use crate::Float;
+use crate::rand::RandGen;
 use geometry::{
     BBox3D, Cylinder3D, DistantSource3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
 };

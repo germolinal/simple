@@ -191,8 +191,8 @@ impl Segment3D {
         // (with `f32`, these are below rounding errors)
         let tiny = (1e-8 as Float).max(10. * Float::EPSILON);
         let intersect_range = tiny..(1. - tiny);
-        let t_a_range =
-            -(1e-12 as Float).max(10. * Float::EPSILON)..(1. + (1e-7 as Float).max(10. * Float::EPSILON));
+        let t_a_range = -(1e-12 as Float).max(10. * Float::EPSILON)
+            ..(1. + (1e-7 as Float).max(10. * Float::EPSILON));
         match self.get_intersection_pt(input) {
             Some((t_a, t_b)) => {
                 let a = self.end - self.start;

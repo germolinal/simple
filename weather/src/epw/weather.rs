@@ -21,8 +21,8 @@ SOFTWARE.
 use super::ground_temperature::EPWGroundTemperature;
 use super::scanner::EPWScanner;
 use super::weather_line::EPWWeatherLine;
-use crate::location::Location;
 use crate::Weather;
+use crate::location::Location;
 
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path};

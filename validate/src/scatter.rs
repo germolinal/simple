@@ -106,7 +106,7 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
         let mut nchecks = 0;
         // Check compliance
         if let Some(allowed_r2) = self.allowed_r2 {
-            nchecks +=1;
+            nchecks += 1;
             if r2 < allowed_r2.into() {
                 err_msg = format!(
                     "{}\n *  R2 is {:.4}, which is lower than the allowed value of {:.4}",
@@ -117,7 +117,7 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
         }
 
         if let Some(allowed_intersect_delta) = self.allowed_intersect_delta {
-            nchecks +=1;
+            nchecks += 1;
             let expected_intersect: f64 = match self.expected_intersect {
                 Some(v) => v.into(),
                 None => 0.0,
@@ -136,7 +136,7 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
         }
 
         if let Some(allowed_slope_delta) = self.allowed_slope_delta {
-            nchecks +=1;
+            nchecks += 1;
             let expected_slope: f64 = match self.expected_slope {
                 Some(v) => v.into(),
                 None => 1.0,
@@ -200,9 +200,11 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
 
         let show_err = if nchecks == 0 {
             "No checks performed..."
-        }else if err_msg.is_empty() { 
-            "No errors found" 
-        } else { &err_msg };
+        } else if err_msg.is_empty() {
+            "No errors found"
+        } else {
+            &err_msg
+        };
         let file = format!(
             "{}\n#### Errors:\n {}\n\n#### Data:\n{}",
             fit_msg,

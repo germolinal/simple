@@ -22,8 +22,8 @@ use calendar::Date;
 use schedule::EmptySchedule;
 use schedule::Schedule;
 
-use crate::current_weather::CurrentWeather;
 use crate::WeatherTrait;
+use crate::current_weather::CurrentWeather;
 
 /// A Factory of CurrentWeather objects.
 /// Each element is a Schedule that produces

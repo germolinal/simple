@@ -24,10 +24,10 @@ Physically Based Rendering: From Theory To Implementation, © 2004-2021 Matt Pha
 https://pbr-book.org/3ed-2018/Primitives_and_Intersection_Acceleration/Bounding_Volume_Hierarchies
  */
 
+use crate::Float;
 use crate::scene::Scene;
 use crate::triangle::fallback::intersect_triangle;
 use crate::triangle::*;
-use crate::Float;
 use geometry::{BBox3D, BBoxAxis, Point3D, Ray3D, Vector3D};
 use std::cmp::Ordering;
 
@@ -261,7 +261,7 @@ impl Node {
                 let this_mid = (end - start) / 2;
 
                 mid = Some(this_mid); // this operation rounds results
-                                      // and sort the relevant range in the array
+                // and sort the relevant range in the array
                 primitives_info[start..end].select_nth_unstable_by(this_mid, cmp_centroids);
             } else {
                 // Use the Surface Area Heuristic...
@@ -573,8 +573,7 @@ impl BoundingVolumeTree {
         let inv_dir = Vector3D::new(inv_x, inv_y, inv_z);
         let dir_is_neg = (inv_dir.x < 0., inv_dir.y < 0., inv_dir.z < 0.);
         // Boxes are tested faster when no component of the direction is zero
-        let nonzero_dir =
-            ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.;
+        let nonzero_dir = ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.;
 
         let mut current_node = 0;
 
@@ -659,8 +658,7 @@ impl BoundingVolumeTree {
         );
         let dir_is_neg = (inv_dir.x < 0., inv_dir.y < 0., inv_dir.z < 0.);
         // Boxes are tested faster when no component of the direction is zero
-        let nonzero_dir =
-            ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.;
+        let nonzero_dir = ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.;
         let mut current_node = 0;
         // Only boxes closer than the distance can contain an obstruction
         let dir_squared = ray.direction * ray.direction;
@@ -733,10 +731,10 @@ impl BoundingVolumeTree {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rand::RngExt;
     use crate::colour::Spectrum;
     use crate::material::Material;
     use crate::material::Plastic;
+    use crate::rand::RngExt;
     use geometry::{Point3D, Ray3D, Sphere3D};
 
     use crate::primitive::Primitive;

@@ -20,13 +20,13 @@ SOFTWARE.
 
 use crate::colour::Spectrum;
 
-use crate::material::TransportMode;
 use crate::Float;
+use crate::material::TransportMode;
 use geometry::Vector3D;
 
 use super::bsdf_sample::BSDFSample;
 use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
-use super::{mirror_direction, RandGen};
+use super::{RandGen, mirror_direction};
 
 /// A mirror material
 #[derive(Debug, Clone)]

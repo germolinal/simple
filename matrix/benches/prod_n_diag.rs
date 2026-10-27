@@ -1,6 +1,6 @@
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
+use matrix::{NDiagMatrix, matrix::Matrix};
 use std::hint::black_box;
-use matrix::{matrix::Matrix, NDiagMatrix};
 
 pub fn prod_n_diag_into(c: &mut Criterion) {
     let ncols = 25;

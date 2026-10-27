@@ -50,7 +50,7 @@ pub fn extract_type_from_path(path: &syn::Path) -> Result<syn::Type, String> {
             return Err(format!(
                 "TODO: error handling 1... found {}",
                 path_to_string(path)?
-            ))
+            ));
         }
     };
     // This argument must be a type:

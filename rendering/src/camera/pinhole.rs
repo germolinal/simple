@@ -18,9 +18,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::camera::{Camera, CameraSample, Film, View};
 use crate::rand::*;
-use crate::Float;
 use geometry::{Ray3D, Vector3D};
 
 #[derive(Debug, Clone)]
@@ -55,7 +55,12 @@ impl Camera for Pinhole {
 
     fn pixel_from_ray(&self, ray: &Ray3D) -> ((usize, usize), Float) {
         if ray.origin.squared_distance(self.view.view_point) > 1e-24 {
-            panic!("Trying to get a pixel of a camera through a ray that does not start at its view point... ViewPoint = {}, ray.origin = {} | distance = {}", self.view.view_point, ray.origin, (self.view.view_point-ray.origin).length());
+            panic!(
+                "Trying to get a pixel of a camera through a ray that does not start at its view point... ViewPoint = {}, ray.origin = {} | distance = {}",
+                self.view.view_point,
+                ray.origin,
+                (self.view.view_point - ray.origin).length()
+            );
         }
 
         // Let's do a Ray/Plane intersection... the plane is Normal to the camera's view directio

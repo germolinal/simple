@@ -22,8 +22,8 @@ use clap::Parser;
 use rendering::{RayTracer, Scene, Wavelengths};
 
 use geometry::{Point3D, Vector3D};
-use rendering::camera::{Film, Pinhole, View};
 use rendering::Float;
+use rendering::camera::{Film, Pinhole, View};
 
 #[derive(Debug, Clone)]
 struct Triplet(Float, Float, Float);
@@ -50,7 +50,7 @@ impl std::str::FromStr for Triplet {
                 return Err(format!(
                     "Expecting value 1 in triplet to be a number... found '{}'",
                     st[0]
-                ))
+                ));
             }
         };
         let b = match st[1].parse::<Float>() {
@@ -59,7 +59,7 @@ impl std::str::FromStr for Triplet {
                 return Err(format!(
                     "Expecting value 2 in triplet to be a number... found '{}'",
                     st[1]
-                ))
+                ));
             }
         };
         let c = match st[2].parse::<Float>() {
@@ -68,7 +68,7 @@ impl std::str::FromStr for Triplet {
                 return Err(format!(
                     "Expecting value 3 in triplet to be a number... found '{}'",
                     st[2]
-                ))
+                ));
             }
         };
         Ok(Self(a, b, c))

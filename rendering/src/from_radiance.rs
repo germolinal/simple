@@ -18,8 +18,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::colour::Spectrum;
 use crate::Float;
+use crate::colour::Spectrum;
 
 use crate::material::{Dielectric, Diffuse, Glass, Light, Metal, Mirror, Plastic};
 
@@ -784,9 +784,9 @@ mod tests {
         assert_eq!(scanner.modifiers[0], "red".to_string());
         assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
         if let Material::Light(m) = &scene.materials[0] {
-            assert_close!(m.0 .0[0], 0.3);
-            assert_close!(m.0 .0[1], 0.05);
-            assert_close!(m.0 .0[2], 0.076);
+            assert_close!(m.0.0[0], 0.3);
+            assert_close!(m.0.0[1], 0.05);
+            assert_close!(m.0.0[2], 0.076);
         } else {
             panic!("Not a metal")
         }
@@ -810,9 +810,9 @@ mod tests {
         assert_eq!(scanner.modifiers[0], "red".to_string());
         assert_eq!(0, scanner.get_modifier_index(&"red".to_string()));
         if let Material::Mirror(m) = &scene.materials[0] {
-            assert_close!(m.0 .0[0], 0.3);
-            assert_close!(m.0 .0[1], 0.05);
-            assert_close!(m.0 .0[2], 0.076);
+            assert_close!(m.0.0[0], 0.3);
+            assert_close!(m.0.0[1], 0.05);
+            assert_close!(m.0.0[2], 0.076);
         } else {
             panic!("Not a metal")
         }

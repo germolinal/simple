@@ -397,9 +397,17 @@ impl Triangulation3D {
         }
 
         // Get edge segment from the other triangle...
-        let edge_2 = match self.triangles[i2].triangle.get_edge_index_from_segment(seg1){
-            Some(e)=>e,
-            None => return Err(format!("The triangles that you are trying to mark as neighbours don't share a segment.\n Triangle 1 : {}\nTriangle 2: {}", self.triangles[i1].triangle, self.triangles[i2].triangle))
+        let edge_2 = match self.triangles[i2]
+            .triangle
+            .get_edge_index_from_segment(seg1)
+        {
+            Some(e) => e,
+            None => {
+                return Err(format!(
+                    "The triangles that you are trying to mark as neighbours don't share a segment.\n Triangle 1 : {}\nTriangle 2: {}",
+                    self.triangles[i1].triangle, self.triangles[i2].triangle
+                ));
+            }
         };
         let edge_2 = Edge::from_i(edge_2);
 
@@ -572,7 +580,7 @@ impl Triangulation3D {
         {
             Some(i) => *i,
             None => {
-                return Err("Segment AC not found on triangle when flipping diagonals.".to_string())
+                return Err("Segment AC not found on triangle when flipping diagonals.".to_string());
             }
         };
         let ac_edge = Edge::from_i(ac_i);
@@ -586,7 +594,7 @@ impl Triangulation3D {
         {
             Some(i) => *i,
             None => {
-                return Err("Segment CB not found on triangle when flipping diagonals.".to_string())
+                return Err("Segment CB not found on triangle when flipping diagonals.".to_string());
             }
         };
         let cb_edge = Edge::from_i(cb_i);
@@ -602,7 +610,7 @@ impl Triangulation3D {
             None => {
                 return Err(
                     "Segment B-Opposite not found on triangle when flipping diagonals.".to_string(),
-                )
+                );
             }
         };
         let bopp_edge = Edge::from_i(bopp_i);
@@ -618,7 +626,7 @@ impl Triangulation3D {
             None => {
                 return Err(
                     "Segment A-Opposite not found on triangle when flipping diagonals.".to_string(),
-                )
+                );
             }
         };
         let aopp_edge = Edge::from_i(aopp_i);
@@ -986,7 +994,7 @@ impl Triangulation3D {
                     return Err(
                         "Trying to split edge with a point that does not fall on an edge"
                             .to_string(),
-                    )
+                    );
                 }
             };
             self.split_edge(index, edge, point)?;
@@ -1173,7 +1181,10 @@ mod testing {
             triangulation_area += tripiece.triangle.area();
             let triangle_normal = tripiece.triangle.normal();
             if !polygon_normal.is_same_direction(triangle_normal) {
-                return Err(format!("Triangle and Polygon do not have the same Normal (they are {} and {}, respectively)", triangle_normal, polygon_normal));
+                return Err(format!(
+                    "Triangle and Polygon do not have the same Normal (they are {} and {}, respectively)",
+                    triangle_normal, polygon_normal
+                ));
             }
 
             // Check proportions of triangle.
@@ -1187,7 +1198,10 @@ mod testing {
             }
 
             if tripiece.aspect_ratio > max_aspect_ratio {
-                return Err(format!("Triangle {} in the triangulation has aspect_ratio ({}) >= max_aspect_ratio ({}) ",i, tripiece.aspect_ratio,max_aspect_ratio));
+                return Err(format!(
+                    "Triangle {} in the triangulation has aspect_ratio ({}) >= max_aspect_ratio ({}) ",
+                    i, tripiece.aspect_ratio, max_aspect_ratio
+                ));
             }
 
             // Check if any of the three edges is
@@ -1245,7 +1259,10 @@ mod testing {
 
                         if inner_segment.contains(&edge)? {
                             if !tripiece.is_constrained(Edge::from_i(e)) {
-                                return Err(format!("Edge {} of Triangle3D {} in triangulation should be constrained",e,i));
+                                return Err(format!(
+                                    "Edge {} of Triangle3D {} in triangulation should be constrained",
+                                    e, i
+                                ));
                             }
                         }
                     }

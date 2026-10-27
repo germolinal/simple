@@ -22,11 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::gamma;
 use crate::Float;
 use crate::Point3D;
 use crate::Ray3D;
 use crate::Vector3D;
+use crate::gamma;
 
 // use crate::round_error::gamma;
 
@@ -257,12 +257,7 @@ impl BBox3D {
     /// Like `intersect_within()`, faster, for rays whose direction has no
     /// component equal to zero (it gives the same results for them, but not
     /// for other rays).
-    pub fn intersect_within_nonzero(
-        &self,
-        ray: Ray3D,
-        inv_dir: &Vector3D,
-        max_t: Float,
-    ) -> bool {
+    pub fn intersect_within_nonzero(&self, ray: Ray3D, inv_dir: &Vector3D, max_t: Float) -> bool {
         debug_assert!(ray.direction.x != 0. && ray.direction.y != 0. && ray.direction.z != 0.);
         let lo = (self.min - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);
         let hi = (self.max - ray.origin).scale_components(inv_dir.x, inv_dir.y, inv_dir.z);

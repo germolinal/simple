@@ -20,7 +20,7 @@ SOFTWARE.
 
 use crate::{Validate, ValidationResult};
 
-/// The type that represents the output of a valid 
+/// The type that represents the output of a valid
 /// validation function
 pub type ValidFunc = Box<dyn Validate + 'static>;
 

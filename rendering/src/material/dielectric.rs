@@ -18,10 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
+use crate::material::TransportMode;
 use crate::material::bsdf_sample::BSDFSample;
 use crate::material::specular::*;
-use crate::material::TransportMode;
-use crate::Float;
 use crate::{
     colour::Spectrum,
     material::mat_trait::{MatFlag, MaterialTrait, TransFlag},
