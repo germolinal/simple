@@ -131,7 +131,9 @@ Change results (to fix and validate one by one):
    weighted by MIS, but BSDF samples that hit such a light after a
    non-specular bounce are not added, so large, close lights are
    underestimated: −23% for a 4 × 4 m light 0.5 m above a floor (ignored test
-   `large_triangle_light_matches_analytic`). Giving light samples a weight
+   `large_triangle_light_matches_analytic`). Visible in Veach's MIS scene (ignored
+   test `veach_mis` in `rendering/tests/test_scenes.rs`): the large lights'
+   reflections on the smoother plates are missing or noisy. Giving light samples a weight
    of 1 instead was tried and reverted: it fixes that test, but light
    sampling is a terrible strategy for near-mirror surfaces, and the ray
    tracer validation got much worse (specular plastic RMSE 21.8 → 13.6
