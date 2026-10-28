@@ -31,7 +31,7 @@ use crate::Point3D;
 use std::fmt;
 
 /// A 3-dimensional Vector
-#[derive(Default, Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Copy, Clone, PartialEq, Serialize)]
 pub struct Vector3D {
     /// the X component
     pub x: Float,
@@ -39,6 +39,14 @@ pub struct Vector3D {
     pub y: Float,
     /// the Z component
     pub z: Float,
+}
+
+// Written as `[x, y, z]` or `{x, y, z}` (see `xyz_serde`)
+impl<'de> Deserialize<'de> for Vector3D {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let (x, y, z) = crate::xyz_serde::deserialize_xyz(deserializer, "Vector3D")?;
+        Ok(Self { x, y, z })
+    }
 }
 
 impl fmt::Display for Vector3D {

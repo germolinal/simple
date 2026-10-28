@@ -9,7 +9,6 @@ edition = "2021"
 syn = { version = "3.0", features = ["full"] }
 quote = "1.0"
 proc-macro2 = "1.0"
-proc-macro-error = { version = "1" }
 
 [lib]
 proc-macro = true

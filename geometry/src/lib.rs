@@ -105,6 +105,8 @@ pub use triangulation3d::Triangulation3D;
 mod vector3d;
 pub use vector3d::Vector3D;
 
+mod xyz_serde;
+
 mod bbox3d;
 pub use bbox3d::{BBox3D, BBoxAxis};
 

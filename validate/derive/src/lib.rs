@@ -94,19 +94,18 @@ fn get_docs(attrs: &[syn::Attribute]) -> String {
     let mut ret = String::new();
 
     for at in attrs {
-        if let Some(segment) = at.path.segments.iter().next() {
-            let segment_ident = format!("{}", segment.ident);
-            if "doc" == segment_ident {
-                let mut doc = format!("{}", at.tokens.clone());
-                // Get rid of the annoying '=' and '"'
-                doc.remove(0);
-                doc.remove(1);
-                doc.remove(doc.len() - 1);
-
-                let doc = doc.replace("\\\\", "\\");
-                let doc = doc.replace("\\\"", "\"");
-
-                ret.push_str(&format!("{}\n", doc));
+        // `/// text` is `#[doc = " text"]`
+        if let syn::Meta::NameValue(nv) = &at.meta {
+            if !nv.path.is_ident("doc") {
+                continue;
+            }
+            if let syn::Expr::Lit(syn::ExprLit {
+                lit: syn::Lit::Str(s),
+                ..
+            }) = &nv.value
+            {
+                // (The leading space keeps descriptions as they were)
+                ret.push_str(&format!(" {}\n", s.value()));
             }
         }
     }
