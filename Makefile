@@ -2,7 +2,7 @@ VALIDATION_FEATURES=--features parallel --release
 
 # None of these targets is a file (`weather` is also a directory, so without
 # this, `make weather` would never run)
-.PHONY: pre_commit ci build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference api_docs summary book website site serve_book check_validation documentation
+.PHONY: pre_commit ci build release release_patch release_minor release_major wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference api_docs summary book website site serve_book check_validation documentation
 
 
 pre_commit: #test validate
@@ -22,9 +22,14 @@ ci:
 build:
 	cargo build --features parallel --release
 
-# Tags main as v<version in Cargo.toml> and pushes the tag (see release.sh)
+# Releasing (see release.sh): `make release_patch` (or _minor, _major) bumps
+# the version, validates and opens a PR; once it is merged, `make release`
+# tags main as v<version in Cargo.toml> and pushes the tag
+release_patch release_minor release_major:
+	./release.sh prepare $(subst release_,,$@)
+
 release:
-	./release.sh
+	./release.sh tag
 
 wasm:
 	cargo build --features wasm --release --target wasm32-unknown-unknown
