@@ -98,12 +98,14 @@ Also, feel free to  [**CHECK THE DOCS**](https://germolinal.github.io/simple/)
   Merging requires the "CI passed" check. Run `make ci` and `make test` to do
   the same locally.
 * **Merging to `main`** publishes nothing.
-* **Releases** are tags. Bump `version` in `Cargo.toml`, run `cargo check`
-  and `make validate`, merge that, and run `make release` on an up-to-date
-  `main`. It refuses to tag unless everything is in place (e.g., stale
-  validation reports). The tag (`.github/workflows/release.yaml`) is tested
-  again, then gets a GitHub Release with binaries, and then the website, book,
-  API docs and validation reports are published from it.
+* **Releases** are tags. From an up-to-date `main`, run `make release_patch`
+  (or `release_minor`, `release_major`): it bumps the version on a
+  `release/vX.Y.Z` branch, runs `make validate`, and opens a PR. Once that is
+  merged, pull `main` and run `make release` to push the tag. Both refuse to
+  go on unless everything is in place (e.g., stale validation reports). The
+  tag (`.github/workflows/release.yaml`) is tested again, then gets a GitHub
+  Release with binaries, and then the website, book, API docs and validation
+  reports are published from it.
 * Rust is pinned in `rust-toolchain.toml`, and Dependabot opens weekly PRs to
   update dependencies.
 
