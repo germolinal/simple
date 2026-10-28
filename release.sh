@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 # Tags the current commit as `v<version in Cargo.toml>` and pushes the tag,
-# which triggers .github/workflows/release.yaml and docs-release.yaml.
+# which triggers .github/workflows/release.yaml: tests, a GitHub Release with
+# binaries, and the website and docs published from the tag.
 #
-# To release: bump `version` in Cargo.toml, commit, push to main, run `make release`.
+# To release: bump `version` in Cargo.toml, run `cargo check` (updates
+# Cargo.lock) and then `make validate` (it must come after any code or
+# Cargo.toml change), merge all that to main through a PR, pull, and run
+# `make release`.
+#
+# Refuses to tag unless the release is set up properly: on an up-to-date,
+# clean main, with a new and higher version, a Cargo.lock that matches it, and
+# validation reports that are not older than the code.
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
@@ -32,13 +40,18 @@ if git rev-parse --quiet --verify "refs/tags/$tag" >/dev/null; then
     fail "tag $tag already exists; bump the version in Cargo.toml"
 fi
 
+latest=$(git tag --list 'v*' --sort=-v:refname | head -1)
+if [ -n "$latest" ]; then
+    highest=$(printf '%s\n%s\n' "$latest" "$tag" | sort -V | tail -1)
+    [ "$highest" = "$tag" ] || fail "$tag is not higher than the latest release, $latest"
+fi
+
+cargo metadata --locked --format-version 1 >/dev/null 2>&1 ||
+    fail "Cargo.lock is out of date (did you bump the version without building?); run 'cargo check', commit Cargo.lock"
+
 if ! report=$(./docs/check_validation.sh); then
-    echo
-    echo "WARNING:"
-    echo "$report" | sed 's/^::error:://'
-    echo
-    read -r -p "Release with stale validation reports anyway? [y/N] " answer
-    [ "$answer" = "y" ] || [ "$answer" = "Y" ] || fail "aborted"
+    fail "the validation reports are stale; run 'make validate' and merge docs/validation first:
+$(echo "$report" | sed 's/^::error:://')"
 fi
 
 echo

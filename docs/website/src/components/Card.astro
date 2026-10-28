@@ -1,0 +1,28 @@
+---
+// A card; a link (with an arrow after the title) when `href` is given
+interface Props {
+  href?: string;
+  title: string;
+  icon?: string;
+  eyebrow?: string;
+  note?: string;
+}
+const { href, title, icon, eyebrow, note } = Astro.props;
+const Tag = href ? "a" : "div";
+---
+
+<Tag
+  href={href}
+  class:list={[
+    "block rounded-xl border border-line bg-surface p-5 text-fg no-underline shadow-sm",
+    href && "transition hover:-translate-y-0.5 hover:shadow-lg",
+  ]}
+>
+  {icon && <span class="mb-2 block text-2xl" aria-hidden="true">{icon}</span>}
+  {eyebrow && <span class="mb-1.5 block text-xs font-semibold tracking-wider text-brand uppercase">{eyebrow}</span>}
+  <h3 class="mb-1.5 text-base font-semibold">
+    {title}{href && <span class="text-brand"> →</span>}
+  </h3>
+  <p class="text-[0.95rem] text-muted"><slot /></p>
+  {note && <p class="mt-2.5 rounded-md bg-warn-bg px-2.5 py-1.5 text-sm text-warn-fg">{note}</p>}
+</Tag>

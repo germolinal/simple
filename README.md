@@ -42,6 +42,42 @@ Here is an example of Holistic simulations. Check these images, showcasing how
 Also, HERE is
 
 
+## Install
+
+### Pre-built binaries (recommended)
+
+Every release attaches pre-built binaries for macOS (Apple silicon), Linux
+(x86-64) and Windows (x86-64) to its
+[GitHub Release](https://github.com/germolinal/simple/releases/latest), and
+the [website](https://germolinal.github.io/simple/#download) links to the
+latest ones. Each archive contains the command-line tools `simple`, `spict`,
+`sfluxmtx`, `sfalsecolor` and `scompare`.
+
+Releases are the tested and validated versions of `SIMPLE`: the documentation
+and validation reports on the website always describe the latest release.
+
+> On macOS the binaries are not signed. If the system refuses to open them,
+> run `xattr -d com.apple.quarantine simple`.
+
+### Build from source
+
+There are no nightly builds: the latest development version is the `main`
+branch, which is tested but not validated until the next release. To use it,
+or a platform without pre-built binaries, build it with
+[Rust](https://rustup.rs):
+
+```sh
+# A release
+cargo install --locked --features parallel --git https://github.com/germolinal/simple --tag v0.1.0 simple
+
+# The development version (main)
+cargo install --locked --features parallel --git https://github.com/germolinal/simple simple
+
+# Or, from a clone (uses the Rust version pinned in rust-toolchain.toml)
+cargo build --release --features parallel
+```
+
+
 ## Documentation
 
 I am hoping that the first people who get here are those niche humans who
@@ -51,6 +87,25 @@ Buildings do not often do programming.
 
 
 Also, feel free to  [**CHECK THE DOCS**](https://germolinal.github.io/simple/)
+
+
+## Development and releases
+
+* **Pull requests to `main`** run formatting, clippy, tests, builds with every
+  feature combination, the API docs, a website build and a security audit of
+  the dependencies (`.github/workflows/test.yaml`). Jobs that can't be
+  affected by a PR are skipped (e.g., no Rust tests for a docs-only change).
+  Merging requires the "CI passed" check. Run `make ci` and `make test` to do
+  the same locally.
+* **Merging to `main`** publishes nothing.
+* **Releases** are tags. Bump `version` in `Cargo.toml`, run `cargo check`
+  and `make validate`, merge that, and run `make release` on an up-to-date
+  `main`. It refuses to tag unless everything is in place (e.g., stale
+  validation reports). The tag (`.github/workflows/release.yaml`) is tested
+  again, then gets a GitHub Release with binaries, and then the website, book,
+  API docs and validation reports are published from it.
+* Rust is pinned in `rust-toolchain.toml`, and Dependabot opens weekly PRs to
+  update dependencies.
 
 
 ## License

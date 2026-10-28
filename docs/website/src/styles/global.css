@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/* Colours that change with the system's light/dark preference. Use them as
+   bg-bg, bg-surface, text-fg, text-muted, border-line, text-brand, etc. */
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --fg: #1b2430;
+  --muted: #5b6676;
+  --line: #e2e6ec;
+  --brand: #0e7490;
+  --brand-strong: #164e63;
+  --on-brand: #ffffff;
+  --accent: #f59e0b;
+  --warn-bg: #fff4e5;
+  --warn-fg: #92400e;
+  --code-bg: #0f1720;
+  --code-fg: #e6edf3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --fg: #e6edf3;
+    --muted: #9aa5b4;
+    --line: #2a313c;
+    --brand: #22d3ee;
+    --brand-strong: #67e8f9;
+    --on-brand: #0d1117;
+    --accent: #fbbf24;
+    --warn-bg: #2d2210;
+    --warn-fg: #fbbf24;
+    --code-bg: #010409;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-fg: var(--warn-fg);
+  --color-code-bg: var(--code-bg);
+  --color-code-fg: var(--code-fg);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-fg antialiased;
+  }
+
+  a {
+    @apply text-brand;
+  }
+}
