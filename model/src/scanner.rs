@@ -177,7 +177,10 @@ impl<'a> SimpleScanner<'a> {
         while levels > 0 || !started {
             let next = self.peek();
             if !started && (next == ',') {
-                let errmsg = Self::make_error_msg("Malformed enum object. These should have parentheses (e.g., not 'ShelterClass::Urban' but 'ShelterClass::Urban()' )", self.line);
+                let errmsg = Self::make_error_msg(
+                    "Malformed enum object. These should have parentheses (e.g., not 'ShelterClass::Urban' but 'ShelterClass::Urban()' )",
+                    self.line,
+                );
                 return Err(errmsg);
             }
             if !started && next == '(' {
@@ -469,7 +472,7 @@ mod testing {
 
         let (ini, fin) = scan.object()?;
         let object = &source[ini..fin];
-        let obj_str = std::str::from_utf8(&object).map_err(|e| e.to_string())?;
+        let obj_str = std::str::from_utf8(object).map_err(|e| e.to_string())?;
         println!("'{}'", obj_str);
         assert_eq!(object, b"{ data data }");
         Ok(())

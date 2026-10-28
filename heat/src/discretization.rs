@@ -19,8 +19,8 @@ SOFTWARE.
 */
 
 pub(crate) const MAX_RS: Float = 0.05;
-use crate::convection::ConvectionParams;
 use crate::Float;
+use crate::convection::ConvectionParams;
 use crate::{cavity::Cavity, surface::ChunkMemory};
 use matrix::matrix::Matrix;
 use model::{Construction, Model, Substance};
@@ -60,8 +60,8 @@ impl UValue {
 /// calculation purposes.
 ///
 /// > **Note:** This object contains all the [`Cavity`] objects in it, which
-/// contain information not only about their thickness but also their orientation.
-/// This means that one `Discretization` should exist per `Surface`, not just by `Construction`.
+/// > contain information not only about their thickness but also their orientation.
+/// > This means that one `Discretization` should exist per `Surface`, not just by `Construction`.
 #[derive(Clone, Debug)]
 pub struct Discretization {
     /// Contains the node's mass and the `UValue` of each segment
@@ -225,7 +225,7 @@ impl Discretization {
                                 return Err(format!(
                                     "Substance '{}' does not have a standard gas.",
                                     substance.name()
-                                ))
+                                ));
                             }
                         };
                         if n_layer == 0 {
@@ -239,7 +239,7 @@ impl Discretization {
                             .materials
                             .get(n_layer - 1)
                             .ok_or("No previous layer found")?; // we already checked this
-                                                                // let prev_mat = model.get_material(prev_mat_name)?;
+                        // let prev_mat = model.get_material(prev_mat_name)?;
 
                         let next_mat_name = match construction.materials.get(n_layer + 1) {
                             Some(v) => v,
@@ -247,7 +247,7 @@ impl Discretization {
                                 return Err(format!(
                                     "Construction '{}' has a Gas as its last layer",
                                     construction.name
-                                ))
+                                ));
                             }
                         };
                         // let next_mat = model.get_material(next_mat_name)?;
@@ -255,14 +255,30 @@ impl Discretization {
                         let prev_substance = model.get_material_substance(prev_mat_name)?;
 
                         const DEFAULT_EM: Float = 0.84;
-                        let ein = match &next_substance{
-                            Substance::Normal(s)=>s.front_thermal_absorbtance_or(crate::heat_model::MODULE_NAME,DEFAULT_EM),
-                            Substance::Gas(_)=>return Err(format!("Construction '{}' has two gases without a solid layer between them", construction.name))
+                        let ein = match &next_substance {
+                            Substance::Normal(s) => s.front_thermal_absorbtance_or(
+                                crate::heat_model::MODULE_NAME,
+                                DEFAULT_EM,
+                            ),
+                            Substance::Gas(_) => {
+                                return Err(format!(
+                                    "Construction '{}' has two gases without a solid layer between them",
+                                    construction.name
+                                ));
+                            }
                         };
 
                         let eout = match &prev_substance {
-                            Substance::Normal(s)=>s.back_thermal_absorbtance_or(crate::heat_model::MODULE_NAME,DEFAULT_EM),
-                            Substance::Gas(_)=>return Err(format!("Construction '{}' has two gases without a solid layer between them", construction.name))
+                            Substance::Normal(s) => s.back_thermal_absorbtance_or(
+                                crate::heat_model::MODULE_NAME,
+                                DEFAULT_EM,
+                            ),
+                            Substance::Gas(_) => {
+                                return Err(format!(
+                                    "Construction '{}' has two gases without a solid layer between them",
+                                    construction.name
+                                ));
+                            }
                         };
 
                         let c = Cavity {
@@ -628,21 +644,23 @@ impl Discretization {
             self.segments.len(),
             nrows
         );
-        memory.k *= 0.;
+        memory.k.fill(0.0);
         memory.q.fill(0.);
         let nnodes = fin - ini;
 
         // this is just quite helpful
         let get_t_after = |i: usize| -> Float {
-            match temperatures.get(i + 1, 0) {
-                Ok(v) => v,
-                Err(_) => back_env.air_temperature,
+            if i + 1 < nrows {
+                temperatures[(i + 1, 0)]
+            } else {
+                back_env.air_temperature
             }
         };
 
+        // `k` is nnodes x nnodes, so all the elements below exist.
         for local_i in 0..nnodes - 1 {
             let global_i = ini + local_i;
-            let t_this = temperatures.get(global_i, 0)?;
+            let t_this = temperatures[(global_i, 0)];
             let t_next = get_t_after(global_i);
             let (.., uvalue) = &self.segments[global_i];
             let u = uvalue.u_value(t_this, t_next);
@@ -651,38 +669,30 @@ impl Discretization {
             if u.is_nan() {
                 dbg!(u);
             }
-            // Top left... should be there
-            memory.k.add_to_element(local_i, local_i, -u)?;
-            // Bottom right, only if within range.
-            if let Ok(old_value) = memory.k.get(local_i + 1, local_i + 1) {
-                #[cfg(debug_assertions)]
-                if old_value.is_nan() {
-                    dbg!(old_value);
+            let k = &mut memory.k;
+            // Top left
+            k[(local_i, local_i)] += -u;
+            // Bottom right
+            k[(local_i + 1, local_i + 1)] -= u;
+            // Top right
+            k[(local_i, local_i + 1)] += u;
+            // Bottom left
+            k[(local_i + 1, local_i)] += u;
+            #[cfg(debug_assertions)]
+            for (r, c) in [
+                (local_i + 1, local_i + 1),
+                (local_i, local_i + 1),
+                (local_i + 1, local_i),
+            ] {
+                if k[(r, c)].is_nan() {
+                    dbg!(r, c);
                 }
-                memory.k.set(local_i + 1, local_i + 1, old_value - u)?;
-            }
-            // Top right, only if within range.
-            if let Ok(old_value) = memory.k.get(local_i, local_i + 1) {
-                #[cfg(debug_assertions)]
-                if old_value.is_nan() {
-                    dbg!(old_value);
-                }
-                memory.k.set(local_i, local_i + 1, old_value + u)?;
-            }
-            // Bottom left, only if within range.
-            if let Ok(old_value) = memory.k.get(local_i + 1, local_i) {
-                #[cfg(debug_assertions)]
-                if old_value.is_nan() {
-                    dbg!(old_value);
-                }
-
-                memory.k.set(local_i + 1, local_i, old_value + u)?;
             }
         }
 
         // Add front border conditions
         let (hs_front, front_q) = if ini == 0 {
-            let ts = temperatures.get(0, 0)?;
+            let ts = temperatures[(0, 0)];
             // Solar radiation is added later because it also depends
             // on the solar absorption of different layers.
 
@@ -692,8 +702,8 @@ impl Discretization {
             (front_hs, front_q)
         } else {
             let (.., uvalue) = &self.segments[ini - 1];
-            let t_before = temperatures.get(ini - 1, 0)?; // this should NEVER fail
-            let t_after = temperatures.get(ini, 0)?; // this should NEVER fail
+            let t_before = temperatures[(ini - 1, 0)];
+            let t_after = temperatures[(ini, 0)];
             let u = uvalue.u_value(t_before, t_after);
 
             (u, u * t_before)
@@ -704,11 +714,11 @@ impl Discretization {
         if hs_front.is_nan() {
             dbg!(hs_front);
         }
-        memory.k.add_to_element(0, 0, -hs_front)?;
+        memory.k[(0, 0)] += -hs_front;
 
         // Add back border conditions
         let (hs_back, back_q) = if fin == nrows {
-            let ts = temperatures.get(fin - 1, 0)?;
+            let ts = temperatures[(fin - 1, 0)];
             // Solar radiation is added later because it also depends
             // on the solar absorption of different layers.
             let back_q = back_env.air_temperature * back_hs  // convection
@@ -717,7 +727,7 @@ impl Discretization {
             (back_hs, back_q)
         } else {
             let (.., uvalue) = &self.segments[fin - 1];
-            let t_before = temperatures.get(fin - 1, 0)?; // this should NEVER fail
+            let t_before = temperatures[(fin - 1, 0)];
             let t_after = get_t_after(fin - 1);
             let u = uvalue.u_value(t_before, t_after);
 
@@ -729,7 +739,7 @@ impl Discretization {
         if hs_back.is_nan() {
             dbg!(hs_back);
         }
-        memory.k.add_to_element(nnodes - 1, nnodes - 1, -hs_back)?;
+        memory.k[(nnodes - 1, nnodes - 1)] += -hs_back;
 
         Ok(())
     }
@@ -741,7 +751,7 @@ impl Discretization {
 
 #[cfg(test)]
 mod testing {
-    use model::{substance::Normal, Material};
+    use model::{Material, substance::Normal};
 
     use super::*;
 
@@ -862,7 +872,6 @@ mod testing {
             "Expecting mass to be {exp_mass}... found {mass}"
         );
         if let UValue::Back = d.segments[1].1 {
-            assert!(true)
         } else {
             panic!("Expecting Back!")
         }
@@ -974,7 +983,6 @@ mod testing {
             "Expecting mass to be {exp_mass}... found {mass}"
         );
         if let UValue::Back = d.segments[3].1 {
-            assert!(true)
         } else {
             panic!("Expecting Solid!")
         }
@@ -1091,7 +1099,6 @@ mod testing {
             "Expecting mass to be {exp_mass}... found {mass}"
         );
         if let UValue::Back = d.segments[3].1 {
-            assert!(true)
         } else {
             panic!("Expecting Solid!")
         }
@@ -1145,7 +1152,7 @@ mod testing {
         let front_hs = front_env.get_tarp_natural_convection_coefficient();
         let back_hs = back_env.get_tarp_convection_coefficient(1., 4., false);
 
-        return (d, temperatures, front_env, front_hs, back_env, back_hs);
+        (d, temperatures, front_env, front_hs, back_env, back_hs)
     }
 
     #[test]
@@ -1429,9 +1436,7 @@ mod testing {
         for r in 0..n - 1 {
             // Check q
             let heat_flow = memory.q[r];
-            if r == 0 {
-                assert!(heat_flow > 1e-5);
-            } else if r == n - 2 {
+            if r == 0 || r == n - 2 {
                 assert!(heat_flow > 1e-5);
             } else {
                 assert!(heat_flow.abs() < 1e-29);

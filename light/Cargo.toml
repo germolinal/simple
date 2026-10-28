@@ -2,7 +2,7 @@
 name = "light"
 version = "0.1.1"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -21,10 +21,11 @@ utils = { path = "../utils" }
 
 
 [dev-dependencies]
+criterion = { workspace = true }
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models" }
 
-validate = { git = "https://github.com/germolinal/validate" }
+validate = { path = "../validate" }
 json5 = { workspace = true }
 
 
@@ -34,7 +35,6 @@ simd = ["rendering/simd"]
 parallel = [
     "rayon",
     "rendering/parallel",
-    "matrix/parallel",
     "geometry/parallel",
 ]
 float = [
@@ -44,4 +44,10 @@ float = [
     "model/float",
     "rendering/float",
     "geometry/float",
+    "matrix/float",
+    "test_models/float",
 ]
+
+[[bench]]
+name = "dc_matrix"
+harness = false

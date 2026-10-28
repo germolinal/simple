@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::error_msgs::print_warning_no_module;
 use crate::scanner::SimpleScanner;
 use crate::simulation_state_element::SimulationStateElement;
-use crate::{hvac::*, Boundary, FenestrationType, SolarOptions, SurfaceType};
+use crate::{Boundary, FenestrationType, SolarOptions, SurfaceType, hvac::*};
 use crate::{Float, SiteDetails};
 use crate::{Object, SurfaceTrait};
 use crate::{Output, SimulationStateHeader};
@@ -526,13 +526,13 @@ impl Model {
     /// assert!(model.add_object(obj).is_ok());
     /// ````
     pub fn add_object(&mut self, add: Object) -> Result<(), String> {
-        if let Ok(space_name) = add.space() {
-            if self.get_space(space_name).is_err() {
-                return Err(format!(
-                    "Space called '{}' was not found in the model",
-                    space_name
-                ));
-            }
+        if let Ok(space_name) = add.space()
+            && self.get_space(space_name).is_err()
+        {
+            return Err(format!(
+                "Space called '{}' was not found in the model",
+                space_name
+            ));
         }
 
         self.objects.push(add);
@@ -913,8 +913,8 @@ impl Model {
     /// Adds a [`Fenestration`] to the [`Model`]
     ///
     /// > Note: It returns a `Result` because  this method can fail.
-    /// Specifically, when the [`Fenestration`] has a `parent_surface`
-    /// that does not exist of it does not fit within it.
+    /// > Specifically, when the [`Fenestration`] has a `parent_surface`
+    /// > that does not exist of it does not fit within it.
     ///
     /// ```rust
     /// use model::{Space, Model, Fenestration, SurfaceTrait, Construction};
@@ -1473,17 +1473,17 @@ mod testing {
     #[cfg(debug_assertions)]
     #[test]
     fn write_io_doc() -> Result<(), String> {
-        use crate::boundary::Boundary;
-        use crate::building::Building;
-        use crate::fenestration::{FenestrationPosition, FenestrationType};
-        use crate::substance;
         use crate::Output;
         use crate::ShelterClass;
         use crate::SolarOptions;
         use crate::TerrainClass;
+        use crate::boundary::Boundary;
+        use crate::building::Building;
+        use crate::fenestration::{FenestrationPosition, FenestrationType};
+        use crate::substance;
         use crate::{
-            hvac, ChairArmType, ChairBackType, ChairLegType, ChairType, Object, ObjectSpecs,
-            SofaType, SpacePurpose, StorageType, TableShape, TableType,
+            ChairArmType, ChairBackType, ChairLegType, ChairType, Object, ObjectSpecs, SofaType,
+            SpacePurpose, StorageType, TableShape, TableType, hvac,
         };
 
         // Written next to the hand-written chapters of the book. `make book`
@@ -1502,18 +1502,18 @@ mod testing {
         /* B */
         /*****/
         // Boundary
-        Boundary::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Boundary::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
-        Building::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Building::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* C */
         /*****/
-        ChairArmType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        ChairBackType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        ChairLegType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        ChairType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Construction::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        ChairArmType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        ChairBackType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        ChairLegType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        ChairType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        Construction::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* D */
@@ -1526,10 +1526,10 @@ mod testing {
         /*****/
         /* F */
         /*****/
-        Fenestration::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Fenestration::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        FenestrationPosition::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        FenestrationType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Fenestration::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        Fenestration::print_api_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        FenestrationPosition::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        FenestrationType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* G */
@@ -1538,19 +1538,19 @@ mod testing {
         /*****/
         /* H */
         /*****/
-        HVAC::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        summary.push_str(&format!("\t"));
-        hvac::ElectricHeater::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        hvac::ElectricHeater::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        HVAC::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        summary.push('\t');
+        hvac::ElectricHeater::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        hvac::ElectricHeater::print_api_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
-        summary.push_str(&format!("\t"));
-        hvac::IdealHeaterCooler::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        hvac::IdealHeaterCooler::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        summary.push('\t');
+        hvac::IdealHeaterCooler::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        hvac::IdealHeaterCooler::print_api_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* I */
         /*****/
-        crate::infiltration::Infiltration::print_doc(&dir, &mut summary)
+        crate::infiltration::Infiltration::print_doc(dir, &mut summary)
             .map_err(|e| e.to_string())?;
 
         /*****/
@@ -1564,13 +1564,13 @@ mod testing {
         /*****/
         /* L */
         /*****/
-        Luminaire::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Luminaire::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Luminaire::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        Luminaire::print_api_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* M */
         /*****/
-        Material::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Material::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* N */
@@ -1581,7 +1581,7 @@ mod testing {
         /*****/
         Object::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
         ObjectSpecs::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
-        Output::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Output::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* P */
@@ -1599,27 +1599,27 @@ mod testing {
         /* S */
         /*****/
         SiteDetails::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
-        SofaType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        SolarOptions::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Space::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Space::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        SpacePurpose::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        SofaType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        SolarOptions::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        Space::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        Space::print_api_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        SpacePurpose::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
         StorageType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
-        Substance::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        summary.push_str(&format!("\t"));
-        substance::Normal::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        summary.push_str(&format!("\t"));
-        substance::Gas::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        summary.push_str(&format!("\t"));
+        Substance::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        summary.push('\t');
+        substance::Normal::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        summary.push('\t');
+        substance::Gas::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        summary.push('\t');
         substance::gas::GasSpecification::print_doc(dir, &mut summary)
             .map_err(|e| e.to_string())?;
 
-        ShelterClass::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        ShelterClass::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
-        Surface::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        Surface::print_api_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
-        crate::surface::SurfaceType::print_doc(&dir, &mut summary).map_err(|e| e.to_string())?;
+        Surface::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        Surface::print_api_doc(dir, &mut summary).map_err(|e| e.to_string())?;
+        crate::surface::SurfaceType::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* T */
@@ -1670,7 +1670,7 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str)?;
+        let (model, _header) = Model::from_json(json_str)?;
         assert_eq!(Some((1.2, 5.21, 123.1)), model.geolocation());
 
         // No site details
@@ -1681,7 +1681,7 @@ mod testing {
             }]
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str)?;
+        let (model, _header) = Model::from_json(json_str)?;
         assert!(model.geolocation().is_none());
 
         // No longitude
@@ -1692,7 +1692,7 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str)?;
+        let (model, _header) = Model::from_json(json_str)?;
         assert!(model.geolocation().is_none());
 
         // No latitude
@@ -1703,7 +1703,7 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str)?;
+        let (model, _header) = Model::from_json(json_str)?;
         assert!(model.geolocation().is_none());
 
         // No standard_meridian
@@ -1714,7 +1714,7 @@ mod testing {
             }
         }"#;
 
-        let (model, _header) = Model::from_json(&json_str)?;
+        let (model, _header) = Model::from_json(json_str)?;
         assert!(model.geolocation().is_none());
 
         Ok(())
@@ -1737,7 +1737,7 @@ mod testing {
         if let Substance::Normal(s) = &s0 {
             assert_eq!(&subs_name, s.name());
         } else {
-            assert!(false, "asd")
+            panic!("asd")
         }
     }
 

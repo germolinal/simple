@@ -19,7 +19,7 @@ SOFTWARE.
 */
 
 use crate::Float;
-use model::hvac::{ElectricHeater, IdealHeaterCooler, HVAC};
+use model::hvac::{ElectricHeater, HVAC, IdealHeaterCooler};
 use model::{Model, SimulationState};
 
 /// An HVAC element from the point of view of the thermal
@@ -58,7 +58,10 @@ impl ThermalHVAC {
                         });
                     }
                 }
-                Err(format!("ElectricHeater is supposed to be in a space called '{}'... but it was not found", parent.target_space()?))
+                Err(format!(
+                    "ElectricHeater is supposed to be in a space called '{}'... but it was not found",
+                    parent.target_space()?
+                ))
             }
             HVAC::IdealHeaterCooler(e) => {
                 let parent = (**e).clone();
@@ -70,7 +73,10 @@ impl ThermalHVAC {
                         });
                     }
                 }
-                Err(format!("IdealHeaterCooler is supposed to be in a space called '{}'... but it was not found", parent.target_space()?))
+                Err(format!(
+                    "IdealHeaterCooler is supposed to be in a space called '{}'... but it was not found",
+                    parent.target_space()?
+                ))
             }
         }
     }
@@ -92,9 +98,9 @@ impl ThermalHVAC {
                         Some(v) => v,
                         None => {
                             return Err(format!(
-                            "Could not get Heating consumption if IdealHeaterCooler called '{}'",
-                            parent.name()
-                        ))
+                                "Could not get Heating consumption if IdealHeaterCooler called '{}'",
+                                parent.name()
+                            ));
                         }
                     };
                     ret.push((*target_space_index, consumption_power))
@@ -113,7 +119,7 @@ impl ThermalHVAC {
                             return Err(format!(
                                 "Could not get Heating consumption of ElectricHeater called '{}'",
                                 parent.name()
-                            ))
+                            ));
                         }
                     };
                     ret.push((*target_space_index, consumption_power))

@@ -1,4 +1,4 @@
-use simple::{run_simulation::*, Model};
+use simple::{Model, run_simulation::*};
 
 #[test]
 #[ignore]

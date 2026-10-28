@@ -24,11 +24,13 @@ use serde::{Deserialize, Serialize};
 /// This class modifies the wind speed in the site
 #[derive(Debug, Eq, PartialEq, Clone, Copy, ObjectIO, Serialize, Deserialize)]
 #[inline_enum]
+#[derive(Default)]
 pub enum TerrainClass {
     /// Describes a Flat, Open Country
     Country,
 
     /// Describes a Rough, Wooded Country or Suburb
+    #[default]
     Suburbs,
 
     /// Describes Towns, City Outskirts, and centers of large cities
@@ -39,12 +41,6 @@ pub enum TerrainClass {
 
     /// Describes Urban, Industrual or Forest terrain
     Urban,
-}
-
-impl std::default::Default for TerrainClass {
-    fn default() -> Self {
-        Self::Suburbs
-    }
 }
 
 impl TerrainClass {
@@ -251,10 +247,10 @@ mod testing {
             if let Some(terrain) = d.terrain {
                 assert_eq!(terrain, TerrainClass::Urban);
             } else {
-                assert!(false, "No terrain!")
+                panic!("No terrain!")
             }
         } else {
-            assert!(false, "No site details!")
+            panic!("No site details!")
         }
         Ok(())
     }

@@ -241,7 +241,6 @@ fn laptop() -> Result<(), String> {
         n_ambient_samples: 220,
         n_shadow_samples: 1,
         max_depth: 4,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -279,7 +278,7 @@ fn sponza() -> Result<(), String> {
 
     // Create film
     let film = Film {
-        resolution: (330, 330),
+        resolution: (630, 630),
     };
 
     // Create view
@@ -302,7 +301,6 @@ fn sponza() -> Result<(), String> {
         n_ambient_samples: 180,
         n_shadow_samples: 1,
         max_depth: 2,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -311,7 +309,6 @@ fn sponza() -> Result<(), String> {
 
 #[test]
 #[ignore]
-
 fn scene_0() -> Result<(), String> {
     // cargo test --package rendering --test test_scenes -- --ignored scene_0 --exact --nocapture
 
@@ -358,7 +355,7 @@ fn cornell_glass() -> Result<(), String> {
     scene.build_accelerator();
 
     let width = 367;
-    let height = (512 / 367) * width;
+    let height = width;
 
     // Create camera
     let film = Film {
@@ -384,7 +381,6 @@ fn cornell_glass() -> Result<(), String> {
         n_ambient_samples: 300,
         n_shadow_samples: 1,
         max_depth: 8,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -423,10 +419,9 @@ fn cornell_solid() -> Result<(), String> {
     let camera = Pinhole::new(view, film);
 
     let integrator = RayTracer {
-        n_ambient_samples: 900,
+        n_ambient_samples: 300,
         n_shadow_samples: 1,
-        max_depth: 100,
-        ..RayTracer::default()
+        max_depth: 8,
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -476,7 +471,6 @@ fn room() -> Result<(), String> {
         n_ambient_samples: 320,
         n_shadow_samples: 1,
         max_depth: 3,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
@@ -512,7 +506,7 @@ fn dining() -> Result<(), String> {
 
     // Create film
     let film = Film {
-        resolution: (250, 250),
+        resolution: (650, 650),
     };
 
     // Create view
@@ -524,7 +518,6 @@ fn dining() -> Result<(), String> {
         view_point,
         view_up,
         field_of_view: 48.,
-        ..View::default()
     };
 
     // Create camera
@@ -534,9 +527,94 @@ fn dining() -> Result<(), String> {
         n_ambient_samples: 20,
         n_shadow_samples: 1,
         max_depth: 1,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);
     buffer.save_hdre(std::path::Path::new("./tests/scenes//images/dining.hdr"))
+}
+
+#[test]
+#[ignore]
+fn veach_mis() -> Result<(), String> {
+    // cargo test --features parallel --release --package rendering --test test_scenes -- veach_mis --exact --nocapture --ignored
+
+    // The multiple importance sampling test scene (Veach and Guibas, 1995;
+    // Veach's thesis, Fig. 9.2): four plates, from smooth (back) to rough
+    // (front), reflecting four sphere lights of increasing size (left to
+    // right) that all emit the same power. Sampling lights works for small
+    // lights on rough plates; sampling the BSDF, for large lights on smooth
+    // plates. With MIS, all 16 highlights should look clean (i.e., no
+    // speckles, and the four reflections of each light equally bright).
+    let mut scene = Scene::new();
+
+    // Lights, in a row behind and above the plates
+    const RADII: [Float; 4] = [0.03, 0.1, 0.3, 0.9];
+    for (i, r) in RADII.iter().enumerate() {
+        // Same power: radiance proportional to 1/r²
+        let light = scene.push_material(Material::Light(Light(Spectrum::gray(0.4 / (r * r)))));
+        let x = -2.4 + 1.6 * i as Float;
+        let s = Sphere3D::new(*r, Point3D::new(x, 4., 3.));
+        scene.push_object(light, light, Primitive::Sphere(s));
+    }
+    // A small fill light, so that the plates are visible
+    let fill = scene.push_material(Material::Light(Light(Spectrum::gray(300.))));
+    let s = Sphere3D::new(0.05, Point3D::new(0., -3., 4.));
+    scene.push_object(fill, fill, Primitive::Sphere(s));
+
+    // Plates: each one is tilted so that it reflects the middle of the row of
+    // lights towards the camera
+    let view_point = Point3D::new(0., -4., 1.5);
+    let lights_centre = Point3D::new(0., 4., 3.);
+    const ROUGHNESS: [Float; 4] = [0.005, 0.02, 0.05, 0.1];
+    const HALF_WIDTH: Float = 3.;
+    const HALF_DEPTH: Float = 0.35;
+    for (i, roughness) in ROUGHNESS.iter().enumerate() {
+        let plate = scene.push_material(Material::Metal(Metal {
+            colour: Spectrum::gray(0.5),
+            specularity: 0.95,
+            roughness: *roughness,
+        }));
+        // Back to front
+        let centre = Point3D::new(0., 2.4 - 0.8 * i as Float, 0.85 - 0.25 * i as Float);
+        let normal = ((view_point - centre).get_normalized()
+            + (lights_centre - centre).get_normalized())
+        .get_normalized();
+        let e1 = Vector3D::new(HALF_WIDTH, 0., 0.);
+        let e2 = normal.cross(Vector3D::new(1., 0., 0.)).get_normalized() * HALF_DEPTH;
+        let (a, b, c, d) = (
+            centre - e1 - e2,
+            centre + e1 - e2,
+            centre + e1 + e2,
+            centre - e1 + e2,
+        );
+        scene.push_object(plate, plate, Primitive::Triangle(Triangle3D::new(a, b, c)?));
+        scene.push_object(plate, plate, Primitive::Triangle(Triangle3D::new(a, c, d)?));
+    }
+
+    scene.build_accelerator();
+
+    // Create film
+    let film = Film {
+        resolution: (512, 512),
+    };
+
+    // Create view
+    let view = View {
+        view_point,
+        view_direction: (Point3D::new(0., 1.5, 1.) - view_point).get_normalized(),
+        field_of_view: 60.,
+        ..View::default()
+    };
+
+    // Create camera
+    let camera = Pinhole::new(view, film);
+
+    let integrator = RayTracer {
+        n_ambient_samples: 64,
+        n_shadow_samples: 4,
+        max_depth: 1,
+    };
+
+    let buffer = integrator.render(&scene, &camera);
+    buffer.save_hdre(std::path::Path::new("./tests/scenes/images/veach_mis.hdr"))
 }

@@ -99,14 +99,20 @@ impl SimulationStateHeader {
             // If individual, check if we are passed that... if not, count
             // and add
             if self.passed_personal {
-                return Err(format!("Trying to add an individual SimulationStateElement '{:?}' after no more were allowed", e));
+                return Err(format!(
+                    "Trying to add an individual SimulationStateElement '{:?}' after no more were allowed",
+                    e
+                ));
             }
             self.n_individual += 1;
         } else if e.is_operational() {
             // If operational, check if we are passed that... if not, count
             // and add... mark individuals as passed
             if self.passed_operational {
-                return Err(format!("Trying to add an operational SimulationStateElement '{:?}' after no more were allowed", e));
+                return Err(format!(
+                    "Trying to add an operational SimulationStateElement '{:?}' after no more were allowed",
+                    e
+                ));
             }
             self.passed_personal = true;
             self.n_operational += 1;
@@ -258,9 +264,9 @@ mod testing {
     fn test_new() {
         let state = SimulationStateHeader::new();
         assert_eq!(state.n_individual, 0);
-        assert_eq!(state.passed_personal, false);
+        assert!(!state.passed_personal);
         assert_eq!(state.n_operational, 0);
-        assert_eq!(state.passed_operational, false);
+        assert!(!state.passed_operational);
         assert_eq!(state.elements.len(), 0);
     }
 
@@ -281,7 +287,7 @@ mod testing {
         if let Some(values) = &state.default_values {
             assert_eq!(values[0], 1.0);
         } else {
-            assert!(false)
+            panic!()
         }
 
         assert_eq!(
@@ -294,7 +300,7 @@ mod testing {
         if let Some(values) = &state.default_values {
             assert_eq!(values[1], 12.0);
         } else {
-            assert!(false)
+            panic!()
         }
 
         // push a physical one
@@ -308,7 +314,7 @@ mod testing {
         if let Some(values) = &state.default_values {
             assert_eq!(values[2], 2.0);
         } else {
-            assert!(false)
+            panic!()
         }
         Ok(())
     }
@@ -318,19 +324,25 @@ mod testing {
         let mut state = SimulationStateHeader::new();
 
         // Add one operational
-        assert!(state
-            .push(SimulationStateElement::LuminairePowerConsumption(0), 1.0)
-            .is_ok());
+        assert!(
+            state
+                .push(SimulationStateElement::LuminairePowerConsumption(0), 1.0)
+                .is_ok()
+        );
 
         // push a physical one
-        assert!(state
-            .push(SimulationStateElement::SpaceDryBulbTemperature(2), 2.)
-            .is_ok());
+        assert!(
+            state
+                .push(SimulationStateElement::SpaceDryBulbTemperature(2), 2.)
+                .is_ok()
+        );
 
         // Add an operational... it should panic now
-        assert!(state
-            .push(SimulationStateElement::LuminairePowerConsumption(0), 1.0)
-            .is_err());
+        assert!(
+            state
+                .push(SimulationStateElement::LuminairePowerConsumption(0), 1.0)
+                .is_err()
+        );
     }
 
     #[test]

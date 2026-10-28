@@ -463,7 +463,7 @@ mod testing {
     use super::*;
 
     use geometry::{Loop3D, Point3D};
-    use json5;
+
     use std::fs;
 
     #[test]
@@ -581,34 +581,18 @@ mod testing {
 
         assert!(matches!(surf.front_boundary, Boundary::Outdoor));
         assert!(matches!(surf.back_boundary, Boundary::Outdoor));
-        assert!(surf
-            .first_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_none());
+        assert!(surf.first_node_temperature.get().is_none());
         assert!(surf.first_node_temperature_index().is_none());
-        assert!(surf
-            .last_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_none());
+        assert!(surf.last_node_temperature.get().is_none());
         assert!(surf.last_node_temperature_index().is_none());
 
         surf.front_boundary = Boundary::Ground;
         surf.set_first_node_temperature_index(31)?;
         surf.set_last_node_temperature_index(39)?;
 
-        assert!(surf
-            .first_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_some());
+        assert!(surf.first_node_temperature.get().is_some());
         assert_eq!(surf.first_node_temperature_index(), Some(31));
-        assert!(surf
-            .last_node_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_some());
+        assert!(surf.last_node_temperature.get().is_some());
         assert_eq!(surf.last_node_temperature_index(), Some(39));
 
         assert!((surf.area() - 4.).abs() < 1e-5);

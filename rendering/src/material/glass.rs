@@ -18,18 +18,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::material::specular::*;
 use crate::Float;
+use crate::material::specular::*;
 use crate::{
     colour::Spectrum,
-    material::mat_trait::{MatFlag, MaterialTrait, TransFlag},
     material::TransportMode,
+    material::mat_trait::{MatFlag, MaterialTrait, TransFlag},
 };
 use geometry::Vector3D;
 use rand::*;
 
-use super::bsdf_sample::BSDFSample;
 use super::RandGen;
+use super::bsdf_sample::BSDFSample;
 
 fn any_transmission(colour: &mut Spectrum) -> bool {
     const MIN_COLOUR: Float = 1e-15;
@@ -137,7 +137,7 @@ impl MaterialTrait for Glass {
             return None;
         }
 
-        let uc: Float = rng.gen();
+        let uc: Float = rng.random();
         if uc <= pr / (pr + pt) {
             // Reflection
 

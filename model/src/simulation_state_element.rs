@@ -19,11 +19,14 @@ SOFTWARE.
 */
 
 use derive::StateElements;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, OnceLock};
 
 /// The type used for storing the fields of structures that represent
 /// values stored in the `SimulationState`.
-pub type StateElementField = Arc<Mutex<Option<usize>>>;
+///
+/// It holds the index of the value within the `SimulationState`. The index is
+/// set once, when the state is built, and read lock-free afterwards.
+pub type StateElementField = Arc<OnceLock<usize>>;
 
 /// The idea is to have a cheap-to-clone (or copy?) structure
 #[derive(Debug, Copy, Clone, PartialEq, Eq, StateElements)]

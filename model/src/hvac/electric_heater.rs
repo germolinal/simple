@@ -18,9 +18,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
-use crate::Float;
 use serde::{Deserialize, Serialize};
 
 use derive::{GroupMemberAPI, ObjectIO};
@@ -64,9 +64,9 @@ pub struct ElectricHeater {
     /// this value, the heater starts heating.
     ///
     /// > Note: This assumes automatic control; that is to say, this
-    /// condition will be evaluated every timestep of the heat model
-    /// simulation (as opposed to the occupant/people control timestep,
-    /// which is the one set by the user witht the simulation options)
+    /// > condition will be evaluated every timestep of the heat model
+    /// > simulation (as opposed to the occupant/people control timestep,
+    /// > which is the one set by the user witht the simulation options)
     heating_setpoint: Option<Float>,
 
     /// The heating or cooling power consumption (not delivered to the `Space`)    
@@ -154,7 +154,7 @@ mod testing {
             assert_eq!("Bedrooms heater", hvac.name());
             assert_eq!("Bedroom", hvac.target_space()?);
         } else {
-            assert!(false, "Incorrect heater!")
+            panic!("Incorrect heater!")
         }
 
         Ok(())

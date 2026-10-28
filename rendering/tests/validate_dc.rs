@@ -1,9 +1,9 @@
 use geometry::{Point3D, Ray3D, Vector3D};
-use rendering::{colour_matrix, ColourMatrix, DCFactory, Float, Scene};
+use rendering::{ColourMatrix, DCFactory, Float, Scene, colour_matrix};
 use utils::ProgressBar;
-use validate::{valid, ScatterValidator, Validate, Validator};
+use validate::{ScatterValidator, Validate, Validator, valid};
 
-fn get_validator(expected: Vec<f64>, found: Vec<f64>) -> Box<ScatterValidator<Float>> {
+fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidator<Float>> {
     Box::new(ScatterValidator {
         units: Some("cd/m2"),
         expected,
@@ -33,9 +33,8 @@ fn load_rays(filename: &str) -> Vec<Ray3D> {
     let s = std::fs::read_to_string(filename).unwrap();
     s.lines()
         .map(|line| {
-            let a: Vec<f64> = line
+            let a: Vec<Float> = line
                 .split_ascii_whitespace()
-                .into_iter()
                 .map(|x| x.parse::<Float>().unwrap())
                 .collect();
 

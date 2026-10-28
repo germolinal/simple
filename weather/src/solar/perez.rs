@@ -69,11 +69,8 @@ impl PerezSky {
         extraterrestrial_irradiance: Float,
     ) -> Float {
         let ret = diffuse_horizontal_irrad * air_mass / extraterrestrial_irradiance;
-        if ret < 0.01 {
-            0.01 // limit set by Radiance's gendaymtx.c
-        } else {
-            ret
-        }
+        // limits set by Radiance's gendaymtx.c
+        ret.clamp(0.01, 0.6)
     }
 
     /// Precipitable water content based on dew point. If now known, Radiance seems to use
@@ -127,7 +124,11 @@ impl PerezSky {
         sky_brightness: Float,
         index: usize,
     ) -> Float {
-        assert!(index <= 7, "Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}", index);
+        assert!(
+            index <= 7,
+            "Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}",
+            index
+        );
 
         const TABLE: [(Float, Float, Float, Float); 8] = [
             (57.20, -4.55, -2.98, 117.12),
@@ -158,7 +159,10 @@ impl PerezSky {
         index: usize,
     ) -> Float {
         if index > 7 {
-            panic!("Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}", index)
+            panic!(
+                "Table 4 of Perez's paper has only 8 sky clearness categories (starting from 0)... received {}",
+                index
+            )
         }
 
         const TABLE: [(Float, Float, Float, Float); 8] = [
@@ -314,10 +318,10 @@ impl PerezSky {
             air_mass,
             extraterrestrial_irradiance,
         )
-        .clamp(0.01, 9e9); // RADIANCE SETS THESE LIMITS... I don't know if they are in the paper
+        .clamp(0.01, 0.6); // As Radiance's gendaymtx.c
         let sky_clearness =
             Self::sky_clearness(diffuse_horizontal_irrad, direct_normal_irrad, zenith)
-                .clamp(-9e9, 11.9);
+                .clamp(1.0, 11.9); // As Radiance's gendaymtx.c
 
         let index = Self::clearness_category(sky_clearness);
 
@@ -347,11 +351,10 @@ impl PerezSky {
             // to calculate it.
             let ret = (1. + params[0] * (params[1] / cos_zeta).exp())
                 * (1. + params[2] * (params[3] * gamma).exp() + params[4] * cosgamma * cosgamma);
-            if ret.is_nan() {
-                0.0
-            } else {
-                ret
-            }
+            // Perez's model can give negative values (e.g., with the sun
+            // close to the horizon); like Radiance's gendaymtx.c, set them to
+            // zero
+            if ret.is_nan() || ret < 0.0 { 0.0 } else { ret }
         };
 
         // Calculate normalization coefficient
@@ -396,9 +399,9 @@ impl PerezSky {
     ) -> Result<Matrix, String> {
         let r = ReinhartSky::new(mf);
         let mut vec = Matrix::new(0.0, r.n_bins, 1);
-        Self::update_sky_vec(
-            &mut vec,
-            mf,
+        Self::update_sky_vec_for(
+            &r,
+            vec.as_mut_slice(),
             solar,
             date,
             weather_data,
@@ -428,18 +431,59 @@ impl PerezSky {
         let (rows, cols) = vec.size();
         debug_assert_eq!(cols, 1);
         if rows != r.n_bins {
-            return Err(format!("when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)", rows, mf, r.n_bins));
+            return Err(format!(
+                "when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)",
+                rows, mf, r.n_bins
+            ));
+        }
+        Self::update_sky_vec_for(
+            &r,
+            vec.as_mut_slice(),
+            solar,
+            date,
+            weather_data,
+            units,
+            albedo,
+            add_sky,
+            add_sun,
+        )
+    }
+
+    /// Like `update_sky_vec()`, for an existing [`ReinhartSky`] (so that its
+    /// bin directions do not need to be calculated again) and a slice with one
+    /// element per bin.
+    ///
+    /// As `update_sky_vec()`, it overwrites the values in `vec`.
+    #[allow(clippy::too_many_arguments)]
+    pub fn update_sky_vec_for(
+        r: &ReinhartSky,
+        vec: &mut [Float],
+        solar: &Solar,
+        date: Date,
+        weather_data: CurrentWeather,
+        units: SkyUnits,
+        albedo: Float,
+        add_sky: bool,
+        add_sun: bool,
+    ) -> Result<(), String> {
+        if vec.len() != r.n_bins {
+            return Err(format!(
+                "when update_sky_vec() : number of elements of input vector ({}) does not match the number of bins for the Reinhart subdivition (MF {} require {} bins)",
+                vec.len(),
+                r.mf,
+                r.n_bins
+            ));
         }
 
         let dew_point = weather_data.dew_point_temperature;
         let diffuse_horizontal_irrad = weather_data.diffuse_horizontal_radiation;
         let direct_normal_irrad = weather_data.direct_normal_radiation;
 
-        // If it is nighttime, just fill with zeroes
+        // The sky and the sun are added below
+        vec.fill(0.0);
+
+        // If it is nighttime, just leave zeroes
         if direct_normal_irrad + diffuse_horizontal_irrad < 1e-4 {
-            for bin in 0..r.n_bins {
-                vec.set(bin, 0, 0.0)?;
-            }
             return Ok(());
         }
 
@@ -453,9 +497,6 @@ impl PerezSky {
             Some(pos) => pos,
             None => {
                 // Vector3D::new(0., 0., -1.) // below the horizon
-                for bin in 0..r.n_bins {
-                    vec.set(bin, 0, 0.0)?;
-                }
                 return Ok(());
             }
         };
@@ -478,10 +519,10 @@ impl PerezSky {
             air_mass,
             extraterrestrial_irradiance,
         )
-        .clamp(0.01, 9e9);
+        .clamp(0.01, 0.6); // As Radiance's gendaymtx.c
         let sky_clearness =
             Self::sky_clearness(diffuse_horizontal_irrad, direct_normal_irrad, zenith)
-                .clamp(-9e9, 11.9);
+                .clamp(1.0, 11.9); // As Radiance's gendaymtx.c
 
         let clearness_category = Self::clearness_category(sky_clearness);
         let mut diff_illum = diffuse_horizontal_irrad
@@ -502,7 +543,7 @@ impl PerezSky {
             }
             let ground = albedo * global_horizontal / PI / WHTEFFICACY;
             if !ground.is_nan() {
-                vec.add_to_element(0, 0, ground)?
+                vec[0] += ground;
             }
         }
 
@@ -516,12 +557,11 @@ impl PerezSky {
                 direct_normal_irrad,
             );
 
-            for bin in 1..r.n_bins {
+            for (bin, item) in vec.iter_mut().enumerate().take(r.n_bins).skip(1) {
                 let dir = r.bin_dir(bin);
                 let v = sky_func(dir);
                 if !v.is_nan() {
-                    // vec.set(bin, 0, v)?;
-                    vec.add_to_element(bin, 0, v)?;
+                    *item += v;
                 }
             }
         }
@@ -566,7 +606,7 @@ impl PerezSky {
                 // let old = vec.get(bin, 0).unwrap();
                 // vec.set(bin, 0, old + val_add).unwrap();
                 if !val_add.is_nan() {
-                    vec.add_to_element(bin, 0, val_add)?;
+                    vec[bin] += val_add;
                 }
             }
         } // finished adding suns
@@ -595,7 +635,7 @@ mod tests {
         for line in content.lines() {
             header_lines += 1;
             // If we reach a blank line, we are over with the header.
-            if line.len() == 0 || line.as_bytes()[0].is_ascii_whitespace() {
+            if line.is_empty() || line.as_bytes()[0].is_ascii_whitespace() {
                 break;
             }
 
@@ -610,7 +650,10 @@ mod tests {
                 nrows = match tuple[1].parse::<usize>() {
                     Ok(v) => Some(v),
                     Err(_) => {
-                        return Err(format!("Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'", tuple[1]));
+                        return Err(format!(
+                            "Expecting NROWS line to be in the format 'NROWS=number', but did not find a number... found '{}'",
+                            tuple[1]
+                        ));
                     }
                 };
                 continue;
@@ -626,7 +669,10 @@ mod tests {
                 ncols = match tuple[1].parse::<usize>() {
                     Ok(v) => Some(v),
                     Err(_) => {
-                        return Err(format!("Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'", tuple[1]));
+                        return Err(format!(
+                            "Expecting NCOLS line to be in the format 'NCOLS=number', but did not find a number... found '{}'",
+                            tuple[1]
+                        ));
                     }
                 };
                 continue;
@@ -642,7 +688,10 @@ mod tests {
                 let ncomp = match tuple[1].parse::<usize>() {
                     Ok(fvalue) => fvalue,
                     Err(_) => {
-                        return Err(format!("Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'", tuple[1]));
+                        return Err(format!(
+                            "Expecting NCOMP line to be in the format 'NCOMP=number', but did not find a number... found '{}'",
+                            tuple[1]
+                        ));
                     }
                 };
                 if ncomp != 3 {
@@ -721,7 +770,7 @@ mod tests {
             }
         }
 
-        return Ok(matrix);
+        Ok(matrix)
     }
 
     #[test]
@@ -737,7 +786,8 @@ mod tests {
         for (nrow, expected) in exp.iter().enumerate() {
             let found = matrix.get(nrow, 0)?;
             let err = (found - expected).abs();
-            assert!(err < 1e-8)
+            // (relative rounding error, with `f32`)
+            assert!(err < (1e-8 as Float).max(10. * Float::EPSILON * expected.abs()))
         }
 
         Ok(())
@@ -749,6 +799,55 @@ mod tests {
         } else {
             3.33 // %
         }
+    }
+
+    /// With the sun close to the horizon and almost no direct radiation,
+    /// Perez's model used to give negative patches (as low as −9e6 in a year
+    /// of Wellington's weather, and −113 at 18:42 on 10 March here), which
+    /// Radiance's `gendaymtx` sets to zero
+    #[test]
+    fn test_sky_vec_is_not_negative() -> Result<(), String> {
+        let lat = -41.30 * PI / 180.;
+        let lon = -174.78 * PI / 180.;
+        let std_mer = -180. * PI / 180.;
+        let solar = Solar::new(lat, lon, std_mer);
+        for i in 0..200 {
+            let hour = 18.5 + 0.0025 * i as Float;
+            for (direct_normal_radiation, diffuse_horizontal_radiation) in
+                [(1.75, 34.), (0.5, 39.), (0., 34.), (4., 38.), (20., 60.)]
+            {
+                let weather_data = CurrentWeather {
+                    dew_point_temperature: 11.,
+                    direct_normal_radiation,
+                    diffuse_horizontal_radiation,
+                    ..CurrentWeather::default()
+                };
+                let date = Date {
+                    month: 3,
+                    day: 10,
+                    hour,
+                };
+                let vec = PerezSky::gen_sky_vec(
+                    4,
+                    &solar,
+                    date,
+                    weather_data,
+                    SkyUnits::Solar,
+                    0.2,
+                    true,
+                    true,
+                )?;
+                let (nrows, _) = vec.size();
+                for bin in 0..nrows {
+                    let v = vec.get(bin, 0)?;
+                    assert!(
+                        v >= 0.0,
+                        "patch {bin} is {v} at {hour}h (direct {direct_normal_radiation}, diffuse {diffuse_horizontal_radiation})"
+                    );
+                }
+            }
+        }
+        Ok(())
     }
 
     #[test]

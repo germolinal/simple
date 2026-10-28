@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Fails if any validation report in docs/validation is stale, i.e., if code
-# that can change simulation results was committed after the report was last
-# updated. Run `make validate` and commit docs/validation to fix it.
+# Fails if the validation reports in docs/validation are stale, i.e., if code
+# that can change simulation results was committed after the last full
+# validation. A full `make validate` writes docs/validation/.last_validated;
+# commit it together with the reports. (Reports that come out byte-identical
+# cannot be re-committed, so the stamp, not each report, marks the validation.)
 #
 # Usage: docs/check_validation.sh [--warn] [ref]   (ref defaults to HEAD; needs full history)
 #
@@ -16,6 +18,8 @@ fi
 ref=${1:-HEAD}
 cd "$(git rev-parse --show-toplevel)"
 
+stamp=docs/validation/.last_validated
+
 # Anything that can change simulation results
 sources=(':(glob)**/*.rs' ':(glob)**/Cargo.toml' 'Cargo.lock' ':(glob)**/tests/**')
 
@@ -25,20 +29,21 @@ if [ -z "$reports" ]; then
     exit 1
 fi
 
-stale=0
-for report in $reports; do
-    last=$(git log -1 --format=%H "$ref" -- "$report")
-    changes=$(git log --format='    %h %cs %s' "$last..$ref" -- "${sources[@]}")
-    if [ -n "$changes" ]; then
-        echo "::$level file=$report::$report is stale (last updated $(git log -1 --format=%cs "$last")). Code changed since:"
-        echo "$changes" | head -10
-        stale=1
-    else
-        echo "OK  $report (last updated $(git log -1 --format=%cs "$last"))"
-    fi
-done
-
-if [ "$stale" -ne 0 ]; then
-    echo "Validation reports are stale: run 'make validate' and commit docs/validation."
+last=$(git log -1 --format=%H "$ref" -- "$stamp")
+if [ -z "$last" ]; then
+    echo "::$level::Validation reports were never stamped ($stamp is not committed at $ref)."
+    echo "Run 'make validate' and commit docs/validation."
     [ "$level" = "warning" ] || exit 1
+    exit 0
+fi
+
+echo "Last full validation: $(git show "$last:$stamp")"
+changes=$(git log --format='    %h %cs %s' "$last..$ref" -- "${sources[@]}")
+if [ -n "$changes" ]; then
+    echo "::$level::Validation reports are stale. Code changed since they were last validated:"
+    echo "$changes" | head -10
+    echo "Run 'make validate' and commit docs/validation."
+    [ "$level" = "warning" ] || exit 1
+else
+    echo "OK: no code changes since then."
 fi

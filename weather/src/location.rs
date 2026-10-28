@@ -18,7 +18,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::{solar::Solar, Float};
+use crate::{Float, solar::Solar};
 use serde::{Deserialize, Serialize};
 
 /// A Location

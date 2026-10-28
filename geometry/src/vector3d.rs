@@ -280,9 +280,7 @@ impl std::ops::Mul<Vector3D> for Vector3D {
     type Output = Float;
 
     fn mul(self, other: Vector3D) -> Float {
-        {
-            self.x * other.x + self.y * other.y + self.z * other.z
-        }
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 
@@ -298,9 +296,7 @@ impl std::ops::Mul<Point3D> for Vector3D {
     type Output = Float;
 
     fn mul(self, other: Point3D) -> Float {
-        {
-            self.x * other.x + self.y * other.y + self.z * other.z
-        }
+        self.x * other.x + self.y * other.y + self.z * other.z
     }
 }
 
@@ -638,7 +634,7 @@ mod testing {
         assert!(!v2.is_parallel(v2));
 
         let v1 = Vector3D::new(123.1, 5.6, 99.12);
-        let mut v2 = v1 * 3.14;
+        let mut v2 = v1 * 3.2;
 
         // V2 is v1 scaled... same dir and
         // parallel

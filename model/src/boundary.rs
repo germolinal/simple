@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 /// the boundary will be assumed to be outside.
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model. It is always
-/// embedded on a `Surface`
+/// > embedded on a `Surface`
 ///
 /// ## Examples
 ///
@@ -203,7 +203,7 @@ mod testing {
         if let Boundary::Space { space } = &model.surfaces[0].front_boundary {
             assert_eq!(space, "Some Space")
         } else {
-            assert!(false, "Wrong space!")
+            panic!("Wrong space!")
         }
 
         Ok(())

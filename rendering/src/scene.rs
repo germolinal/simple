@@ -19,6 +19,7 @@ SOFTWARE.
 */
 
 // use std::rc::RefCount;
+use crate::Float;
 use crate::bvh::BoundingVolumeTree;
 use crate::colour::Spectrum;
 use crate::from_simple_model::SimpleModelReader;
@@ -27,12 +28,11 @@ use crate::material::{Light, Material};
 use crate::primitive::Primitive;
 use crate::rand::RandGen;
 use crate::triangle::Triangle;
-use crate::Float;
 use calendar::Date;
 
 use geometry::{Ray3D, Vector3D};
 use model::Model;
-use rand::Rng;
+use rand::RngExt;
 
 #[derive(Clone, Default)]
 pub struct Object {
@@ -52,6 +52,10 @@ pub struct Scene {
     pub front_material_indexes: Vec<usize>,
 
     pub back_material_indexes: Vec<usize>,
+
+    /// For each triangle, the index of the light (in `lights`) it belongs
+    /// to, if any (e.g., all the triangles of a sphere light)
+    pub light_indexes: Vec<Option<usize>>,
 
     /// The materials in the scene
     pub materials: Vec<Material>,
@@ -106,9 +110,8 @@ impl Scene {
         if self.lights.is_empty() && self.distant_lights.is_empty() {
             return None;
         }
-        let mut i: usize = rng.gen();
         let nlights = self.lights.len() + self.distant_lights.len();
-        i %= nlights;
+        let i = rng.random_range(0..nlights);
         let pdf = 1. / nlights as Float;
         if i < self.lights.len() {
             Some((&self.lights[i], pdf))
@@ -211,11 +214,22 @@ impl Scene {
     /// 21 was moved to the first position, then the mapping will be `vec![21, ...]`)
     pub fn build_accelerator(&mut self) -> Vec<usize> {
         if self.accelerator.is_some() {
-            panic!("Trying to re-build accelerator structure. If you really want this, use rebuild_accelerator")
+            panic!(
+                "Trying to re-build accelerator structure. If you really want this, use rebuild_accelerator"
+            )
         }
         let (bvh, mapping) = BoundingVolumeTree::new(self);
         self.accelerator = Some(bvh);
+        self.reorder_light_indexes(&mapping);
         mapping
+    }
+
+    /// Reorders `light_indexes` as the triangles were reordered when building
+    /// the accelerator
+    fn reorder_light_indexes(&mut self, mapping: &[usize]) {
+        if !mapping.is_empty() {
+            self.light_indexes = mapping.iter().map(|i| self.light_indexes[*i]).collect();
+        }
     }
 
     /// Re-Builds the accelerator
@@ -227,6 +241,7 @@ impl Scene {
     pub fn rebuild_accelerator(&mut self) -> Vec<usize> {
         let (bvh, mapping) = BoundingVolumeTree::new(self);
         self.accelerator = Some(bvh);
+        self.reorder_light_indexes(&mapping);
         mapping
     }
 
@@ -247,23 +262,22 @@ impl Scene {
         node_aux: &mut [usize; N],
     ) -> Option<(usize, Interaction)> {
         if let Some(accelerator) = &self.accelerator {
-            let aux = accelerator.intersect(self, ray, node_aux);
-
-            match aux {
-                Some((i, ..)) => {
-                    // update ray
-                    let t = &self.triangles[i];
-                    let (point, u, v) = crate::triangle::baricentric_coordinates(ray, t).unwrap();
-                    let interaction = Interaction {
+            accelerator.intersect(self, ray, node_aux).map(|hit| {
+                let t = &self.triangles[hit.index];
+                let point = ray.project(hit.t);
+                let interaction = Interaction {
+                    point,
+                    wo: ray.direction * -1.0,
+                    geometry_shading: crate::triangle::new_info(
+                        t,
                         point,
-                        wo: ray.direction * -1.0,
-                        geometry_shading: crate::triangle::new_info(t, point, u, v, ray.direction),
-                    };
-
-                    Some((i, interaction))
-                }
-                None => None,
-            }
+                        hit.u,
+                        hit.v,
+                        ray.direction,
+                    ),
+                };
+                (hit.index, interaction)
+            })
         } else {
             panic!("Trying to cast_ray() in a scene without an acceleration structure")
         }
@@ -279,7 +293,9 @@ impl Scene {
         if let Some(a) = &self.accelerator {
             a.unobstructed_distance(self, ray, distance_squared, node_aux)
         } else {
-            panic!("Trying to check if unobstructed_distance() in a scene without an acceleration structure")
+            panic!(
+                "Trying to check if unobstructed_distance() in a scene without an acceleration structure"
+            )
         }
     }
 
@@ -311,6 +327,7 @@ impl Scene {
         }
 
         // If it is light
+        let mut light_index = None;
         let is_light = if self.materials[front_material_index].emits_direct_light()
             || self.materials[back_material_index].emits_direct_light()
         {
@@ -328,6 +345,7 @@ impl Scene {
                 self.distant_lights.push(object);
             } else {
                 // register object as light
+                light_index = Some(self.lights.len());
                 self.lights.push(object);
             }
             true
@@ -354,6 +372,8 @@ impl Scene {
         self.normals.extend_from_slice(&normals);
         self.front_material_indexes.extend_from_slice(&front);
         self.back_material_indexes.extend_from_slice(&back);
+        self.light_indexes
+            .extend(std::iter::repeat_n(light_index, additional));
     }
 }
 

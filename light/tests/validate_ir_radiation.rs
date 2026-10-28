@@ -4,7 +4,7 @@ use light::{Float, SolarModel};
 use model::SolarOptions;
 use schedule::ScheduleConstant;
 use test_models::*;
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 use weather::SyntheticWeather;
 const SIGMA: Float = 5.670374419e-8;
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<ScatterValidator<Float>> {
@@ -103,7 +103,9 @@ fn get_simple_results(
             gain / surface_area / emmisivity + SIGMA * (ts as Float + 273.15).powi(4);
 
         // Set outdoor temp
-        let mut weather = SyntheticWeather::default();
+        let mut weather = SyntheticWeather {
+            ..SyntheticWeather::default()
+        };
         weather.dew_point_temperature = Box::new(ScheduleConstant::new(11.)); //11C is what Radiance uses by default.
         weather.horizontal_infrared_radiation_intensity =
             Box::new(ScheduleConstant::new(horizontal_ir[index]));
@@ -115,7 +117,8 @@ fn get_simple_results(
         let surface = &model.surfaces[0];
 
         // March
-        solar_model.march(date, &weather, &model, &mut state, &mut ())?;
+        let mut memory = solar_model.allocate_memory(&state)?;
+        solar_model.march(date, &weather, &model, &mut state, &mut memory)?;
 
         let front_radiation = surface
             .front_ir_irradiance(&state)
@@ -131,7 +134,7 @@ fn get_simple_results(
 }
 
 fn barcelona(validator: &mut Validator) -> Result<(), String> {
-    const CITY: &'static str = "barcelona";
+    const CITY: &str = "barcelona";
 
     #[valid("Exterior Incident Long Wave Radiation - Barcelona, South")]
     fn validate_barcelona_south() -> Result<ValidFunc, String> {
@@ -165,7 +168,7 @@ fn barcelona(validator: &mut Validator) -> Result<(), String> {
 }
 
 fn wellington(validator: &mut Validator) -> Result<(), String> {
-    const CITY: &'static str = "wellington";
+    const CITY: &str = "wellington";
 
     #[valid("Exterior Incident Long Wave Radiation - Wellington, South")]
     fn validate_wellington_south() -> Result<ValidFunc, String> {

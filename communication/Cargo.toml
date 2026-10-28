@@ -2,7 +2,7 @@
 name = "communication"
 version = "0.1.0"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -14,4 +14,4 @@ calendar = { path = "../calendar" }
 
 [features]
 default = []
-float = []
+float = ["model/float", "weather/float", "calendar/float"]

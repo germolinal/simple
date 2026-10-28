@@ -1,5 +1,5 @@
-use simple::{run_simulation::*, Model};
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use simple::{Model, run_simulation::*};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 
 #[test]
 fn box_sim() -> Result<(), String> {
@@ -48,7 +48,8 @@ fn box_sim() -> Result<(), String> {
 
         // Load produced data
         let found = validate::from_csv::<simple::Float>(res, &[1]);
-        let expected = validate::from_csv::<simple::Float>("tests/box/cold_box_eplus.csv", &[0]);
+        // (column 29 is EnergyPlus' "ZONE ONE:Zone Mean Air Temperature")
+        let expected = validate::from_csv::<simple::Float>("tests/box/eplusout.csv", &[29]);
 
         let skip = 100;
         let take = 8760 * 4 - 120;
@@ -56,14 +57,9 @@ fn box_sim() -> Result<(), String> {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
-            expected: expected[0]
-                .iter()
-                .skip(skip)
-                .take(take)
-                .map(|v| *v)
-                .collect(),
+            expected: expected[0].iter().skip(skip).take(take).copied().collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[0].iter().skip(skip).take(take).map(|v| *v).collect(),
+            found: found[0].iter().skip(skip).take(take).copied().collect(),
 
             // allowed_r2: Some(0.93),
             // allowed_intersect_delta: Some(0.5),

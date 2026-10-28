@@ -20,8 +20,8 @@ SOFTWARE.
 
 use model::{Model, SimulationState};
 
-use crate::control_trait::SimpleControl;
 use crate::MultiphysicsModel;
+use crate::control_trait::SimpleControl;
 use std::borrow::Borrow;
 
 /// A controler that does not control anything.

@@ -1,9 +1,23 @@
 VALIDATION_FEATURES=--features parallel --release
 
+# None of these targets is a file (`weather` is also a directory, so without
+# this, `make weather` would never run)
+.PHONY: pre_commit ci build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference api_docs summary book site serve_book check_validation documentation
+
 
 pre_commit: #test validate
 	cargo fmt
-	cargo clippy
+	cargo clippy --workspace --all-targets
+
+# The checks CI runs on every pull request (see .github/workflows/test.yaml),
+# except the tests
+ci:
+	cargo fmt --all -- --check
+	RUSTFLAGS="-D warnings" cargo clippy --workspace --all-targets --locked -- -D warnings
+	RUSTFLAGS="-D warnings" cargo clippy --workspace --all-targets --locked --features parallel -- -D warnings
+	RUSTFLAGS="-D warnings" cargo check --workspace --all-targets --locked --features float
+	RUSTFLAGS="-D warnings" cargo check --workspace --all-targets --locked --features float --features parallel
+	RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --locked
 
 build:
 	cargo build --features parallel --release
@@ -25,8 +39,9 @@ neighbours:
 
 
 # Regenerates every report in docs/validation (see `make check_validation`)
-validate: cold box convection dc cloud_to_sun solar_irradiance ir_irradiance ray_tracer infiltration versailles walls weather
-	echo Done validating!
+validate: cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather
+	echo "Validated $$(git rev-parse --short HEAD)$$(git diff --quiet HEAD -- . ':!docs/validation' || echo ' (with uncommitted changes)') on $$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > docs/validation/.last_validated
+	echo Done validating! Commit docs/validation, including .last_validated
 
 cold:
 	cargo test $(VALIDATION_FEATURES) --package simple --test cold_apartment -- apartment_sim --exact --nocapture --ignored
@@ -49,21 +64,24 @@ solar_irradiance:
 ir_irradiance:
 	cargo test $(VALIDATION_FEATURES) --package light --test validate_ir_radiation -- validate_ir_radiation --exact --nocapture
 
+view_factors:
+	cargo test $(VALIDATION_FEATURES) --package light --test validate_view_factors -- validate_view_factors --exact --nocapture
+
 ray_tracer:
 	cargo test $(VALIDATION_FEATURES) --package rendering --test validate_ray_tracer -- validate_ray_tracer --exact --nocapture
+
+light_sources:
+	cargo test $(VALIDATION_FEATURES) --package rendering --test validate_light_sources -- validate_light_sources --exact --nocapture
 
 infiltration:
 	cargo test --package air --test validate_infiltration -- validate --exact --nocapture
 
 
-versailles:
-	cargo test $(VALIDATION_FEATURES) --package simple --test versailles -- versailles_sim --exact --nocapture --ignored
-
 walls:
 	cargo test  --package heat --test validate_wall_heat_transfer -- validate --exact --nocapture
 
 weather:
-	cargo test $(VALIDATION_FEATURES) --package weather --test go_through -- test_go_through --exact --nocapture
+	cargo test --release --package weather --test go_through -- test_go_through --exact --nocapture
 
 
 
@@ -72,11 +90,16 @@ weather:
 #   /             -> docs/index.html (landing page + validation reports)
 #   /validation/  -> docs/validation/*.html (written by `make validate`)
 #   /book/        -> docs/book (hand-written chapters + auto-generated IO reference)
+#   /api/         -> Rust API reference (`make api_docs`, copied if present)
 SITE_DIR=$(CURDIR)/target/site
 
 # Writes docs/book/src/auto-*.md and IO_SUMMARY.md
 io_reference:
 	cargo test -p model --lib -- model::testing::write_io_doc --exact
+
+# Writes the Rust API reference into target/doc
+api_docs:
+	cargo doc --workspace --no-deps
 
 summary:
 	cat docs/book/SUMMARY_TEMPLATE.md docs/book/src/IO_SUMMARY.md > docs/book/src/SUMMARY.md
@@ -89,6 +112,7 @@ site: summary
 	mdbook build docs/book --dest-dir $(SITE_DIR)/book
 	cp docs/index.html $(SITE_DIR)/index.html
 	cp -R docs/validation $(SITE_DIR)/validation
+	if [ -d target/doc ]; then cp -R target/doc $(SITE_DIR)/api; fi
 
 serve_book: io_reference summary
 	mdbook serve docs/book --open

@@ -22,10 +22,10 @@ use crate::Float;
 use crate::{colour::Spectrum, material::TransportMode};
 use geometry::Vector3D;
 
+use super::RandGen;
 use super::bsdf_sample::BSDFSample;
 use super::mat_trait::{MatFlag, MaterialTrait, TransFlag};
 use super::ward::ward_pdf;
-use super::RandGen;
 
 /// Information required for modelling Radiance's Metal and Metal
 #[derive(Debug, Clone)]

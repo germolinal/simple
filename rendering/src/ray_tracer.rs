@@ -25,10 +25,10 @@ use crate::interaction::Interaction;
 use crate::material::Material;
 use crate::rand::*;
 
-use crate::scene::{Object, Scene};
 use crate::Float;
-use geometry::intersection::SurfaceSide;
+use crate::scene::{Object, Scene};
 use geometry::Ray3D;
+use geometry::intersection::SurfaceSide;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -77,7 +77,13 @@ impl RayTracer {
         mut ray: Ray3D,
         aux: &mut [usize; N],
     ) -> Spectrum {
+        // The pdf of the last BSDF sample, as given by `Material::pdf()` (so
+        // that it matches the one used when sampling lights)
         let mut ray_prob = 1.0;
+        // The number of shadow samples at the previous vertex
+        let mut n_prev_shadow_samples = self.n_shadow_samples;
+        // The probability of choosing each light, when sampling them
+        let p_light = 1. / scene.count_all_lights().max(1) as Float;
         let mut beta = Spectrum::ONE;
         let mut depth = 0;
         let mut refraction_coefficient = 1.0;
@@ -89,15 +95,14 @@ impl RayTracer {
                 // Check distant lights
                 for light in &scene.distant_lights {
                     if let Some((light_colour, light_pdf)) = intersect_light(scene, light, ray, aux)
+                        && light_pdf > 1e-18
                     {
-                        if light_pdf > 1e-18 {
-                            let w = if depth == 0 || specular_bounce {
-                                1.0
-                            } else {
-                                power_heuristic(1, ray_prob, 1, light_pdf)
-                            };
-                            spectrum += beta * w * light_colour;
-                        }
+                        let w = if depth == 0 || specular_bounce {
+                            1.0
+                        } else {
+                            power_heuristic(1, ray_prob, n_prev_shadow_samples, light_pdf * p_light)
+                        };
+                        spectrum += beta * w * light_colour;
                     }
                 }
 
@@ -128,6 +133,20 @@ impl RayTracer {
             if material.emits_light() {
                 if specular_bounce {
                     spectrum += beta * material.colour();
+                } else if let Some(light_index) = scene.light_indexes[triangle_index] {
+                    // This light was also sampled at the previous vertex, so
+                    // weight both strategies (multiple importance sampling).
+                    // Lights are sampled on their primitive (e.g., a sphere),
+                    // not on the triangles meshing it; if the ray misses the
+                    // primitive, light sampling could not have produced it.
+                    let light = &scene.lights[light_index];
+                    let light_pdf = light
+                        .primitive
+                        .intersect(&ray)
+                        .map_or(0.0, |info| light.primitive.solid_angle_pdf(&info, &ray));
+                    let w =
+                        power_heuristic(1, ray_prob, n_prev_shadow_samples, light_pdf * p_light);
+                    spectrum += beta * w * material.colour();
                 }
                 break;
             }
@@ -136,8 +155,8 @@ impl RayTracer {
             interaction.interpolate_normal(scene.normals[triangle_index]);
 
             // Direct lighting
+            let n_shadow_samples = if depth == 0 { self.n_shadow_samples } else { 1 };
             if !material.specular_only() {
-                let n_shadow_samples = if depth == 0 { self.n_shadow_samples } else { 1 };
                 let local = self.get_local_illumination(
                     scene,
                     material,
@@ -157,6 +176,9 @@ impl RayTracer {
             }
 
             // Sample BSDF, and continue
+            let (_, normal, e1, e2) = interaction.get_triad();
+            let wo = interaction.wo;
+            let eta = refraction_coefficient;
             if let Some(sample) = material.sample_bsdf(
                 ray.direction,
                 &mut interaction,
@@ -165,7 +187,8 @@ impl RayTracer {
             ) {
                 let cos_theta = (interaction.geometry_shading.normal * sample.wi).abs();
                 beta *= sample.spectrum * cos_theta / sample.pdf;
-                ray_prob = sample.pdf;
+                ray_prob = material.pdf(normal, e1, e2, sample.wi, wo, eta);
+                n_prev_shadow_samples = n_shadow_samples;
                 ray = Ray3D {
                     direction: sample.wi,
                     origin: interaction.point,
@@ -177,7 +200,7 @@ impl RayTracer {
 
             // Russian roulette
             let q = (1. - beta.radiance()).max(0.);
-            let aux: Float = rng.gen();
+            let aux: Float = rng.random();
             if aux < q {
                 break;
             }
@@ -214,7 +237,6 @@ impl RayTracer {
     /// Calculates the luminance produced by the direct sources in the
     /// scene
     #[allow(clippy::too_many_arguments)]
-
     fn get_local_illumination<const N: usize>(
         &self,
         scene: &Scene,
@@ -235,12 +257,10 @@ impl RayTracer {
         if let Some((light, p_light)) = scene.sample_light_uniform(rng) {
             let mut i = 0;
             while i < n {
-                let wi = if n > 1 {
-                    light.primitive.sample_direction(rng, intersection_pt)
-                } else {
-                    let (_, direction) = light.primitive.direction(intersection_pt);
-                    direction
-                };
+                // Always a random direction (aiming at the light's centre, as
+                // Radiance with `-dj 0`, is biased; and multiple importance
+                // sampling needs both strategies to be sampled)
+                let wi = light.primitive.sample_direction(rng, intersection_pt);
                 let shadow_ray = Ray3D {
                     origin: intersection_pt,
                     direction: wi,
@@ -301,19 +321,17 @@ impl RayTracer {
         let progress = utils::ProgressBar::new("Rendering".to_string(), width * height);
 
         let _ = &i.enumerate().for_each(|(first_p, chunk)| {
-            let mut pindex = first_p * chunk_len;
             let mut aux = [0; 32];
 
             let mut rng = get_rng();
 
-            for pixel in chunk {
+            for (pindex, pixel) in (first_p * chunk_len..).zip(chunk.iter_mut()) {
                 let y = (pindex as Float / width as Float).floor() as usize;
                 let x = pindex - y * width;
                 let (ray, _weight) = camera.gen_ray(&CameraSample { p_film: (x, y) });
                 *pixel = self.trace_all_rays(&mut rng, scene, ray, &mut aux);
 
                 progress.tic();
-                pindex += 1;
             }
         });
 

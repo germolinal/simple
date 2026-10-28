@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 /// {{#include ../../../model/tests/scanner/shelter_class.json}}
 /// ```
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Building` object
+/// > as it is always embeded on a `Building` object
 #[derive(Copy, Clone, ObjectIO, Debug, Serialize, Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 #[inline_enum]
@@ -176,9 +176,8 @@ mod testing {
 
         assert_eq!(model.buildings[0].name, "Main Building");
         if let Some(ShelterClass::Urban) = model.buildings[0].shelter_class {
-            assert!(true)
         } else {
-            assert!(false, "Wrong shelter class")
+            panic!("Wrong shelter class")
         }
 
         Ok(())
@@ -234,9 +233,8 @@ mod testing {
 
         assert_eq!(model.buildings[0].name, "Main Building");
         if let Some(ShelterClass::Urban) = model.buildings[0].shelter_class {
-            assert!(true)
         } else {
-            assert!(false, "Wrong shelter class")
+            panic!("Wrong shelter class")
         }
 
         Ok(())

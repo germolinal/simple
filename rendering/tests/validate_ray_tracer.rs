@@ -1,13 +1,13 @@
 use geometry::{Point3D, Ray3D, Vector3D};
 
 use rendering::{Float, RayTracer, Scene};
-use validate::{valid, SeriesValidator, ValidFunc, Validator};
+use validate::{SeriesValidator, ValidFunc, Validator, valid};
 const MAX_DEPTH: usize = 30;
 
 fn get_validator(expected: Vec<Float>, found: Vec<Float>) -> Box<SeriesValidator<Float>> {
     Box::new(SeriesValidator {
-        x_label: Some("Sensor".into()),
-        y_label: Some("Luminance".into()),
+        x_label: Some("Sensor"),
+        y_label: Some("Luminance"),
         y_units: Some("cd/m2"),
         expected_legend: Some("Radiance"),
         found_legend: Some("SIMPLE"),
@@ -24,7 +24,6 @@ fn load_expected_results(filename: String) -> Result<Vec<Float>, String> {
         .map(|line| {
             let a: Vec<Float> = line
                 .split_ascii_whitespace()
-                .into_iter()
                 .map(|x| x.parse::<Float>().expect("This should never fail"))
                 .collect();
             assert_eq!(a.len(), 1);
@@ -42,7 +41,6 @@ fn load_rays(filename: &str) -> Result<Vec<Ray3D>, String> {
         .map(|line| {
             let a: Vec<Float> = line
                 .split_ascii_whitespace()
-                .into_iter()
                 .map(|x| x.parse::<Float>().expect("This should never fail"))
                 .collect();
 
@@ -67,7 +65,6 @@ fn get_simple_results(dir: &str, max_depth: usize) -> Result<(Vec<Float>, Vec<Fl
         n_ambient_samples,
         n_shadow_samples: 1,
         max_depth,
-        ..RayTracer::default()
     };
     let mut aux = [0; 32];
     let mut rng = rendering::rand::get_rng();

@@ -28,9 +28,19 @@ impl ProgressBar {
         ret
     }
     pub fn tic(&self) {
+        self.tic_n(1)
+    }
+
+    /// Advances the bar by `n` steps at once
+    pub fn tic_n(&self, n: usize) {
+        if n == 0 {
+            return;
+        }
         let c = self
             .counter
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            .fetch_add(n, std::sync::atomic::Ordering::Relaxed)
+            + n
+            - 1;
         let progress = if c >= self.total_count {
             eprintln!(
                 "Progress bar '{}' overflowed... ticked beyond count of {}",
@@ -45,7 +55,7 @@ impl ProgressBar {
             .last_progress
             .load(std::sync::atomic::Ordering::Relaxed);
 
-        let delta = if progress > lp { progress - lp } else { 0 };
+        let delta = progress.saturating_sub(lp);
         if delta >= 100 / BAR_LENGTH {
             self.last_progress
                 .fetch_add(delta, std::sync::atomic::Ordering::Relaxed);
@@ -56,21 +66,19 @@ impl ProgressBar {
     fn show_progress(&self, progress: usize) {
         let filled_length = (BAR_LENGTH as f64 * (progress as f64 / 100.0)).round() as usize;
         let filled = "=".repeat(filled_length);
-        let n_empty = if BAR_LENGTH >= filled_length {
-            BAR_LENGTH - filled_length
-        } else {
-            0
-        };
+        let n_empty = BAR_LENGTH.saturating_sub(filled_length);
         let empty = " ".repeat(n_empty);
-        print!(
+        // On stderr, so that it does not get mixed with results written to
+        // stdout
+        eprint!(
             "\r    {} [{}{}] {:.2}%",
             self.title, filled, empty, progress
         );
-        std::io::stdout().flush().unwrap();
+        std::io::stderr().flush().unwrap();
     }
 
     pub fn done(&self) {
         #[cfg(not(feature = "wasm"))]
-        println!("\nDone after {} seconds", self.start.elapsed().as_secs());
+        eprintln!("\nDone after {} seconds", self.start.elapsed().as_secs());
     }
 }

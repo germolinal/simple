@@ -34,8 +34,8 @@ fi
 
 if ! report=$(./docs/check_validation.sh); then
     echo
-    echo "WARNING: validation reports are stale (run 'make validate' and commit docs/validation to fix):"
-    echo "$report" | grep -v "^OK" | sed 's/^::error file=[^:]*:://'
+    echo "WARNING:"
+    echo "$report" | sed 's/^::error:://'
     echo
     read -r -p "Release with stale validation reports anyway? [y/N] " answer
     [ "$answer" = "y" ] || [ "$answer" = "Y" ] || fail "aborted"

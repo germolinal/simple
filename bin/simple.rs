@@ -19,10 +19,10 @@ SOFTWARE.
 */
 
 use clap::Parser;
+use simple::OccupantBehaviour;
 use simple::control_trait::SimpleControl;
 use simple::run_simulation::*;
 use simple::void_control::VoidControl;
-use simple::OccupantBehaviour;
 use simple::{Model, SimulationStateHeader};
 
 fn run_sim<C>(

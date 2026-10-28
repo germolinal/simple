@@ -134,7 +134,7 @@ mod testing {
 
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&rust_reference).map_err(|e| e.to_string())?;
-        println!("{}", &rust_json);
+        println!("{}", rust_json);
         let rust_heter_2: HVAC = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
@@ -149,7 +149,7 @@ mod testing {
             assert_eq!("Bedrooms heater", hvac.name());
             assert_eq!("Bedroom", hvac.target_space()?);
         } else {
-            assert!(false, "Wrong space!")
+            panic!("Wrong space!")
         }
 
         Ok(())
@@ -191,7 +191,7 @@ mod testing {
 
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&rust_reference).map_err(|e| e.to_string())?;
-        println!("{}", &rust_json);
+        println!("{}", rust_json);
         let rust_heter_2: HVAC = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(
             format!("{:?}", rust_reference),
@@ -206,7 +206,7 @@ mod testing {
             assert_eq!("Bedrooms heater", hvac.name());
             assert_eq!("Bedroom", hvac.target_space()?);
         } else {
-            assert!(false, "Wrong space!")
+            panic!("Wrong space!")
         }
 
         Ok(())

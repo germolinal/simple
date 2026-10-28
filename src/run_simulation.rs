@@ -17,15 +17,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-use crate::control_trait::SimpleControl;
 use crate::Float;
 use crate::RhaiControlScript;
-use calendar::Period;
+use crate::control_trait::SimpleControl;
+use calendar::{Date, Period};
 use clap::Parser;
 use communication::{MetaOptions, SimulationModel};
 use model::{Model, SimulationStateHeader};
 use serde_json;
 use std::borrow::Borrow;
+use std::io::{BufWriter, Write};
 
 use crate::multiphysics_model::MultiphysicsModel;
 use std::fs::{self};
@@ -93,7 +94,10 @@ fn pre_process(
 ) -> Result<PreProcessData, String> {
     const MAX_N: usize = 60;
     let n = if options.n > MAX_N {
-        eprintln!("The maximum allowed value for -n param is {}... n has been automatically limited to that value", MAX_N);
+        eprintln!(
+            "The maximum allowed value for -n param is {}... n has been automatically limited to that value",
+            MAX_N
+        );
         MAX_N
     } else if options.n == 0 {
         return Err("Parameter 'n' should be larger than 0".to_string());
@@ -175,13 +179,52 @@ fn pre_process(
     })
 }
 
+/// Writes the header of the results: `Date`, followed by the name of each
+/// reported element.
+fn write_header<W: Write>(
+    out: &mut W,
+    full_header: &[String],
+    report_indexes: &[usize],
+    report_len: usize,
+) -> std::io::Result<()> {
+    out.write_all(b"Date,")?;
+    for (index, i) in report_indexes.iter().enumerate() {
+        let s = &full_header[*i];
+        if index < report_len - 1 {
+            write!(out, "{s},")?;
+        } else {
+            write!(out, "{s}")?;
+        }
+    }
+    out.write_all(b"\n")
+}
+
+/// Writes one row of results: the date, followed by the reported values.
+fn write_row<W: Write>(
+    out: &mut W,
+    date: Date,
+    state: &[Float],
+    report_indexes: &[usize],
+    report_len: usize,
+) -> std::io::Result<()> {
+    write!(out, "{date},")?;
+    for (index, i) in report_indexes.iter().enumerate() {
+        if index < report_len - 1 {
+            write!(out, "{:.3},", state[*i])?;
+        } else {
+            write!(out, "{:.3}", state[*i])?;
+        }
+    }
+    out.write_all(b"\n")
+}
+
 /// This function drives the simulation, after having parsed and built
 /// the Building, State and Peoeple.
 pub fn run<T, C, M>(
     model: M,
     state_header: &mut SimulationStateHeader,
     options: &SimOptions,
-    mut out: T,
+    out: T,
     controller: C,
 ) -> Result<(), String>
 where
@@ -189,6 +232,7 @@ where
     C: SimpleControl,
     M: Borrow<Model>,
 {
+    let mut out = BufWriter::new(out);
     let pre_process_data = pre_process(model.borrow(), options, state_header)?;
 
     let mut state = state_header
@@ -204,25 +248,13 @@ where
     let mut memory = pre_process_data.model.allocate_memory(&state)?;
 
     // Write header
-    let _u = out
-        .write(b"Date,")
-        .expect("Could not write to output file (header => 'Date').");
-    for (index, i) in pre_process_data.report_indexes.iter().enumerate() {
-        let s: &String = &pre_process_data.full_header[*i];
-        if index < report_len - 1 {
-            let s = format!("{s},");
-            let _u = out
-                .write(s.as_bytes())
-                .expect("Could not write to output file (header).");
-        } else {
-            let _u = out
-                .write(s.as_bytes())
-                .expect("Could not write to output file (header).");
-        }
-    }
-    let _u = out
-        .write(b"\n")
-        .expect("Could not write to output file (header newline).");
+    write_header(
+        &mut out,
+        &pre_process_data.full_header,
+        &pre_process_data.report_indexes,
+        report_len,
+    )
+    .map_err(|e| format!("Could not write to output file (header): {e}"))?;
 
     /* ************************************ */
     /* SIMULATE THE WHOLE SIMULATION PERIOD */
@@ -246,27 +278,18 @@ where
         )?;
 
         // Print all the values in the state
-        let ds = format!("{},", date);
-        let _u = out
-            .write(ds.as_bytes())
-            .unwrap_or_else(|_| panic!("Could not write to output file (Date '{}')", date));
-
-        for (index, i) in pre_process_data.report_indexes.iter().enumerate() {
-            let st = if index < report_len - 1 {
-                format!("{:.3},", state[*i])
-            } else {
-                format!("{:.3}", state[*i])
-            };
-            let _u = out
-                .write(st.as_bytes())
-                .expect("Could not write to output file (data)");
-        }
-        let _u = out
-            .write(b"\n")
-            .expect("Could not write to output file (newline)");
+        write_row(
+            &mut out,
+            date,
+            &state,
+            &pre_process_data.report_indexes,
+            report_len,
+        )
+        .map_err(|e| format!("Could not write to output file (Date '{date}'): {e}"))?;
     }
 
-    Ok(())
+    out.flush()
+        .map_err(|e| format!("Could not write to output file: {e}"))
 }
 
 /// This function drives the simulation, after having parsed and built
@@ -276,11 +299,12 @@ pub fn run_rhai<T>(
     state_header: &mut SimulationStateHeader,
     options: &SimOptions,
     control_file: &String,
-    mut out: T,
+    out: T,
 ) -> Result<(), String>
 where
     T: std::io::Write,
 {
+    let mut out = BufWriter::new(out);
     let model = std::sync::Arc::new(model);
 
     let pre_process_data = pre_process(model.borrow(), options, state_header)?;
@@ -300,25 +324,13 @@ where
     };
 
     // Write header
-    let _u = out
-        .write(b"Date,")
-        .expect("Could not write to output file (header => 'Date').");
-    for (index, i) in pre_process_data.report_indexes.iter().enumerate() {
-        let s: &String = &pre_process_data.full_header[*i];
-        if index < report_len - 1 {
-            let s = format!("{s},");
-            let _u = out
-                .write(s.as_bytes())
-                .expect("Could not write to output file (header).");
-        } else {
-            let _u = out
-                .write(s.as_bytes())
-                .expect("Could not write to output file (header).");
-        }
-    }
-    let _u = out
-        .write(b"\n")
-        .expect("Could not write to output file (header newline).");
+    write_header(
+        &mut out,
+        &pre_process_data.full_header,
+        &pre_process_data.report_indexes,
+        report_len,
+    )
+    .map_err(|e| format!("Could not write to output file (header): {e}"))?;
 
     /* ************************************ */
     /* SIMULATE THE WHOLE SIMULATION PERIOD */
@@ -346,28 +358,19 @@ where
         )?;
 
         // Print all the values in the state
-        let ds = format!("{},", date);
-        let _u = out
-            .write(ds.as_bytes())
-            .unwrap_or_else(|_| panic!("Could not write to output file (Date '{}')", date));
-
-        for (index, i) in pre_process_data.report_indexes.iter().enumerate() {
-            let st = if index < report_len - 1 {
-                format!("{:.3},", state_lock[*i])
-            } else {
-                format!("{:.3}", state_lock[*i])
-            };
-            let _u = out
-                .write(st.as_bytes())
-                .expect("Could not write to output file (data)");
-        }
+        write_row(
+            &mut out,
+            date,
+            &state_lock,
+            &pre_process_data.report_indexes,
+            report_len,
+        )
+        .map_err(|e| format!("Could not write to output file (Date '{date}'): {e}"))?;
         std::mem::drop(state_lock); // drop mutex
-        let _u = out
-            .write(b"\n")
-            .expect("Could not write to output file (newline)");
     }
 
-    Ok(())
+    out.flush()
+        .map_err(|e| format!("Could not write to output file: {e}"))
 }
 
 /***********/

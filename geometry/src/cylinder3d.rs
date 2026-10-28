@@ -100,7 +100,10 @@ impl Cylinder3D {
         }
         let mut phi_max = phi_max;
         if !(-Float::EPSILON..=360. + Float::EPSILON).contains(&phi_max) {
-            panic!("when creating a 'cylinder': given phi_max is not between 0 and 360 degrees (it was {})", phi_max);
+            panic!(
+                "when creating a 'cylinder': given phi_max is not between 0 and 360 degrees (it was {})",
+                phi_max
+            );
         }
         phi_max = phi_max.clamp(0., 360.).to_radians();
 

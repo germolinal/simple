@@ -19,7 +19,7 @@ SOFTWARE.
 */
 
 use crate::Float;
-use polynomial::{poly, Polynomial};
+use polynomial::{Polynomial, poly};
 
 /// A structure containing the data that will describe the thermal
 /// behaviour of a gas.
@@ -255,11 +255,7 @@ fn nu_60(ra: Float, a_gi: Float) -> Float {
     let nu2 = (0.104 + 0.175 / a_gi) * ra.powf(0.283);
 
     // Eq. 45
-    if nu1 > nu2 {
-        nu1
-    } else {
-        nu2
-    }
+    if nu1 > nu2 { nu1 } else { nu2 }
 }
 
 /// Calculates the Nusselt number for cavities tilted between $`60^o`$
@@ -274,7 +270,7 @@ fn nu_60_90(ra: Float, gamma: Float, a_gi: Float) -> Float {
     }
     let nu60 = nu_60(ra, a_gi); // PI/3 radians
     let nu90 = nu_90(ra, a_gi); // PI/2 radians
-                                // interpolate
+    // interpolate
     let x = (gamma - crate::PI / 3.) / (crate::PI / 2. - crate::PI / 3.);
     nu60 + (nu90 - nu60) * x
 }
@@ -299,11 +295,7 @@ fn nu_90(ra: Float, a_gi: Float) -> Float {
     let nu2 = 0.242 * (ra / a_gi).powf(0.272);
 
     // Eq. 49
-    if nu1 > nu2 {
-        nu1
-    } else {
-        nu2
-    }
+    if nu1 > nu2 { nu1 } else { nu2 }
 }
 
 /// Calculates the Nusselt number for cavities tilted between $`90^o`$ and $`180^o`$

@@ -143,7 +143,7 @@ impl Weather {
 
     /// Sorts the data by date
     pub fn sort_data(&mut self) {
-        self.data.sort_by(|a, b| a.date.cmp(&b.date));
+        self.data.sort_by_key(|a| a.date);
     }
 
     /// Calculates the solar data (direct_normal, diffuse_horizontal, global_horizontal)
@@ -295,6 +295,13 @@ mod tests {
 
     #[test]
     fn test_find_weather_line_wraps_around_new_year() {
+        // With `f32`, the time of the year (in days) has a resolution of a few
+        // seconds, which moves interpolated values by ~0.002 °C. (An `f64`,
+        // as `assert_close!` takes it.)
+        #[cfg(feature = "float")]
+        let tolerance = 1e-2;
+        #[cfg(not(feature = "float"))]
+        let tolerance = 1e-5;
         let line = |month, day, hour, dry_bulb_temperature| CurrentWeather {
             date: Date { month, day, hour },
             dry_bulb_temperature,
@@ -318,7 +325,7 @@ mod tests {
             day: 31,
             hour: 23.5,
         });
-        assert_close!(ln.dry_bulb_temperature, 20. + 0.25 * (10. - 20.), 1e-5);
+        assert_close!(ln.dry_bulb_temperature, 20. + 0.25 * (10. - 20.), tolerance);
 
         // Before the first record: same interpolation, three quarters of the way
         let ln = weather.find_weather_line(Date {
@@ -326,7 +333,7 @@ mod tests {
             day: 1,
             hour: 0.5,
         });
-        assert_close!(ln.dry_bulb_temperature, 20. + 0.75 * (10. - 20.), 1e-5);
+        assert_close!(ln.dry_bulb_temperature, 20. + 0.75 * (10. - 20.), tolerance);
     }
 
     #[test]

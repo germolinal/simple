@@ -19,8 +19,8 @@ SOFTWARE.
 */
 use crate::Float;
 
-use crate::gas::Gas;
 use crate::SIGMA;
+use crate::gas::Gas;
 
 /// Represents some gas enclosed by two solid
 /// materials

@@ -101,7 +101,8 @@ impl Segment3D {
         let dot01 = v0 * (point.x - self.start.x)
             + v1 * (point.y - self.start.y)
             + v2 * (point.z - self.start.z);
-        Ok(dot01 >= -1e-9 && dot01 <= dot00)
+        // (with `f32`, 1e-9 is below rounding errors)
+        Ok(dot01 >= -(1e-9 as Float).max(100. * Float::EPSILON) && dot01 <= dot00)
     }
 
     /// Checks if a [`Segment3D`] contains another [`Segment3D`].
@@ -149,24 +150,31 @@ impl Segment3D {
         let normal = dir1.cross(dir2);
         let delta = self.start() - input.start();
         let dot = delta * normal;
-        if dot.abs() > 1e-5 {
+        // Beyond the rounding error of the product (with `f32` and long
+        // segments, e.g., the rays of `Loop3D::test_point()`, that error alone
+        // exceeds 1e-5)
+        let rounding = 10. * Float::EPSILON * normal.length() * delta.length();
+        if dot.abs() > (1e-5 as Float).max(rounding) {
             // not coplanar.
             return None;
         }
 
-        // Check for intersection.
-        const TINY: Float = 1e-5;
-        let (t_a, t_b) = if normal.z.abs() > TINY {
+        // Check for intersection, projecting onto a plane the segments are
+        // not perpendicular to. (The threshold is relative to the normal's
+        // length, `|dir1| |dir2|`: with an absolute one, the rounding error of
+        // a normal that should be horizontal could select the XY plane.)
+        let tiny: Float = 1e-5 * normal.length();
+        let (t_a, t_b) = if normal.z.abs() > tiny {
             let det = dir1.y * dir2.x - dir1.x * dir2.y;
             let t_a = (dir2.y * delta.x - dir2.x * delta.y) / det;
             let t_b = (dir1.y * delta.x - dir1.x * delta.y) / det;
             (t_a, t_b)
-        } else if normal.x.abs() > TINY {
+        } else if normal.x.abs() > tiny {
             let det = dir1.y * dir2.z - dir1.z * dir2.y;
             let t_a = (dir2.y * delta.z - dir2.z * delta.y) / det;
             let t_b = (dir1.y * delta.z - dir1.z * delta.y) / det;
             (t_a, t_b)
-        } else if normal.y.abs() > TINY {
+        } else if normal.y.abs() > tiny {
             let det = dir1.x * dir2.z - dir1.z * dir2.x;
             let t_a = (dir2.x * delta.z - dir2.z * delta.x) / det;
             let t_b = (dir1.x * delta.z - dir1.z * delta.x) / det;
@@ -180,13 +188,16 @@ impl Segment3D {
     /// Checks if two [`Segment3D`] intersect each other. This returns `false` if
     /// one of the [`Segment3D`] barely touches the other one.
     pub fn intersect(&self, input: &Segment3D, output: &mut Point3D) -> bool {
-        const TINY: Float = 1e-8;
-        const INTERSECT_RANGE: core::ops::Range<Float> = TINY..(1. - TINY);
+        // (with `f32`, these are below rounding errors)
+        let tiny = (1e-8 as Float).max(10. * Float::EPSILON);
+        let intersect_range = tiny..(1. - tiny);
+        let t_a_range = -(1e-12 as Float).max(10. * Float::EPSILON)
+            ..(1. + (1e-7 as Float).max(10. * Float::EPSILON));
         match self.get_intersection_pt(input) {
             Some((t_a, t_b)) => {
                 let a = self.end - self.start;
 
-                if (-1e-12..(1. + 1e-7)).contains(&t_a) && INTERSECT_RANGE.contains(&t_b) {
+                if t_a_range.contains(&t_a) && intersect_range.contains(&t_b) {
                     *output = self.start + a * t_a;
                     true
                 } else {

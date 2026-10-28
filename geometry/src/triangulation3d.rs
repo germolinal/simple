@@ -397,9 +397,17 @@ impl Triangulation3D {
         }
 
         // Get edge segment from the other triangle...
-        let edge_2 = match self.triangles[i2].triangle.get_edge_index_from_segment(seg1){
-            Some(e)=>e,
-            None => return Err(format!("The triangles that you are trying to mark as neighbours don't share a segment.\n Triangle 1 : {}\nTriangle 2: {}", self.triangles[i1].triangle, self.triangles[i2].triangle))
+        let edge_2 = match self.triangles[i2]
+            .triangle
+            .get_edge_index_from_segment(seg1)
+        {
+            Some(e) => e,
+            None => {
+                return Err(format!(
+                    "The triangles that you are trying to mark as neighbours don't share a segment.\n Triangle 1 : {}\nTriangle 2: {}",
+                    self.triangles[i1].triangle, self.triangles[i2].triangle
+                ));
+            }
         };
         let edge_2 = Edge::from_i(edge_2);
 
@@ -572,7 +580,7 @@ impl Triangulation3D {
         {
             Some(i) => *i,
             None => {
-                return Err("Segment AC not found on triangle when flipping diagonals.".to_string())
+                return Err("Segment AC not found on triangle when flipping diagonals.".to_string());
             }
         };
         let ac_edge = Edge::from_i(ac_i);
@@ -586,7 +594,7 @@ impl Triangulation3D {
         {
             Some(i) => *i,
             None => {
-                return Err("Segment CB not found on triangle when flipping diagonals.".to_string())
+                return Err("Segment CB not found on triangle when flipping diagonals.".to_string());
             }
         };
         let cb_edge = Edge::from_i(cb_i);
@@ -602,7 +610,7 @@ impl Triangulation3D {
             None => {
                 return Err(
                     "Segment B-Opposite not found on triangle when flipping diagonals.".to_string(),
-                )
+                );
             }
         };
         let bopp_edge = Edge::from_i(bopp_i);
@@ -618,7 +626,7 @@ impl Triangulation3D {
             None => {
                 return Err(
                     "Segment A-Opposite not found on triangle when flipping diagonals.".to_string(),
-                )
+                );
             }
         };
         let aopp_edge = Edge::from_i(aopp_i);
@@ -941,11 +949,12 @@ impl Triangulation3D {
                 for j in 0..3 {
                     let this_edge = Edge::from_i(j);
                     // calculate possible aspect ratio...
-                    if let Some(ar) = self.get_flipped_aspect_ratio(i, this_edge)? {
-                        if current_ar > ar && best_aspect_ratio > ar {
-                            best_edge = Some(this_edge);
-                            best_aspect_ratio = ar;
-                        }
+                    if let Some(ar) = self.get_flipped_aspect_ratio(i, this_edge)?
+                        && current_ar > ar
+                        && best_aspect_ratio > ar
+                    {
+                        best_edge = Some(this_edge);
+                        best_aspect_ratio = ar;
                     }
                 }
 
@@ -986,7 +995,7 @@ impl Triangulation3D {
                     return Err(
                         "Trying to split edge with a point that does not fall on an edge"
                             .to_string(),
-                    )
+                    );
                 }
             };
             self.split_edge(index, edge, point)?;
@@ -1173,7 +1182,10 @@ mod testing {
             triangulation_area += tripiece.triangle.area();
             let triangle_normal = tripiece.triangle.normal();
             if !polygon_normal.is_same_direction(triangle_normal) {
-                return Err(format!("Triangle and Polygon do not have the same Normal (they are {} and {}, respectively)", triangle_normal, polygon_normal));
+                return Err(format!(
+                    "Triangle and Polygon do not have the same Normal (they are {} and {}, respectively)",
+                    triangle_normal, polygon_normal
+                ));
             }
 
             // Check proportions of triangle.
@@ -1187,7 +1199,10 @@ mod testing {
             }
 
             if tripiece.aspect_ratio > max_aspect_ratio {
-                return Err(format!("Triangle {} in the triangulation has aspect_ratio ({}) >= max_aspect_ratio ({}) ",i, tripiece.aspect_ratio,max_aspect_ratio));
+                return Err(format!(
+                    "Triangle {} in the triangulation has aspect_ratio ({}) >= max_aspect_ratio ({}) ",
+                    i, tripiece.aspect_ratio, max_aspect_ratio
+                ));
             }
 
             // Check if any of the three edges is
@@ -1243,10 +1258,13 @@ mod testing {
                         let b = inner[(j + 1) % n_in];
                         let inner_segment = Segment3D::new(a, b);
 
-                        if inner_segment.contains(&edge)? {
-                            if !tripiece.is_constrained(Edge::from_i(e)) {
-                                return Err(format!("Edge {} of Triangle3D {} in triangulation should be constrained",e,i));
-                            }
+                        if inner_segment.contains(&edge)?
+                            && !tripiece.is_constrained(Edge::from_i(e))
+                        {
+                            return Err(format!(
+                                "Edge {} of Triangle3D {} in triangulation should be constrained",
+                                e, i
+                            ));
                         }
                     }
                 } // end of iterating inner loops
@@ -1354,7 +1372,7 @@ mod testing {
             if !tri.valid {
                 continue;
             }
-            ret += &"<polygon points='";
+            ret += "<polygon points='";
             for vertex_i in 0..3 {
                 let v = tri.triangle.vertex(vertex_i)?;
                 let svg_point = into_svg_coordinates(v);
@@ -1467,18 +1485,18 @@ mod testing {
             let svg_point = into_svg_coordinates(*v);
             ret += &format!("{},{} ", SCALE * svg_point.x, SCALE * svg_point.y).to_string();
         }
-        ret += &"' style='fill:#b9b9b9;stroke:black;stroke-width:2;fill-rule:evenodd;' />\n\n";
+        ret += "' style='fill:#b9b9b9;stroke:black;stroke-width:2;fill-rule:evenodd;' />\n\n";
 
         let n_inner = p.n_inner_loops();
 
         for i in 0..n_inner {
             let inner = p.inner(i)?;
-            ret += &"<polygon points='";
+            ret += "<polygon points='";
             for v in inner.vertices().iter() {
                 let svg_point = into_svg_coordinates(*v);
                 ret += &format!("{},{} ", SCALE * svg_point.x, SCALE * svg_point.y);
             }
-            ret += &"' style='fill:white;stroke:black;stroke-width:2;fill-rule:evenodd;' />\n\n";
+            ret += "' style='fill:white;stroke:black;stroke-width:2;fill-rule:evenodd;' />\n\n";
         }
 
         ret += "</svg>";
@@ -1661,27 +1679,15 @@ mod testing {
         t.push(a, b, c, 0)?;
         t.push(b, c, d, 0)?;
 
-        match t.get_first_invalid(0) {
-            Some(_i) => assert!(false),
-            None => assert!(true),
-        };
+        assert_eq!(t.get_first_invalid(0), None);
 
         t.invalidate(1)?;
-        match t.get_first_invalid(0) {
-            Some(i) => assert_eq!(1, i),
-            None => assert!(false),
-        };
+        assert_eq!(t.get_first_invalid(0), Some(1));
 
         t.invalidate(0)?;
-        match t.get_first_invalid(0) {
-            Some(i) => assert_eq!(0, i),
-            None => assert!(false),
-        };
+        assert_eq!(t.get_first_invalid(0), Some(0));
 
-        match t.get_first_invalid(1) {
-            Some(i) => assert_eq!(1, i),
-            None => assert!(false),
-        };
+        assert_eq!(t.get_first_invalid(1), Some(1));
         Ok(())
     }
 
@@ -2546,13 +2552,13 @@ mod testing {
                 0.0,
             ),
             Point3D::new(
-                4.1214927526583072,
+                4.121_492_752_658_307,
                 /*7.1919133973049894,*/ 0.011954070000000039,
                 0.0,
             ),
             Point3D::new(
-                4.1214927526583072,
-                /*7.1919133973049894,*/ 2.8027003087477782,
+                4.121_492_752_658_307,
+                /*7.1919133973049894,*/ 2.802_700_308_747_778,
                 0.0,
             ),
             Point3D::new(
@@ -2569,22 +2575,22 @@ mod testing {
 
         let inner_1_vertices = vec![
             Point3D::new(
-                6.2749445994448472,
+                6.274_944_599_444_847,
                 /*6.3884632404921478,*/ 0.014954099999999748,
                 0.0,
             ),
             Point3D::new(
-                5.5580492649418591,
+                5.558_049_264_941_859,
                 /*6.6559359818884003,*/ 0.014954099999999748,
                 0.0,
             ),
             Point3D::new(
-                5.5580492649418591,
+                5.558_049_264_941_859,
                 /*6.6559359818884003,*/ 2.0732600999999997,
                 0.0,
             ),
             Point3D::new(
-                6.2749445994448472,
+                6.274_944_599_444_847,
                 /*6.3884632404921478,*/ 2.0732600999999997,
                 0.0,
             ),
@@ -2597,7 +2603,7 @@ mod testing {
 
         let inner_2_vertices = vec![
             Point3D::new(
-                8.3124151415813934,
+                8.312_415_141_581_393,
                 /*5.62828556156055,*/ 0.014954099999999748,
                 0.0,
             ),
@@ -2612,7 +2618,7 @@ mod testing {
                 0.0,
             ),
             Point3D::new(
-                8.3124151415813934,
+                8.312_415_141_581_393,
                 /*5.62828556156055,*/ 2.0732600999999997,
                 0.0,
             ),
@@ -2625,22 +2631,22 @@ mod testing {
 
         let inner_3_vertices = vec![
             Point3D::new(
-                9.3154744121348684,
-                /*5.2540454180340674,*/ 0.014954059999999769,
+                9.315_474_412_134_868,
+                /*5.2540454180340674,*/ 0.014_954_059_999_999_77,
                 0.0,
             ),
             Point3D::new(
-                8.4823625968720968,
-                /*5.5648783812202911,*/ 0.014954059999999769,
+                8.482_362_596_872_097,
+                /*5.5648783812202911,*/ 0.014_954_059_999_999_77,
                 0.0,
             ),
             Point3D::new(
-                8.4823625968720968,
+                8.482_362_596_872_097,
                 /*5.5648783812202911,*/ 1.9883438599999999,
                 0.0,
             ),
             Point3D::new(
-                9.3154744121348684,
+                9.315_474_412_134_868,
                 /*5.2540454180340674,*/ 1.9883438599999999,
                 0.0,
             ),

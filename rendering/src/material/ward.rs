@@ -18,16 +18,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::material::TransportMode;
 use crate::Spectrum;
+use crate::material::TransportMode;
 use crate::{Float, PI};
 use geometry::Vector3D;
 use rand::*;
 
+use super::RandGen;
 use super::bsdf_sample::BSDFSample;
 use super::local_coordinates_utils::same_heisphere;
 use super::mat_trait::{MatFlag, TransFlag};
-use super::RandGen;
 
 const LOW_ROUGHNESS: Float = 1e-3;
 
@@ -36,6 +36,12 @@ const LOW_ROUGHNESS: Float = 1e-3;
 ///
 /// This implementation is based on "A new Ward BRDF model with bounded albedo" (2010),
 /// by David Geisler-Moroder and Arne Dür
+///
+/// `wo` is the direction of the incoming ray (i.e., pointing into the
+/// surface). The specular lobe is chosen with probability `specularity`; the
+/// returned spectrum is the BSDF of that lobe (as `evaluate_ward_anisotropic()`
+/// gives it), and the pdf the probability of choosing the lobe times the
+/// density of the sampled direction.
 pub fn sample_ward_anisotropic(
     specularity: Float,
     mut alpha: Float,
@@ -48,106 +54,95 @@ pub fn sample_ward_anisotropic(
     alpha = alpha.max(LOW_ROUGHNESS);
     beta = beta.max(LOW_ROUGHNESS);
 
-    let prob_spec: Float = rng.gen();
+    let prob_spec: Float = rng.random();
 
     if prob_spec < specularity {
-        let mut attempts = 0;
-        loop {
-            attempts += 1;
-            let (xi1, xi2): (Float, Float) = rng.gen();
-            // incident direction
+        // Pointing away from the surface
+        let wo = -wo;
+        let (xi1, xi2): (Float, Float) = rng.random();
 
-            // From Radiance's https://github.com/NREL/Radiance/blob/2fcca99ace2f2435f32a09525ad31f2b3be3c1bc/src/rt/normal.c#L409
-            let mut d = 2. * PI * xi1;
-            let mut cosp = d.cos() * alpha;
-            let mut sinp = d.sin() * beta;
-            d = 1. / (cosp.powi(2) + sinp.powi(2)).sqrt();
-            cosp *= d;
-            sinp *= d;
+        // Half vector, as in Radiance's `gaussamp()` (src/rt/normal.c)
+        let mut d = 2. * PI * xi1;
+        let mut cosp = d.cos() * alpha;
+        let mut sinp = d.sin() * beta;
+        d = 1. / (cosp.powi(2) + sinp.powi(2)).sqrt();
+        cosp *= d;
+        sinp *= d;
+        let tan_theta_h = if xi2 < 1e-9 {
+            0.
+        } else {
+            (-xi2.ln() / ((cosp / alpha).powi(2) + (sinp / beta).powi(2))).sqrt()
+        };
+        let h = Vector3D::new(cosp * tan_theta_h, sinp * tan_theta_h, 1.0).get_normalized();
 
-            d = if xi2 < 1e-9 {
-                1.
-            } else {
-                (-xi2.ln() / ((cosp / alpha).powi(2) + (sinp / beta).powi(2))).sqrt()
-                // (alpha.powi(2) * -xi2.ln()).sqrt()
-            };
-
-            let h = Vector3D::new(cosp * d, sinp * d, 1.0);
-            d = (h * wo) * 2. / (1. + d.powi(2));
-            let mut v = -wo;
-            v.z += d;
-            v.normalize();
-            debug_assert!((1. - v.length()).abs() < 1e-5, "len of v = {}", v.length());
-
-            let l_n = wo.z;
-            let v_n = v.z;
-            if v_n < 0.0 || l_n < 0.0 {
-                // Here we want to evaluate the BSDF before we update the ray... otherwise the returned value would be incorrect
-                let (spec, _diffuse) =
-                    evaluate_ward_anisotropic(specularity, alpha, beta, wo, v, transport_mode);
-                assert!(
-                    !spec.is_nan(),
-                    "incorrect (i.e., NaN) bsdf when calculating Ward aniso."
-                );
-
-                // eq. 14 and 15
-                let pdf = 0.5 * (1. + v_n / l_n) * spec; // * specularity / specularity;
-                let mut spectrum = Spectrum::gray(spec);
-                spectrum /= l_n.abs();
-                if pdf < 1e-8 && spec < 1e-8 {
-                    continue;
-                }
-
-                let ret = BSDFSample {
-                    pdf,
-                    spectrum,
-                    flags: MatFlag::GlossyReflection,
-                    wi: -v,
-                    ..Default::default()
-                };
-
-                return Some(ret);
-            } else if attempts > 50 {
-                let ret = BSDFSample {
-                    pdf: 1.0, // irrelevant, because spectrum is Zero
-                    spectrum: Spectrum::BLACK,
-                    flags: MatFlag::GlossyReflection,
-                    wi: v,
-                    ..Default::default()
-                };
-                return Some(ret);
-            }
-        } // end of loop. If we did not return, try again.
+        // Reflect `wo` around the half vector
+        let wi = h * (2. * (wo * h)) - wo;
+        if wi.z <= 0.0 {
+            // Below the surface: nothing is reflected
+            return None;
+        }
+        let (spec, _diffuse) =
+            evaluate_ward_anisotropic(specularity, alpha, beta, wo, wi, transport_mode);
+        let pdf = specularity * ward_specular_pdf(alpha, beta, wo, wi);
+        if pdf < 1e-12 {
+            return None;
+        }
+        Some(BSDFSample {
+            pdf,
+            spectrum: Spectrum::gray(spec),
+            flags: MatFlag::GlossyReflection,
+            wi,
+            ..Default::default()
+        })
     } else {
         let diff = 1. - specularity;
-        let mut ret = BSDFSample::new_diffuse(Spectrum::gray(diff), rng.gen());
+        let mut ret = BSDFSample::new_diffuse(Spectrum::gray(diff), rng.random());
         ret.pdf *= diff;
         Some(ret)
     }
 }
 
+/// The density of the directions sampled for the specular lobe by
+/// `sample_ward_anisotropic()`: Ward's density of half vectors,
+/// `exp(-tan²θh (cos²φ/α² + sin²φ/β²)) / (π α β cos³θh)`, divided by
+/// `4 |h·wo|` (the change from half vectors to reflected directions). It is
+/// symmetric in `wo` and `wi` (both pointing away from the surface).
+fn ward_specular_pdf(alpha: Float, beta: Float, wo: Vector3D, wi: Vector3D) -> Float {
+    let h = (wo + wi).get_normalized();
+    let cos_h = h.z;
+    if cos_h <= 0.0 {
+        return 0.0;
+    }
+    let exponent = ((h.x / alpha).powi(2) + (h.y / beta).powi(2)) / (cos_h * cos_h);
+    let p_h = (-exponent).exp() / (PI * alpha * beta * cos_h.powi(3));
+    p_h / (4. * (h * wo).abs())
+}
+
+/// The pdf of the directions sampled by `sample_ward_anisotropic()`: the
+/// mixture of its specular and diffuse lobes. `wo` and `wi` point away from
+/// the surface; the diffuse lobe's density depends on the sampled direction,
+/// `wo` here (as `Material::pdf()` is called with the sampled direction
+/// first).
 pub fn ward_pdf(
     specularity: Float,
     alpha: Float,
     beta: Float,
     wo: Vector3D,
     wi: Vector3D,
-    transport_mode: TransportMode,
+    _transport_mode: TransportMode,
 ) -> Float {
     if !same_heisphere(wo, wi) {
         return 0.0;
     }
-    // Here we want to evaluate the BSDF before we update the ray... otherwise the returned value would be incorrect
-    let (spec, _) = evaluate_ward_anisotropic(specularity, alpha, beta, wo, wi, transport_mode);
-    assert!(
-        !spec.is_nan(),
-        "incorrect (i.e., NaN) bsdf when calculating Ward aniso."
-    );
-
-    // eq. 14 and 15
-    // we would nee d to multiply this by Specularity to account for the probability
-    // of this being specular
-    let spec_pdf = 0.5 * (1. + wo.z / wi.z) * spec; // * specularity/specularity;
+    let alpha = alpha.max(LOW_ROUGHNESS);
+    let beta = beta.max(LOW_ROUGHNESS);
+    // Both on the same side; make them point up
+    let (wo, wi) = if wo.z < 0.0 { (-wo, -wi) } else { (wo, wi) };
+    let spec_pdf = if specularity > 1e-5 {
+        specularity * ward_specular_pdf(alpha, beta, wo, wi)
+    } else {
+        0.0
+    };
     let diffuse_pdf = (1. - specularity) * wo.z.abs() / PI;
     spec_pdf + diffuse_pdf
 }
@@ -173,18 +168,21 @@ pub fn evaluate_ward_anisotropic(
         alpha = alpha.max(LOW_ROUGHNESS);
         beta = beta.max(LOW_ROUGHNESS);
 
-        let h = (wo + wi).get_normalized();
-        let h_n = h.z;
-        // Eq. 17
-        let c1 = specularity * (h * h) / (PI * alpha * beta * h_n.powi(4));
-        let c2 = -((h.x / alpha).powi(2) + (h.y / beta).powi(2)) / (h_n.powi(2));
+        // As in Radiance's `dirnorm()` (src/rt/normal.c), the "W-G-M-D"
+        // model (Ward; Geisler-Moroder & Dür): the half vector is NOT
+        // normalized (h·h = 4 cos²θd), and the result is not divided by
+        // cos(θo).
+        let h = wo + wi;
+        let h_n2 = h.z * h.z;
+        let c1 = specularity * (h * h) / (PI * alpha * beta * h_n2 * h_n2);
+        let c2 = -((h.x / alpha).powi(2) + (h.y / beta).powi(2)) / h_n2;
         c1 * c2.exp()
     } else {
         0.0
     };
 
     let diff = (1. - specularity) / PI;
-    (spec / wo.z.abs(), diff)
+    (spec, diff)
 }
 
 #[cfg(test)]
@@ -194,21 +192,24 @@ mod tests {
 
     use crate::{
         material::TransportMode,
-        material::{get_rng, mat_trait::TransFlag, mirror_direction},
+        material::{get_rng, mat_trait::TransFlag},
     };
 
     use super::*;
 
     #[test]
     fn sample_ward() {
+        // Glossy samples of a smooth surface must be above it, and close to
+        // the mirror direction
         let mut rng = get_rng();
         let specularity = 0.95;
         let alpha = 0.02;
         let beta = 0.03;
-        let wo = Vector3D::new(1., 0., 1.).get_normalized();
-        let _wi = -mirror_direction(wo);
+        // The incoming ray (pointing into the surface), and its reflection
+        let wo = Vector3D::new(1., 0., -1.).get_normalized();
+        let mirror = Vector3D::new(wo.x, wo.y, -wo.z);
 
-        for _ in 0..100 {
+        for _ in 0..1000 {
             let sample = sample_ward_anisotropic(
                 specularity,
                 alpha,
@@ -217,12 +218,21 @@ mod tests {
                 &mut rng,
                 TransportMode::Radiance,
                 TransFlag::default(),
-            )
-            .unwrap();
-
-            // println!("{} * {} ={}", sample.wi, wi, sample.wi * wi);
-            // println!("{} - {}", sample.spectrum, sample.pdf);
-            println!("{},{},{}", sample.wi.x, sample.wi.z, sample.pdf);
+            );
+            let Some(sample) = sample else { continue };
+            assert!(
+                sample.wi.z > 0.0,
+                "sampled below the surface: {}",
+                sample.wi
+            );
+            if let MatFlag::GlossyReflection = sample.flags {
+                assert!(
+                    sample.wi * mirror > 0.98,
+                    "{} is far from the mirror direction {mirror}",
+                    sample.wi
+                );
+                assert!(sample.pdf > 0.0);
+            }
         }
     }
     #[test]

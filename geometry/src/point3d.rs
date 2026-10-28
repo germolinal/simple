@@ -150,9 +150,12 @@ impl Point3D {
 
         let ab = b - self;
         let bc = c - b;
-        let cross = ab.cross(bc).length();
+        // The sine of the angle between `ab` and `bc` (an absolute
+        // threshold on the cross product, in m², depended on the edges'
+        // lengths: e.g., it rejected all triangles smaller than ~3 mm)
+        let sin = ab.cross(bc).length() / (ab.length() * bc.length());
 
-        Ok(cross < 1e-5)
+        Ok(sin < 1e-5)
     }
 
     /// Calculates the ditance of from a [`Point3D`] to a plane, defined based on

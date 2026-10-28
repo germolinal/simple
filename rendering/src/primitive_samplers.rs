@@ -37,7 +37,7 @@ fn uniform_cone_pdf(cos_theta: Float) -> Float {
 /* TRIANGLE */
 
 pub fn sample_triangle_surface(triangle: &Triangle3D, rng: &mut RandGen) -> Point3D {
-    let u = rng.gen();
+    let u = rng.random();
     uniform_sample_triangle(u, triangle.a(), triangle.b(), triangle.c())
 }
 
@@ -56,8 +56,10 @@ pub fn triangle_solid_angle_pdf(
     ray: &Ray3D,
 ) -> Float {
     let d2 = (info.p - ray.origin).length_squared();
-    let cos_theta = ray.origin * info.normal;
-    // debug_assert!(cos_theta > 0.);
+    // The cosine of the angle between the light's normal and the direction
+    // towards the light (`info.normal` faces against the ray, so their dot
+    // product is negative)
+    let cos_theta = -(ray.direction * info.normal) / ray.direction.length();
     if cos_theta < 1e-7 {
         return 0.0;
     }
@@ -86,7 +88,7 @@ pub fn sphere_direction(sphere: &Sphere3D, point: Point3D) -> (Float, Vector3D) 
 
 pub fn sample_sphere_surface(sphere: &Sphere3D, rng: &mut RandGen) -> Point3D {
     // Sample a sphere of radius 1 centered at the origin
-    let u = rng.gen();
+    let u = rng.random();
     let p = uniform_sample_sphere(u);
     let (mut x, mut y, mut z) = (p.x, p.y, p.z);
 

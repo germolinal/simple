@@ -18,8 +18,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use crate::rand::RandGen;
 use crate::Float;
+use crate::rand::RandGen;
 use geometry::{
     BBox3D, Cylinder3D, DistantSource3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
 };
@@ -109,7 +109,7 @@ impl Primitive {
     }
 
     pub fn sample_direction(&self, rng: &mut RandGen, point: Point3D) -> Vector3D {
-        let u: (Float, Float) = rng.gen();
+        let u: (Float, Float) = rng.random();
         let surface_point = match self {
             Self::Sphere(s) => sample_sphere_surface(s, rng),
             Self::Triangle(s) => sample_triangle_surface(s, rng),

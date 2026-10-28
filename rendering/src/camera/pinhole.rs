@@ -18,9 +18,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::camera::{Camera, CameraSample, Film, View};
 use crate::rand::*;
-use crate::Float;
 use geometry::{Ray3D, Vector3D};
 
 #[derive(Debug, Clone)]
@@ -48,15 +48,19 @@ impl Camera for Pinhole {
     /// Generates a random CameraSample
     fn gen_random_sample(&self, rng: &mut RandGen) -> CameraSample {
         let (width, height) = self.film.resolution;
-        let (x, y): (usize, usize) = rng.gen();
         CameraSample {
-            p_film: (x % width, y % height),
+            p_film: (rng.random_range(0..width), rng.random_range(0..height)),
         }
     }
 
     fn pixel_from_ray(&self, ray: &Ray3D) -> ((usize, usize), Float) {
         if ray.origin.squared_distance(self.view.view_point) > 1e-24 {
-            panic!("Trying to get a pixel of a camera through a ray that does not start at its view point... ViewPoint = {}, ray.origin = {} | distance = {}", self.view.view_point, ray.origin, (self.view.view_point-ray.origin).length());
+            panic!(
+                "Trying to get a pixel of a camera through a ray that does not start at its view point... ViewPoint = {}, ray.origin = {} | distance = {}",
+                self.view.view_point,
+                ray.origin,
+                (self.view.view_point - ray.origin).length()
+            );
         }
 
         // Let's do a Ray/Plane intersection... the plane is Normal to the camera's view directio

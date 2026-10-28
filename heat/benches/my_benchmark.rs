@@ -1,6 +1,7 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 
-use heat::surface::{rk4, ChunkMemory};
+use heat::surface::{ChunkMemory, rk4};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
     let mut memory = black_box(ChunkMemory::new(0, 23));

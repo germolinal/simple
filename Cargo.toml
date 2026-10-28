@@ -2,7 +2,7 @@
 [package]
 name = "simple"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -23,6 +23,8 @@ members = [
     "weather",
     "derive",
     "utils",
+    "validate",
+    "validate/derive",
 ]
 
 
@@ -61,17 +63,15 @@ name = "scompare"
 path = "bin/scompare.rs"
 
 
-[[examples]]
-name = "box"
-path = "examples/cold_apartment.rs"
-
 [workspace.dependencies]
 rayon = { version = "1.10" }
 serde = { version = "1.0", features = ["derive", "rc"] }
-serde_json = { version = "1.0" }
+# (`float_roundtrip`: floats read back exactly, e.g., from cached optical data)
+serde_json = { version = "1.0", features = ["float_roundtrip"] }
 rhai = { version = "1.20" }
 json5 = { version = "0.4" }
-rand = { version = "0.8" }
+rand = { version = "0.10" }
+criterion = { version = "0.8", features = ["html_reports"] }
 
 [dependencies]
 rhai = { workspace = true }
@@ -94,7 +94,12 @@ schedule = { path = "schedule" }
 utils = { path = "utils" }
 
 [dev-dependencies]
-validate = { git = "https://github.com/germolinal/validate" }
+validate = { path = "validate" }
+criterion = { workspace = true }
+
+[[bench]]
+name = "simulation"
+harness = false
 
 
 [features]
@@ -114,5 +119,8 @@ float = [
     "light/float",
     "model/float",
     "weather/float",
+    "geometry/float",
+    "matrix/float",
+    "rendering/float",
 ]
 wasm = ["model/wasm", "utils/wasm", "rhai/wasm-bindgen"]

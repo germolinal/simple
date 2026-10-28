@@ -33,7 +33,7 @@ use serde::{Deserialize, Serialize};
 /// ```
 ///
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Substance` of type `Gas`
+/// > as it is always embeded on a `Substance` of type `Gas`
 ///
 #[derive(Debug, Copy, Clone, ObjectIO, Serialize, Deserialize)]
 #[inline_enum]
@@ -137,7 +137,7 @@ mod testing {
 
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&air).map_err(|e| e.to_string())?;
-        println!("{}", &rust_json);
+        println!("{}", rust_json);
         let rust_again: GasSpecification =
             serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", rust_again));
@@ -176,7 +176,7 @@ mod testing {
 
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&air).map_err(|e| e.to_string())?;
-        println!("{}", &rust_json);
+        println!("{}", rust_json);
         let rust_again: Gas = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", air), format!("{:?}", rust_again));
 
@@ -187,12 +187,11 @@ mod testing {
         if let Substance::Gas(g) = &model.substances[0] {
             assert_eq!("Some Gas", g.name());
             if let Some(GasSpecification::Xenon) = g.gas {
-                assert!(true)
             } else {
-                assert!(false, "Wrong gas")
+                panic!("Wrong gas")
             }
         } else {
-            assert!(false, "Wrong substance")
+            panic!("Wrong substance")
         }
 
         Ok(())

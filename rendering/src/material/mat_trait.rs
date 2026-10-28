@@ -1,12 +1,12 @@
+use super::RandGen;
 use super::bsdf_sample::BSDFSample;
 use super::local_coordinates_utils::abs_cos_theta;
-use super::RandGen;
-use crate::samplers::sample_uniform_hemisphere;
 use crate::Float;
+use crate::samplers::sample_uniform_hemisphere;
 use rand::*;
 
-use crate::Spectrum;
 use crate::PI;
+use crate::Spectrum;
 use geometry::Vector3D;
 use std::ops::BitAnd;
 
@@ -159,7 +159,7 @@ pub trait MaterialTrait: std::fmt::Debug {
     fn hemispherical_rho(&self, rng: &mut RandGen, nsamples: usize) -> Spectrum {
         let mut rho = Spectrum::BLACK;
         for _ in 0..nsamples {
-            let b = rng.gen();
+            let b = rng.random();
             let wo = sample_uniform_hemisphere(b);
             if let Some(sample) = self.sample_bsdf(
                 wo,
@@ -199,8 +199,8 @@ pub trait MaterialTrait: std::fmt::Debug {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::material::get_rng;
     use crate::material::Diffuse;
+    use crate::material::get_rng;
 
     #[test]
     fn test_non_specular() {

@@ -94,6 +94,9 @@ pub struct ReinhartSky {
 
     /// The number of elements in this sky discretization (including ground)
     pub n_bins: usize,
+
+    /// The direction pointing to the centre of each bin
+    dirs: Vec<Vector3D>,
 }
 
 impl ReinhartSky {
@@ -118,7 +121,10 @@ impl ReinhartSky {
     /// Calculates the row in which a certain bin is located
     fn bins_row(&self, nbin: usize) -> usize {
         if nbin > self.n_bins {
-            panic!("Trying to get the row of a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+            panic!(
+                "Trying to get the row of a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
         }
 
         let mut row = self.n_rows - 1; // If not found, this is the value
@@ -144,7 +150,10 @@ impl ReinhartSky {
         }
         // Error
         if nbin > self.n_bins {
-            panic!("Trying to get direction to a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+            panic!(
+                "Trying to get direction to a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
         }
         // All others
 
@@ -190,7 +199,9 @@ impl ReinhartSky {
     fn sin_altitude_to_row(&self, sin_altitude: Float) -> usize {
         if sin_altitude < 0. {
             // Points ot the ground... This should be handled in the caller function.
-            panic!("Trying to call sin_altitude_to_row() by using a negative sin_altitude (e.g., does not point to the sky")
+            panic!(
+                "Trying to call sin_altitude_to_row() by using a negative sin_altitude (e.g., does not point to the sky"
+            )
         }
         for (row, max_sin) in self.row_max_sin.iter().enumerate() {
             if sin_altitude < *max_sin {
@@ -251,7 +262,26 @@ impl ReinhartSky {
     }
 
     /// Gets a `Vector3D` pointing to the centre the bin.
+    ///
+    /// # Panics
+    /// Panics if `nbin` is out of bounds.
     pub fn bin_dir(&self, nbin: usize) -> Vector3D {
+        if nbin >= self.n_bins {
+            panic!(
+                "Trying to get direction to a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
+        }
+        self.dirs[nbin]
+    }
+
+    /// The directions pointing to the centre of each bin (see `bin_dir()`)
+    pub fn bin_dirs(&self) -> &[Vector3D] {
+        &self.dirs
+    }
+
+    /// Calculates the `Vector3D` pointing to the centre the bin.
+    fn compute_bin_dir(&self, nbin: usize) -> Vector3D {
         if nbin == 0 {
             // Ground
             return Vector3D::new(0., 0., -1.);
@@ -262,7 +292,10 @@ impl ReinhartSky {
         }
         // Error
         if nbin > self.n_bins {
-            panic!("Trying to get direction to a bin out of bounds... found {} but only {} are available", nbin, self.n_bins);
+            panic!(
+                "Trying to get direction to a bin out of bounds... found {} but only {} are available",
+                nbin, self.n_bins
+            );
         }
 
         /*******************/
@@ -330,14 +363,17 @@ impl ReinhartSky {
         // Cap + Ground + others
         let n_bins = 1 + acc_bins[n_rows - 1] + 1;
 
-        // Return
-        Self {
+        let mut sky = Self {
             mf,
             n_rows,
             n_bins,
             row_max_sin,
             acc_bins,
-        }
+            dirs: Vec::new(),
+        };
+        // Bin directions are calculated once, as they are used often
+        sky.dirs = (0..n_bins).map(|bin| sky.compute_bin_dir(bin)).collect();
+        sky
     }
 }
 
@@ -415,7 +451,9 @@ mod tests {
                 // Tests the values
                 let (min, max) = r.row_altitude(row);
 
-                if (min - exp_min).abs() > 1e-9 {
+                // (with `f32`, 1e-9 is below rounding errors)
+                let tolerance = (1e-9 as Float).max(10. * Float::EPSILON);
+                if (min - exp_min).abs() > tolerance {
                     return Err(format!(
                         "MIN does not match: row = {} | Exp_min = {} min = {} ",
                         row,
@@ -423,7 +461,7 @@ mod tests {
                         min * 180. / PI
                     ));
                 }
-                if (max - exp_max).abs() > 1e-9 {
+                if (max - exp_max).abs() > tolerance {
                     return Err(format!(
                         "MAX does not match: row = {} | Exp_max = {} | max = {}",
                         row,
@@ -440,7 +478,14 @@ mod tests {
                     let z = angle.sin();
                     let found_row = r.sin_altitude_to_row(z);
                     if row != found_row {
-                        return Err(format!("Row does not match... Exp_min = {}, Exp_max = {}, angle = {} ... expected_row = {}, but found row = {}", exp_min*180./PI, exp_max*180./PI, angle*180./PI, row, found_row));
+                        return Err(format!(
+                            "Row does not match... Exp_min = {}, Exp_max = {}, angle = {} ... expected_row = {}, but found row = {}",
+                            exp_min * 180. / PI,
+                            exp_max * 180. / PI,
+                            angle * 180. / PI,
+                            row,
+                            found_row
+                        ));
                     }
                 }
 
@@ -466,17 +511,14 @@ mod tests {
     fn test_rnaz() {
         let test_rnaz = |mf: usize| {
             const TNAZ: [usize; 7] = [30, 30, 24, 24, 18, 12, 6];
-            for main_row in 0..=7 {
+            for (main_row, n) in TNAZ.iter().enumerate() {
                 for i in 0..mf {
                     let row = mf * main_row + i;
-                    if main_row == 7 {
-                        assert_eq!(bins_in_row(mf, row), 1);
-                        return; // stop test here
-                    } else {
-                        assert_eq!(bins_in_row(mf, row), TNAZ[main_row] * mf);
-                    }
+                    assert_eq!(bins_in_row(mf, row), n * mf);
                 }
             }
+            // The zenith is a single bin
+            assert_eq!(bins_in_row(mf, mf * 7), 1);
         };
 
         test_rnaz(1);
@@ -4006,5 +4048,20 @@ mod tests {
         );
         assert!((r.bin_dir(577) - Vector3D::new(0., 6.12323e-17, 1.)).length() < 1e-6);
         assert_eq!(577, r.dir_to_bin(Vector3D::new(0., 6.12323e-17, 1.)));
+    }
+
+    #[test]
+    fn test_cached_bin_dirs() {
+        for mf in 1..=4 {
+            let r = ReinhartSky::new(mf);
+            assert_eq!(r.bin_dirs().len(), r.n_bins);
+            for bin in 0..r.n_bins {
+                let cached = r.bin_dir(bin);
+                let computed = r.compute_bin_dir(bin);
+                assert_eq!(cached.x.to_bits(), computed.x.to_bits());
+                assert_eq!(cached.y.to_bits(), computed.y.to_bits());
+                assert_eq!(cached.z.to_bits(), computed.z.to_bits());
+            }
+        }
     }
 }

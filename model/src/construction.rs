@@ -60,8 +60,8 @@ pub struct Construction {
 #[cfg(test)]
 mod testing {
     use super::*;
-    use crate::material::Material;
     use crate::Model;
+    use crate::material::Material;
     use std::sync::Arc;
 
     #[test]

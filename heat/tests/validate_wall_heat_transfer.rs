@@ -1,13 +1,13 @@
 use communication::MetaOptions;
 use communication::SimulationModel;
-use heat::heat_model::ThermalModel;
 use heat::Float;
+use heat::heat_model::ThermalModel;
 
 use calendar::Date;
-use model::{Model, SimulationStateElement, SimulationStateHeader, HVAC};
+use model::{HVAC, Model, SimulationStateElement, SimulationStateHeader};
 use schedule::ScheduleConstant;
-use test_models::{get_single_zone_test_building, SingleZoneTestBuildingOptions, TestMat};
-use validate::{valid, SeriesValidator, ValidFunc, Validator};
+use test_models::{SingleZoneTestBuildingOptions, TestMat, get_single_zone_test_building};
+use validate::{SeriesValidator, ValidFunc, Validator, valid};
 use weather::SyntheticWeather;
 
 fn get_validator(
@@ -26,7 +26,9 @@ fn get_validator(
         found,
 
         allowed_mean_bias_error: Some(0.2),
-        allowed_root_mean_squared_error: Some(0.2),
+        // (0.2 when the mean squared error was reported as the RMSE; this is
+        // the same criterion)
+        allowed_root_mean_squared_error: Some(0.2_f64.sqrt()),
         ..validate::SeriesValidator::default()
     })
 }
@@ -63,7 +65,7 @@ struct SingleZoneTestModel {
 }
 
 impl SingleZoneTestModel {
-    fn get_closed_solution(&self) -> Box<impl Fn(Float) -> Float> {
+    fn get_closed_solution(&self) -> Box<impl Fn(Float) -> Float + use<>> {
         // heat balance in the form
         // of C*dT/dt = A - B*T
         let air = heat::gas::AIR;
@@ -143,10 +145,12 @@ fn march_with_window() -> Result<(Vec<Float>, Vec<Float>), String> {
 
     let t_out: Float = 30.0; // T of surroundings
 
-    let mut weather = SyntheticWeather::default();
-    weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(t_out));
-    weather.wind_direction = Box::new(ScheduleConstant::new(0.0));
-    weather.wind_speed = Box::new(ScheduleConstant::new(0.0));
+    let weather = SyntheticWeather {
+        dry_bulb_temperature: Box::new(ScheduleConstant::new(t_out)),
+        wind_direction: Box::new(ScheduleConstant::new(0.0)),
+        wind_speed: Box::new(ScheduleConstant::new(0.0)),
+        ..SyntheticWeather::default()
+    };
 
     let dt = main_dt;
 
@@ -240,10 +244,12 @@ fn very_simple_march() -> Result<(Vec<Float>, Vec<Float>), String> {
     };
     let exp_fn = tester.get_closed_solution();
 
-    let mut weather = SyntheticWeather::default();
-    weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(t_out));
-    weather.wind_direction = Box::new(ScheduleConstant::new(0.0));
-    weather.wind_speed = Box::new(ScheduleConstant::new(0.0));
+    let weather = SyntheticWeather {
+        dry_bulb_temperature: Box::new(ScheduleConstant::new(t_out)),
+        wind_direction: Box::new(ScheduleConstant::new(0.0)),
+        wind_speed: Box::new(ScheduleConstant::new(0.0)),
+        ..SyntheticWeather::default()
+    };
 
     let mut date = Date {
         day: 1,
@@ -339,10 +345,12 @@ fn march_with_window_and_luminaire() -> Result<(Vec<Float>, Vec<Float>), String>
     };
     let exp_fn = tester.get_closed_solution();
 
-    let mut weather = SyntheticWeather::default();
-    weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(t_out));
-    weather.wind_direction = Box::new(ScheduleConstant::new(0.0));
-    weather.wind_speed = Box::new(ScheduleConstant::new(0.0));
+    let weather = SyntheticWeather {
+        dry_bulb_temperature: Box::new(ScheduleConstant::new(t_out)),
+        wind_direction: Box::new(ScheduleConstant::new(0.0)),
+        wind_speed: Box::new(ScheduleConstant::new(0.0)),
+        ..SyntheticWeather::default()
+    };
 
     let dt = main_dt; // / model.dt_subdivisions() as Float;
 
@@ -442,10 +450,12 @@ fn march_with_window_and_heater() -> Result<(Vec<Float>, Vec<Float>), String> {
     };
     let exp_fn = tester.get_closed_solution();
 
-    let mut weather = SyntheticWeather::default();
-    weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(t_out));
-    weather.wind_direction = Box::new(ScheduleConstant::new(0.0));
-    weather.wind_speed = Box::new(ScheduleConstant::new(0.0));
+    let weather = SyntheticWeather {
+        dry_bulb_temperature: Box::new(ScheduleConstant::new(t_out)),
+        wind_direction: Box::new(ScheduleConstant::new(0.0)),
+        wind_speed: Box::new(ScheduleConstant::new(0.0)),
+        ..SyntheticWeather::default()
+    };
 
     let dt = main_dt; // / model.dt_subdivisions() as Float;
 
@@ -561,10 +571,12 @@ fn march_with_window_heater_and_infiltration() -> Result<(Vec<Float>, Vec<Float>
     };
     let exp_fn = tester.get_closed_solution();
 
-    let mut weather = SyntheticWeather::default();
-    weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(t_out));
-    weather.wind_direction = Box::new(ScheduleConstant::new(0.0));
-    weather.wind_speed = Box::new(ScheduleConstant::new(0.0));
+    let weather = SyntheticWeather {
+        dry_bulb_temperature: Box::new(ScheduleConstant::new(t_out)),
+        wind_direction: Box::new(ScheduleConstant::new(0.0)),
+        wind_speed: Box::new(ScheduleConstant::new(0.0)),
+        ..SyntheticWeather::default()
+    };
 
     let dt = main_dt; // / model.dt_subdivisions() as Float;
 
@@ -625,13 +637,13 @@ fn march_model(
     let site_wind_speed = &cols[0]; // 1	Environment:Site Wind Speed [m/s](TimeStep)
     let site_wind_direction = &cols[1]; // 2	Environment:Site Wind Direction [deg](TimeStep)
     let incident_solar_radiation = &cols[2]; // 3	WALL EXTERIOR:Surface Outside Face Incident Solar Radiation Rate per Area [W/m2](TimeStep)
-                                             // let inside_surface_temp = &cols[3];                 // 4	WALL EXTERIOR:Surface Inside Face Temperature [C](TimeStep)
-                                             // let outside_surface_temp = &cols[4];                // 5	WALL EXTERIOR:Surface Outside Face Temperature [C](TimeStep)
-                                             // let exp_hs_in = &cols[5];                           // 6	WALL EXTERIOR:Surface Inside Face Convection Heat Transfer Coefficient [W/m2-K](TimeStep)
-                                             // let indoor_thermal_heat_gain = &cols[6]; // 7	WALL EXTERIOR:Surface Inside Face Net Surface Thermal Radiation Heat Gain Rate [W](TimeStep)
+    // let inside_surface_temp = &cols[3];                 // 4	WALL EXTERIOR:Surface Inside Face Temperature [C](TimeStep)
+    // let outside_surface_temp = &cols[4];                // 5	WALL EXTERIOR:Surface Outside Face Temperature [C](TimeStep)
+    // let exp_hs_in = &cols[5];                           // 6	WALL EXTERIOR:Surface Inside Face Convection Heat Transfer Coefficient [W/m2-K](TimeStep)
+    // let indoor_thermal_heat_gain = &cols[6]; // 7	WALL EXTERIOR:Surface Inside Face Net Surface Thermal Radiation Heat Gain Rate [W](TimeStep)
     let outdoor_temp = &cols[7]; // 8	WALL EXTERIOR:Surface Outside Face Outdoor Air Drybulb Temperature [C](TimeStep)
-                                 // let surface_wind_speed = &cols[8];          // 9	WALL EXTERIOR:Surface Outside Face Outdoor Air Wind Speed [m/s](TimeStep)
-                                 // let exp_hs_out = &cols[9];                          // 10	WALL EXTERIOR:Surface Outside Face Convection Heat Transfer Coefficient [W/m2-K](TimeStep)
+    // let surface_wind_speed = &cols[8];          // 9	WALL EXTERIOR:Surface Outside Face Outdoor Air Wind Speed [m/s](TimeStep)
+    // let exp_hs_out = &cols[9];                          // 10	WALL EXTERIOR:Surface Outside Face Convection Heat Transfer Coefficient [W/m2-K](TimeStep)
     let outdoor_thermal_heat_gain = &cols[10]; // 11	WALL EXTERIOR:Surface Outside Face Net Thermal Radiation Heat Gain Rate [W](TimeStep)
     let exp_zone_air_temp = &cols[11]; // 12	INTERIOR SPACE:Zone Mean Air Temperature [C](TimeStep)
 
@@ -659,10 +671,12 @@ fn march_model(
         }
 
         // Set outdoor temp
-        let mut weather = SyntheticWeather::default();
-        weather.dry_bulb_temperature = Box::new(ScheduleConstant::new(outdoor_temp[i]));
-        weather.wind_direction = Box::new(ScheduleConstant::new(site_wind_direction[i]));
-        weather.wind_speed = Box::new(ScheduleConstant::new(site_wind_speed[i]));
+        let weather = SyntheticWeather {
+            dry_bulb_temperature: Box::new(ScheduleConstant::new(outdoor_temp[i])),
+            wind_direction: Box::new(ScheduleConstant::new(site_wind_direction[i])),
+            wind_speed: Box::new(ScheduleConstant::new(site_wind_speed[i])),
+            ..SyntheticWeather::default()
+        };
 
         let surface = &simple_model.surfaces[0];
 
@@ -733,7 +747,7 @@ fn march_simple_model(
 }
 
 fn theoretical(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "Theoretical Solution";
+    const EXPECTED_LEGEND: &str = "Theoretical Solution";
 
     #[valid("No-mass Wall - Walls only")]
     fn nomass_wallonly() -> Result<ValidFunc, String> {
@@ -781,7 +795,7 @@ fn theoretical(validations: &mut Validator) -> Result<(), String> {
 }
 
 fn tilted(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "EnergyPlus";
+    const EXPECTED_LEGEND: &str = "EnergyPlus";
 
     /// This test intends to test non-vertical convection coefficients and their correct placement
     #[valid("Massive and Tilted Wall, with the Space at its front")]
@@ -797,7 +811,7 @@ fn tilted(validations: &mut Validator) -> Result<(), String> {
 }
 
 fn horizontal(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "EnergyPlus";
+    const EXPECTED_LEGEND: &str = "EnergyPlus";
 
     /// This test intends to test non-vertical convection coefficients and their correct placement
     #[valid("Massive Horizontal Wall, with Solar and Long Wave Radiation")]
@@ -812,7 +826,7 @@ fn horizontal(validations: &mut Validator) -> Result<(), String> {
 }
 
 fn massive(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "EnergyPlus";
+    const EXPECTED_LEGEND: &str = "EnergyPlus";
 
     #[valid("Massive Wall, with Solar and Long Wave Radiation")]
     fn wall1() -> Result<ValidFunc, String> {
@@ -871,7 +885,7 @@ fn massive(validations: &mut Validator) -> Result<(), String> {
 }
 
 fn mixed(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "EnergyPlus";
+    const EXPECTED_LEGEND: &str = "EnergyPlus";
 
     #[valid("Mixed Mass Wall, with Solar Radiation and Long Wave Radiation")]
     fn wall1() -> Result<ValidFunc, String> {
@@ -951,7 +965,7 @@ fn mixed(validations: &mut Validator) -> Result<(), String> {
 }
 
 fn nomass(validations: &mut Validator) -> Result<(), String> {
-    const EXPECTED_LEGEND: &'static str = "EnergyPlus";
+    const EXPECTED_LEGEND: &str = "EnergyPlus";
 
     #[valid("No Mass Wall, with Solar Radiation and Long Wave Radiation")]
     fn wall1() -> Result<ValidFunc, String> {

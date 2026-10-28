@@ -20,7 +20,7 @@ SOFTWARE.
 
 use model::rhai_api::register_control_api;
 use model::{Model, SimulationState};
-use rhai::{Engine, AST};
+use rhai::{AST, Engine};
 use std::fs::{self};
 use std::sync::{Arc, Mutex};
 

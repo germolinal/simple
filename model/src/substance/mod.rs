@@ -39,10 +39,10 @@ use std::sync::Arc;
 /// thicknesses to reference the same material.
 ///
 /// > Note: Glazing substances are `Normal` substances with `solar_transmitance`
-/// and `visible_transmittance`. However, contrary to all other properties, this property
-/// does depend on the thickness of the substance. So, in order
-/// to build a coherent Glazing, you'll need to match this Substance
-/// with an appropriate Material
+/// > and `visible_transmittance`. However, contrary to all other properties, this property
+/// > does depend on the thickness of the substance. So, in order
+/// > to build a coherent Glazing, you'll need to match this Substance
+/// > with an appropriate Material
 ///
 /// ## Examples
 ///
@@ -115,7 +115,7 @@ mod testing {
 
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&rust_xenon).map_err(|e| e.to_string())?;
-        println!("{}", &rust_json);
+        println!("{}", rust_json);
         let rust_again: Substance = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_xenon), format!("{:?}", rust_again));
 
@@ -126,12 +126,11 @@ mod testing {
         if let Substance::Gas(g) = &model.substances[0] {
             assert_eq!("Some Gas", g.name());
             if let Ok(GasSpecification::Xenon) = g.gas() {
-                assert!(true)
             } else {
-                assert!(false, "Wrong gas")
+                panic!("Wrong gas")
             }
         } else {
-            assert!(false, "Wrong substance")
+            panic!("Wrong substance")
         }
 
         Ok(())
@@ -167,7 +166,7 @@ mod testing {
 
         // Serialize and deserialize again... check that everythin matches the pattern
         let rust_json = serde_json::to_string(&rust_normal).map_err(|e| e.to_string())?;
-        println!("{}", &rust_json);
+        println!("{}", rust_json);
         let rust_again: Substance = serde_json::from_str(&rust_json).map_err(|e| e.to_string())?;
         assert_eq!(format!("{:?}", rust_normal), format!("{:?}", rust_again));
 
@@ -179,7 +178,7 @@ mod testing {
             assert_eq!("the substance", g.name());
             assert!((12. - g.thermal_conductivity()?).abs() < 1e-9);
         } else {
-            assert!(false, "Wrong substance")
+            panic!("Wrong substance")
         }
 
         Ok(())

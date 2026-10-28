@@ -18,10 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::infiltration::Infiltration;
 use crate::model::Model;
 use crate::simulation_state_element::StateElementField;
-use crate::Float;
 use derive::{ObjectAPI, ObjectIO};
 use serde::{Deserialize, Serialize};
 
@@ -219,20 +219,12 @@ mod testing {
         assert_eq!(*space.volume().unwrap(), vol);
 
         let i = 91;
-        assert!(space
-            .dry_bulb_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_none());
+        assert!(space.dry_bulb_temperature.get().is_none());
         assert!(space.dry_bulb_temperature_index().is_none());
         space
             .set_dry_bulb_temperature_index(i)
             .map_err(|e| e.to_string())?;
-        assert!(space
-            .dry_bulb_temperature
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_some());
+        assert!(space.dry_bulb_temperature.get().is_some());
         assert_eq!(
             space
                 .dry_bulb_temperature_index()
@@ -241,25 +233,17 @@ mod testing {
         );
 
         let i = 191;
-        assert!(space
-            .brightness
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_none());
+        assert!(space.brightness.get().is_none());
         assert!(space.brightness_index().is_none());
         space.set_brightness_index(i).map_err(|e| e.to_string())?;
-        assert!(space
-            .brightness
-            .lock()
-            .map_err(|e| e.to_string())?
-            .is_some());
+        assert!(space.brightness.get().is_some());
         assert_eq!(space.brightness_index().ok_or("no brightness")?, i);
 
         let i = 111;
-        assert!(space.loudness.lock().map_err(|e| e.to_string())?.is_none());
+        assert!(space.loudness.get().is_none());
         assert!(space.loudness_index().is_none());
         space.set_loudness_index(i).map_err(|e| e.to_string())?;
-        assert!(space.loudness.lock().map_err(|e| e.to_string())?.is_some());
+        assert!(space.loudness.get().is_some());
         assert_eq!(space.loudness_index().ok_or("no loudness")?, i);
 
         Ok(())

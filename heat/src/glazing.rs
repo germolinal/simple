@@ -411,7 +411,7 @@ mod testing {
             .collect();
         assert_eq!(props, vec![(0.0, 0.9, 0.8)]);
         let alphas = Glazing::alphas(&glazings);
-        let exp = vec![0.1];
+        let exp = [0.1];
         for (found, exp) in alphas.iter().zip(exp.iter()) {
             validate::assert_close!(*exp, *found);
         }
@@ -429,6 +429,8 @@ mod testing {
 
     #[test]
     fn test_9050() {
+        // (with `f32`, 1e-15 is below rounding errors)
+        let tolerance: Float = (1e-15 as Float).max(10. * Float::EPSILON);
         let tau1 = 0.1;
         let rho_b1 = 0.3;
         let rho_f1 = 0.13;
@@ -442,12 +444,12 @@ mod testing {
         // Eq. 2 of ISO9050/2003
         let tau12 = g1.combined_tau(&g2);
         let exp = tau1 * tau2 / (1. - rho_b1 * rho_f2);
-        assert!((tau12 - exp).abs() < 1e-15);
+        assert!((tau12 - exp).abs() < tolerance);
 
         // Eq. 5 of ISO9050/2003
         let rho_f12 = g1.combined_rho_front(&g2);
         let exp = rho_f1 + tau1 * tau1 * rho_f2 / (1. - rho_b1 * rho_f2);
-        assert!((rho_f12 - exp).abs() < 1e-15);
+        assert!((rho_f12 - exp).abs() < tolerance);
 
         let tau3 = 0.21;
         let rho_b3 = 0.34;
@@ -460,27 +462,27 @@ mod testing {
         // Eq. 3 of ISO9050/2003
         let exp = tau1 * tau2 * tau3
             / ((1. - rho_b1 * rho_f2) * (1. - rho_b2 * rho_f3) - tau2.powi(2) * rho_b1 * rho_f3);
-        assert!((exp - g13.tau()).abs() < 1e-15);
+        assert!((exp - g13.tau()).abs() < tolerance);
 
         // Eq. 6 of ISO9050/2003
         let exp = rho_f1
             + (tau1 * tau1 * rho_f2 * (1. - rho_b2 * rho_f3) + tau1 * tau1 * tau2 * tau2 * rho_f3)
                 / ((1. - rho_b1 * rho_f2) * (1. - rho_b2 * rho_f3) - tau2 * tau2 * rho_b1 * rho_f3);
-        assert!((exp - g13.rho_front()).abs() < 1e-15);
+        assert!((exp - g13.rho_front()).abs() < tolerance);
 
         // test integration
         let other_g13 = Glazing::combine_layers(&[g1, g2, g3]);
-        assert!((g13.tau - other_g13.tau).abs() < 1e-15);
-        assert!((g13.rho_front - other_g13.rho_front).abs() < 1e-15);
-        assert!((g13.rho_back - other_g13.rho_back).abs() < 1e-15);
-        assert!((g13.alpha_back - other_g13.alpha_back).abs() < 1e-15);
-        assert!((g13.alpha_front - other_g13.alpha_front).abs() < 1e-15);
+        assert!((g13.tau - other_g13.tau).abs() < tolerance);
+        assert!((g13.rho_front - other_g13.rho_front).abs() < tolerance);
+        assert!((g13.rho_back - other_g13.rho_back).abs() < tolerance);
+        assert!((g13.alpha_back - other_g13.alpha_back).abs() < tolerance);
+        assert!((g13.alpha_front - other_g13.alpha_front).abs() < tolerance);
 
         // Test alphas
         let alphas = Glazing::alphas(&[g1, g2, g3]);
         let found: Float = alphas.iter().sum();
         assert!(
-            (found - g13.alpha_front).abs() < 1e-15,
+            (found - g13.alpha_front).abs() < tolerance,
             "expecting {}, found {}",
             g13.alpha_front,
             found
@@ -500,25 +502,23 @@ mod testing {
         let exp_a2 = (tau1 * a_f2 * (1. - rho_b2 * rho_f3) + tau1 * tau2 * a_b2 * rho_f3) / denom;
         let exp_a3 = (tau1 * tau2 * a_f3) / denom;
 
-        #[cfg(feature = "float")]
-        const SMOL: Float = 1e-10;
-        #[cfg(not(feature = "float"))]
-        const SMOL: Float = 1e-15;
+        // (with `f32`, 1e-15, or even 1e-10, is below rounding errors)
+        let smol: Float = (1e-15 as Float).max(10. * Float::EPSILON);
 
         assert!(
-            (alphas[0] - exp_a1).abs() < SMOL,
+            (alphas[0] - exp_a1).abs() < smol,
             "Expecting {} ... found {}",
             exp_a1,
             alphas[0]
         );
         assert!(
-            (alphas[1] - exp_a2).abs() < SMOL,
+            (alphas[1] - exp_a2).abs() < smol,
             "Expecting {} ... found {}",
             exp_a2,
             alphas[1]
         );
         assert!(
-            (alphas[2] - exp_a3).abs() < SMOL,
+            (alphas[2] - exp_a3).abs() < smol,
             "Expecting {} ... found {}",
             exp_a3,
             alphas[2]

@@ -28,12 +28,12 @@ impl StructObject {
 
     pub fn has_name(&self) -> bool {
         for f in self.fields.iter() {
-            if let crate::field::Field::String(sf) = f {
-                if let Some(i) = &sf.ident {
-                    let ident_str = format!("{}", i);
-                    if ident_str == "name" {
-                        return true;
-                    }
+            if let crate::field::Field::String(sf) = f
+                && let Some(i) = &sf.ident
+            {
+                let ident_str = format!("{}", i);
+                if ident_str == "name" {
+                    return true;
                 }
             }
         }
@@ -124,7 +124,7 @@ impl StructObject {
                     // states are empty
                     content = quote!(
                         #content
-                        #fname : std::sync::Arc::new(std::sync::Mutex::new(None)),
+                        #fname : std::sync::Arc::new(std::sync::OnceLock::new()),
                     )
                 }
                 Field::Option(_) => {
@@ -216,7 +216,7 @@ impl StructObject {
         stru: &syn::DataStruct,
     ) -> syn::punctuated::Punctuated<syn::Field, syn::token::Comma> {
         if let syn::DataStruct {
-            fields: syn::Fields::Named(syn::FieldsNamed { ref named, .. }),
+            fields: syn::Fields::Named(syn::FieldsNamed { named, .. }),
             ..
         } = stru
         {
@@ -243,7 +243,10 @@ impl StructObject {
                     let set_ident = format!("set_{}_index", f_ident);
                     let set_ident = syn::Ident::new(&set_ident, f_ident.span());
                     // doc of the 'set_index_' method
-                    let sets_index_doc_string = format!(" Sets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`]. Returns an error if the object already has an index assigned for this field.", f_ident);
+                    let sets_index_doc_string = format!(
+                        " Sets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`]. Returns an error if the object already has an index assigned for this field.",
+                        f_ident
+                    );
 
                     let already_there_err = if self.has_name() {
                         let err_msg = format!(
@@ -259,36 +262,12 @@ impl StructObject {
                         quote!(format!(#err_msg))
                     };
 
-                    let cant_lock_err = if self.has_name() {
-                        let err_msg = format!(
-                            "Field '{}' in {} called '{{}}' cannot be locked for reading and/or writing.",
-                            self.ident, f_ident
-                        );
-                        quote!(#err_msg, self.name())
-                    } else {
-                        let err_msg = format!(
-                            "Field '{}' in {} cannot be locked for reading and/or writing.",
-                            self.ident, f_ident
-                        );
-                        quote!(#err_msg)
-                    };
-
                     sets = quote!(
                         #sets
 
                         #[doc = #sets_index_doc_string]
                         pub fn #set_ident(&self, i: usize)->Result<(), String>{
-                            // todo!();
-                            if let Ok(mut guard) = self.#f_ident.lock(){
-                                if guard.is_some() {
-                                    return Err(#already_there_err);
-                                }
-                                *guard = Some(i);
-                                return Ok(())
-                            }else{
-                                return Err(format!(#cant_lock_err))
-
-                            }
+                            self.#f_ident.set(i).map_err(|_| #already_there_err)
                         }
                     );
 
@@ -296,7 +275,10 @@ impl StructObject {
                     let set_ident = format!("set_{}", f_ident);
                     let set_ident = syn::Ident::new(&set_ident, f_ident.span());
                     // doc of the 'set_' method
-                    let sets_doc_string = format!(" Changes the value of the [`SimulationStateElement`] associated with the `{}` within the [`SimulationState`] .", f_ident);
+                    let sets_doc_string = format!(
+                        " Changes the value of the [`SimulationStateElement`] associated with the `{}` within the [`SimulationState`] .",
+                        f_ident
+                    );
                     let err_msg = format!(
                         " Impossible to change the state of object because `{}` has no value",
                         f_ident
@@ -306,15 +288,12 @@ impl StructObject {
 
                         #[doc = #sets_doc_string]
                         pub fn #set_ident(&self, state: &mut crate::simulation_state::SimulationState, v : crate::Float) -> Result<(), String>{
-                            if let Ok(guard) = self.#f_ident.lock(){
-                                if let Some(i) = *guard {
+                            match self.#f_ident.get() {
+                                Some(&i) => {
                                     state[i] = v;
-                                    return Ok(());
-                                }else{
-                                    return Err(format!("{}", #err_msg))
+                                    Ok(())
                                 }
-                            }else{
-                                return Err(format!(#cant_lock_err))
+                                None => Err(format!("{}", #err_msg)),
                             }
                         }
                     );
@@ -325,41 +304,33 @@ impl StructObject {
                     let get_index_ident = syn::Ident::new(&get_index_ident, f_ident.span());
 
                     // doc of the 'get_index_' method
-                    let get_index_doc_string = format!(" Gets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].", f_ident);
+                    let get_index_doc_string = format!(
+                        " Gets the index of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].",
+                        f_ident
+                    );
 
                     gets = quote!(
                         #gets
 
                         #[doc = #get_index_doc_string]
                         pub fn #get_index_ident(&self) -> Option<usize> {
-                            if let Ok(guard) = self.#f_ident.lock(){
-                                *guard
-                            }else{
-                                panic!(#cant_lock_err)
-                            }
-
+                            self.#f_ident.get().copied()
                         }
                     );
 
                     /* GET THE STATE OF THE OBJECT */
 
                     // doc of the 'get_index_' method
-                    let get_doc_string = format!(" Gets the value of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].", f_ident);
+                    let get_doc_string = format!(
+                        " Gets the value of the [`SimulationStateElement`] representing the `{}` within the [`SimulationState`].",
+                        f_ident
+                    );
                     gets = quote!(
                         #gets
 
                         #[doc = #get_doc_string]
                         pub fn #f_ident(&self, state: &crate::simulation_state::SimulationState) -> Option<crate::Float> {
-
-                            if let Ok(guard) = self.#f_ident.lock(){
-                                if let Some(i) = *guard {
-                                    return Some(state[i]);
-                                }else{
-                                    return None
-                                }
-                            }else{
-                                panic!(#cant_lock_err)
-                            }
+                            self.#f_ident.get().map(|&i| state[i])
                         }
                     );
                 }
@@ -412,7 +383,10 @@ impl StructObject {
                     // Name of the 'set_' method
                     let get_or_ident = format!("{}_or", f_ident);
                     let get_or_ident = syn::Ident::new(&get_or_ident, f_ident.span());
-                    let gets_or_doc_string = format!(" Gets the content of `{}` field or a default value given if the field is `None`. If no default is logical, use `self.{}()` instead, which returns an error", f_ident, f_ident);
+                    let gets_or_doc_string = format!(
+                        " Gets the content of `{}` field or a default value given if the field is `None`. If no default is logical, use `self.{}()` instead, which returns an error",
+                        f_ident, f_ident
+                    );
                     // let gets_or_warning = if self.has_name() {
                     //     quote!(
                     //         crate::error_msgs::print_warning(module_name,
@@ -446,7 +420,10 @@ impl StructObject {
                     }
 
                     // the ident of this method is the name of the field itself
-                    let gets_doc_string = format!(" Gets the `{}` field. Returns a `Result` because this field is optional and thus it might not be there.", f_ident);
+                    let gets_doc_string = format!(
+                        " Gets the `{}` field. Returns a `Result` because this field is optional and thus it might not be there.",
+                        f_ident
+                    );
                     let gets_err = if self.has_name() {
                         quote!(
                             format!("{} called '{}' has not been assigned any value for field '{}'", self.object_type(), self.name, #f_ident_str)
@@ -487,10 +464,7 @@ impl StructObject {
         let mut field_setters = quote!();
         // open docs
         let mut docs = "\n\n## API\n\nThe following properties are available for simulating control algorithms".to_string();
-        docs = format!(
-            "{}\n\n| Property |\n|----------|",
-            docs
-        );
+        docs = format!("{}\n\n| Property |\n|----------|", docs);
 
         for field in self.fields.iter() {
             if let Field::State(_) = field {
@@ -532,7 +506,7 @@ impl StructObject {
 
     fn get_api(&self, access_from_model: TokenStream2) -> Result<TokenStream2, String> {
         let object_name = self.ident.clone();
-        let name_str = format!("{}", &object_name);
+        let name_str = format!("{}", object_name);
 
         // Register type in API... always within an RC
         let register_type = quote!(
@@ -587,13 +561,13 @@ impl StructObject {
 
     pub fn gen_object_api(&self) -> Result<TokenStream2, String> {
         let object_name = self.ident.clone();
-        let name_str = format!("{}", &object_name);
+        let name_str = format!("{}", object_name);
         let name_str_lower = name_str.to_lowercase();
 
         let location_str = crate::object_location(name_str).unwrap_or_else(|| {
             panic!(
                 "Cannot set API for object '{}' which is not stored in the Model",
-                &object_name
+                object_name
             )
         });
         let location = syn::Ident::new(location_str, proc_macro2::Span::call_site());

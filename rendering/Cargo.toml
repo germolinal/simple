@@ -1,7 +1,7 @@
 [package]
 name = "rendering"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -13,17 +13,17 @@ geometry = { version = "0.2.0", path = "../geometry" }
 weather = { path = "../weather" }
 calendar = { path = "../calendar" }
 utils = { path = "../utils" }
-rand = { workspace = true, features = ["small_rng"] }
+rand = { workspace = true }
 rayon = { workspace = true, optional = true }
 serde = { workspace = true, features = ['derive'] }
 clap = { version = "4.0.14", features = ["derive"] }
 obj-rs = "0.7.0"
-jpeg-encoder = "0.5.1"
+jpeg-encoder = "0.7"
 
 
 [dev-dependencies]
-criterion = "0.5.1"
-validate = { git = "https://github.com/germolinal/validate" }
+criterion = { workspace = true }
+validate = { path = "../validate" }
 
 [[bench]]
 name = "benchmark"
@@ -32,8 +32,8 @@ harness = false
 
 [features]
 default = []
-float = ["model/float", "geometry/float", "matrix/float", "weather/float"]
-parallel = ["geometry/parallel", "matrix/parallel", "rayon"]
+float = ["model/float", "geometry/float", "matrix/float", "weather/float", "calendar/float"]
+parallel = ["geometry/parallel", "rayon"]
 textures = ["geometry/textures"]
 simd = []
 

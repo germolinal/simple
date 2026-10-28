@@ -18,10 +18,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-use model::{Model, SimulationState, HVAC};
+use model::{HVAC, Model, SimulationState};
 
-use crate::control_trait::SimpleControl;
 use crate::MultiphysicsModel;
+use crate::control_trait::SimpleControl;
 use std::borrow::Borrow;
 
 /// A relatively simple control algorithm aiming to represent a quite
@@ -115,8 +115,8 @@ impl SimpleControl for OccupantBehaviour {
 mod testing {
 
     use communication::{MetaOptions, SimulationModel};
-    use model::hvac::{ElectricHeater, IdealHeaterCooler};
     use model::Space;
+    use model::hvac::{ElectricHeater, IdealHeaterCooler};
     use validate::assert_close;
 
     use super::*;

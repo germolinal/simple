@@ -2,20 +2,18 @@
 name = "matrix"
 version = "0.1.0"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-rayon = { workspace = true, optional = true }
 serde = { version = "1.0.142", features = ["derive"] }
 
 [dev-dependencies]
 serde_json = "1.0.83"
-criterion = { version = "0.5.1", features = ["html_reports"] }
+criterion = { workspace = true }
 
 [features]
 default = []
 float = []
-parallel = ["rayon"]
 
 [[bench]]
 name = "generic_matrix_bench"
@@ -23,4 +21,8 @@ harness = false
 
 [[bench]]
 name = "prod_n_diag"
+harness = false
+
+[[bench]]
+name = "hot_kernels"
 harness = false

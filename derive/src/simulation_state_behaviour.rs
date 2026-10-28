@@ -63,10 +63,22 @@ pub fn derive_enum_kind(
             n += 1;
         }
         if n == 0 {
-            return Err(syn::Error::new(v.span(),format!("Variant {} has no attributes... must have either 'physical', 'personal' or 'operational'", v.ident)));
+            return Err(syn::Error::new(
+                v.span(),
+                format!(
+                    "Variant {} has no attributes... must have either 'physical', 'personal' or 'operational'",
+                    v.ident
+                ),
+            ));
         }
         if n > 1 {
-            return Err(syn::Error::new(v.span(),format!("Variant {} has too many attributes... it must have ONLY ONE between 'physical', 'personal' or 'operational'", v.ident)));
+            return Err(syn::Error::new(
+                v.span(),
+                format!(
+                    "Variant {} has too many attributes... it must have ONLY ONE between 'physical', 'personal' or 'operational'",
+                    v.ident
+                ),
+            ));
         }
     }
 

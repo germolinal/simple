@@ -47,7 +47,7 @@ use serde::{Deserialize, Serialize};
 /// {{#include ../../../model/tests/scanner/infiltration_constant.json}}
 /// ```
 /// > **Note**: This object cannot be declared by itself in a `SIMPLE` model,
-/// as it is always embeded on a `Space`
+/// > as it is always embeded on a `Space`
 #[derive(Debug, PartialEq, Clone, ObjectIO, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(deny_unknown_fields)]
@@ -226,7 +226,7 @@ mod testing {
         if let Ok(Infiltration::Doe2 { flow }) = model.spaces[0].infiltration() {
             assert!((flow - 0.24).abs() < 1e-9);
         } else {
-            assert!(false, "Incorrect infiltration!")
+            panic!("Incorrect infiltration!")
         }
 
         Ok(())
@@ -311,7 +311,7 @@ mod testing {
         if let Ok(inf) = model.spaces[0].infiltration() {
             assert_eq!(*inf, Infiltration::Doe2 { flow: 0.24 })
         } else {
-            assert!(false)
+            panic!()
         }
 
         Ok(())

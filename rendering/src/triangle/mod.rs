@@ -1,70 +1,65 @@
 use crate::{Float, Scene};
 use geometry::{
-    intersection::{IntersectionInfo, SurfaceSide},
     BBox3D, Point3D, Ray3D, Sphere3D, Triangle3D, Vector3D,
+    intersection::{IntersectionInfo, SurfaceSide},
 };
 
 pub mod fallback;
 pub use fallback::baricentric_coordinates;
 
-pub(crate) const LEAF_SIZE: usize = 24;
+pub(crate) const LEAF_SIZE: usize = 8;
 
 /// The smallest definition of a Triangle I could think of
 pub type Triangle = [Float; 9];
 
+/// The intersection between a ray and a [`Triangle`] of a [`Scene`]
+#[derive(Debug, Clone, Copy)]
+pub struct TriangleHit {
+    /// The index of the triangle in the scene
+    pub index: usize,
+    /// The intersection is at `ray.project(t)`
+    pub t: Float,
+    /// The first baricentric coordinate of the intersection
+    pub u: Float,
+    /// The second baricentric coordinate of the intersection
+    pub v: Float,
+}
+
 #[macro_export]
 macro_rules! ax {
-    ( $n : expr ) => {{
-        $n[0]
-    }};
+    ( $n : expr ) => {{ $n[0] }};
 }
 #[macro_export]
 macro_rules! ay {
-    ( $n : expr ) => {{
-        $n[1]
-    }};
+    ( $n : expr ) => {{ $n[1] }};
 }
 #[macro_export]
 macro_rules! az {
-    ( $n : expr ) => {{
-        $n[2]
-    }};
+    ( $n : expr ) => {{ $n[2] }};
 }
 #[macro_export]
 macro_rules! bx {
-    ( $n : expr ) => {{
-        $n[3]
-    }};
+    ( $n : expr ) => {{ $n[3] }};
 }
 #[macro_export]
 macro_rules! by {
-    ( $n : expr ) => {{
-        $n[4]
-    }};
+    ( $n : expr ) => {{ $n[4] }};
 }
 #[macro_export]
 macro_rules! bz {
-    ( $n : expr ) => {{
-        $n[5]
-    }};
+    ( $n : expr ) => {{ $n[5] }};
 }
 #[macro_export]
 macro_rules! cx {
-    ( $n : expr ) => {{
-        $n[6]
-    }};
+    ( $n : expr ) => {{ $n[6] }};
 }
 #[macro_export]
 macro_rules! cy {
-    ( $n : expr ) => {{
-        $n[7]
-    }};
+    ( $n : expr ) => {{ $n[7] }};
 }
 #[macro_export]
 macro_rules! cz {
-    ( $n : expr ) => {{
-        $n[8]
-    }};
+    ( $n : expr ) => {{ $n[8] }};
 }
 
 pub fn triangle_area(t: &Triangle) -> Float {
@@ -90,8 +85,9 @@ pub fn triangle_solid_angle_pdf(
     ray: &Ray3D,
 ) -> Float {
     let d2 = (point - ray.origin).length_squared();
-    let cos_theta = ray.origin * normal;
-    // debug_assert!(cos_theta > 0.);
+    // The cosine of the angle between the light's normal and the direction
+    // towards the light (`normal` must face against the ray)
+    let cos_theta = -(ray.direction * normal) / ray.direction.length();
     if cos_theta < 1e-7 {
         return 0.0;
     }
@@ -128,7 +124,7 @@ pub fn simple_intersect_triangle_slice(
     ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
-) -> Option<(usize, Point3D)> {
+) -> Option<TriangleHit> {
     fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
 
@@ -139,7 +135,7 @@ pub fn simple_triangle_intersect(
     ray: geometry::Ray3D,
     ini: usize,
     fin: usize,
-) -> Option<(usize, geometry::Point3D)> {
+) -> Option<TriangleHit> {
     fallback::simple_intersect_triangle_slice(scene, ray, ini, fin)
 }
 
@@ -333,7 +329,7 @@ pub fn mesh_sphere(s: &Sphere3D) -> (Vec<Triangle>, Vec<(Vector3D, Vector3D, Vec
 
 #[cfg(test)]
 mod testing {
-    use crate::{material::Metal, Spectrum};
+    use crate::{Spectrum, material::Metal};
 
     use super::*;
     use validate::assert_close;

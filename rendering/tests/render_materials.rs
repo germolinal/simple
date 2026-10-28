@@ -1,10 +1,10 @@
 use geometry::Point3D;
 use geometry::{Sphere3D, Triangle3D};
+use rendering::Float;
 use rendering::camera::{Film, Pinhole, View};
 use rendering::material::Material;
 use rendering::material::*;
 use rendering::primitive::Primitive;
-use rendering::Float;
 use rendering::{RayTracer, Scene, Spectrum};
 
 fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
@@ -142,7 +142,6 @@ fn render_ball(mat: Material, filename: &str) -> Result<(), String> {
         n_ambient_samples: 60,
         n_shadow_samples: 1,
         max_depth: 1,
-        ..RayTracer::default()
     };
 
     let buffer = integrator.render(&scene, &camera);

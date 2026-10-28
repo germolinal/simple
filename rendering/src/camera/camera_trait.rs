@@ -18,9 +18,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+use crate::Float;
 use crate::camera::{CameraSample, View};
 use crate::rand::*;
-use crate::Float;
 use geometry::Ray3D;
 
 pub trait Camera: Sync {

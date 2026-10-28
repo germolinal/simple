@@ -18,12 +18,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 use clap::Parser;
-use rendering::{colour_matrix::save_colour_matrix, Scene};
+use rendering::{Scene, colour_matrix::save_colour_matrix};
 use weather::ReinhartSky;
 // use rendering::from_radiance::from
 use geometry::{Point3D, Ray3D, Vector3D};
-use rendering::daylight_coefficients::DCFactory;
 use rendering::Wavelengths;
+use rendering::daylight_coefficients::DCFactory;
 use utils::ProgressBar;
 
 /// Calculates the Daylight Coefficients

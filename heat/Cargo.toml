@@ -2,7 +2,7 @@
 name = "heat"
 version = "1.0.0"
 authors = ["German Molina <germolinal@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "MIT"
 
 
@@ -19,10 +19,10 @@ rayon = { workspace = true, optional = true}
 
 
 [dev-dependencies]
-validate = { git = "https://github.com/germolinal/validate.git"}
+validate = { path = "../validate" }
 schedule = { path = "../schedule" }
 test_models = { path = "../test_models"}
-criterion = "0.5.1"
+criterion = { workspace = true }
 
 [[bench]]
 name = "my_benchmark"
@@ -41,7 +41,6 @@ rustdoc-args = [
 default = []
 parallel=[
     "rayon",
-    # "matrix/parallel"
 ]
 float = [
     "model/float",  
@@ -49,5 +48,7 @@ float = [
     "weather/float", 
     "calendar/float", 
     "geometry/float", 
-    "polynomial/float"
+    "polynomial/float",
+    "communication/float",
+    "test_models/float",
 ]

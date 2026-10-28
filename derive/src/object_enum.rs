@@ -120,20 +120,20 @@ impl EnumObject {
         let mut ret = String::new();
 
         // // Title
-        writeln!(ret, "# {}\n", &self.ident).map_err(|e| e.to_string())?;
+        writeln!(ret, "# {}\n", self.ident).map_err(|e| e.to_string())?;
 
         // Written doc
-        writeln!(ret, "{}\n\n ## Supported Variants\n", &self.docs).map_err(|e| e.to_string())?;
+        writeln!(ret, "{}\n\n ## Supported Variants\n", self.docs).map_err(|e| e.to_string())?;
 
         // Document variants
         for variant in self.variants.iter() {
-            writeln!(ret, "###  {}\n", &variant.data().ident).map_err(|e| e.to_string())?;
+            writeln!(ret, "###  {}\n", variant.data().ident).map_err(|e| e.to_string())?;
 
-            writeln!(ret, "{}\n\n", &variant.data().docs).map_err(|e| e.to_string())?;
+            writeln!(ret, "{}\n\n", variant.data().docs).map_err(|e| e.to_string())?;
             match variant {
                 Variant::Unnamed(s) => {
                     let v_ident = &s.ident;
-                    write!(ret, "```rs\n{} {{\n\t{} : ", &self.ident, v_ident)
+                    write!(ret, "```rs\n{} {{\n\t{} : ", self.ident, v_ident)
                         .map_err(|e| e.to_string())?;
                     let mut i = 0;
                     for field in s.fields.iter() {
@@ -151,7 +151,7 @@ impl EnumObject {
                 }
                 Variant::Named(s) => {
                     let v_ident = &s.ident;
-                    write!(ret, "##### Full Specification\n```json\n{} {{\n\ttype : \"{}\", // this should not change\n", &self.ident, v_ident).unwrap();
+                    write!(ret, "##### Full Specification\n```json\n{} {{\n\ttype : \"{}\", // this should not change\n", self.ident, v_ident).unwrap();
                     let mut i = 0;
 
                     for field in s.fields.iter() {
@@ -194,7 +194,7 @@ impl EnumObject {
         }
 
         // Api access.
-        let object_name_str = format!("{}", &self.ident);
+        let object_name_str = format!("{}", self.ident);
         if crate::object_has_api(object_name_str.clone()) {
             let name_str_lower = object_name_str.to_lowercase();
             writeln!(ret, "\n\n## API Access\n\n```rs\n// by name\n let my_{} = {}(string);\n// by index\nlet my_{} = {}(int);```", name_str_lower, name_str_lower, name_str_lower, name_str_lower).unwrap();
@@ -291,24 +291,24 @@ impl EnumObject {
 
     pub fn gen_group_api(&self) -> TokenStream2 {
         let object_name = self.ident.clone();
-        let name_str = format!("{}", &object_name);
+        let name_str = format!("{}", object_name);
         let name_str_lower = name_str.to_lowercase();
 
         let location_str = crate::object_location(name_str).unwrap_or_else(|| {
             panic!(
                 "Trying to gen a Group API of '{}', which is not registered in Model",
-                &object_name
+                object_name
             )
         });
         let location = syn::Ident::new(location_str, proc_macro2::Span::call_site());
-        let not_found_err = format!("Could not find {} '{{}}'", &object_name);
+        let not_found_err = format!("Could not find {} '{{}}'", object_name);
         let negative_index_err = format!(
             "Impossible to get {} using a negative index ({{}} was given)",
-            &object_name
+            object_name
         );
         let out_of_bounds_err = format!(
             "Trying to access {} number {{}}... but the last index is {{}}",
-            &object_name
+            object_name
         );
 
         let mut name_match_statement = quote!();

@@ -1,5 +1,5 @@
-use simple::{run_simulation::*, Model};
-use validate::{valid, ScatterValidator, ValidFunc, Validator};
+use simple::{Model, run_simulation::*};
+use validate::{ScatterValidator, ValidFunc, Validator, valid};
 
 #[test]
 #[ignore]
@@ -56,24 +56,14 @@ fn apartment_sim() -> Result<(), String> {
         found[i].pop();
 
         let skip = 2000; // This is warmup period
-                         // let take = expected[0].len() - skip - 1000;
+        // let take = expected[0].len() - skip - 1000;
         Box::new(ScatterValidator {
             chart_title: Some("Dry Bulb Temperature - SIMPLE vs EnergyPlus"),
             units: Some("C"),
             expected_legend: Some("EnergyPlus-calculated temperature"),
-            expected: expected[i]
-                .iter()
-                .skip(skip)
-                // .take(take)
-                .map(|v| *v)
-                .collect(),
+            expected: expected[i].iter().skip(skip).copied().collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[i]
-                .iter()
-                .skip(skip)
-                // .take(take)
-                .map(|v| *v)
-                .collect(),
+            found: found[i].iter().skip(skip).copied().collect(),
 
             // allowed_r2: Some(0.93),
             // allowed_intersect_delta: Some(0.8),

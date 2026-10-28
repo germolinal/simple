@@ -28,9 +28,9 @@ SOFTWARE.
  written by Bruce Walter  (bjw@graphics.cornell.edu)  5/26/95
  based on code written by Greg Ward
 */
+use crate::Float;
 use crate::colour::Spectrum;
 use crate::colourmap::Colourmap;
-use crate::Float;
 use jpeg_encoder::{ColorType, Encoder};
 use std::io::Write;
 use std::path::Path;
@@ -155,7 +155,13 @@ impl ImageBuffer {
     /// Creates a new empty [`ImageBuffer`]
     pub fn from_pixels(width: usize, height: usize, pixels: Vec<Spectrum>) -> Self {
         if pixels.len() != width * height {
-            panic!("Width ({}) and Height ({}) does not match the number of pixels (n_pixels is {}... expecting width*height={})", width, height, pixels.len(), width*height)
+            panic!(
+                "Width ({}) and Height ({}) does not match the number of pixels (n_pixels is {}... expecting width*height={})",
+                width,
+                height,
+                pixels.len(),
+                width * height
+            )
         }
         Self {
             width,
@@ -197,7 +203,7 @@ impl ImageBuffer {
                     filename
                         .to_str()
                         .ok_or("Could not transform filename into string")?
-                ))
+                ));
             }
         };
         let mut content = content.as_slice();
@@ -220,7 +226,10 @@ impl ImageBuffer {
             if line.starts_with(b"-Y") {
                 let errmsg = {
                     let l = std::str::from_utf8(line).map_err(|e| e.to_string())?;
-                    Err(format!("When reading file '{}' : Expecting SIZE line to be in the format '-Y number +X number'... found '{}'",filename, l))
+                    Err(format!(
+                        "When reading file '{}' : Expecting SIZE line to be in the format '-Y number +X number'... found '{}'",
+                        filename, l
+                    ))
                 };
 
                 // Size
@@ -273,7 +282,9 @@ impl ImageBuffer {
 
         // Read body
         let pixels = content
-            .chunks_exact(4)
+            .as_chunks::<4>()
+            .0
+            .iter()
             .map(|x| {
                 let (r, g, b, e) = (x[0], x[1], x[2], x[3]);
                 rgbe_to_colour(r, g, b, e)
@@ -408,24 +419,26 @@ mod tests {
     use std::os::raw::c_double;
     use std::os::raw::c_int;
 
-    extern "C" {
+    unsafe extern "C" {
         fn frexp(x: c_double, exp: *mut c_int) -> c_double;
         fn ldexp(x: c_double, ex: c_int) -> c_double;
     }
 
+    #[allow(clippy::useless_conversion)] // (not useless with `f32`)
     fn c_frexp(x: Float) -> (Float, i32) {
         let mut exp: c_int = 0;
         let res = unsafe { frexp(x.into(), &mut exp) } as Float;
         (res, exp as i32)
     }
 
+    #[allow(clippy::useless_conversion)] // (not useless with `f32`)
     fn c_ldexp(x: Float, n: i32) -> Float {
         (unsafe { ldexp(x.into(), n) }) as Float
     }
 
     #[test]
     fn test_frexp() {
-        let xs: Vec<Float> = vec![1e6, 2., PI.into(), 123987., 0., 99., 2.3123, 1024., 0.1];
+        let xs: Vec<Float> = vec![1e6, 2., PI, 123987., 0., 99., 2.3123, 1024., 0.1];
         for x in xs.iter() {
             let (c_mantissa, c_exp) = c_frexp(*x);
             let (mantissa, exp) = rusty_frexp(*x);
