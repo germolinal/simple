@@ -19,10 +19,9 @@ SOFTWARE.
 */
 
 use crate::numberish::Numberish;
-use crate::stats::try_into_t;
 use crate::Validate;
 use crate::ValidationResult;
-use poloto::prelude::*;
+use poloto::build;
 
 /// Validates a time series based on Mean Bias Error and Root Mean Squared Error
 #[derive(Default, Clone)]
@@ -75,8 +74,6 @@ impl<T: Numberish> Validate for SeriesValidator<T> {
             return ValidationResult::Err(err_msg.clone(), err_msg);
         }
 
-        let n = try_into_t(self.expected.len());
-
         let num = self.expected.len();
 
         let mean_bias_error = crate::stats::mean_bias_error(&self.expected, &self.found);
@@ -116,17 +113,11 @@ impl<T: Numberish> Validate for SeriesValidator<T> {
         }
 
         let exp_legend = self.expected_legend.unwrap_or("Expected");
-        let line_expected = poloto::range_iter([0.0, n], num)
-            .zip_output(|i| self.expected[i as usize].into())
-            .buffered_plot()
-            .line(exp_legend);
+        let line_expected = build::plot(exp_legend)
+            .line((0..num).map(|i| -> [f64; 2] { [i as f64, self.expected[i].into()] }));
         let found_legend = self.found_legend.unwrap_or("Found");
-        let line_found = poloto::range_iter([0.0, n], num)
-            .zip_output(|i| self.found[i as usize].into())
-            .buffered_plot()
-            .line(found_legend);
-        let origin = poloto::build::origin();
-        // let data = plots!(line_expected, line_found, m);
+        let line_found = build::plot(found_legend)
+            .line((0..num).map(|i| -> [f64; 2] { [i as f64, self.found[i].into()] }));
 
         let mut x_label: String = self.x_label.unwrap_or("x").into();
         if let Some(units) = self.x_units {
@@ -137,14 +128,14 @@ impl<T: Numberish> Validate for SeriesValidator<T> {
             y_label = format!("{} ({})", y_label, units);
         }
         let chart_title = self.chart_title.unwrap_or("");
-        let p = quick_fmt!(
-            chart_title,
-            &x_label,
-            &y_label,
-            line_expected,
-            line_found,
-            origin
-        );
+        let chart = poloto::frame_build()
+            .data(poloto::plots!(line_expected, line_found, build::origin()))
+            .build_and_label((chart_title, x_label, y_label))
+            .append_to(poloto::header().light_theme())
+            .render_string()
+            .unwrap_or_else(|e| format!("Could not draw the chart: {e}"))
+            // On one line, or Markdown breaks it apart (e.g., at blank lines)
+            .replace(['\n', '\t'], " ");
 
         let show_err = if nchecks == 0 {
             "No checks performed..."
@@ -156,9 +147,7 @@ impl<T: Numberish> Validate for SeriesValidator<T> {
 
         let file = format!(
             "{}\n#### Errors:\n {}\n#### Data:\n\n{}",
-            file_msg,
-            show_err,
-            poloto::disp(|w| p.simple_theme(w))
+            file_msg, show_err, chart
         );
 
         if !err_msg.is_empty() {

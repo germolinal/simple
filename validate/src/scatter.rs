@@ -21,7 +21,7 @@ SOFTWARE.
 use crate::numberish::Numberish;
 use crate::Validate;
 use crate::ValidationResult;
-use poloto::prelude::*;
+use poloto::build;
 
 /// Validates a time series based on Mean Bias Error and Root Mean Squared Error
 #[derive(Default, Clone)]
@@ -155,14 +155,13 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
         }
 
         let n = self.expected.len();
-        let data = |i: usize| [self.expected[i].into(), self.found[i].into()];
+        let data = |i: usize| -> [f64; 2] { [self.expected[i].into(), self.found[i].into()] };
 
         let exp_legend = self.expected_legend.unwrap_or("Expected");
         let found_legend = self.found_legend.unwrap_or("Found");
-        let origin = poloto::build::origin();
 
         let (.., max_x) = crate::stats::min_max(&self.expected);
-        let fit = |i: usize| {
+        let fit = |i: usize| -> [f64; 2] {
             if i == 0 {
                 [0., intersect]
             } else if i == 1 {
@@ -171,10 +170,10 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
                 unreachable!();
             }
         };
-        let range = (0..2).map(|x| x as usize);
-        let fit = range.clone().map(fit).buffered_plot().line("fit");
+        let range = 0..2;
+        let fit = build::plot("fit").line(range.clone().map(fit));
 
-        let exp_fit = |i: usize| {
+        let exp_fit = |i: usize| -> [f64; 2] {
             if i == 0 {
                 [0.0, 0.0]
             } else if i == 1 {
@@ -183,20 +182,18 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
                 unreachable!();
             }
         };
-        let exp_fit = range.map(exp_fit).buffered_plot().line("expected_fit");
-        let range = 0..n;
-        let scatter = range.map(data).buffered_plot().scatter("some name");
+        let exp_fit = build::plot("expected_fit").line(range.map(exp_fit));
+        let scatter = build::plot("some name").scatter((0..n).map(data));
 
         let chart_title = self.chart_title.unwrap_or("");
-        let p = quick_fmt!(
-            chart_title,
-            &exp_legend,
-            &found_legend,
-            scatter,
-            fit,
-            exp_fit,
-            origin
-        );
+        let chart = poloto::frame_build()
+            .data(poloto::plots!(scatter, fit, exp_fit, build::origin()))
+            .build_and_label((chart_title, exp_legend, found_legend))
+            .append_to(poloto::header().light_theme())
+            .render_string()
+            .unwrap_or_else(|e| format!("Could not draw the chart: {e}"))
+            // On one line, or Markdown breaks it apart (e.g., at blank lines)
+            .replace(['\n', '\t'], " ");
 
         let show_err = if nchecks == 0 {
             "No checks performed..."
@@ -207,9 +204,7 @@ impl<T: Numberish> Validate for ScatterValidator<T> {
         };
         let file = format!(
             "{}\n#### Errors:\n {}\n\n#### Data:\n{}",
-            fit_msg,
-            show_err,
-            poloto::disp(|w| p.simple_theme(w))
+            fit_msg, show_err, chart
         );
 
         if !err_msg.is_empty() {
