@@ -419,11 +419,13 @@ mod testing {
         assert!(v.sky + v.air > 0.09 && v.sky + v.air < 0.13, "{v:?}");
 
         // A window under an overhang sees less sky than an unobstructed one
-        // (its normal ray misses the overhang)
+        // (its normal ray misses the overhang). Over 2000 runs, sky + air was
+        // 0.2734 on average, with a standard deviation of 0.0019, so these
+        // bounds are ~7 standard deviations away (0.27 used to fail 1 in 25)
         let window = surface(&[(0., 0., 0.5), (0., 1., 0.5), (0., 1., 1.5), (0., 0., 1.5)])?;
         let overhang = scene("grey polygon o 0 0 12 0 -0.5 1.6 1 -0.5 1.6 1 1.5 1.6 0 1.5 1.6\n");
         let v = window.calc_view_factors(&overhang, window.normal.x > 0., 16384)?;
-        assert!(v.sky + v.air > 0.27 && v.sky + v.air < 0.31, "{v:?}");
+        assert!(v.sky + v.air > 0.26 && v.sky + v.air < 0.29, "{v:?}");
         Ok(())
     }
 
