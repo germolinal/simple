@@ -31,7 +31,7 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       site: ${{ steps.filter.outputs.site }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -64,7 +64,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust toolchain
         run: rustup install
       - name: Check formatting
@@ -81,7 +81,7 @@ jobs:
         # than an `f32` can hold, on purpose)
         features: ["", "--features parallel"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust toolchain
         run: rustup install
       - uses: Swatinem/rust-cache@v2
@@ -95,7 +95,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust toolchain
         run: rustup install
       - uses: Swatinem/rust-cache@v2
@@ -117,7 +117,7 @@ jobs:
           - "--features float"
           - "--features float --features parallel"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust toolchain
         run: rustup install
       - uses: Swatinem/rust-cache@v2
@@ -133,7 +133,7 @@ jobs:
     env:
       RUSTDOCFLAGS: -D warnings
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Rust toolchain
         run: rustup install
       - uses: Swatinem/rust-cache@v2
@@ -145,7 +145,7 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-audit
@@ -161,7 +161,7 @@ jobs:
     if: needs.changes.outputs.site == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Tags, so the landing page can find the latest release
           fetch-depth: 0
@@ -191,7 +191,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Check whether validation reports are stale
