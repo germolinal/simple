@@ -19,4 +19,4 @@ license     = "MIT"
 derive = { package = "validate_derive", path = "derive", version = "0.1.0" }
 csv = "1"
 poloto = "15.2.0"
-pulldown-cmark = "0.9.1"
+pulldown-cmark = "0.13.5"
