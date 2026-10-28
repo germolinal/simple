@@ -39,7 +39,7 @@ pub(crate) struct EPWScanner<'a> {
     line: usize,
 
     /// The data source
-    src: &'a Vec<u8>,
+    src: &'a [u8],
 
     /// Are we in a string? (i.e. within quotation marks, e.g. " STRING ")
     in_string: bool,
@@ -47,7 +47,7 @@ pub(crate) struct EPWScanner<'a> {
 
 impl<'a> EPWScanner<'a> {
     /// Creates a new scanner.
-    pub fn new(src: &'a Vec<u8>) -> Self {
+    pub fn new(src: &'a [u8]) -> Self {
         Self {
             current: 0,
             start: 0,
@@ -68,7 +68,7 @@ impl<'a> EPWScanner<'a> {
     }
 
     /// Parses the EPW file and builds a proper EPWWeather
-    pub fn build_weather_file(src: &'a Vec<u8>) -> Result<EPWWeather, String> {
+    pub fn build_weather_file(src: &'a [u8]) -> Result<EPWWeather, String> {
         // build a scaner
         let mut scanner = EPWScanner::new(src);
 

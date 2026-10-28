@@ -25,6 +25,7 @@ members = [
     "utils",
     "validate",
     "validate/derive",
+    "wasm",
 ]
 
 

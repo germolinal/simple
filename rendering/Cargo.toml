@@ -20,6 +20,10 @@ clap = { version = "4.6", features = ["derive"] }
 obj-rs = "0.7"
 jpeg-encoder = "0.7"
 
+# `rand` seeds itself through `getrandom`, which needs to be told to use the
+# browser's `crypto.getRandomValues` when targeting WebAssembly
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+getrandom = { version = "0.4", features = ["wasm_js"] }
 
 [dev-dependencies]
 criterion = { workspace = true }

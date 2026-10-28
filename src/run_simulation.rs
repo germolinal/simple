@@ -79,12 +79,21 @@ pub struct SimOptions {
     pub n: usize,
 }
 
-struct PreProcessData {
-    sim_period: Period,
-    report_indexes: Vec<usize>,
-    full_header: Vec<String>,
-    model: MultiphysicsModel,
-    weather: Weather,
+/// Everything needed to march a [`Model`] through a weather file, as
+/// built by [`prepare`].
+pub struct PreProcessData {
+    /// The period to simulate (i.e., the whole weather file)
+    pub sim_period: Period,
+    /// The indexes (within the [`SimulationState`](model::SimulationState))
+    /// of the elements to report
+    pub report_indexes: Vec<usize>,
+    /// The name of every element in the
+    /// [`SimulationState`](model::SimulationState)
+    pub full_header: Vec<String>,
+    /// The physics model
+    pub model: MultiphysicsModel,
+    /// The weather driving the simulation
+    pub weather: Weather,
 }
 
 fn pre_process(
@@ -92,23 +101,8 @@ fn pre_process(
     options: &SimOptions,
     state_header: &mut SimulationStateHeader,
 ) -> Result<PreProcessData, String> {
-    const MAX_N: usize = 60;
-    let n = if options.n > MAX_N {
-        eprintln!(
-            "The maximum allowed value for -n param is {}... n has been automatically limited to that value",
-            MAX_N
-        );
-        MAX_N
-    } else if options.n == 0 {
-        return Err("Parameter 'n' should be larger than 0".to_string());
-    } else {
-        options.n
-    };
-
-    let dt = 60. * 60. / n as Float;
-
     // Load weather
-    let mut weather: Weather = match &options.weather_file {
+    let weather: Weather = match &options.weather_file {
         None => {
             return Err("No weather file specified".to_string());
         }
@@ -126,6 +120,37 @@ fn pre_process(
             }
         }
     };
+
+    prepare(model, weather, options.n, state_header)
+}
+
+/// Builds the physics model (with `n` timesteps per hour) and works out the
+/// simulation period and the reported variables, given an already loaded
+/// [`Weather`]
+pub fn prepare(
+    model: &Model,
+    mut weather: Weather,
+    n: usize,
+    state_header: &mut SimulationStateHeader,
+) -> Result<PreProcessData, String> {
+    const MAX_N: usize = 60;
+    let n = if n > MAX_N {
+        eprintln!(
+            "The maximum allowed value for -n param is {}... n has been automatically limited to that value",
+            MAX_N
+        );
+        MAX_N
+    } else if n == 0 {
+        return Err("Parameter 'n' should be larger than 0".to_string());
+    } else {
+        n
+    };
+
+    let dt = 60. * 60. / n as Float;
+
+    if weather.data.is_empty() {
+        return Err("The weather has no data".to_string());
+    }
 
     let start = weather.data[0].date;
     let mut end = weather.data[weather.data.len() - 1].date;

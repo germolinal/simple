@@ -55,6 +55,12 @@ impl EPWWeather {
     pub fn from_file<P: AsRef<Path> + Display>(filename: P) -> Result<Self, String> {
         EPWScanner::from_file(filename)
     }
+
+    /// Creates an `EPWWeather` from the contents of an EPW file (e.g., when
+    /// there is no file system, as in WebAssembly)
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+        EPWScanner::build_weather_file(bytes)
+    }
 }
 
 impl std::convert::From<EPWWeather> for Weather {
