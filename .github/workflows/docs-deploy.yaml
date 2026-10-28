@@ -1,22 +1,23 @@
 name: Build and deploy docs
 
-# Reusable workflow behind docs.yaml and docs-release.yaml. Publishes
-# https://germolinal.github.io/simple/ (see `make site`).
+# Publishes https://germolinal.github.io/simple/ (see `make book`) entirely
+# from a release tag: landing page, book, IO reference, API docs and
+# validation reports all describe that release.
 #
-# Hand-written docs (docs/index.html, docs/book) come from the commit that
-# triggered the run. Generated docs (IO reference and validation reports) come
-# from `generated_ref`, so they always describe a released version of SIMPLE.
+# Called by release.yaml after the binaries are uploaded (so the download
+# links work), or run by hand from the Actions tab to re-publish a tag.
 on:
   workflow_call:
     inputs:
-      generated_ref:
-        description: "Ref to generate the IO reference and take validation reports from. Empty means the latest `v*` tag"
+      tag:
         type: string
-        default: ""
-      check_validation:
-        description: "Warn if the validation reports are stale"
-        type: boolean
-        default: false
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish, e.g., v0.2.0"
+        type: string
+        required: true
 
 env:
   CARGO_TERM_COLOR: always
@@ -30,28 +31,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Tags and history are needed to find the release and check reports
-          fetch-depth: 0
+          ref: refs/tags/${{ inputs.tag }}
 
-      - name: Find release
-        run: |
-          ref="${{ inputs.generated_ref }}"
-          if [ -z "$ref" ]; then
-            ref=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
-          fi
-          if [ -z "$ref" ]; then
-            echo "::warning::No release tag found; generating docs from ${{ github.sha }}"
-            ref=${{ github.sha }}
-          fi
-          echo "Generated docs come from $ref"
-          echo "GENERATED_REF=$ref" >> "$GITHUB_ENV"
-
-      - name: Check validation reports
-        if: inputs.check_validation
-        run: ./docs/check_validation.sh --warn "$GENERATED_REF"
-
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
+      # Installs the version in rust-toolchain.toml
+      - name: Install Rust toolchain
+        run: rustup install
 
       - uses: Swatinem/rust-cache@v2
 
@@ -61,17 +45,16 @@ jobs:
         with:
           tool: mdbook@0.4.52,mdbook-katex@0.9.4
 
-      - name: Generate docs from release
-        run: |
-          release="$RUNNER_TEMP/release"
-          git worktree add --detach "$release" "$GENERATED_REF"
-          CARGO_TARGET_DIR="$PWD/target" make -C "$release" io_reference api_docs
-          cp "$release"/docs/book/src/auto-*.md "$release"/docs/book/src/IO_SUMMARY.md docs/book/src/
-          rm -rf docs/validation
-          cp -R "$release"/docs/validation docs/validation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/website/package-lock.json
 
       - name: Build site
-        run: make site
+        env:
+          SIMPLE_VERSION: ${{ inputs.tag }}
+        run: make book
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

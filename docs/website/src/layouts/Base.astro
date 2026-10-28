@@ -1,0 +1,56 @@
+---
+import "../styles/global.css";
+import Logo from "../components/Logo.astro";
+import { repo, version } from "../lib/release";
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+  </head>
+  <body class="font-sans leading-relaxed">
+    <nav class="sticky top-0 z-10 border-b border-line bg-bg/85 backdrop-blur">
+      <div class="mx-auto flex h-15 max-w-5xl items-center justify-between gap-4 px-4 sm:px-5">
+        <a href="#top" class="flex items-center gap-2.5 font-bold tracking-wide text-fg no-underline">
+          <Logo class="size-8" />
+          SIMPLE
+        </a>
+        <ul class="flex gap-3.5 text-sm sm:gap-5 sm:text-[0.95rem]">
+          <li class="hidden sm:block"><a class="text-muted no-underline hover:text-fg" href="#what">What it is</a></li>
+          <li><a class="text-muted no-underline hover:text-fg" href="#download">Download</a></li>
+          <li><a class="text-muted no-underline hover:text-fg" href="#docs">Docs</a></li>
+          <li><a class="text-muted no-underline hover:text-fg" href="#validation">Validation</a></li>
+          <li class="hidden sm:block"><a class="text-muted no-underline hover:text-fg" href={repo}>GitHub</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <slot />
+
+    <footer class="border-t border-line pt-8 pb-12 text-sm text-muted">
+      <div class="mx-auto flex max-w-5xl flex-wrap justify-between gap-3 px-4 sm:px-5">
+        <span>
+          SIMPLE is open source under the MIT license.
+          {version && <> This site documents <a href={`${repo}/releases/tag/${version}`}>{version}</a>.</>}
+        </span>
+        <span>
+          <a href={repo}>GitHub</a> ·
+          <a href={`${repo}/issues`}>Report an issue</a> ·
+          <a href="https://buildingsforpeople.org/simple_demo/">Browser demo</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>

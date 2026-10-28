@@ -1,0 +1,226 @@
+---
+import Base from "../layouts/Base.astro";
+import Card from "../components/Card.astro";
+import Logo from "../components/Logo.astro";
+import Section from "../components/Section.astro";
+import { groups } from "../data/validation";
+import { assetUrl, binaries, platforms, releasesUrl, repo, version } from "../lib/release";
+
+// The book (/book), validation reports (/validation) and API docs (/api) are
+// copied next to this page by `make site`
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const book = `${base}book/`;
+const release = version;
+
+const btn = "inline-block rounded-lg border px-4.5 py-2.5 font-semibold no-underline transition hover:shadow-lg";
+const pre = "min-w-0 overflow-x-auto rounded-xl bg-code-bg px-5 py-4.5 font-mono text-sm text-code-fg";
+---
+
+<Base
+  title="SIMPLE - Simulating for People"
+  description="SIMPLE is an open-source building performance simulation tool that simulates heat, light and air together, written in Rust and validated against EnergyPlus and Radiance."
+>
+  <header id="top">
+    <div class="mx-auto grid max-w-5xl items-center gap-8 px-4 pt-10 pb-14 sm:px-5 md:grid-cols-[1.2fr_1fr] md:gap-12 md:pt-18">
+      <div>
+        <Logo class="mb-5 size-19" label="SIMPLE logo" />
+        <h1 class="mb-2 text-[clamp(2.2rem,5vw,3.4rem)] leading-tight font-bold tracking-tight">SIMPLE</h1>
+        <p class="mb-5 font-mono text-lg text-muted">
+          [<b class="text-brand">SIM</b>]ulating for peo[<b class="text-brand">PLE</b>]
+        </p>
+        <p class="mb-7 text-lg text-muted">
+          An open-source building performance simulation tool that simulates heat, light and air
+          <em>together</em>, so we can study how buildings perform for the people who live in them.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a class:list={[btn, "border-brand-strong bg-brand-strong text-on-brand"]} href="#download">Download</a>
+          <a class:list={[btn, "border-line bg-surface text-fg"]} href={`${book}getting_started.html`}>Get started</a>
+          <a class:list={[btn, "border-line bg-surface text-fg"]} href="#validation">Validation reports</a>
+        </div>
+      </div>
+      <figure>
+        <img
+          class="block w-full rounded-2xl shadow-xl"
+          src={`${book}images/cornell_glass.png`}
+          width="420"
+          height="420"
+          alt="A Cornell box with two glass spheres, rendered with SIMPLE's ray tracer"
+        />
+        <figcaption class="mt-2.5 text-center text-sm text-muted">
+          A Cornell box rendered with SIMPLE's ray tracer: the same engine that calculates daylight and solar gains.
+        </figcaption>
+      </figure>
+    </div>
+  </header>
+
+  <Section
+    id="what"
+    title="What is SIMPLE?"
+    intro="People do not separate the thermal, daylight and acoustic performance of a room: they just feel it. SIMPLE was designed so that all those domains share a single simulation state, and so that the behaviour of people, such as opening a window or switching on a heater, can be part of the simulation as it runs."
+  >
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Card icon="☀️" title="Holistic">
+        Heat transfer, solar and long-wave radiation, daylight, infiltration and ventilation, solved together at every
+        timestep rather than in separate runs.
+      </Card>
+      <Card icon="🧑‍🤝‍🧑" title="Made for people">
+        Control buildings with <a href="https://rhai.rs">Rhai</a> scripts that read and change the state, from window
+        operation to model predictive control.
+      </Card>
+      <Card icon="🌍" title="Runs everywhere">
+        Written in Rust: a command-line tool for Windows, Linux and Mac, a library, and WebAssembly (try the
+        <a href="https://buildingsforpeople.org/simple_demo/">browser demo</a>).
+      </Card>
+      <Card icon="🔍" title="Transparent">
+        Open source (MIT), and validated against EnergyPlus, Radiance and analytic solutions. Every release regenerates
+        the reports below.
+      </Card>
+    </div>
+
+    <div class="mt-8 grid gap-6 md:grid-cols-2">
+      <figure class="rounded-xl border border-line bg-white p-4">
+        <img
+          class="block w-full"
+          src={`${book}images/holistic_architecture.png`}
+          width="769"
+          height="413"
+          loading="lazy"
+          alt="Diagram: the SIMPLE model connects a shared simulation state with thermal, lighting, ventilation and acoustic modules"
+        />
+        <figcaption class="mt-2.5 text-center text-sm text-[#5b6676]">
+          Every physics module reads and writes the same simulation state.
+        </figcaption>
+      </figure>
+      <figure class="rounded-xl border border-line bg-white p-4">
+        <img
+          class="block w-full"
+          src={`${book}images/time_traveling.png`}
+          width="1011"
+          height="335"
+          loading="lazy"
+          alt="Diagram: from the present state, several potential futures are simulated to choose the best action"
+        />
+        <figcaption class="mt-2.5 text-center text-sm text-[#5b6676]">
+          "Time travelling": copy the state, try several actions, and simulate their futures before choosing one.
+        </figcaption>
+      </figure>
+    </div>
+  </Section>
+
+  <Section
+    id="download"
+    title="Download"
+    intro={version
+      ? `Pre-built command-line tools for ${version}, the latest release. Each archive contains ${binaries.join(", ")}.`
+      : "Pre-built command-line tools are attached to every release on GitHub."}
+  >
+    {
+      release && (
+        <div class="grid gap-4 sm:grid-cols-3">
+          {platforms.map((p) => (
+            <Card href={assetUrl(release, p)} eyebrow={p.detail} title={p.name}>
+              <code class="text-sm break-all">
+                simple-{release}-{p.target}.{p.ext}
+              </code>
+            </Card>
+          ))}
+        </div>
+      )
+    }
+    <p class="mt-5 text-muted">
+      Older versions and release notes are on the <a href={releasesUrl}>releases page</a>. On macOS, the binaries are not
+      signed: if the system refuses to open them, run <code class="font-mono text-sm">xattr -d com.apple.quarantine simple</code>.
+    </p>
+
+    <div class="mt-10 grid items-start gap-8 md:grid-cols-2">
+      <div>
+        <h3 class="mb-2 text-xl font-semibold">Build from source</h3>
+        <p class="text-muted">
+          Releases are the tested, validated versions. To get the latest development version (the
+          <code class="font-mono text-sm">main</code> branch, not validated yet), or a platform without pre-built binaries,
+          build SIMPLE with <a href="https://rustup.rs">Rust</a>.
+        </p>
+      </div>
+      <pre class={pre}><code><span class="text-[#8b949e]"># A release</span>
+cargo install --locked --features parallel \
+  --git {repo} \
+  --tag {version ?? "<version>"} simple
+
+<span class="text-[#8b949e]"># The development version (main)</span>
+cargo install --locked --features parallel \
+  --git {repo} simple</code></pre>
+    </div>
+  </Section>
+
+  <Section id="start" title="Getting started">
+    <div class="grid items-start gap-8 md:grid-cols-2">
+      <ol class="list-decimal space-y-1.5 pl-5 text-muted">
+        <li><a href="#download">Download</a> SIMPLE, or build it from source.</li>
+        <li>
+          Describe your building in a <code class="font-mono text-sm">.spl</code> file (see the
+          <a href={`${book}getting_started.html`}>guide</a> and the <a href={`${book}auto-surface.html`}>input reference</a>).
+        </li>
+        <li>Run it with an EPW weather file.</li>
+      </ol>
+      <pre class={pre}><code><span class="text-[#8b949e]"># Simulate a year, 4 timesteps per hour</span>
+simple -i model.spl \
+       -w wellington.epw \
+       -n 4 \
+       -o results.csv
+
+<span class="text-[#8b949e]"># Add a control script</span>
+simple -i model.spl -w wellington.epw \
+       -c control.rhai -o results.csv</code></pre>
+    </div>
+  </Section>
+
+  <Section id="docs" title="Documentation" intro="From why SIMPLE exists to every field of every input object.">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <Card href={`${book}index.html`} title="User guide">
+        What SIMPLE is, why it exists, and how to describe and run a model.
+      </Card>
+      <Card href={`${book}auto-surface.html`} title="Input reference">
+        Every object a model can contain (spaces, surfaces, materials, HVAC, luminaires…) and its fields, generated from
+        the code.
+      </Card>
+      <Card href={`${base}api/simple/index.html`} title="API reference">
+        The Rust crates: the model, the heat, light and air modules, geometry, the ray tracer and more.
+      </Card>
+    </div>
+  </Section>
+
+  <Section
+    id="validation"
+    title="Validation"
+    intro="SIMPLE aims to be as reliable and transparent as possible. These reports are produced by the tests every release has to pass, comparing SIMPLE with EnergyPlus, Radiance and analytic solutions. We are not perfect: if you can help make the results better, let us know."
+  >
+    <figure class="mx-auto mb-2 max-w-xl rounded-xl border border-line bg-white p-4">
+      <img
+        class="block w-full"
+        src={`${book}images/incident_solar.png`}
+        width="787"
+        height="486"
+        loading="lazy"
+        alt="Chart: solar irradiance on a wall over a week, as calculated by SIMPLE and by EnergyPlus; the curves overlap"
+      />
+      <figcaption class="mt-2.5 text-center text-sm text-[#5b6676]">
+        Solar radiation incident on a wall, SIMPLE and EnergyPlus.
+      </figcaption>
+    </figure>
+
+    {
+      groups.map((g) => (
+        <>
+          <h3 class="mt-9 mb-3.5 text-base font-semibold tracking-wider text-muted uppercase">{g.title}</h3>
+          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {g.reports.map((r) => (
+              <Card href={`${base}validation/${r.file}`} eyebrow={r.against} title={r.title} note={r.note}>
+                {r.description}
+              </Card>
+            ))}
+          </div>
+        </>
+      ))
+    }
+  </Section>
+</Base>

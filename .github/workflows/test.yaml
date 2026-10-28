@@ -1,9 +1,10 @@
 name: Tests
 
+# Checks every pull request to main. Merges are not re-tested: they were
+# tested in their PR (branch protection requires "CI passed" and an
+# up-to-date branch). Releases are tested again by release.yaml.
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -23,17 +24,55 @@ env:
   RUSTFLAGS: -D warnings
 
 jobs:
+  # What changed, so jobs that can't be affected are skipped
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      site: ${{ steps.filter.outputs.site }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # A file counts for `code` unless it matches one of the exclusions.
+          # (Rust code writes into docs/validation and docs/book, but never
+          # reads from them.)
+          predicate-quantifier: every
+          filters: |
+            code:
+              - "**"
+              - "!docs/**"
+              - "!**/*.md"
+              - "!LICENSE"
+              - "!.gitignore"
+              - "!katex.html"
+              - "!release.sh"
+              - "!.github/dependabot.yml"
+              - "!.github/workflows/docs-deploy.yaml"
+              - "!.github/workflows/release.yaml"
+            site:
+              - "docs/**"
+              - "Makefile"
+              - "**/*.rs"
+              - "rust-toolchain.toml"
+              - ".github/workflows/docs-deploy.yaml"
+              - ".github/workflows/test.yaml"
+
   fmt:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
+      - name: Install Rust toolchain
+        run: rustup install
       - name: Check formatting
         run: cargo fmt --all -- --check
 
   clippy:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -43,9 +82,8 @@ jobs:
         features: ["", "--features parallel"]
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
+      - name: Install Rust toolchain
+        run: rustup install
       - uses: Swatinem/rust-cache@v2
         with:
           key: clippy-${{ matrix.features }}
@@ -53,10 +91,13 @@ jobs:
         run: cargo clippy --workspace --all-targets --locked ${{ matrix.features }} -- -D warnings
 
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain
+        run: rustup install
       - uses: Swatinem/rust-cache@v2
       - name: Run tests (parallel)
         run: cargo test --workspace --locked --features parallel
@@ -64,6 +105,8 @@ jobs:
         run: cargo test --release --locked --features parallel -p simple -- --ignored
 
   check:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -75,26 +118,77 @@ jobs:
           - "--features float --features parallel"
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain
+        run: rustup install
       - uses: Swatinem/rust-cache@v2
         with:
           key: check-${{ matrix.features }}
       - name: Check (all targets, including tests, benches and examples)
         run: cargo check --workspace --all-targets --locked ${{ matrix.features }}
 
-  docs:
+  api_docs:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     env:
       RUSTDOCFLAGS: -D warnings
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust toolchain
+        run: rustup install
       - uses: Swatinem/rust-cache@v2
       - name: Build API docs
         run: cargo doc --workspace --no-deps --locked
 
+  # Known vulnerabilities in dependencies (Rust and the website's npm packages).
+  # Runs on every PR: new advisories appear even if nothing changed here.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+      - name: Audit Rust dependencies
+        run: cargo audit
+      - name: Audit website dependencies
+        working-directory: docs/website
+        run: npm audit --audit-level=high
+
+  # Builds (does not publish) the website, as release.yaml would
+  site:
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags, so the landing page can find the latest release
+          fetch-depth: 0
+      - name: Install Rust toolchain
+        run: rustup install
+      - uses: Swatinem/rust-cache@v2
+      # mdbook-katex 0.9.x is the last series compatible with mdbook 0.4.x
+      - name: Install mdBook
+        uses: taiki-e/install-action@v2
+        with:
+          tool: mdbook@0.4.52,mdbook-katex@0.9.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/website/package-lock.json
+      - name: Type-check the website
+        working-directory: docs/website
+        run: npm ci && npm run check
+      - name: Build site
+        run: make book
+
   validation_reports:
-    # Warns (does not fail) when code changed after the last `make validate`
+    # Warns (does not fail) when code changed after the last `make validate`;
+    # `make release` and release.yaml refuse stale reports
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -102,3 +196,18 @@ jobs:
           fetch-depth: 0
       - name: Check whether validation reports are stale
         run: ./docs/check_validation.sh --warn
+
+  # The one check branch protection requires: fails if any job above failed
+  # or was cancelled; skipped jobs are fine
+  ci:
+    name: CI passed
+    if: always()
+    needs: [changes, fmt, clippy, test, check, api_docs, audit, site, validation_reports]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check job results
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "Some jobs failed or were cancelled"
+          exit 1
+      - run: echo "All jobs passed or were skipped"

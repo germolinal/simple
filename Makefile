@@ -2,7 +2,7 @@ VALIDATION_FEATURES=--features parallel --release
 
 # None of these targets is a file (`weather` is also a directory, so without
 # this, `make weather` would never run)
-.PHONY: pre_commit ci build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference api_docs summary book site serve_book check_validation documentation
+.PHONY: pre_commit ci build release wasm test neighbours validate cold box convection dc cloud_to_sun solar_irradiance ir_irradiance view_factors ray_tracer light_sources infiltration walls weather io_reference api_docs summary book website site serve_book check_validation documentation
 
 
 pre_commit: #test validate
@@ -86,8 +86,9 @@ weather:
 
 
 # DOCUMENTATION
-# The published site (https://germolinal.github.io/simple/) is:
-#   /             -> docs/index.html (landing page + validation reports)
+# The published site (https://germolinal.github.io/simple/), built from each
+# release tag by .github/workflows/release.yaml, is:
+#   /             -> docs/website (Astro landing page: downloads, links to the rest)
 #   /validation/  -> docs/validation/*.html (written by `make validate`)
 #   /book/        -> docs/book (hand-written chapters + auto-generated IO reference)
 #   /api/         -> Rust API reference (`make api_docs`, copied if present)
@@ -104,13 +105,19 @@ api_docs:
 summary:
 	cat docs/book/SUMMARY_TEMPLATE.md docs/book/src/IO_SUMMARY.md > docs/book/src/SUMMARY.md
 
-book: io_reference site
+# Everything: generates the references, then assembles the site
+book: io_reference api_docs site
 
-# Assembles the site, assuming the IO reference was already generated
+# Builds the landing page into $(SITE_DIR) (needs Node.js; set SIMPLE_VERSION
+# to the release it describes, or it uses the latest `v*` tag)
+website:
+	cd docs/website && npm ci && npm run build -- --outDir $(SITE_DIR)
+
+# Assembles the site, assuming the IO reference (and API docs) were already generated
 site: summary
 	rm -rf $(SITE_DIR)
+	$(MAKE) website
 	mdbook build docs/book --dest-dir $(SITE_DIR)/book
-	cp docs/index.html $(SITE_DIR)/index.html
 	cp -R docs/validation $(SITE_DIR)/validation
 	if [ -d target/doc ]; then cp -R target/doc $(SITE_DIR)/api; fi
 

@@ -1,6 +1,9 @@
 name: Release
 
-# Push a tag like `v0.1.0` to test, build and attach binaries to a GitHub Release
+# Push a tag like `v0.1.0` (see `make release`) to test, create a GitHub
+# Release with binaries attached, and then publish the website and docs from
+# the tag. Nothing is published unless the tests pass and the validation
+# reports are up to date.
 on:
   push:
     tags: ["v*"]
@@ -17,15 +20,18 @@ jobs:
           fetch-depth: 0
 
       - name: Check validation reports
-        run: ./docs/check_validation.sh --warn
+        run: ./docs/check_validation.sh
 
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
+      # Installs the version in rust-toolchain.toml
+      - name: Install Rust toolchain
+        run: rustup install
+
+      - uses: Swatinem/rust-cache@v2
 
       - name: Run tests parallel
         run: |
-          cargo test --features parallel --workspace
-          cargo test --release --features parallel -p simple -- --ignored
+          cargo test --features parallel --workspace --locked
+          cargo test --release --features parallel -p simple --locked -- --ignored
 
   create_release:
     needs: test
@@ -65,13 +71,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install stable toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.target }}
+      - name: Install Rust toolchain
+        shell: bash
+        run: |
+          rustup install
+          rustup target add ${{ matrix.target }}
 
       - name: Compile for target ${{ matrix.target }}
-        run: cargo build --release --features parallel --target ${{ matrix.target }}
+        run: cargo build --release --locked --features parallel --target ${{ matrix.target }}
 
       - name: Package binaries
         shell: bash
@@ -95,3 +102,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.ref_name }}" "$ASSET"
+
+  docs:
+    needs: publish_binaries
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/docs-deploy.yaml
+    with:
+      tag: ${{ github.ref_name }}

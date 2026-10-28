@@ -1,0 +1,6 @@
+# The Rust version used locally and in CI. Bump it on purpose (new versions
+# bring new clippy lints, which CI treats as errors).
+[toolchain]
+channel = "1.99.1"
+profile = "minimal"
+components = ["rustfmt", "clippy"]
