@@ -18,5 +18,5 @@ license     = "MIT"
 # (named `validate_derive`, as `simple` has its own `derive` crate)
 derive = { package = "validate_derive", path = "derive", version = "0.1.0" }
 csv = "1"
-poloto = "15.2.0"
+poloto = "19.1.2"
 pulldown-cmark = "0.9.1"

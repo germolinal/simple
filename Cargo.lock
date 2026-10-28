@@ -822,12 +822,11 @@ dependencies = [
 
 [[package]]
 name = "poloto"
-version = "15.2.0"
+version = "19.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "185192f5138e3b032aae56d6b0b8e1d288881db4ddaaf139aea878dc7c2013ce"
+checksum = "164dbd541c9832e92fa34452e9c2e98b515a548a3f8549fb2402fe1cd5e46b96"
 dependencies = [
- "chrono",
- "tagger",
+ "tagu",
 ]
 
 [[package]]
@@ -1215,10 +1214,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "tagger"
-version = "4.3.5"
+name = "tagu"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "094c9f64d6de9a8506b1e49b63a29333b37ed9e821ee04be694d431b3264c3c5"
+checksum = "eddb6b06d20fba9ed21fca3d696ee1b6e870bca0bcf9fa2971f6ae2436de576a"
 
 [[package]]
 name = "test_models"
