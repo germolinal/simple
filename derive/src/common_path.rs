@@ -18,10 +18,19 @@ pub fn path_is_vec(path: &syn::Path) -> Result<bool, String> {
     path_is(path, "Vec")
 }
 
+// NOTE: The model uses `Arc`, not `Rc`, but `Arc`s only appear in `Model`'s
+// fields, which are not derived.
 pub fn path_is_rc(path: &syn::Path) -> Result<bool, String> {
     path_is(path, "Rc")
 }
 
+// NOTE: The following checks only recognise these exact, unqualified
+// spellings. Anything else (e.g., `u8`, `i32`, `u32`, or qualified paths such
+// as `crate::Float` or `std::primitive::f64`) is silently classified as
+// `Field::Object`, which means no `_or()` getter for `Option`s of them and a
+// misleading type in the IO docs. Not an issue as long as every optional
+// numeric field is `Option<Float>` or `Option<usize>`, but it might be worth
+// making unrecognised primitive types a compile error.
 pub fn path_is_float(path: &syn::Path) -> Result<bool, String> {
     let str_path = path_to_string(path)?;
     Ok(path.segments.len() == 1 && (str_path == "Float" || str_path == "f32" || str_path == "f64"))

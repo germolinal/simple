@@ -1,0 +1,179 @@
+/*
+A single bedroom of 4m x 3m x 2.7m, with a window facing North.
+
+This is the model built in the "Getting started" chapter of the
+SIMPLE book. Run it with:
+
+    simple -i bedroom.spl -w wellington.epw -o results.csv
+*/
+
+// ANCHOR: materials
+// A Substance is "what things are made of"...
+Substance {
+    type: "Normal",
+    name: "Concrete",
+    thermal_conductivity: 1.63,     // W/m.K
+    density: 2400,                  // kg/m3
+    specific_heat_capacity: 900.,   // J/kg.K
+    front_thermal_absorbtance: 0.9,
+    back_thermal_absorbtance: 0.9,
+    front_solar_absorbtance: 0.7,
+    back_solar_absorbtance: 0.7,
+}
+
+Substance {
+    type: "Normal",
+    name: "Glass",
+    thermal_conductivity: 1.,
+    density: 2500,
+    specific_heat_capacity: 840,
+    solar_transmittance: 0.8,
+    front_solar_absorbtance: 0.1,
+    back_solar_absorbtance: 0.1,
+    front_thermal_absorbtance: 0.84,
+    back_thermal_absorbtance: 0.84,
+}
+
+// ... a Material is a layer of a Substance, with a thickness...
+Material {
+    name: "20cm Concrete",
+    substance: "Concrete",
+    thickness: 0.2, // m
+}
+
+Material {
+    name: "3mm Glass",
+    substance: "Glass",
+    thickness: 0.003,
+}
+
+// ... and a Construction is a stack of Materials (from front to back)
+Construction {
+    name: "Concrete Wall",
+    materials: ["20cm Concrete"],
+}
+
+Construction {
+    name: "Single Glazing",
+    materials: ["3mm Glass"],
+}
+// ANCHOR_END: materials
+
+// ANCHOR: space
+Space {
+    name: "Bedroom",
+    volume: 32.4, // 4 x 3 x 2.7... SIMPLE does not calculate volumes (yet)
+    purposes: ["Bedroom"],
+}
+// ANCHOR_END: space
+
+// ANCHOR: north_wall
+Surface {
+    name: "North Wall",
+    construction: "Concrete Wall",
+    // No front_boundary means the front leads outdoors
+    back_boundary: { type: "Space", space: "Bedroom" },
+    vertices: [
+        4, 3, 2.7,
+        4, 3, 0,
+        0, 3, 0,
+        0, 3, 2.7,
+    ],
+}
+
+Fenestration {
+    name: "North Window",
+    construction: "Single Glazing",
+    parent_surface: "North Wall", // SIMPLE makes the hole in the wall
+    back_boundary: { type: "Space", space: "Bedroom" },
+    vertices: [
+        3, 3, 2.1,
+        3, 3, 0.9,
+        1, 3, 0.9,
+        1, 3, 2.1,
+    ],
+}
+// ANCHOR_END: north_wall
+
+// ANCHOR: other_walls
+Surface {
+    name: "South Wall",
+    construction: "Concrete Wall",
+    back_boundary: { type: "Space", space: "Bedroom" },
+    vertices: [
+        0, 0, 2.7,
+        0, 0, 0,
+        4, 0, 0,
+        4, 0, 2.7,
+    ],
+}
+
+Surface {
+    name: "East Wall",
+    construction: "Concrete Wall",
+    back_boundary: { type: "Space", space: "Bedroom" },
+    vertices: [
+        4, 0, 2.7,
+        4, 0, 0,
+        4, 3, 0,
+        4, 3, 2.7,
+    ],
+}
+
+Surface {
+    name: "West Wall",
+    construction: "Concrete Wall",
+    back_boundary: { type: "Space", space: "Bedroom" },
+    vertices: [
+        0, 3, 2.7,
+        0, 3, 0,
+        0, 0, 0,
+        0, 0, 2.7,
+    ],
+}
+// ANCHOR_END: other_walls
+
+// ANCHOR: floor_ceiling
+Surface {
+    name: "Floor",
+    construction: "Concrete Wall",
+    // A crawl space at 12C (Ground boundaries are not supported yet)
+    front_boundary: { type: "AmbientTemperature", temperature: 12 },
+    back_boundary: { type: "Space", space: "Bedroom" },
+    vertices: [
+        4, 0, 0,
+        0, 0, 0,
+        0, 3, 0,
+        4, 3, 0,
+    ],
+}
+
+Surface {
+    name: "Ceiling",
+    construction: "Concrete Wall",
+    // The apartment upstairs, at 18C
+    front_boundary: { type: "AmbientTemperature", temperature: 18 },
+    back_boundary: { type: "Space", space: "Bedroom" },
+    vertices: [
+        0, 3, 2.7,
+        0, 0, 2.7,
+        4, 0, 2.7,
+        4, 3, 2.7,
+    ],
+}
+// ANCHOR_END: floor_ceiling
+
+// ANCHOR: heater
+HVAC {
+    type: "ElectricHeater",
+    name: "Bedroom Heater",
+    target_space: "Bedroom",
+    max_heating_power: 1500, // W
+    heating_setpoint: 19,    // C
+}
+// ANCHOR_END: heater
+
+// ANCHOR: outputs
+Output { SpaceDryBulbTemperature: "Bedroom" }
+Output { HeatingCoolingPowerConsumption: "Bedroom Heater" }
+// ANCHOR_END: outputs

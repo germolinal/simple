@@ -380,7 +380,7 @@ impl StructObject {
                         );
                     }
 
-                    // Name of the 'set_' method
+                    // Name of the '_or' method
                     let get_or_ident = format!("{}_or", f_ident);
                     let get_or_ident = syn::Ident::new(&get_or_ident, f_ident.span());
                     let gets_or_doc_string = format!(
@@ -401,6 +401,13 @@ impl StructObject {
                     //     )
                     // };
 
+                    // NOTE: `module_name` is currently unused: it was meant for the
+                    // warning above, which is commented out. Either restore the
+                    // warning or remove the parameter (and update every call to
+                    // `*_or()`).
+                    //
+                    // NOTE: only fields classified as Int, Float or Bool get an
+                    // `_or()` method (see `common_path.rs` for what counts as such)
                     if is_copy {
                         gets = quote!(
                             #gets
@@ -463,8 +470,11 @@ impl StructObject {
         let mut field_getters = quote!();
         let mut field_setters = quote!();
         // open docs
-        let mut docs = "\n\n## API\n\nThe following properties are available for simulating control algorithms".to_string();
-        docs = format!("{}\n\n| Property |\n|----------|", docs);
+        let mut docs = "\n\n## API\n\nThe following properties are available for simulating control algorithms. Control scripts can read all of them, but only set those that people (or control systems) can change in real life. The rest can only be set in [research mode](./controlling.md#research-mode).".to_string();
+        docs = format!(
+            "{}\n\n| Property | Can be set |\n|----------|------------|",
+            docs
+        );
 
         for field in self.fields.iter() {
             if let Field::State(_) = field {
@@ -481,7 +491,12 @@ impl StructObject {
                 // Docs
                 let api_fieldname = field.api_name()?;
 
-                let row = format!("| `{}` |  ", api_fieldname);
+                let can_be_set = if att_names.contains(&"physical".to_string()) {
+                    "Research mode only"
+                } else {
+                    "Yes"
+                };
+                let row = format!("| `{}` | {} |", api_fieldname, can_be_set);
 
                 docs = format!("{}\n{}", docs, row);
 

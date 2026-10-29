@@ -46,6 +46,9 @@ pub(crate) const MODULE_NAME: &str = "Thermal model";
 pub struct ThermalModelMemory {
     surfaces: Vec<SurfaceMemory>,
     fenestrations: Vec<SurfaceMemory>,
+    /// The devices whose control has already been warned about asking for
+    /// more than they can do (so we warn only once per device)
+    warned_devices: std::collections::HashSet<String>,
 }
 
 /// A structure containing all the thermal representation of the whole
@@ -252,6 +255,7 @@ impl SimulationModel for ThermalModel {
         let ret = ThermalModelMemory {
             surfaces,
             fenestrations,
+            warned_devices: std::collections::HashSet::new(),
         };
         Ok(ret)
     }
@@ -411,6 +415,28 @@ impl SimulationModel for ThermalModel {
         alloc: &mut ThermalModelMemory,
     ) -> Result<(), String> {
         let model = model.borrow();
+
+        // Devices can only do what they can do, whatever the control asked for
+        let mut warnings = Vec::new();
+        for hvac in model.hvacs.iter() {
+            if let Some(w) = hvac.clamp_power_consumption(state)? {
+                warnings.push((format!("HVAC {}", hvac.name()), w));
+            }
+        }
+        for luminaire in model.luminaires.iter() {
+            if let Some(w) = luminaire.clamp_power_consumption(state)? {
+                warnings.push((format!("Luminaire {}", luminaire.name()), w));
+            }
+        }
+        for (device, warning) in warnings {
+            if alloc.warned_devices.insert(device) {
+                model::print_warning(
+                    MODULE_NAME,
+                    format!("{date}: {warning}. (This is reported only once per device.)"),
+                );
+            }
+        }
+
         // Iterate through all the sub-subdivitions
         for _ in 0..self.dt_subdivisions {
             // advance in time

@@ -56,3 +56,6 @@ mod optical_info;
 /// on them, and their view factors
 pub mod solar_surface;
 pub use optical_info::{IR_VIEW_FACTOR_RAYS, IRViewFactorSet, OpticalInfo};
+/// Daylight illuminance over workplanes
+pub mod workplane;
+pub use workplane::{IlluminanceRecord, WorkplaneModel, WorkplaneModelMemory, WorkplaneSensors};

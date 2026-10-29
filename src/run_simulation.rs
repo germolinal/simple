@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::Float;
 use crate::RhaiControlScript;
 use crate::control_trait::SimpleControl;
-use calendar::{Date, Period};
+use calendar::{Date, DayOfWeek};
 use clap::Parser;
 use communication::{MetaOptions, SimulationModel};
 use model::{Model, SimulationStateHeader};
@@ -53,7 +53,9 @@ pub struct SimOptions {
     #[arg(short, long)]
     pub weather_file: Option<String>,
 
-    /// The control script
+    /// The control: a Rhai script, or `people` for the built-in controller
+    /// that switches heaters/coolers on and off based on their setpoints.
+    /// With no control, nothing is ever turned on.
     #[arg(short, long)]
     pub control_file: Option<String>,
 
@@ -62,8 +64,10 @@ pub struct SimOptions {
     #[arg(short, long)]
     pub output: Option<String>,
 
-    /// Enable research mode, allowing some unrealistic
-    /// but very powerful functions in the API
+    /// Enable research mode, allowing control scripts to do things that are
+    /// impossible in real life but useful for research (e.g., setting the
+    /// temperature of a space). Without it, scripts can only operate the
+    /// building (e.g., turn heaters on and off, open windows)
     #[arg(short, long)]
     pub research_mode: bool,
 
@@ -74,16 +78,120 @@ pub struct SimOptions {
     // /// The final date
     // #[clap(short = 'e')]
     // pub end: Date,
-    /// The number of timesteps per hour in the simulation
+    /// The seed for the random numbers of the control script (i.e., `random()`),
+    /// for repeatable simulations. Without it, every simulation gets
+    /// different random numbers
+    #[arg(short, long)]
+    pub seed: Option<u64>,
+
+    /// The number of timesteps per hour in the simulation (1 to 60). The
+    /// control script runs, and results are reported, every timestep
     #[arg(short, long, default_value_t = 1)]
     pub n: usize,
+}
+
+/// The timesteps of a simulation, as the [`Date`] at the end of each of them.
+///
+/// Weather records (e.g., in EPW files) describe the interval that
+/// ends at their timestamp, so the simulation starts one record-interval
+/// before the first record, and ends at the last one. For example, an
+/// hourly EPW file simulated with `n = 4` gives the timesteps ending at
+/// 00:15, 00:30, ..., 24:00 of every day (i.e., `8760 * 4` timesteps),
+/// just like EnergyPlus.
+#[derive(Clone, Copy, Debug)]
+pub struct SimulationPeriod {
+    /// The date of the first record in the weather
+    first_record: Date,
+    /// The hours between the end of the first timestep and the
+    /// `first_record` (i.e., zero or negative)
+    first_offset: Float,
+    /// The timestep, in hours
+    dt: Float,
+    /// The number of timesteps
+    n_steps: usize,
+    /// The next timestep to return
+    current: usize,
+    /// The day of the week of the `first_record`, if known
+    start_day_of_week: Option<DayOfWeek>,
+}
+
+impl SimulationPeriod {
+    /// Builds the timesteps covering a [`Weather`] (which must have data)
+    /// with `n` timesteps per hour
+    fn new(weather: &Weather, n: usize) -> Self {
+        let first_record = weather.data[0].date;
+        let last_record = weather.data[weather.data.len() - 1].date;
+
+        // hours between two dates, going forward (i.e., through new year, if needed)
+        let hours_between = |from: Date, to: Date| -> Float {
+            let mut days = to - from;
+            if days < 0. {
+                days += 365.;
+            }
+            days * 24.
+        };
+
+        // The interval described by each record
+        let record_interval = if weather.data.len() > 1 {
+            hours_between(first_record, weather.data[1].date)
+        } else {
+            1.0
+        };
+
+        let dt = 1. / n as Float;
+        // The first timestep ends `dt` after the start of the first record's
+        // interval... but do not go back past midnight of the first day
+        let first_offset = (dt - record_interval).max(-first_record.hour);
+        // ... and the last one ends at the last record
+        let last_offset = hours_between(first_record, last_record);
+
+        Self {
+            first_record,
+            first_offset,
+            dt,
+            n_steps: ((last_offset - first_offset) / dt).round() as usize + 1,
+            current: 0,
+            start_day_of_week: weather.start_day_of_week,
+        }
+    }
+
+    /// The day of the week of a `date` within this period, if the weather
+    /// says what day of the week it starts on
+    pub fn day_of_week(&self, date: Date) -> Option<DayOfWeek> {
+        let mut days = date.day_of_year().floor() - self.first_record.day_of_year().floor();
+        if days < 0. {
+            days += 365.;
+        }
+        self.start_day_of_week.map(|d| d.add_days(days as usize))
+    }
+}
+
+impl Iterator for SimulationPeriod {
+    type Item = Date;
+
+    fn next(&mut self) -> Option<Date> {
+        if self.current >= self.n_steps {
+            return None;
+        }
+        let hours = self.first_offset + self.current as Float * self.dt;
+        self.current += 1;
+
+        let mut date = self.first_record;
+        if hours < 0. {
+            // Before the first record, but on the same day (see `first_offset`)
+            date.hour += hours;
+        } else {
+            date.add_hours(hours);
+        }
+        Some(date)
+    }
 }
 
 /// Everything needed to march a [`Model`] through a weather file, as
 /// built by [`prepare`].
 pub struct PreProcessData {
-    /// The period to simulate (i.e., the whole weather file)
-    pub sim_period: Period,
+    /// The timesteps to simulate (i.e., the whole weather file)
+    pub sim_period: SimulationPeriod,
     /// The indexes (within the [`SimulationState`](model::SimulationState))
     /// of the elements to report
     pub report_indexes: Vec<usize>,
@@ -94,6 +202,8 @@ pub struct PreProcessData {
     pub model: MultiphysicsModel,
     /// The weather driving the simulation
     pub weather: Weather,
+    /// The location of the simulation (from the weather)
+    pub meta_options: MetaOptions,
 }
 
 fn pre_process(
@@ -146,17 +256,12 @@ pub fn prepare(
         n
     };
 
-    let dt = 60. * 60. / n as Float;
-
     if weather.data.is_empty() {
         return Err("The weather has no data".to_string());
     }
 
-    let start = weather.data[0].date;
-    let mut end = weather.data[weather.data.len() - 1].date;
-    end.hour -= 0.1;
-
-    let sim_period = Period::new(start, end, dt);
+    // (before sorting, so the first record is the first one in time)
+    let sim_period = SimulationPeriod::new(&weather, n);
 
     weather.sort_data();
 
@@ -177,22 +282,20 @@ pub fn prepare(
         .map(|x| x.stringify(model))
         .collect();
 
-    let report_indexes: Vec<usize> = model
-        .borrow()
-        .outputs
-        .iter()
-        .filter_map(|item| {
-            full_header.iter().position(|x| {
-                x == &serde_json::to_string(item)
-                    .expect("There was an error interpreting the inputs")
-            })
-        })
-        .collect();
-
-    let report_indexes = if report_indexes.is_empty() {
+    // Report everything, unless specific outputs were requested
+    let outputs = &model.borrow().outputs;
+    let report_indexes: Vec<usize> = if outputs.is_empty() {
         (0..full_header.len()).collect()
     } else {
-        report_indexes
+        outputs
+            .iter()
+            .map(|item| {
+                let item = serde_json::to_string(item).map_err(|e| e.to_string())?;
+                full_header.iter().position(|x| x == &item).ok_or_else(|| {
+                    format!("Output {item} does not match anything that is being simulated")
+                })
+            })
+            .collect::<Result<_, String>>()?
     };
 
     Ok(PreProcessData {
@@ -201,6 +304,7 @@ pub fn prepare(
         full_header,
         weather,
         model: physics_model,
+        meta_options,
     })
 }
 
@@ -210,12 +314,11 @@ fn write_header<W: Write>(
     out: &mut W,
     full_header: &[String],
     report_indexes: &[usize],
-    report_len: usize,
 ) -> std::io::Result<()> {
     out.write_all(b"Date,")?;
     for (index, i) in report_indexes.iter().enumerate() {
         let s = &full_header[*i];
-        if index < report_len - 1 {
+        if index < report_indexes.len() - 1 {
             write!(out, "{s},")?;
         } else {
             write!(out, "{s}")?;
@@ -230,11 +333,10 @@ fn write_row<W: Write>(
     date: Date,
     state: &[Float],
     report_indexes: &[usize],
-    report_len: usize,
 ) -> std::io::Result<()> {
     write!(out, "{date},")?;
     for (index, i) in report_indexes.iter().enumerate() {
-        if index < report_len - 1 {
+        if index < report_indexes.len() - 1 {
             write!(out, "{:.3},", state[*i])?;
         } else {
             write!(out, "{:.3}", state[*i])?;
@@ -244,7 +346,7 @@ fn write_row<W: Write>(
 }
 
 /// This function drives the simulation, after having parsed and built
-/// the Building, State and Peoeple.
+/// the Building, State and People.
 pub fn run<T, C, M>(
     model: M,
     state_header: &mut SimulationStateHeader,
@@ -264,12 +366,6 @@ where
         .take_values()
         .ok_or("Could not take values from SimulationStateHeader")?;
 
-    let report_len = if model.borrow().outputs.is_empty() {
-        state_header.elements.len()
-    } else {
-        model.borrow().outputs.len()
-    };
-
     let mut memory = pre_process_data.model.allocate_memory(&state)?;
 
     // Write header
@@ -277,7 +373,6 @@ where
         &mut out,
         &pre_process_data.full_header,
         &pre_process_data.report_indexes,
-        report_len,
     )
     .map_err(|e| format!("Could not write to output file (header): {e}"))?;
 
@@ -303,14 +398,8 @@ where
         )?;
 
         // Print all the values in the state
-        write_row(
-            &mut out,
-            date,
-            &state,
-            &pre_process_data.report_indexes,
-            report_len,
-        )
-        .map_err(|e| format!("Could not write to output file (Date '{date}'): {e}"))?;
+        write_row(&mut out, date, &state, &pre_process_data.report_indexes)
+            .map_err(|e| format!("Could not write to output file (Date '{date}'): {e}"))?;
     }
 
     out.flush()
@@ -318,7 +407,7 @@ where
 }
 
 /// This function drives the simulation, after having parsed and built
-/// the Building, State and Peoeple.
+/// the Building, State and People.
 pub fn run_rhai<T>(
     model: Model,
     state_header: &mut SimulationStateHeader,
@@ -339,21 +428,17 @@ where
         .ok_or("Could not take values from SimulationStateHeader")?;
     let mut memory = pre_process_data.model.allocate_memory(&state)?;
 
-    let (controller, state) =
+    let (mut controller, state) =
         RhaiControlScript::from_file(&model, state, control_file, options.research_mode)?;
-
-    let report_len = if model.outputs.is_empty() {
-        state_header.elements.len()
-    } else {
-        model.outputs.len()
-    };
+    if let Some(seed) = options.seed {
+        controller.set_seed(seed);
+    }
 
     // Write header
     write_header(
         &mut out,
         &pre_process_data.full_header,
         &pre_process_data.report_indexes,
-        report_len,
     )
     .map_err(|e| format!("Could not write to output file (header): {e}"))?;
 
@@ -362,13 +447,14 @@ where
     /* ************************************ */
     let mut last_reported_month: u8 = 99;
 
-    for date in pre_process_data.sim_period {
+    let sim_period = pre_process_data.sim_period;
+    for date in sim_period {
         if date.month != last_reported_month {
             last_reported_month = date.month;
             eprintln!("  ... Simulating month {}", last_reported_month);
         }
 
-        controller.control()?;
+        controller.control(date, sim_period.day_of_week(date))?;
 
         let mut state_lock = (*state).lock().unwrap();
         // Physics
@@ -388,7 +474,6 @@ where
             date,
             &state_lock,
             &pre_process_data.report_indexes,
-            report_len,
         )
         .map_err(|e| format!("Could not write to output file (Date '{date}'): {e}"))?;
         std::mem::drop(state_lock); // drop mutex

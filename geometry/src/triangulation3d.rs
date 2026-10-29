@@ -2305,6 +2305,87 @@ mod testing {
         )
     }
 
+    /// Builds a horizontal polygon from (x, y) vertices
+    fn floor(xy: &[(Float, Float)], z: Float) -> Result<Polygon3D, String> {
+        let mut outer = Loop3D::new();
+        for (x, y) in xy {
+            outer.push(Point3D::new(*x, *y, z))?;
+        }
+        outer.close()?;
+        Polygon3D::new(outer)
+    }
+
+    #[test]
+    #[ignore = "mesh_polygon's refinement is known to fail here (run with --ignored)"]
+    fn test_mesh_square_regression() -> Result<(), String> {
+        // Fails with "Trying to build a Triangle3D from collinear points",
+        // apparently because a circumcenter falling (within rounding error)
+        // on an edge is considered to be inside a triangle
+        let poly = floor(&[(15.24, 0.), (0., 0.), (0., 15.24), (15.24, 15.24)], 0.)?;
+        let t = Triangulation3D::mesh_polygon(&poly, 1.0, 1.6)?;
+        test_triangulation_results(&t, &poly, 1.0, 1.6)
+    }
+
+    #[test]
+    #[ignore = "mesh_polygon's refinement does not yet meet max_area and max_aspect_ratio in most of these cases (run with --ignored)"]
+    fn test_mesh_polygon_sweep() -> Result<(), String> {
+        // Typical floor plans, in both orientations, at different positions
+        // and sizes, meshed with different maximum areas
+        let mut shapes: Vec<(String, Vec<(Float, Float)>)> = Vec::new();
+        for (w, h) in [
+            (15.24, 15.24),
+            (2.98, 2.39),
+            (10., 3.),
+            (7.3, 5.1),
+            (1., 1.),
+        ] {
+            for (x0, y0) in [(0., 0.), (-3.7, 12.1)] {
+                let ccw = vec![(x0, y0), (x0 + w, y0), (x0 + w, y0 + h), (x0, y0 + h)];
+                let mut cw = ccw.clone();
+                cw.reverse();
+                shapes.push((format!("{w}x{h} at ({x0},{y0})"), ccw));
+                shapes.push((format!("{w}x{h} at ({x0},{y0}), cw"), cw));
+            }
+        }
+        shapes.push((
+            "L-shape".into(),
+            vec![(0., 0.), (8., 0.), (8., 3.), (3., 3.), (3., 6.), (0., 6.)],
+        ));
+        shapes.push((
+            "Collinear vertices".into(),
+            vec![(0., 0.), (2., 0.), (4., 0.), (4., 4.), (0., 4.)],
+        ));
+        shapes.push((
+            "Non-rectangular".into(),
+            vec![(0., 0.), (6.2, 0.4), (7.1, 5.3), (1.3, 4.4)],
+        ));
+
+        let mut failures = Vec::new();
+        let mut n = 0;
+        for (name, xy) in &shapes {
+            for z in [0., 2.7] {
+                let poly = floor(xy, z)?;
+                for max_area in [0.25, 0.5, 1.0, 2.0] {
+                    n += 1;
+                    let r = Triangulation3D::mesh_polygon(&poly, max_area, 1.6)
+                        .and_then(|t| test_triangulation_results(&t, &poly, max_area, 1.6));
+                    if let Err(e) = r {
+                        failures.push(format!("{name} (z={z}, max_area={max_area}): {e}"));
+                    }
+                }
+            }
+        }
+        if failures.is_empty() {
+            Ok(())
+        } else {
+            Err(format!(
+                "{} of {n} cases failed:\n{}",
+                failures.len(),
+                failures.join("\n")
+            ))
+        }
+    }
+
     #[test]
     fn test_mesh_polygon() -> Result<(), String> {
         /* SIMPLE CASE ... three vertices */

@@ -55,6 +55,11 @@ fn apartment_sim() -> Result<(), String> {
         expected[i].pop();
         found[i].pop();
 
+        // eplusout.csv starts at 01:15 (it was trimmed to match an older
+        // SIMPLE, which skipped the first hour), while SIMPLE now starts at
+        // 00:15... so skip SIMPLE's first hour
+        let found_offset = 4;
+
         let skip = 2000; // This is warmup period
         // let take = expected[0].len() - skip - 1000;
         Box::new(ScatterValidator {
@@ -63,7 +68,12 @@ fn apartment_sim() -> Result<(), String> {
             expected_legend: Some("EnergyPlus-calculated temperature"),
             expected: expected[i].iter().skip(skip).copied().collect(),
             found_legend: Some("SIMPLE-calculated temperature"),
-            found: found[i].iter().skip(skip).copied().collect(),
+            found: found[i]
+                .iter()
+                .skip(found_offset + skip)
+                .take(expected[i].len() - skip)
+                .copied()
+                .collect(),
 
             // allowed_r2: Some(0.93),
             // allowed_intersect_delta: Some(0.8),

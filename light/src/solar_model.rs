@@ -75,6 +75,14 @@ pub struct SolarModel {
     back_fenestrations_dc: DCMatrix,
 }
 
+/// Creates the [`Solar`] object for the location in `meta_options`
+pub(crate) fn solar_from_meta_options(meta_options: &MetaOptions) -> Solar {
+    let latitude = meta_options.latitude;
+    let longitude = -meta_options.longitude;
+    let standard_meridian = -meta_options.standard_meridian;
+    Solar::new(latitude, longitude, standard_meridian)
+}
+
 impl SolarModel {
     /// Builds the model, preparing the daylight coefficients in `optical_info`
     fn from_optical_info(optical_info: OpticalInfo, solar: Solar, mf: usize) -> Self {
@@ -464,11 +472,7 @@ impl SimulationModel for SolarModel {
             OpticalInfo::new(&options, model, state)?
         };
 
-        // Create the Solar object
-        let latitude = meta_options.latitude;
-        let longitude = -meta_options.longitude;
-        let standard_meridian = -meta_options.standard_meridian;
-        let solar = Solar::new(latitude, longitude, standard_meridian);
+        let solar = solar_from_meta_options(meta_options);
 
         if model.surfaces.is_empty() {
             print_warning(MODULE_NAME, "Model has no surfaces");

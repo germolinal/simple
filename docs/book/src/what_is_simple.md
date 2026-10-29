@@ -8,21 +8,21 @@ Digging deeper, `SIMPLE` can be seen from two perspectives.
 1. **Historical** perspective, referring to the motivations and drivers that determined 
 its design and motivated me to develop it. 
 2. **Pragmatic** perspective, associated with those cool features and benefits of `SIMPLE` 
-that I have been finding _during_ it's development. 
+that I have been finding _during_ its development. 
 
-> Arguibly, these _pragmatic_ benefits might be present in any modern simulation tool... but considering
+> Arguably, these _pragmatic_ benefits might be present in any modern simulation tool... but considering
 the low number of these, I guess they are pretty unique to `SIMPLE` anyway.
 
 ## `SIMPLE`'s origins — It's the people, stupid
 
 The development of `SIMPLE` was motivated by the results of my [PhD Research](https://openaccess.wgtn.ac.nz/articles/thesis/Exploring_modelling_and_simulating_the_Feeling_of_Comfort_in_residential_settings/17085467/1).
 In these studies, I investigated what is it that _people_—not building scientists
-or architects or engineers—mean by and expect from _a comfortable home_. In a single sentence, my finidings
+or architects or engineers—mean by and expect from _a comfortable home_. In a single sentence, my findings
 suggest that our understanding of building physics far outpaces our knowledge of how people 
 interact with buildings. This gap is only going to widen unless we invest resources in understanding
 humans.
 
-Let put it this way:
+Let me put it this way:
 
 1. **Materials have been/will be getting better** which means that, for instance, closed doors and windows are really good at 
 preventing air leakage and heat transfer. Therefore, building controls and human behaviour—which define whether a window or 
@@ -45,7 +45,7 @@ for real people.
 The motivation for performing holistic simulations is kind of obvious: when people get into a room, they just
 _feel_ it. In other words, **people do not separate—as software and building scientists do—the
 Thermal from the Daylight from the Acoustic domains**. This means that,
-if we want to trully incorporate people's behaviour and comfort into our simulations, we need to account
+if we want to truly incorporate people's behaviour and comfort into our simulations, we need to account
 for multiple domains at the same time, **at run time**.
 
 > **At run time means** that it is not enough to run three simulations (one for thermal, one for acoustic, one for
@@ -53,7 +53,7 @@ for multiple domains at the same time, **at run time**.
 
 So far, `SIMPLE` is actually quite good at Lighting and Thermal simulation, even though this feature has not been
 fully utilised. For instance, the following figure is evidence of how good it can calculate lighting
-and how well it compares to [Energy Plus](https://energyplus.net) in therms of temperature estimations.
+and how well it compares to [Energy Plus](https://energyplus.net) in terms of temperature estimations.
 
 | Lighting simulation | Thermal simulation |
 |-|-|
@@ -122,34 +122,34 @@ And, of course, there are other benefits.
 ### 1. It allows easily defining complex control algorithms
 
 `SIMPLE` can ingest control algorithms as scripts. This allows for a much richer and flexible
-way of writing algoritghms than through schedules. or other common methods.
+way of writing algorithms than through schedules or other common methods.
 
 ```rs
 let kids_bedroom = space("Kids Bedroom");
 let kids_heater = hvac("Kids heater");
 let kids_window = fenestration("kids window");
 
-let window_is_open = kids_window.open_fraction > 0.0
-let temperature = kids_bedroom.dry_bulb_temperature;
-let is_cold = temperature < 19
-let is_hot = temperature > 25
+let window_is_open = kids_window.open_fraction > 0.0;
+let inside_temperature = kids_bedroom.dry_bulb_temperature;
+let is_cold = inside_temperature < 19.0;
+let is_hot = inside_temperature > 25.0;
 
-let outside_temperature = kids_window.front_temperature
+let outside_temperature = kids_window.front_temperature;
 
 if is_hot && outside_temperature < inside_temperature  {
     if random() < 0.7 {
         // 70% chance of opening windows
-        kids_window.open_fraction = 1
+        kids_window.open_fraction = 1.0;
     }
 } else if is_cold && outside_temperature > inside_temperature {
     if random() < 0.3 {
         // 30% chance of ventilating
-        kids_window.open_fraction = 1
+        kids_window.open_fraction = 1.0;
     }
 } else {
     if random() < 0.5{
         // 50% of opening windows to balance temperatures
-        kids_window.open_fraction = 1
+        kids_window.open_fraction = 1.0;
     }
 }
 
@@ -158,6 +158,8 @@ if is_hot && outside_temperature < inside_temperature  {
 
 ```
 
+> Check [Controlling the building](./controlling.md) to learn how to write these scripts.
+
 ### 2. You can store and reuse the solar calculations
 
 Optical calculations—like those required for estimating the amount of sun or light that reaches each 
@@ -165,7 +167,7 @@ surface—can be computationally expensive. Because of this, it is common to pre
 as possible _before_ the simulation starts, and then reuse this data when advancing through time.
 
 
-`SIMPLE` goes one step ahead and allows you to save this data, and then reuse it in succeding 
+`SIMPLE` goes one step ahead and allows you to save this data, and then reuse it in succeeding 
 simulations. (This data is valid as long as the geometry and materials of the model remain the same.)
 
 ```rs
@@ -203,8 +205,8 @@ pausing and restarting of simulations, offering flexibility for various applicat
 
 This feature can potentially be particularly beneficial for integrating `SIMPLE` with 
 Energy Management Systems (EMS). By periodically running simulations, 
-EMS systems can update the building's current state and determine the most o
-ptimal control strategy, such as Model Predictive Control.
+EMS systems can update the building's current state and determine the most
+optimal control strategy, such as Model Predictive Control.
 
 ### 4. Deploy it to modern infrastructure
 

@@ -255,11 +255,30 @@ impl Field {
             "Property '{}' has not been initialized for {} called '{{}}' ",
             api_fieldname, object_name
         );
+
+        // Physical properties (e.g., temperatures) are calculated by the
+        // physics... people cannot set them in real life, so only research
+        // mode allows it. Operational ones (e.g., turning a heater on) are
+        // what people can do.
+        let is_physical = data.attributes.iter().any(|a| a.name == "physical");
+        let research_only_err = format!(
+            "Property '{}' of {} called '{{}}' can only be set in research mode (it cannot be set in real life)",
+            api_fieldname, object_name
+        );
+        let check_research_mode = if is_physical {
+            quote!(if !research_mode {
+                return Err(format!(#research_only_err, this.name).into());
+            })
+        } else {
+            quote!()
+        };
+
         let ret = quote!(
             // Setter by name
             let new_mod = std::sync::Arc::clone(model);
             let new_state = std::sync::Arc::clone(state);
             engine.register_set(#api_fieldname, move |this: &mut std::sync::Arc<#object_name>, v: crate::Float | -> Result<_, Box<rhai::EvalAltResult>> {
+                #check_research_mode
                 match this.#index_ident(){
                     Some(_)=>{
                         let state_ptr = &mut *new_state.lock().unwrap();
@@ -276,6 +295,7 @@ impl Field {
             let new_mod = std::sync::Arc::clone(model);
             let new_state = std::sync::Arc::clone(state);
             engine.register_set(#api_fieldname, move |this: &mut std::sync::Arc<#object_name>, v: rhai::INT | -> Result<_, Box<rhai::EvalAltResult>> {
+                #check_research_mode
                 match this.#index_ident(){
                     Some(_)=>{
                         let state_ptr = &mut *new_state.lock().unwrap();

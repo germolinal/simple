@@ -25,6 +25,11 @@ use serde::{Deserialize, Serialize};
 
 /// A Luminaire
 ///
+/// Like every device in `SIMPLE`, it does not turn itself on: something
+/// (e.g., a control script) has to set its `power_consumption`, which goes
+/// from zero (off) to its `max_power`. All of this power becomes heat in its
+/// `target_space`.
+///
 /// ## Examples
 ///
 /// ##### `.spl`
@@ -42,7 +47,8 @@ pub struct Luminaire {
     /// The name of the Luminaire
     name: String,
 
-    /// The maximum power consumption
+    /// The maximum power consumption, in W. If not given, it is
+    /// 10kW (i.e., [`DEFAULT_MAX_POWER`](crate::DEFAULT_MAX_POWER)).
     #[serde(skip_serializing_if = "Option::is_none")]
     max_power: Option<Float>,
 
@@ -57,10 +63,61 @@ pub struct Luminaire {
     #[serde(skip_serializing_if = "Option::is_none")]
     target_space: Option<String>,
 
-    /// The state of the luminaire    
+    /// The power consumption, in W. This is what turns the luminaire on
+    /// (or dims it). It goes from zero to `max_power`.
     #[operational]
     #[serde(skip)]
     power_consumption: StateElementField,
+}
+
+impl Luminaire {
+    /// Keeps the `power_consumption` of the luminaire (as set by a control)
+    /// between zero and its `max_power` (or
+    /// [`DEFAULT_MAX_POWER`](crate::DEFAULT_MAX_POWER), if not given).
+    ///
+    /// Returns a warning, to show to the user, if the power had to be changed.
+    ///
+    /// ```rust
+    /// use model::{Model, Luminaire};
+    ///
+    /// let mut model = Model::default();
+    /// let mut luminaire = Luminaire::new("Light");
+    /// luminaire.set_max_power(15.);
+    /// let luminaire = model.add_luminaire(luminaire).unwrap();
+    /// let mut state = model.take_state().unwrap().take_values().unwrap();
+    ///
+    /// luminaire.set_power_consumption(&mut state, 100.).unwrap();
+    /// luminaire.clamp_power_consumption(&mut state).unwrap();
+    /// assert_eq!(luminaire.power_consumption(&state), Some(15.));
+    ///
+    /// luminaire.set_power_consumption(&mut state, -1.).unwrap();
+    /// luminaire.clamp_power_consumption(&mut state).unwrap();
+    /// assert_eq!(luminaire.power_consumption(&state), Some(0.));
+    /// ```
+    pub fn clamp_power_consumption(
+        &self,
+        state: &mut crate::SimulationState,
+    ) -> Result<Option<String>, String> {
+        let Some(v) = self.power_consumption(state) else {
+            return Ok(None);
+        };
+        let max = self.max_power().ok().copied();
+        let missing = if max.is_none() {
+            vec!["max_power"]
+        } else {
+            vec![]
+        };
+        let max = max.unwrap_or(crate::DEFAULT_MAX_POWER);
+        self.set_power_consumption(state, v.clamp(0., max))?;
+        Ok(crate::out_of_range_warning(
+            "Luminaire",
+            self.name(),
+            v,
+            0.,
+            max,
+            &missing,
+        ))
+    }
 }
 
 #[cfg(test)]

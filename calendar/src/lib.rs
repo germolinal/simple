@@ -74,3 +74,5 @@ mod date;
 pub use crate::date::Date;
 mod period;
 pub use crate::period::Period;
+mod day_of_week;
+pub use crate::day_of_week::DayOfWeek;

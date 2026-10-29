@@ -161,7 +161,7 @@ pub struct Fenestration {
 
     /// The name of the surface containing this `Fenestration`,
     /// if any. A hole will be made in the parent surface in order
-    /// to accomodate
+    /// to accommodate the `Fenestration`.
     ///
     /// Note that a `Fenestration` can be self contained (i.e., it can have
     /// no parent surface), which allows representing situation where

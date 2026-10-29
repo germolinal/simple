@@ -66,6 +66,7 @@ pub use crate::current_weather::CurrentWeather;
 
 /// For handling EPW Files
 pub mod epw;
+use calendar::DayOfWeek;
 pub use epw::{
     ground_temperature::EPWGroundTemperature, weather::EPWWeather, weather_line::EPWWeatherLine,
 };
@@ -95,6 +96,10 @@ pub struct Weather {
     ///
     /// This is based on EPW Files information
     pub location: Location,
+
+    /// The day of the week of the first record in `data`, if known
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start_day_of_week: Option<DayOfWeek>,
 }
 
 impl Weather {
@@ -376,11 +381,13 @@ mod tests {
         let mut first = Weather {
             location: Location::default(),
             data: first_dates,
+            ..Default::default()
         };
 
         let second = Weather {
             location: Location::default(),
             data: second_dates,
+            ..Default::default()
         };
 
         first += second;
@@ -421,6 +428,7 @@ mod tests {
     fn test_sort_data() {
         let w = Weather {
             location: Location::default(),
+            start_day_of_week: None,
             data: vec![
                 CurrentWeather {
                     date: Date {

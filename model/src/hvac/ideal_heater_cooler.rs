@@ -27,7 +27,16 @@ use serde::{Deserialize, Serialize};
 
 /// An ideal Heating and Cooling device, with a COP of 1.
 ///
-/// It only has two states: On/Off.
+/// Like every device in `SIMPLE`, it does not turn itself on: something
+/// (e.g., a control script) has to set its `power_consumption`, which
+/// is delivered to the air of its `target_space`. A positive value means
+/// heating, and a negative one means cooling.
+///
+/// The power is limited to what the device can do: between minus
+/// `max_cooling_power` (cooling) and `max_heating_power` (heating). If any of
+/// these is not given, the limit in that direction is 10kW (i.e.,
+/// [`DEFAULT_MAX_POWER`](crate::DEFAULT_MAX_POWER)), which is useful for
+/// sizing (i.e., the reported power is what was needed).
 ///
 /// ## Example
 ///
@@ -48,41 +57,42 @@ pub struct IdealHeaterCooler {
     /// The name of the system
     pub name: String,
 
-    /// The `Space`s that this `IdealHeaterCooler` heats and/or
-    /// cools
+    /// The `Space` that this `IdealHeaterCooler` heats and/or
+    /// cools, which is also where its thermostat is (i.e., where the
+    /// temperature compared with the setpoints is measured)
     pub target_space: Option<String>,
 
-    /// Max heating power
+    /// Max heating power, in W
     max_heating_power: Option<Float>,
 
-    /// Max cooling power
+    /// Max cooling power, in W
     max_cooling_power: Option<Float>,
 
-    /// The temperature that automatically triggers the on/off option.
+    /// The heating setpoint, in C: the system should heat when the dry bulb
+    /// temperature of the `target_space` is below this value.
     ///
-    /// This tempareture is 'measured' in the `thermostat_location`. If
-    /// the dry bulb tempreature in the `thermostat_location` is below
-    /// this value, the system starts heating.
-    ///
-    /// > Note: This assumes automatic control; that is to say, this
-    /// > condition will be evaluated every timestep of the heat model
-    /// > simulation (as opposed to the occupant/people control timestep,
-    /// > which is the one set by the user witht the simulation options)
+    /// > **Note:** Like every device in `SIMPLE`, this heater does nothing
+    /// > unless something turns it on (see the "Controlling the building"
+    /// > chapter of the book). This setpoint is not used by the
+    /// > physics: it is used by the controllers that turn the device
+    /// > on and off (e.g., the one used with `simple -c people`), which
+    /// > run once every timestep.
     heating_setpoint: Option<Float>,
 
-    /// The temperature that triggers the on/off option.
+    /// The cooling setpoint, in C: the system should cool when the dry bulb
+    /// temperature of the `target_space` is over this value.
     ///
-    /// This tempareture is 'measured' in the `thermostat_location`. If
-    /// the dry bulb tempreature in the `thermostat_location` is over
-    /// this value, the system starts cooling.
-    ///
-    /// > Note: This assumes automatic control; that is to say, this
-    /// > condition will be evaluated every timestep of the heat model
-    /// > simulation (as opposed to the occupant/people control timestep,
-    /// > which is the one set by the user witht the simulation options)
+    /// > **Note:** Like every device in `SIMPLE`, this heater does nothing
+    /// > unless something turns it on (see the "Controlling the building"
+    /// > chapter of the book). This setpoint is not used by the
+    /// > physics: it is used by the controllers that turn the device
+    /// > on and off (e.g., the one used with `simple -c people`), which
+    /// > run once every timestep.
     cooling_setpoint: Option<Float>,
 
-    /// The heating or cooling power consumption (not delivered to the `Space`)    
+    /// The heating or cooling power consumption, in W. This is what turns
+    /// the system on (positive values heat, negative ones cool) and off (zero).
+    /// It is limited by `max_heating_power` and `max_cooling_power`.
     #[operational("power_consumption")]
     #[serde(skip)]
     heating_cooling_consumption: StateElementField,
@@ -177,7 +187,11 @@ mod testing {
         );
 
         // check simple
-        let (model, ..) = Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl")?;
+        // (the heater needs its `target_space`)
+        let spl = fs::read_to_string("./tests/scanner/hvac_ideal_heater_cooler.spl")
+            .map_err(|e| e.to_string())?;
+        let spl = format!("Space {{ name: \"Bedroom\" }}\n{spl}");
+        let (model, ..) = Model::from_bytes(spl.as_bytes())?;
         assert_eq!(model.hvacs.len(), 1);
         if let HVAC::IdealHeaterCooler(hvac) = &model.hvacs[0] {
             assert_eq!("Bedrooms heater", hvac.name());
