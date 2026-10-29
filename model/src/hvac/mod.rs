@@ -142,7 +142,11 @@ mod testing {
         );
 
         // Check simple
-        let (model, ..) = Model::from_file("./tests/scanner/hvac_ideal_heater_cooler.spl")?;
+        // (the heater needs its `target_space`)
+        let spl = fs::read_to_string("./tests/scanner/hvac_ideal_heater_cooler.spl")
+            .map_err(|e| e.to_string())?;
+        let spl = format!("Space {{ name: \"Bedroom\" }}\n{spl}");
+        let (model, ..) = Model::from_bytes(spl.as_bytes())?;
         assert_eq!(model.hvacs.len(), 1);
 
         if let HVAC::IdealHeaterCooler(hvac) = &model.hvacs[0] {
@@ -199,7 +203,11 @@ mod testing {
         );
 
         // Check simple
-        let (model, ..) = Model::from_file("./tests/scanner/hvac_electric_heater.spl")?;
+        // (the heater needs its `target_space`)
+        let spl = fs::read_to_string("./tests/scanner/hvac_electric_heater.spl")
+            .map_err(|e| e.to_string())?;
+        let spl = format!("Space {{ name: \"Bedroom\" }}\n{spl}");
+        let (model, ..) = Model::from_bytes(spl.as_bytes())?;
         assert_eq!(model.hvacs.len(), 1);
 
         if let HVAC::ElectricHeater(hvac) = &model.hvacs[0] {

@@ -30,11 +30,11 @@ SOFTWARE.
 //! `Float64Array` (`Float32Array` with the `float` feature) without copying.
 
 use simple::multiphysics_model::MultiphysicsModelMemory;
-use simple::run_simulation::prepare;
+use simple::run_simulation::{SimulationPeriod, prepare};
 use simple::{
-    Date, EPWWeather, Float, IlluminanceRecord, Model, MultiphysicsModel, Period,
-    RhaiControlScript, SimulationModel, SimulationState, SimulationStateHeader, Weather,
-    WorkplaneModel, WorkplaneModelMemory, WorkplaneSensors,
+    Date, EPWWeather, Float, IlluminanceRecord, Model, MultiphysicsModel, RhaiControlScript,
+    SimulationModel, SimulationState, SimulationStateHeader, Weather, WorkplaneModel,
+    WorkplaneModelMemory, WorkplaneSensors,
 };
 use std::sync::{Arc, Mutex, MutexGuard};
 use wasm_bindgen::prelude::*;
@@ -79,7 +79,7 @@ pub struct Simulation {
     physics: MultiphysicsModel,
     memory: MultiphysicsModelMemory,
     weather: Weather,
-    period: Period,
+    period: SimulationPeriod,
     state: Arc<Mutex<SimulationState>>,
     controller: Option<RhaiControlScript>,
     full_header: Vec<String>,
@@ -99,6 +99,7 @@ impl Simulation {
     /// * `n`: the number of timesteps per hour
     /// * `control_script`: an optional Rhai script, run before every timestep
     /// * `research_mode`: enables the research-only functions of the Rhai API
+    ///   (reserved: there are none yet, so this has no effect)
     ///
     /// Building the simulation includes calculating the daylight
     /// coefficients of the model's workplanes (if any), which can take a
@@ -171,8 +172,8 @@ impl Simulation {
             return Ok(false);
         };
 
-        if let Some(controller) = &self.controller {
-            controller.control().map_err(|e| JsError::new(&e))?;
+        if let Some(controller) = &mut self.controller {
+            controller.control(date).map_err(|e| JsError::new(&e))?;
         }
 
         let mut state = lock(&self.state);

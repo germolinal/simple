@@ -26,10 +26,17 @@ use serde::{Deserialize, Serialize};
 use derive::{GroupMemberAPI, ObjectIO};
 
 /// A simple model of an Electric Heater. It can only heat
-/// and has a COP of 1. It only has two states: On/Off.
+/// and has a COP of 1.
 ///
-/// The thermostat that controls it—if any—is assumed to be in
-/// the `target_space`
+/// Like every device in `SIMPLE`, it does not turn itself on: something
+/// (e.g., a control script) has to set its `power_consumption`, which
+/// is delivered to the air of its `target_space`. The thermostat that
+/// controls it—if any—is assumed to be in the `target_space`
+///
+/// > **Note:** The physics deliver whatever `power_consumption` is set to
+/// > (i.e., they do not limit it to `max_heating_power`). This limit—and
+/// > the setpoint—are used by the controllers (e.g., the one used with
+/// > `simple -c people` uses the heater as On/Off, at full power).
 ///
 /// ## Examples
 ///
@@ -50,26 +57,25 @@ pub struct ElectricHeater {
     /// The name of the system
     pub name: String,
 
-    /// The `Space` that this [`ElectricHeater`] heats and/or
-    /// cools
+    /// The `Space` that this [`ElectricHeater`] heats
     target_space: Option<String>,
 
-    /// Max heating power
+    /// Max heating power, in W
     max_heating_power: Option<Float>,
 
-    /// The temperature that triggers the on/off option.
+    /// The heating setpoint, in C: the heater should heat when the dry bulb
+    /// temperature of the `target_space` is below this value.
     ///
-    /// This tempareture is 'measured' in the `target_space`. If
-    /// the dry bulb tempreature in the `target_space` is below
-    /// this value, the heater starts heating.
-    ///
-    /// > Note: This assumes automatic control; that is to say, this
-    /// > condition will be evaluated every timestep of the heat model
-    /// > simulation (as opposed to the occupant/people control timestep,
-    /// > which is the one set by the user witht the simulation options)
+    /// > **Note:** Like every device in `SIMPLE`, this heater does nothing
+    /// > unless something turns it on (see the "Controlling the building"
+    /// > chapter of the book). This setpoint is not used by the
+    /// > physics: it is used by the controllers that turn the device
+    /// > on and off (e.g., the one used with `simple -c people`), which
+    /// > run once every timestep.
     heating_setpoint: Option<Float>,
 
-    /// The heating or cooling power consumption (not delivered to the `Space`)    
+    /// The power consumption, in W. This is what turns the heater on
+    /// (values above zero) and off (zero).
     #[operational("power_consumption")]
     #[serde(skip)]
     heating_cooling_consumption: StateElementField,
@@ -148,7 +154,11 @@ mod testing {
         );
 
         // check simple
-        let (model, ..) = Model::from_file("./tests/scanner/hvac_electric_heater.spl")?;
+        // (the heater needs its `target_space`)
+        let spl = fs::read_to_string("./tests/scanner/hvac_electric_heater.spl")
+            .map_err(|e| e.to_string())?;
+        let spl = format!("Space {{ name: \"Bedroom\" }}\n{spl}");
+        let (model, ..) = Model::from_bytes(spl.as_bytes())?;
         assert_eq!(model.hvacs.len(), 1);
         if let HVAC::ElectricHeater(hvac) = &model.hvacs[0] {
             assert_eq!("Bedrooms heater", hvac.name());

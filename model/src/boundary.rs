@@ -50,6 +50,13 @@ pub enum Boundary {
     Outdoor,
 
     /// The Surface is in contact with the Ground
+    ///
+    /// > **TODO:** Ground boundaries can be written in a model, but the
+    /// > thermal model does not support them yet: simulating a model
+    /// > that has one fails with "ground boundaries are not supported
+    /// > yet". In the meantime, use an `AmbientTemperature` boundary
+    /// > with an estimate of the ground temperature.
+    /// > (See [#152](https://github.com/germolinal/simple/issues/152))
     Ground,
 
     /// The Surface leads to another space whose temperature
@@ -57,7 +64,7 @@ pub enum Boundary {
     ///
     /// Border conditions:
     /// * **Solar Radiation**: As calculated by the Solar module
-    /// * **Net Shortwave (IR) Radiation**: Zero, for now at least (this is a good assumption if the surfaces inside the `Space` are at similar temperatures)
+    /// * **Net Longwave (IR) Radiation**: Zero, for now at least (this is a good assumption if the surfaces inside the `Space` are at similar temperatures)
     /// * **Convection Coefficient**: Indoor
     /// * **Wind**: No
     Space {
@@ -69,14 +76,14 @@ pub enum Boundary {
     /// mean-radiant and dry bulb temperature
     ///
     /// This object is useful for defining surfaces that lead to spaces that
-    /// we one is not interested in modelling; for example, a wall that separates
+    /// we are not interested in modelling; for example, a wall that separates
     /// an apartment's room with the hall of the building. In that case, we don't
     /// need to simulate the temperature of the hall... but we can assume a certain
     /// temperature.
     ///
     /// Border conditions:
     /// * **Solar Radiation**: None
-    /// * **Net Shortwave (IR) Radiation**: The set temperature
+    /// * **Net Longwave (IR) Radiation**: The set temperature
     /// * **Convection Coefficient**: Indoor
     /// * **Wind**: No
     AmbientTemperature {

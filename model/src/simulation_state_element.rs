@@ -326,6 +326,9 @@ mod testing {
     #[test]
     fn test_output() -> Result<(), String> {
         let src = b"
+            Space { name: \"The Space\" }
+            Space { name: \"The Other Space\" }
+            Space { name: \"Yet another Space\" }
             Output { SpaceDryBulbTemperature : \"The Space\" }
             Output { SpaceDryBulbTemperature : \"The Other Space\" }
             Output { SpaceDryBulbTemperature : \"Yet another Space\" }

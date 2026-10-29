@@ -288,7 +288,7 @@ impl Date {
             let would_be_day = self.day as usize + n_days; // Now we can add more than a year
             let n_days_this_month = N_DAYS_PER_MONTH[self.month as usize - 1];
 
-            if would_be_day as u8 > n_days_this_month {
+            if would_be_day > n_days_this_month as usize {
                 // Add one month, considering that this might be a change in year
                 self.month += 1;
                 if self.month == 13 {
@@ -968,6 +968,28 @@ mod tests {
         }
 
         Ok(())
+    }
+
+    #[test]
+    fn test_add_many_days() {
+        // (more than 255 days used to overflow)
+        for (n_days, month, day) in [(0, 1, 1), (31, 2, 1), (275, 10, 3), (364, 12, 31)] {
+            let mut d = Date {
+                month: 1,
+                day: 1,
+                hour: 0.5,
+            };
+            d.add_days(n_days);
+            assert_eq!((d.month, d.day), (month, day), "adding {n_days} days");
+        }
+
+        let mut d = Date {
+            month: 1,
+            day: 1,
+            hour: 0.999999,
+        };
+        d.add_hours(8759.0);
+        assert_eq!((d.month, d.day), (12, 31));
     }
 
     #[test]

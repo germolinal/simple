@@ -451,6 +451,7 @@ impl<'a> SimpleScanner<'a> {
             }
         }
 
+        model.check_references()?;
         let state = model.take_state().ok_or("Could not take state")?;
         Ok((model, state))
     }

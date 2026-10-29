@@ -68,7 +68,7 @@ or a platform without pre-built binaries, build it with
 
 ```sh
 # A release
-cargo install --locked --features parallel --git https://github.com/germolinal/simple --tag v0.1.0 simple
+cargo install --locked --features parallel --git https://github.com/germolinal/simple --tag v0.2.1 simple
 
 # The development version (main)
 cargo install --locked --features parallel --git https://github.com/germolinal/simple simple

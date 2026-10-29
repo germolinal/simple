@@ -199,7 +199,10 @@ mod testing {
         );
 
         // check simple
-        let (model, ..) = Model::from_file("./tests/scanner/space.spl")?;
+        // (the space needs its `building`)
+        let spl = fs::read_to_string("./tests/scanner/space.spl").map_err(|e| e.to_string())?;
+        let spl = format!("Building {{ name: \"Wonderful Zoo\" }}\n{spl}");
+        let (model, ..) = Model::from_bytes(spl.as_bytes())?;
         assert_eq!(model.spaces.len(), 1);
         assert!("Walrus Enclosure" == model.spaces[0].name());
 

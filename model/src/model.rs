@@ -422,6 +422,7 @@ impl Model {
             Ok(m) => m,
             Err(e) => return Err(e.to_string()),
         };
+        model.check_references()?;
         let state = model
             .take_state()
             .expect("Internal Error: No State after parsing JSON?");
@@ -624,7 +625,7 @@ impl Model {
     /// model.add_material(mat);
     /// assert_eq!(model.materials.len(), 1);
     ///
-    /// // Adding something witht the same name will warn the user... but still adds it
+    /// // Adding something with the same name will warn the user... but still adds it
     /// let mat = Material::new("Sweet Panel", "is made of this", 0.2);
     /// model.add_material(mat);
     /// assert_eq!(model.materials.len(), 2);
@@ -887,7 +888,7 @@ impl Model {
     /// model.add_building(b);
     /// assert_eq!(model.buildings.len(), 1);
     ///
-    /// // Adding a new building witht the same name warns the user but still works
+    /// // Adding a new building with the same name warns the user but still works
     /// let b = Building::new("Main Campus");
     /// model.add_building(b);
     /// assert_eq!(model.buildings.len(), 2);
@@ -1364,6 +1365,176 @@ impl Model {
         let mat = self.get_material(mat_name)?;
         let name = &mat.substance;
         self.get_substance(name)
+    }
+
+    /// Checks that every name used to refer to another object (e.g., the
+    /// `substance` of a [`Material`], or the `target_space` of an [`HVAC`])
+    /// belongs to an object in the [`Model`]. This is run after parsing a
+    /// model, so mistyped names are reported instead of silently ignored.
+    ///
+    /// Outputs that refer to more than one thing (e.g.,
+    /// `SurfaceNodeTemperature`, whose value is `"<surface>-<node>"`) are
+    /// not checked here, as names can contain `-`. These are checked when
+    /// the simulation is prepared.
+    ///
+    /// ```rust
+    /// use model::{Model, Space, Output};
+    ///
+    /// let mut model = Model::default();
+    /// model.add_space(Space::new("Bedroom"));
+    /// model.outputs.push(Output::SpaceDryBulbTemperature("Bedroom".into()));
+    /// assert!(model.check_references().is_ok());
+    ///
+    /// model.outputs.push(Output::SpaceDryBulbTemperature("Bedrom".into()));
+    /// assert!(model.check_references().is_err());
+    /// ```
+    pub fn check_references(&self) -> Result<(), String> {
+        for m in &self.materials {
+            self.get_substance(&m.substance).map_err(|_| {
+                format!(
+                    "Material '{}' is made of Substance '{}', which does not exist",
+                    m.name, m.substance
+                )
+            })?;
+        }
+        for c in &self.constructions {
+            for m in &c.materials {
+                self.get_material(m).map_err(|_| {
+                    format!(
+                        "Construction '{}' has Material '{}', which does not exist",
+                        c.name, m
+                    )
+                })?;
+            }
+        }
+        for s in &self.spaces {
+            if let Ok(b) = s.building() {
+                self.get_building(b).map_err(|_| {
+                    format!(
+                        "Space '{}' is in Building '{}', which does not exist",
+                        s.name, b
+                    )
+                })?;
+            }
+        }
+        let check_boundary = |kind: &str, name: &str, b: &Boundary| -> Result<(), String> {
+            if let Boundary::Space { space } = b {
+                self.get_space(space).map_err(|_| {
+                    format!("{kind} '{name}' leads to Space '{space}', which does not exist")
+                })?;
+            }
+            Ok(())
+        };
+        for s in &self.surfaces {
+            self.get_construction(&s.construction).map_err(|_| {
+                format!(
+                    "Surface '{}' has Construction '{}', which does not exist",
+                    s.name, s.construction
+                )
+            })?;
+            check_boundary("Surface", &s.name, &s.front_boundary)?;
+            check_boundary("Surface", &s.name, &s.back_boundary)?;
+        }
+        for f in &self.fenestrations {
+            // (openings have no construction)
+            if f.category != FenestrationType::Opening {
+                self.get_construction(&f.construction).map_err(|_| {
+                    format!(
+                        "Fenestration '{}' has Construction '{}', which does not exist",
+                        f.name, f.construction
+                    )
+                })?;
+            }
+            check_boundary("Fenestration", &f.name, &f.front_boundary)?;
+            check_boundary("Fenestration", &f.name, &f.back_boundary)?;
+        }
+        for h in &self.hvacs {
+            let target = match h {
+                HVAC::ElectricHeater(h) => h.target_space().ok(),
+                HVAC::IdealHeaterCooler(h) => h.target_space().ok(),
+            };
+            if let Some(space) = target {
+                self.get_space(space).map_err(|_| {
+                    format!(
+                        "HVAC '{}' heats/cools Space '{}', which does not exist",
+                        h.name(),
+                        space
+                    )
+                })?;
+            }
+        }
+        for l in &self.luminaires {
+            if let Ok(space) = l.target_space() {
+                self.get_space(space).map_err(|_| {
+                    format!(
+                        "Luminaire '{}' is in Space '{}', which does not exist",
+                        l.name(),
+                        space
+                    )
+                })?;
+            }
+        }
+        for o in &self.objects {
+            if let Some(space) = &o.space {
+                self.get_space(space).map_err(|_| {
+                    format!(
+                        "Object '{}' is in Space '{}', which does not exist",
+                        o.name, space
+                    )
+                })?;
+            }
+        }
+        for w in &self.workplanes {
+            self.get_space(&w.space).map_err(|_| {
+                format!(
+                    "Workplane '{}' is in Space '{}', which does not exist",
+                    w.name, w.space
+                )
+            })?;
+        }
+
+        for o in &self.outputs {
+            let found = match o {
+                Output::SpaceDryBulbTemperature(n)
+                | Output::SpaceInfiltrationVolume(n)
+                | Output::SpaceInfiltrationTemperature(n)
+                | Output::SpaceVentilationVolume(n)
+                | Output::SpaceVentilationTemperature(n) => ("Space", n, self.get_space(n).is_ok()),
+                Output::SurfaceFrontConvectionCoefficient(n)
+                | Output::SurfaceBackConvectionCoefficient(n)
+                | Output::SurfaceFrontConvectiveHeatFlow(n)
+                | Output::SurfaceBackConvectiveHeatFlow(n)
+                | Output::SurfaceFrontSolarIrradiance(n)
+                | Output::SurfaceBackSolarIrradiance(n)
+                | Output::SurfaceFrontIRIrradiance(n)
+                | Output::SurfaceBackIRIrradiance(n) => ("Surface", n, self.get_surface(n).is_ok()),
+                Output::FenestrationOpenFraction(n)
+                | Output::FenestrationFrontConvectionCoefficient(n)
+                | Output::FenestrationBackConvectionCoefficient(n)
+                | Output::FenestrationFrontConvectiveHeatFlow(n)
+                | Output::FenestrationBackConvectiveHeatFlow(n)
+                | Output::FenestrationFrontSolarIrradiance(n)
+                | Output::FenestrationBackSolarIrradiance(n)
+                | Output::FenestrationFrontIRIrradiance(n)
+                | Output::FenestrationBackIRIrradiance(n) => {
+                    ("Fenestration", n, self.get_fenestration(n).is_ok())
+                }
+                Output::HeatingCoolingPowerConsumption(n) => ("HVAC", n, self.get_hvac(n).is_ok()),
+                Output::LuminairePowerConsumption(n) => {
+                    ("Luminaire", n, self.get_luminaire(n).is_ok())
+                }
+                // Checked when the simulation is prepared
+                _ => continue,
+            };
+            if let (kind, name, false) = found {
+                return Err(format!(
+                    "Output {} refers to {kind} '{name}', which does not exist",
+                    serde_json::to_string(o).map_err(|e| e.to_string())?
+                ));
+            }
+        }
+
+        Ok(())
     }
 
     /// Retrieves a dictionary with the heating/cooling setpoints of the different
