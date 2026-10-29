@@ -32,7 +32,7 @@ jobs:
       site: ${{ steps.filter.outputs.site }}
     steps:
       - uses: actions/checkout@v7
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           # A file counts for `code` unless it matches one of the exclusions.
