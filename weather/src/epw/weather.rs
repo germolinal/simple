@@ -23,6 +23,7 @@ use super::scanner::EPWScanner;
 use super::weather_line::EPWWeatherLine;
 use crate::Weather;
 use crate::location::Location;
+use calendar::DayOfWeek;
 
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, path::Path};
@@ -38,6 +39,10 @@ pub struct EPWWeather {
 
     /// The weather data
     pub data: Vec<EPWWeatherLine>,
+
+    /// The day of the week of the first record (from the `DATA PERIODS`
+    /// header)
+    pub start_day_of_week: Option<DayOfWeek>,
 }
 
 impl std::default::Default for EPWWeather {
@@ -46,6 +51,7 @@ impl std::default::Default for EPWWeather {
             location: Location::default(),
             data: Vec::with_capacity(8670),
             ground_temperature: Vec::with_capacity(1),
+            start_day_of_week: None,
         }
     }
 }
@@ -70,6 +76,7 @@ impl std::convert::From<EPWWeather> for Weather {
         Weather {
             data,
             location: epw.location,
+            start_day_of_week: epw.start_day_of_week,
         }
     }
 }

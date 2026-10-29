@@ -201,6 +201,42 @@ pub use infiltration::Infiltration;
 pub mod hvac;
 pub use hvac::{HVAC, SmallHVAC};
 
+/// The power (in W) that devices (e.g., heaters, luminaires) can use when
+/// their maximum power is not given. Not giving a maximum power is useful for
+/// sizing (the reported power is what was needed), but there must be some
+/// limit, as unbounded power in a small space makes no physical sense.
+pub const DEFAULT_MAX_POWER: Float = 10_000.;
+
+/// The warning shown when a control asks a device (e.g., `"HVAC"` called
+/// `name`) for a power (`asked`, in W) outside of what it can do (from `min`
+/// to `max`), if that is the case. `missing` are the limits that were not
+/// given, and therefore are [`DEFAULT_MAX_POWER`].
+pub(crate) fn out_of_range_warning(
+    kind: &str,
+    name: &str,
+    asked: Float,
+    min: Float,
+    max: Float,
+    missing: &[&str],
+) -> Option<String> {
+    if (min..=max).contains(&asked) {
+        return None;
+    }
+    let used = asked.clamp(min, max);
+    let defaults = if missing.is_empty() {
+        String::new()
+    } else {
+        format!(
+            " (no {} was given, so the limit is {} W)",
+            missing.join(" or "),
+            DEFAULT_MAX_POWER
+        )
+    };
+    Some(format!(
+        "{kind} '{name}' was asked to use {asked} W, but it can only use between {min} W and {max} W{defaults}... so it used {used} W"
+    ))
+}
+
 /// For setting options in simulations
 pub mod simulation_options;
 pub use simulation_options::SolarOptions;

@@ -120,15 +120,16 @@ let light = luminaire("Bedroom light");
 
 If the object does not exist, the script fails with an error telling you so.
 
-Then, you can read and write their properties:
+Then, you can read their properties, and set those that people can change in
+real life:
 
-| Object | Properties |
-|--------|------------|
-| `space` | `dry_bulb_temperature`, `infiltration_volume`, `infiltration_temperature`, `ventilation_volume`, `ventilation_temperature`, `brightness`, `loudness` |
-| `surface` | `front_temperature`, `back_temperature`, `front_convection_coefficient`, `back_convection_coefficient`, `front_convective_heat_flow`, `back_convective_heat_flow`, `front_incident_solar_irradiance`, `back_incident_solar_irradiance`, `front_ir_irradiance`, `back_ir_irradiance` |
-| `fenestration` | The same as `surface`, plus `open_fraction` |
-| `hvac` | `power_consumption` |
-| `luminaire` | `power_consumption` |
+| Object | Can be set | Can only be read |
+|--------|------------|------------------|
+| `space` | | `dry_bulb_temperature`, `infiltration_volume`, `infiltration_temperature`, `ventilation_volume`, `ventilation_temperature`, `brightness`, `loudness` |
+| `surface` | | `front_temperature`, `back_temperature`, `front_convection_coefficient`, `back_convection_coefficient`, `front_convective_heat_flow`, `back_convective_heat_flow`, `front_incident_solar_irradiance`, `back_incident_solar_irradiance`, `front_ir_irradiance`, `back_ir_irradiance` |
+| `fenestration` | `open_fraction` | The same as `surface` |
+| `hvac` | `power_consumption` | |
+| `luminaire` | `power_consumption` | |
 
 Each object's page in the Input/Output reference has an _API_ section with these
 too (e.g., [Space](./auto-space.md#api)). Some properties only exist when the physics
@@ -138,29 +139,49 @@ and reading them fails with an error.
 The units are the usual ones: °C for temperatures, W for power, W/m² for irradiance,
 and so on.
 
-> **Operating vs. cheating:** `power_consumption` and `open_fraction` are
-> _operational_ properties: they are what people (or control systems) actually
-> change in a building. The others are _physical_ properties, calculated by `SIMPLE`.
-> You can read them all—that's how controls know what is going on. But please,
-> only write the operational ones: setting the temperature of a space directly
-> is not something people can do in real life, so it makes the simulation
-> meaningless. (`SIMPLE` does not stop you yet. See [research mode](#research-mode).)
+> **Rhai tip:** Properties are set on variables, so
+> `hvac("Bedroom Heater").power_consumption = 1500.0;` fails with _"Expression cannot
+> be assigned to"_. Store the object in a variable first, like we did above.
 
-#### How heaters and coolers use `power_consumption`
+#### How devices use `power_consumption`
 
-The physics deliver whatever `power_consumption` you set to the air of the
-`target_space` (they all have an efficiency of 1). Positive values heat, and
-negative values cool. In other words, you can do proportional control, not just
-on/off:
+The `power_consumption` of an `HVAC` is delivered to the air of its `target_space`
+(they all have an efficiency of 1). Positive values heat, and negative values cool.
+Similarly, all the `power_consumption` of a `Luminaire` becomes heat in its
+`target_space`. You can use any value in between, so you can do proportional
+control (or dim lights), not just on/off:
 
 ```rs
-// 100W per degree below 20C, between 0 and 1500W
-let power = 100.0 * (20.0 - bedroom.dry_bulb_temperature);
-heater.power_consumption = power.max(0.0).min(1500.0);
+// 100W per degree below 20C
+heater.power_consumption = 100.0 * (20.0 - bedroom.dry_bulb_temperature);
 ```
 
-> **Careful:** The physics do not check the `max_heating_power` (or
-> `max_cooling_power`) of the device; staying within limits is the control's job.
+But devices can only do what they can do. Whatever the control asks for, the power
+is limited to:
+
+| Device | From | To |
+|--------|------|----|
+| `ElectricHeater` | 0 (it cannot cool) | `max_heating_power` |
+| `IdealHeaterCooler` | minus `max_cooling_power` (cooling) | `max_heating_power` (heating) |
+| `Luminaire` | 0 | `max_power` |
+
+The results report the power that was actually used. And, as asking a device for
+something it cannot do is probably a mistake in the control, `SIMPLE` warns you
+(on the terminal, the first time it happens for each device):
+
+```text
+Warning: [in Thermal model] 01/01 - 1:00: HVAC 'Bedroom Heater' was asked to use 99999 W, but it can only use between 0 W and 1500 W... so it used 1500 W. (This is reported only once per device.)
+```
+
+If a device has no limit
+(e.g., no `max_heating_power`), the limit is 10kW, which is handy for sizing:
+ask for whatever keeps the room comfortable, and the results tell you how much
+power that took. (10kW is a lot for a room, but if your space needs more, give the
+device a `max_heating_power` that is large enough.)
+
+> **Careful:** Limits keep devices realistic, but not controls. A script that keeps
+> a 10kW heater on all year will cook a small sealed room to temperatures where the
+> physics stop making sense (and, eventually, stop working).
 
 ### Time
 
@@ -171,9 +192,45 @@ The script knows the date of the timestep it is controlling:
 | `month` | From 1 to 12 |
 | `day` | Day of the month, from 1 |
 | `hour` | The hour at the **end** of the timestep, from 0 to 24 (e.g., `7.5` is 7:30am). Midnight is `24.0` of the day that ends. |
+| `day_of_week` | `"monday"`, `"tuesday"`, ..., `"sunday"` |
 
 For example, `hour <= 7.0` is true for every timestep that ends at or before 7am,
-i.e., the ones between midnight and 7am.
+i.e., the ones between midnight and 7am. And this is how you would tell weekends apart:
+
+```rs
+let is_weekend = day_of_week == "saturday" || day_of_week == "sunday";
+```
+
+`SIMPLE` knows the day of the week because EPW files say on which day they start.
+If the weather does not say (e.g., some synthetic weathers), `day_of_week` is `()`
+(i.e., nothing). Note that EPW files often combine months from different years, so
+the days of the week are not necessarily those of any real calendar.
+
+### Randomness
+
+People are not that predictable, so control scripts can use `random()`, which
+returns a random number between 0 and 1. For example, people who open the window
+40% of the times they feel hot:
+
+```rs
+let window = fenestration("North Window");
+if bedroom.dry_bulb_temperature > 25.0 && random() < 0.4 {
+    window.open_fraction = 1.0;
+}
+```
+
+Keep in mind that the script runs every timestep, so "40% of the time" depends on
+the timestep: with `-n 60`, that is a 40% chance _every minute_.
+
+By default, each simulation gets different random numbers, so two runs of the same
+model give (slightly) different results. To repeat a simulation exactly (e.g., to
+compare two designs with the same "people", or for a paper), give it a seed:
+
+```sh
+simple -i bedroom.spl -w wellington.epw -c my_script.rhai -s 42
+```
+
+The same seed always gives the same random numbers.
 
 ### Remembering things
 
@@ -229,7 +286,31 @@ even shorter.
 
 ## Research mode
 
-`simple` has a `-r` (`--research-mode`) option. The idea is to enable functions
-in the control API that are useful for research but not realistic—e.g., things
-that a real control system could not do. There are none yet, so it currently has
-no effect.
+`SIMPLE` simulates buildings that could exist, operated by people who could exist.
+So, by default, **control scripts can only do what people (or control systems) can
+do in real life**: turn a heater on or off, open a window, dim a light, and so on.
+They can _read_ everything (people can feel the temperature, and thermostats can
+measure it), but they cannot _set_ physical properties, like the temperature of a
+space, the temperature of a wall, or the solar radiation reaching a window.
+
+But sometimes, unrealistic is exactly what you need. For example, to answer _"how
+much energy would it take to keep this room at exactly 21°C?"_ or to test a model
+with a known temperature. For that, there is **research mode**:
+
+```sh
+simple -i bedroom.spl -w wellington.epw -c my_script.rhai -r
+```
+
+In research mode, control scripts can also set physical properties:
+
+```rs
+let bedroom = space("Bedroom");
+bedroom.dry_bulb_temperature = 21.0; // fails, unless in research mode
+```
+
+The physics take it from there (i.e., the value you set is the starting point
+of the timestep, not a value that stays fixed).
+
+> **Rule of thumb:** If you are setting something with research mode, make sure
+> you would be happy to explain _why_ in a paper. Results from research-mode
+> simulations describe a building that cannot exist.

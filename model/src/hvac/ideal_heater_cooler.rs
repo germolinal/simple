@@ -32,11 +32,11 @@ use serde::{Deserialize, Serialize};
 /// is delivered to the air of its `target_space`. A positive value means
 /// heating, and a negative one means cooling.
 ///
-/// > **Note:** The physics deliver whatever `power_consumption` is set to
-/// > (i.e., they do not limit it to `max_heating_power` or
-/// > `max_cooling_power`). These limits—and the setpoints—are used by the
-/// > controllers (e.g., the one used with `simple -c people` uses the
-/// > device as On/Off, at full power).
+/// The power is limited to what the device can do: between minus
+/// `max_cooling_power` (cooling) and `max_heating_power` (heating). If any of
+/// these is not given, the limit in that direction is 10kW (i.e.,
+/// [`DEFAULT_MAX_POWER`](crate::DEFAULT_MAX_POWER)), which is useful for
+/// sizing (i.e., the reported power is what was needed).
 ///
 /// ## Example
 ///
@@ -92,6 +92,7 @@ pub struct IdealHeaterCooler {
 
     /// The heating or cooling power consumption, in W. This is what turns
     /// the system on (positive values heat, negative ones cool) and off (zero).
+    /// It is limited by `max_heating_power` and `max_cooling_power`.
     #[operational("power_consumption")]
     #[serde(skip)]
     heating_cooling_consumption: StateElementField,

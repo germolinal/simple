@@ -33,10 +33,10 @@ use derive::{GroupMemberAPI, ObjectIO};
 /// is delivered to the air of its `target_space`. The thermostat that
 /// controls it—if any—is assumed to be in the `target_space`
 ///
-/// > **Note:** The physics deliver whatever `power_consumption` is set to
-/// > (i.e., they do not limit it to `max_heating_power`). This limit—and
-/// > the setpoint—are used by the controllers (e.g., the one used with
-/// > `simple -c people` uses the heater as On/Off, at full power).
+/// The power goes from zero (it cannot cool) to `max_heating_power`. If no
+/// `max_heating_power` is given, the limit is 10kW (i.e.,
+/// [`DEFAULT_MAX_POWER`](crate::DEFAULT_MAX_POWER)), which is useful for
+/// sizing (i.e., the reported power is what was needed).
 ///
 /// ## Examples
 ///
@@ -75,7 +75,8 @@ pub struct ElectricHeater {
     heating_setpoint: Option<Float>,
 
     /// The power consumption, in W. This is what turns the heater on
-    /// (values above zero) and off (zero).
+    /// (values above zero) and off (zero). It goes from zero to
+    /// `max_heating_power`.
     #[operational("power_consumption")]
     #[serde(skip)]
     heating_cooling_consumption: StateElementField,

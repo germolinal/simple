@@ -20,7 +20,7 @@ SOFTWARE.
 use crate::Float;
 use crate::RhaiControlScript;
 use crate::control_trait::SimpleControl;
-use calendar::Date;
+use calendar::{Date, DayOfWeek};
 use clap::Parser;
 use communication::{MetaOptions, SimulationModel};
 use model::{Model, SimulationStateHeader};
@@ -64,9 +64,10 @@ pub struct SimOptions {
     #[arg(short, long)]
     pub output: Option<String>,
 
-    /// Enable research mode, reserved for unrealistic but very powerful
-    /// functions in the control (Rhai) API... none of which exists yet,
-    /// so this currently has no effect
+    /// Enable research mode, allowing control scripts to do things that are
+    /// impossible in real life but useful for research (e.g., setting the
+    /// temperature of a space). Without it, scripts can only operate the
+    /// building (e.g., turn heaters on and off, open windows)
     #[arg(short, long)]
     pub research_mode: bool,
 
@@ -77,6 +78,12 @@ pub struct SimOptions {
     // /// The final date
     // #[clap(short = 'e')]
     // pub end: Date,
+    /// The seed for the random numbers of the control script (i.e., `random()`),
+    /// for repeatable simulations. Without it, every simulation gets
+    /// different random numbers
+    #[arg(short, long)]
+    pub seed: Option<u64>,
+
     /// The number of timesteps per hour in the simulation (1 to 60). The
     /// control script runs, and results are reported, every timestep
     #[arg(short, long, default_value_t = 1)]
@@ -104,6 +111,8 @@ pub struct SimulationPeriod {
     n_steps: usize,
     /// The next timestep to return
     current: usize,
+    /// The day of the week of the `first_record`, if known
+    start_day_of_week: Option<DayOfWeek>,
 }
 
 impl SimulationPeriod {
@@ -142,7 +151,18 @@ impl SimulationPeriod {
             dt,
             n_steps: ((last_offset - first_offset) / dt).round() as usize + 1,
             current: 0,
+            start_day_of_week: weather.start_day_of_week,
         }
+    }
+
+    /// The day of the week of a `date` within this period, if the weather
+    /// says what day of the week it starts on
+    pub fn day_of_week(&self, date: Date) -> Option<DayOfWeek> {
+        let mut days = date.day_of_year().floor() - self.first_record.day_of_year().floor();
+        if days < 0. {
+            days += 365.;
+        }
+        self.start_day_of_week.map(|d| d.add_days(days as usize))
     }
 }
 
@@ -410,6 +430,9 @@ where
 
     let (mut controller, state) =
         RhaiControlScript::from_file(&model, state, control_file, options.research_mode)?;
+    if let Some(seed) = options.seed {
+        controller.set_seed(seed);
+    }
 
     // Write header
     write_header(
@@ -424,13 +447,14 @@ where
     /* ************************************ */
     let mut last_reported_month: u8 = 99;
 
-    for date in pre_process_data.sim_period {
+    let sim_period = pre_process_data.sim_period;
+    for date in sim_period {
         if date.month != last_reported_month {
             last_reported_month = date.month;
             eprintln!("  ... Simulating month {}", last_reported_month);
         }
 
-        controller.control(date)?;
+        controller.control(date, sim_period.day_of_week(date))?;
 
         let mut state_lock = (*state).lock().unwrap();
         // Physics

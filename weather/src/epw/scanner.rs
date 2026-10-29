@@ -22,6 +22,7 @@ use crate::Float;
 use super::ground_temperature::EPWGroundTemperature;
 use super::weather::EPWWeather;
 use super::weather_line::EPWWeatherLine;
+use calendar::DayOfWeek;
 use std::fmt::Display;
 use std::fs;
 use std::path::Path;
@@ -234,7 +235,8 @@ impl<'a> EPWScanner<'a> {
         }
 
         let _data_period_name = EPWScanner::scan_string(self.scan_element())?;
-        let _start_day_of_the_week = EPWScanner::scan_string(self.scan_element())?;
+        let start_day_of_week = EPWScanner::scan_string(self.scan_element())?;
+        epw.start_day_of_week = DayOfWeek::from_name(&start_day_of_week);
 
         // this is in month/day data format
         let _data_period_start_day = EPWScanner::scan_string(self.scan_element())?;

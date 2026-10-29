@@ -98,8 +98,8 @@ impl Simulation {
     /// * `weather`: the contents of an EPW or `.sw` weather file
     /// * `n`: the number of timesteps per hour
     /// * `control_script`: an optional Rhai script, run before every timestep
-    /// * `research_mode`: enables the research-only functions of the Rhai API
-    ///   (reserved: there are none yet, so this has no effect)
+    /// * `research_mode`: allows the control script to set physical properties
+    ///   (e.g., the temperature of a space), which cannot be set in real life
     ///
     /// Building the simulation includes calculating the daylight
     /// coefficients of the model's workplanes (if any), which can take a
@@ -164,6 +164,15 @@ impl Simulation {
         })
     }
 
+    /// Seeds the random numbers of the control script (i.e., `random()`), for
+    /// repeatable simulations. Without it, every simulation gets different
+    /// random numbers. It does nothing if there is no control script.
+    pub fn set_seed(&mut self, seed: u64) {
+        if let Some(controller) = &mut self.controller {
+            controller.set_seed(seed);
+        }
+    }
+
     /// Runs the control script (if any) and advances the simulation by one
     /// timestep. Returns `false`, without doing anything, once the end of the
     /// weather file has been reached.
@@ -173,7 +182,9 @@ impl Simulation {
         };
 
         if let Some(controller) = &mut self.controller {
-            controller.control(date).map_err(|e| JsError::new(&e))?;
+            controller
+                .control(date, self.period.day_of_week(date))
+                .map_err(|e| JsError::new(&e))?;
         }
 
         let mut state = lock(&self.state);

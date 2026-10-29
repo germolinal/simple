@@ -158,8 +158,7 @@ if is_hot && outside_temperature < inside_temperature  {
 
 ```
 
-> **Note:** `random()` is not part of the control API yet, so this script does not run
-> as is. Check [Controlling the building](./controlling.md) for what scripts can do today.
+> Check [Controlling the building](./controlling.md) to learn how to write these scripts.
 
 ### 2. You can store and reuse the solar calculations
 

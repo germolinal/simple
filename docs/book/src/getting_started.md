@@ -182,6 +182,8 @@ simple -i bedroom.spl -w wellington.epw -o results.csv
 | `-o` | Where to write the results. If not given, they are printed on the terminal |
 | `-n` | The number of timesteps per hour (from 1 to 60; 1 by default) |
 | `-c` | How to control the building (see the [next chapter](./controlling.md)) |
+| `-r` | Research mode (see [Research mode](./controlling.md#research-mode)) |
+| `-s` | The seed for random numbers in control scripts (see [Randomness](./controlling.md#randomness)) |
 
 The simulation runs through the whole weather file, telling you what month it is
 in. For our bedroom, this takes less than a second.

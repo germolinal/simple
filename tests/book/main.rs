@@ -24,8 +24,9 @@ fn book_examples() -> Result<(), String> {
     // Simulate the first two days... it is summer in Wellington, but the
     // nights are cold enough to need some heating
     let mut heated = false;
-    for date in data.sim_period.take(48 * n) {
-        controller.control(date)?;
+    let sim_period = data.sim_period;
+    for date in sim_period.take(48 * n) {
+        controller.control(date, sim_period.day_of_week(date))?;
         let mut state = state.lock().unwrap();
         data.model
             .march(date, &data.weather, model.as_ref(), &mut state, &mut memory)?;
