@@ -180,6 +180,10 @@ pub use site_details::{SiteDetails, TerrainClass};
 mod luminaire;
 pub use luminaire::Luminaire;
 
+/// Workplanes, for reporting daylight illuminance
+mod workplane;
+pub use workplane::Workplane;
+
 /// The module for requesting Outputs
 // mod output;
 pub use simulation_state_element::Output;

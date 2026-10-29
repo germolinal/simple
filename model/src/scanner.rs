@@ -272,6 +272,7 @@ impl<'a> SimpleScanner<'a> {
             "Output",
             "SiteDetails",
             "SolarOptions",
+            "Workplane",
         ];
 
         for ident in read_order {
@@ -392,6 +393,19 @@ impl<'a> SimpleScanner<'a> {
                             }
                         };
                         model.solar_options = Some(s);
+                    }
+                    b"Workplane" => {
+                        let s: crate::Workplane = match json5::from_str(obj_str) {
+                            Ok(s) => s,
+                            Err(e) => {
+                                let errmsg = Self::make_error_msg(e.to_string(), *ln);
+                                return Err(errmsg);
+                            }
+                        };
+                        if let Err(e) = model.add_workplane(s) {
+                            let errmsg = Self::make_error_msg(e, *ln);
+                            return Err(errmsg);
+                        }
                     }
                     b"Space" => {
                         let s: crate::Space = match json5::from_str(obj_str) {

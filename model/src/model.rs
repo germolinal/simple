@@ -34,7 +34,9 @@ use std::io::prelude::*;
 use std::path::Path;
 use std::sync::Arc;
 
-use crate::{Building, Construction, Fenestration, Luminaire, Material, Space, Substance, Surface};
+use crate::{
+    Building, Construction, Fenestration, Luminaire, Material, Space, Substance, Surface, Workplane,
+};
 
 /// A structure describing a set of built-environment objects.
 ///
@@ -93,6 +95,10 @@ pub struct Model {
     /// The [`Substance`]s in the model
     pub substances: Vec<Substance>,
 
+    /// The [`Workplane`]s in the model
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub workplanes: Vec<Arc<Workplane>>,
+
     /// Serde
     #[serde(skip)]
     simulation_state: Option<SimulationStateHeader>,
@@ -148,6 +154,10 @@ impl std::fmt::Display for Model {
             write!(f, "Surface {}", b)?;
         }
 
+        for b in self.workplanes.iter() {
+            write!(f, "Workplane {}", b)?;
+        }
+
         Ok(())
     }
 }
@@ -168,6 +178,7 @@ impl std::default::Default for Model {
             spaces: Vec::default(),
             surfaces: Vec::default(),
             substances: Vec::default(),
+            workplanes: Vec::default(),
             simulation_state: Some(SimulationStateHeader::new()), // yeah... this is the only field that defaults to a non-default value.
         }
     }
@@ -249,6 +260,12 @@ impl<'de> Visitor<'de> for SimpleModelVisitor {
                 }
                 b"solar_options" => {
                     model.solar_options = map.next_value()?;
+                }
+                b"workplanes" => {
+                    let objs: Vec<Workplane> = map.next_value()?;
+                    for o in objs.into_iter() {
+                        model.add_workplane(o).map_err(serde::de::Error::custom)?;
+                    }
                 }
                 b"spaces" => {
                     let objs: Vec<Space> = map.next_value()?;
@@ -1245,6 +1262,51 @@ impl Model {
         Ok(add)
     }
 
+    /// Adds a [`Workplane`] to the [`Model`]. Workplanes are not part of the
+    /// simulation state, and their names must be unique.
+    ///
+    /// ```rust
+    /// use model::{Model, Workplane};
+    ///
+    /// let mut model = Model::default();
+    /// assert!(model.add_workplane(Workplane::new("Desks", "Office")).is_ok());
+    /// assert_eq!(model.workplanes.len(), 1);
+    ///
+    /// // Names must be unique
+    /// assert!(model.add_workplane(Workplane::new("Desks", "Office")).is_err());
+    /// ```
+    pub fn add_workplane(&mut self, add: Workplane) -> Result<Arc<Workplane>, String> {
+        if self.get_workplane(&add.name).is_ok() {
+            return Err(format!(
+                "There is already a Workplane called '{}'",
+                add.name
+            ));
+        }
+        let add = Arc::new(add);
+        self.workplanes.push(Arc::clone(&add));
+        Ok(add)
+    }
+
+    /// Retrieves a reference (`Arc`) to a [`Workplane`] based on its name
+    ///
+    /// ```rust
+    /// use model::{Model, Workplane};
+    ///
+    /// let mut model = Model::default();
+    /// model.add_workplane(Workplane::new("Desks", "Office")).unwrap();
+    ///
+    /// assert!(model.get_workplane("Desks").is_ok());
+    /// assert!(model.get_workplane("Floor").is_err());
+    /// ```
+    pub fn get_workplane<S: Into<String>>(&self, name: S) -> Result<Arc<Workplane>, String> {
+        let name: String = name.into();
+        self.workplanes
+            .iter()
+            .find(|w| w.name == name)
+            .cloned()
+            .ok_or_else(|| format!("Could not find Workplane '{}' in model", name))
+    }
+
     /// Retrieves a reference (`Arc`) to a [`Luminaire`] based on its name, from the `fenestrations`
     /// field
     ///
@@ -1639,6 +1701,7 @@ mod testing {
         /*****/
         /* W */
         /*****/
+        Workplane::print_doc(dir, &mut summary).map_err(|e| e.to_string())?;
 
         /*****/
         /* X */

@@ -380,7 +380,7 @@ impl StructObject {
                         );
                     }
 
-                    // Name of the 'set_' method
+                    // Name of the '_or' method
                     let get_or_ident = format!("{}_or", f_ident);
                     let get_or_ident = syn::Ident::new(&get_or_ident, f_ident.span());
                     let gets_or_doc_string = format!(
@@ -401,6 +401,13 @@ impl StructObject {
                     //     )
                     // };
 
+                    // NOTE: `module_name` is currently unused: it was meant for the
+                    // warning above, which is commented out. Either restore the
+                    // warning or remove the parameter (and update every call to
+                    // `*_or()`).
+                    //
+                    // NOTE: only fields classified as Int, Float or Bool get an
+                    // `_or()` method (see `common_path.rs` for what counts as such)
                     if is_copy {
                         gets = quote!(
                             #gets

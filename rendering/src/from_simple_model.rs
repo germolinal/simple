@@ -55,10 +55,6 @@ impl SimpleModelReader {
         model: &Model,
         wavelength: &Wavelengths,
     ) -> Result<(Scene, Vec<(SceneElement, usize)>), String> {
-        if matches!(wavelength, Wavelengths::Visible) {
-            unimplemented!()
-        }
-
         let mut scene = Scene::new();
         let mut triangle_map = Vec::with_capacity(model.surfaces.len() * 3);
 
@@ -193,38 +189,30 @@ impl SimpleModelReader {
     fn substance_to_material(substance: &Substance, wavelength: &Wavelengths) -> Option<Material> {
         match substance {
             Substance::Normal(s) => {
-                let alpha = match *wavelength {
-                    Wavelengths::Solar => match s.front_solar_absorbtance() {
-                        Ok(v) => *v,
-                        Err(_) => {
-                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
-                            0.7
-                        }
-                    },
-                    Wavelengths::Visible => match s.front_visible_reflectance() {
-                        Ok(v) => *v,
-                        Err(_) => {
-                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
-                            0.7
-                        }
-                    },
+                // Solar properties (absorbtance and transmittance, as in
+                // EnergyPlus) are used for the visible spectrum when the
+                // visible ones (reflectance and transmissivity, as in
+                // Radiance) are not given
+                let solar_rho = match s.front_solar_absorbtance() {
+                    Ok(v) => 1. - *v,
+                    Err(_) => {
+                        // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
+                        0.3
+                    }
                 };
-                let rho = 1. - alpha;
-                let tau = match *wavelength {
-                    Wavelengths::Solar => match s.solar_transmittance() {
-                        Ok(v) => transmittance_to_transmissivity(*v),
-                        Err(_) => {
-                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
-                            0.
-                        }
-                    },
-                    Wavelengths::Visible => match s.visible_transmissivity() {
-                        Ok(v) => *v,
-                        Err(_) => {
-                            // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
-                            0.
-                        }
-                    },
+                let solar_tau = match s.solar_transmittance() {
+                    Ok(v) => transmittance_to_transmissivity(*v),
+                    Err(_) => {
+                        // eprintln!("Substance '{}' does not have a Solar Absorbtance... assuming value of {}", s.name, v);
+                        0.
+                    }
+                };
+                let (rho, tau) = match *wavelength {
+                    Wavelengths::Solar => (solar_rho, solar_tau),
+                    Wavelengths::Visible => (
+                        s.front_visible_reflectance().copied().unwrap_or(solar_rho),
+                        s.visible_transmissivity().copied().unwrap_or(solar_tau),
+                    ),
                 };
 
                 // return
@@ -259,6 +247,56 @@ mod tests {
     #[test]
     fn test_transmittance_to_transmissivity() {
         assert_close!(0.96, transmittance_to_transmissivity(0.88), 1e-2)
+    }
+
+    #[test]
+    fn test_visible_materials() -> Result<(), String> {
+        let (model, _) = Model::from_bytes(
+            br#"
+            Substance { type: "Normal", name: "painted", front_solar_absorbtance: 0.7, front_visible_reflectance: 0.8 }
+            Substance { type: "Normal", name: "concrete", front_solar_absorbtance: 0.6 }
+            Substance { type: "Normal", name: "glass", solar_transmittance: 0.88, visible_transmissivity: 0.9 }
+            Substance { type: "Normal", name: "film", solar_transmittance: 0.5 }
+            "#,
+        )?;
+        let colour = |name: &str, wavelength: Wavelengths| -> Result<(char, Spectrum), String> {
+            let substance = model
+                .substances
+                .iter()
+                .find(|s| s.name() == name)
+                .ok_or("no substance")?;
+            match SimpleModelReader::substance_to_material(substance, &wavelength) {
+                Some(Material::Plastic(p)) => Ok(('p', p.colour)),
+                Some(Material::Glass(g)) => Ok(('g', g.colour)),
+                other => Err(format!("unexpected material {other:?}")),
+            }
+        };
+
+        // Visible properties are used when given...
+        assert_eq!(
+            colour("painted", Wavelengths::Visible)?,
+            ('p', Spectrum::gray(0.8))
+        );
+        assert_eq!(
+            colour("glass", Wavelengths::Visible)?,
+            ('g', Spectrum::gray(0.9))
+        );
+        // ... and the solar ones otherwise
+        let (kind, c) = colour("concrete", Wavelengths::Visible)?;
+        assert_eq!(kind, 'p');
+        assert_close!(c.0[0], 0.4);
+        assert_eq!(
+            colour("film", Wavelengths::Visible)?,
+            colour("film", Wavelengths::Solar)?
+        );
+        // Solar is unaffected by the visible properties
+        let (_, c) = colour("painted", Wavelengths::Solar)?;
+        assert_close!(c.0[0], 0.3);
+        assert_eq!(
+            colour("glass", Wavelengths::Solar)?,
+            ('g', Spectrum::gray(transmittance_to_transmissivity(0.88)))
+        );
+        Ok(())
     }
 
     #[test]

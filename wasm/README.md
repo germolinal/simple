@@ -48,3 +48,35 @@ The state can also be accessed through `state()`/`set_state()` (copies) and
 
 When a control script is given, it runs before every timestep, exactly as with
 `simple -c script.rhai`.
+
+## Daylight on workplanes
+
+Workplanes are declared in the model (see the `Workplane` object). They are
+only for reporting: daylight only, not part of the state, and not available to
+control scripts.
+
+```
+Workplane { name: "Desks", space: "Office" }                  // 0.7m high, sensors 0.5m apart
+Workplane { name: "Counters", space: "Office", height: 0.85, spacing: 1 }
+```
+
+Their daylight coefficients are calculated when the `Simulation` is built.
+Then, the illuminance at their sensors is recorded in every timestep:
+
+```js
+const names = sim.workplane_names();     // workplanes are referred to by index
+const xyz = sim.workplane_sensors(0);    // [x0, y0, z0, x1, y1, z1, ...]
+const areas = sim.workplane_areas(0);    // m2 of floor represented by each sensor
+
+sim.run();
+
+// Per sensor, counting only the hours between 8:00 and 18:00 (omit both
+// for every hour of the day)
+const over300 = sim.hours_above(0, 300, 8, 18);        // hours with >= 300 lux
+const useful = sim.hours_within(0, 100, 2000, 8, 18);  // hours within 100-2000 lux
+const occupied = sim.occupied_hours(0, 8, 18);
+
+// The raw data: the latest timestep, or every timestep so far
+sim.illuminance(0);
+sim.illuminance_history(0);
+```

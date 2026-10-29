@@ -32,8 +32,9 @@ SOFTWARE.
 use simple::multiphysics_model::MultiphysicsModelMemory;
 use simple::run_simulation::prepare;
 use simple::{
-    Date, EPWWeather, Float, Model, MultiphysicsModel, Period, RhaiControlScript, SimulationModel,
-    SimulationState, SimulationStateHeader, Weather,
+    Date, EPWWeather, Float, IlluminanceRecord, Model, MultiphysicsModel, Period,
+    RhaiControlScript, SimulationModel, SimulationState, SimulationStateHeader, Weather,
+    WorkplaneModel, WorkplaneModelMemory, WorkplaneSensors,
 };
 use std::sync::{Arc, Mutex, MutexGuard};
 use wasm_bindgen::prelude::*;
@@ -84,6 +85,9 @@ pub struct Simulation {
     full_header: Vec<String>,
     report_indexes: Vec<usize>,
     date: Option<Date>,
+    workplanes: WorkplaneModel,
+    workplane_memory: WorkplaneModelMemory,
+    illuminance: Vec<IlluminanceRecord>,
 }
 
 #[wasm_bindgen]
@@ -95,6 +99,10 @@ impl Simulation {
     /// * `n`: the number of timesteps per hour
     /// * `control_script`: an optional Rhai script, run before every timestep
     /// * `research_mode`: enables the research-only functions of the Rhai API
+    ///
+    /// Building the simulation includes calculating the daylight
+    /// coefficients of the model's workplanes (if any), which can take a
+    /// while.
     #[wasm_bindgen(constructor)]
     pub fn new(
         model: &str,
@@ -115,6 +123,17 @@ impl Simulation {
             .model
             .allocate_memory(&state)
             .map_err(|e| JsError::new(&e))?;
+
+        let workplanes =
+            WorkplaneModel::new(&data.meta_options, &model, WorkplaneModel::DEFAULT_MF)
+                .map_err(|e| JsError::new(&e))?;
+        let workplane_memory = workplanes.allocate_memory();
+        let dt_hours = 1. / data.model.dt_subdivisions as Float;
+        let illuminance = workplanes
+            .workplanes()
+            .iter()
+            .map(|w| IlluminanceRecord::new(w.sensors.len(), dt_hours))
+            .collect();
 
         let model = Arc::new(model);
         let (controller, state) = match control_script {
@@ -138,6 +157,9 @@ impl Simulation {
             full_header: data.full_header,
             report_indexes: data.report_indexes,
             date: None,
+            workplanes,
+            workplane_memory,
+            illuminance,
         })
     }
 
@@ -163,9 +185,104 @@ impl Simulation {
                 &mut self.memory,
             )
             .map_err(|e| JsError::new(&format!("{e} (Date '{date}')")))?;
+        drop(state);
+
+        if !self.illuminance.is_empty() {
+            self.workplanes
+                .march(date, &self.weather, &mut self.workplane_memory)
+                .map_err(|e| JsError::new(&format!("{e} (Date '{date}')")))?;
+            for (i, record) in self.illuminance.iter_mut().enumerate() {
+                let lux = self.workplane_memory.illuminance(i).unwrap_or_default();
+                record.push(date, lux).map_err(|e| JsError::new(&e))?;
+            }
+        }
 
         self.date = Some(date);
         Ok(true)
+    }
+
+    /// The names of the model's workplanes. Workplanes are referred to by
+    /// their index in this list.
+    pub fn workplane_names(&self) -> Vec<String> {
+        self.workplanes
+            .workplanes()
+            .iter()
+            .map(|w| w.name.clone())
+            .collect()
+    }
+
+    /// The position of the sensors of a workplane, as `[x0, y0, z0, x1, ...]`
+    pub fn workplane_sensors(&self, workplane: usize) -> Result<Vec<Float>, JsError> {
+        Ok(self
+            .workplane(workplane)?
+            .sensors
+            .iter()
+            .flat_map(|p| [p.x, p.y, p.z])
+            .collect())
+    }
+
+    /// The floor area (in m2) represented by each sensor of a workplane
+    pub fn workplane_areas(&self, workplane: usize) -> Result<Vec<Float>, JsError> {
+        Ok(self.workplane(workplane)?.areas.clone())
+    }
+
+    /// The illuminance (in lux) at each sensor of a workplane in the last
+    /// timestep simulated
+    pub fn illuminance(&self, workplane: usize) -> Result<Vec<Float>, JsError> {
+        self.workplane(workplane)?;
+        Ok(self
+            .workplane_memory
+            .illuminance(workplane)
+            .map(|v| v.to_vec())
+            .unwrap_or_default())
+    }
+
+    /// The illuminance (in lux) at each sensor of a workplane in every
+    /// timestep simulated so far, one timestep after the other
+    pub fn illuminance_history(&self, workplane: usize) -> Result<Vec<Float>, JsError> {
+        Ok(self.record(workplane)?.values().to_vec())
+    }
+
+    /// The number of hours each sensor of a workplane received at least
+    /// `min` lux. If `from` and `to` are given, only the hours of the day
+    /// within that range count (e.g., from 8 to 18).
+    pub fn hours_above(
+        &self,
+        workplane: usize,
+        min: Float,
+        from: Option<Float>,
+        to: Option<Float>,
+    ) -> Result<Vec<Float>, JsError> {
+        Ok(self
+            .record(workplane)?
+            .hours_above(min, occupied(from, to)?))
+    }
+
+    /// The number of hours each sensor of a workplane received between `min`
+    /// and `max` lux (both included). If `from` and `to` are given, only the
+    /// hours of the day within that range count (e.g., from 8 to 18).
+    pub fn hours_within(
+        &self,
+        workplane: usize,
+        min: Float,
+        max: Float,
+        from: Option<Float>,
+        to: Option<Float>,
+    ) -> Result<Vec<Float>, JsError> {
+        Ok(self
+            .record(workplane)?
+            .hours_within(min, max, occupied(from, to)?))
+    }
+
+    /// The number of hours simulated so far that are within `from` and `to`
+    /// (or all of them, if not given)
+    pub fn occupied_hours(
+        &self,
+        workplane: usize,
+        from: Option<Float>,
+        to: Option<Float>,
+    ) -> Result<Float, JsError> {
+        Ok(self.record(workplane)?.occupied_hours(occupied(from, to)?))
     }
 
     /// Runs every remaining timestep, returning the reported values (see
@@ -263,6 +380,32 @@ impl Simulation {
     /// The number of elements in the state
     pub fn state_len(&self) -> usize {
         lock(&self.state).len()
+    }
+}
+
+impl Simulation {
+    fn workplane(&self, i: usize) -> Result<&WorkplaneSensors, JsError> {
+        self.workplanes
+            .workplanes()
+            .get(i)
+            .ok_or_else(|| JsError::new(&format!("There is no workplane {i}")))
+    }
+
+    fn record(&self, i: usize) -> Result<&IlluminanceRecord, JsError> {
+        self.illuminance
+            .get(i)
+            .ok_or_else(|| JsError::new(&format!("There is no workplane {i}")))
+    }
+}
+
+/// The occupied hours of the day, from JavaScript's optional `from` and `to`
+fn occupied(from: Option<Float>, to: Option<Float>) -> Result<Option<(Float, Float)>, JsError> {
+    match (from, to) {
+        (Some(from), Some(to)) => Ok(Some((from, to))),
+        (None, None) => Ok(None),
+        _ => Err(JsError::new(
+            "Occupied hours need both 'from' and 'to' (or neither)",
+        )),
     }
 }
 

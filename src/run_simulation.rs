@@ -94,6 +94,8 @@ pub struct PreProcessData {
     pub model: MultiphysicsModel,
     /// The weather driving the simulation
     pub weather: Weather,
+    /// The location of the simulation (from the weather)
+    pub meta_options: MetaOptions,
 }
 
 fn pre_process(
@@ -201,6 +203,7 @@ pub fn prepare(
         full_header,
         weather,
         model: physics_model,
+        meta_options,
     })
 }
 
