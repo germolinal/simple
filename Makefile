@@ -31,14 +31,15 @@ release_patch release_minor release_major:
 release:
 	./release.sh tag
 
-# Builds the WebAssembly bindings (see wasm/README.md) into wasm/pkg. Needs
+# Builds the WebAssembly bindings (see wasm/README.md) into wasm/pkg, with
+# the `wasm` profile (Cargo.toml). Needs
 # the wasm-bindgen CLI, of the same version as the `wasm-bindgen` crate in
 # Cargo.lock (`cargo install wasm-bindgen-cli --version <version>`). Set
 # WASM_TARGET=nodejs (or bundler) to target something other than browsers.
 WASM_TARGET ?= web
 wasm:
-	cargo build -p simple-wasm --release --target wasm32-unknown-unknown
-	wasm-bindgen --target $(WASM_TARGET) --out-dir wasm/pkg target/wasm32-unknown-unknown/release/simple_wasm.wasm
+	cargo build -p simple-wasm --profile wasm --target wasm32-unknown-unknown
+	wasm-bindgen --target $(WASM_TARGET) --out-dir wasm/pkg target/wasm32-unknown-unknown/wasm/simple_wasm.wasm
 
 test:
 	cargo test --features parallel  --workspace

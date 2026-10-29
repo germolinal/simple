@@ -34,6 +34,14 @@ debug = true
 lto = true
 codegen-units = 1
 
+# The WebAssembly build (`make wasm`): release without debug info, which only
+# makes the binary bigger (4.2 MB -> 3.2 MB after wasm-bindgen). Not
+# opt-level "s"/"z": they shrink it further but simulate 37-47% slower.
+[profile.wasm]
+inherits = "release"
+debug = false
+strip = true
+
 [package.metadata.docs.rs]
 rustdoc-args = ["--html-in-header", "./katex.html"]
 
